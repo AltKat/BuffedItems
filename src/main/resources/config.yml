@@ -1,0 +1,129 @@
+# -------------------------------------------------------------------------------------------
+# BuffedItems - Plugin Configuration v1.0
+# Author: StreetMelodeez
+# -------------------------------------------------------------------------------------------
+# Welcome to the configuration file for BuffedItems!
+# Here you can create unique items with permanent effects and attributes.
+#
+# GENERAL STRUCTURE:
+#
+# items:
+#   unique_item_id: <-- This is the ID you will use in commands (e.g., /bi give player unique_item_id)
+#     display_name: "&aItem Name"
+#     lore:
+#       - "&7A descriptive line."
+#       - "&7Another line."
+#     material: "DIAMOND_SWORD"
+#     glow: true
+#     permission: "buffeditems.item.unique"
+#     effects:
+#       SLOT_NAME:
+#         potion_effects:
+#           - "EFFECT_NAME;LEVEL"
+#         attributes:
+#           - "ATTRIBUTE_NAME;OPERATION;AMOUNT"
+#
+# --- DETAILED GUIDE ---
+#
+# display_name: The in-game name of the item. Supports color codes with '&'.
+# lore: The item's description. Each line is a new list item. Supports color codes.
+# material: Must be a valid Spigot Material name. List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+# glow: (Optional) Set to 'true' to give the item an enchantment glow without any real enchantments. Defaults to false.
+# permission: (Optional) If you set a permission node here, only players with this permission can benefit from the item's effects.
+#
+# effects: This section holds all the magic.
+#   SLOT_NAME: Defines where the item must be for the effects to activate.
+#     Valid Slots: MAIN_HAND, OFF_HAND, INVENTORY, HELMET, CHESTPLATE, LEGGINGS, BOOTS
+#
+#   potion_effects: A list of potion effects to apply.
+#     - Format: 'EFFECT_NAME;LEVEL' (e.g., 'SPEED;2' for Speed II)
+#     - Potion Effect List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/potion/PotionEffectType.html
+#
+#   attributes: A list of permanent attribute modifiers to apply.
+#     - Format: 'ATTRIBUTE_NAME;OPERATION;AMOUNT'
+#     - Attribute List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/attribute/Attribute.html
+#     - OPERATIONS:
+#       - ADD_NUMBER: Adds a flat amount (e.g., GENERIC_MAX_HEALTH;ADD_NUMBER;2.0 adds 1 heart).
+#       - ADD_SCALAR: Adds a percentage based on the base value.
+#       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount). (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
+# -------------------------------------------------------------------------------------------
+
+items:
+  bunny_charm:
+    display_name: "&aBunny's Charm"
+    lore:
+      - "&7A small charm infused with the spirit of a rabbit."
+      - ""
+      - "&6Passive Effect:"
+      - "&7- When held in your off-hand, grants"
+      - "&7  permanent Jump Boost II and Slow Falling I."
+    material: "RABBIT_FOOT"
+    glow: true
+    effects:
+      OFF_HAND:
+        potion_effects:
+          - "JUMP;2"
+          - "SLOW_FALLING;1"
+  miners_dream:
+    display_name: "&bMiner's Dream"
+    lore:
+      - "&7This pickaxe hums with an ancient energy."
+      - ""
+      - "&6Active Effect:"
+      - "&7- When held in your main hand, grants"
+      - "&7  permanent Haste II."
+    material: "DIAMOND_PICKAXE"
+    glow: false
+    effects:
+      MAIN_HAND:
+        potion_effects:
+          - "FAST_DIGGING;2"
+  warriors_talisman:
+    display_name: "&cWarrior's Talisman"
+    lore:
+      - "&7Forged in dragon's fire, this talisman"
+      - "&7bolsters the wearer's life force."
+      - ""
+      - "&6Passive Effect:"
+      - "&7- As long as this is in your inventory,"
+      - "&7  you gain +2 Hearts and +1 Armor Toughness."
+      - "&cRequires Permission: buffeditems.item.warrior"
+    material: "NETHERITE_INGOT"
+    glow: true
+    permission: "buffeditems.item.warrior"
+    effects:
+      INVENTORY:
+        attributes:
+          - "GENERIC_MAX_HEALTH;ADD_NUMBER;4.0"
+          - "GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0"
+  helmet_of_wisdom:
+    display_name: "&9Helmet of Wisdom"
+    lore:
+      - "&7This helmet clears the mind and reveals the unseen."
+      - ""
+      - "&6Passive Effect:"
+      - "&7- While worn as a helmet, grants permanent"
+      - "&7  Night Vision and Water Breathing."
+    material: "DIAMOND_HELMET"
+    glow: true
+    effects:
+      HELMET:
+        potion_effects:
+          - "NIGHT_VISION;1"
+          - "WATER_BREATHING;1"
+  berserkers_greaves:
+    display_name: "&4Berserker's Greaves"
+    lore:
+      - "&7Boots stained with the fury of countless battles."
+      - ""
+      - "&6Passive Effect:"
+      - "&7- While worn as boots, grants a permanent"
+      - "&7  +10% bonus to your movement speed but"
+      - "&7  reduces your armor by a small amount."
+    material: "NETHERITE_BOOTS"
+    glow: false
+    effects:
+      BOOTS:
+        attributes:
+          - "GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.10"
+          - "GENERIC_ARMOR;ADD_NUMBER;-1.0"
