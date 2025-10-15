@@ -1,0 +1,7 @@
+name: BuffedItems
+version: '${project.version}'
+main: io.github.altkat.BuffedItems.BuffedItems
+api-version: '1.16'
+authors: [StreetMelodeez(AltKat)]
+commands:
+permissions:

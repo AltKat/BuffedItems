@@ -1,0 +1,54 @@
+# ===================================================================
+# Java & Maven
+# Compiled code, packages, and temporary Maven files
+# ===================================================================
+/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# ===================================================================
+# IntelliJ IDEA
+# Project and user-specific setting files
+# ===================================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ===================================================================
+# Other IDEs (Eclipse, NetBeans, VS Code)
+# ===================================================================
+.classpath
+.project
+.settings
+.factorypath
+.vscode/
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# ===================================================================
+# Log and Report Files
+# ===================================================================
+*.log
+hs_err_pid*
+
+# ===================================================================
+# OS Generated Files (macOS, Windows)
+# ===================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
