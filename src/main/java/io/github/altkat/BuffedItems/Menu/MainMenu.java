@@ -16,16 +16,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MainMenu extends Menu {
+public class MainMenu extends PaginatedMenu {
 
     private final BuffedItems plugin;
     private int page = 0;
 
-    private final int maxItemsPerPage = 28;
+    private int maxItemsPerPage = 28;
 
     public MainMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.maxItemsPerPage = 28;
     }
 
     @Override
@@ -44,10 +45,19 @@ public class MainMenu extends Menu {
         Player p = (Player) e.getWhoClicked();
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
 
+        if (handlePageChange(e, items.size())) return;
+
+        if (e.getCurrentItem() == null) return;
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
                 p.closeInventory();
+                break;
+            case ANVIL:
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setChatInputPath("createnewitem");
+                p.closeInventory();
+                p.sendMessage("§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword').");
                 break;
             case ARROW:
                 if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Next")) {
@@ -64,21 +74,20 @@ public class MainMenu extends Menu {
                     }
                 }
                 break;
-            case ANVIL:
-
-                p.sendMessage("§aYeni eşya oluşturma menüsü yakında eklenecek!");
-                break;
             case LAVA_BUCKET:
 
                 p.sendMessage("§cEşya silme menüsü yakında eklenecek!");
                 break;
             default:
-
                 if (e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING)) {
                     String itemId = e.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
                     playerMenuUtility.setItemToEditId(itemId);
 
-                    p.sendMessage("§eDüzenleme menüsü yakında eklenecek! Düzenlenecek Eşya: " + itemId);
+                    if (e.isLeftClick()) {
+                        new ItemEditorMenu(playerMenuUtility, plugin).open();
+                    } else if (e.isRightClick()) {
+                        new ConfirmationMenu(playerMenuUtility, plugin, itemId).open();
+                    }
                 }
                 break;
         }
@@ -88,6 +97,8 @@ public class MainMenu extends Menu {
     public void setMenuItems() {
 
         addMenuControls();
+        inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
 
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
 
@@ -102,7 +113,10 @@ public class MainMenu extends Menu {
 
 
                 ItemMeta meta = itemStack.getItemMeta();
-                List<String> newLore = new ArrayList<>(meta.getLore());
+
+                List<String> currentLore = meta.getLore();
+                List<String> newLore = (currentLore != null) ? new ArrayList<>(currentLore) : new ArrayList<>();
+
                 newLore.add("");
                 newLore.add("§eLeft-Click to Edit");
                 newLore.add("§cRight-Click to Delete");
@@ -114,18 +128,10 @@ public class MainMenu extends Menu {
         }
     }
 
-    private void addMenuControls() {
-
-        ItemStack left = makeItem(Material.ARROW, "§aPrevious Page");
-        ItemStack right = makeItem(Material.ARROW, "§aNext Page");
-        inventory.setItem(48, left);
-        inventory.setItem(50, right);
-
-
-        ItemStack createItem = makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new", "§7item from scratch.");
-        inventory.setItem(49, createItem);
-
-
+    @Override
+    public void addMenuControls() {
+        super.addMenuControls();
+        inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
     }
 }
