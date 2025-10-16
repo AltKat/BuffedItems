@@ -4,48 +4,37 @@
 # -------------------------------------------------------------------------------------------
 # Welcome to the configuration file for BuffedItems!
 # Here you can create unique items with permanent effects and attributes.
-#
-# GENERAL STRUCTURE:
-#
-# items:
-#   unique_item_id: <-- This is the ID you will use in commands (e.g., /bi give player unique_item_id)
-#     display_name: "&aItem Name"
-#     lore:
-#       - "&7A descriptive line."
-#       - "&7Another line."
-#     material: "DIAMOND_SWORD"
-#     glow: true
-#     permission: "buffeditems.item.unique"
-#     effects:
-#       SLOT_NAME:
-#         potion_effects:
-#           - "EFFECT_NAME;LEVEL"
-#         attributes:
-#           - "ATTRIBUTE_NAME;OPERATION;AMOUNT"
+# For full control, use the in-game editor: /bi menu
 #
 # --- DETAILED GUIDE ---
 #
 # display_name: The in-game name of the item. Supports color codes with '&'.
-# lore: The item's description. Each line is a new list item. Supports color codes.
-# material: Must be a valid Spigot Material name. List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
-# glow: (Optional) Set to 'true' to give the item an enchantment glow without any real enchantments. Defaults to false.
-# permission: (Optional) If you set a permission node here, only players with this permission can benefit from the item's effects.
 #
-# effects: This section holds all the magic.
-#   SLOT_NAME: Defines where the item must be for the effects to activate.
-#     Valid Slots: MAIN_HAND, OFF_HAND, INVENTORY, HELMET, CHESTPLATE, LEGGINGS, BOOTS
+# lore: The item's description. Each line under this key is a new line in the lore.
 #
-#   potion_effects: A list of potion effects to apply.
+# material: Must be a valid Spigot Material name from this list:
+#           https://hub.spigotmc.org/javadoc/spigot/org/bukkit/Material.html
+#
+# glow: (Optional) Set to 'true' to give the item an enchantment glow. Defaults to false.
+#
+# permission: (Optional) If you set a permission node, only players with this permission
+#             can benefit from the item's effects.
+#             IMPORTANT: To remove a permission via the in-game editor, set its value
+#             to 'none'. This will be saved here as 'NONE' and means no permission is required.
+#
+# effects: This section holds all the magic. Effects can be applied to different slots.
+#   Valid Slots: MAIN_HAND, OFF_HAND, INVENTORY, HELMET, CHESTPLATE, LEGGINGS, BOOTS
+#
+#   potion_effects: A list of potion effects to apply in this slot.
 #     - Format: 'EFFECT_NAME;LEVEL' (e.g., 'SPEED;2' for Speed II)
-#     - Potion Effect List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/potion/PotionEffectType.html
+#     - Effect List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/potion/PotionEffectType.html
 #
-#   attributes: A list of permanent attribute modifiers to apply.
+#   attributes: A list of permanent attribute modifiers to apply in this slot.
 #     - Format: 'ATTRIBUTE_NAME;OPERATION;AMOUNT'
-#     - Attribute List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/attribute/Attribute.html
+#     - Attribute List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/attribute/Attribute.html
 #     - OPERATIONS:
-#       - ADD_NUMBER: Adds a flat amount (e.g., GENERIC_MAX_HEALTH;ADD_NUMBER;2.0 adds 1 heart).
-#       - ADD_SCALAR: Adds a percentage based on the base value.
-#       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount). (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
+#       - ADD_NUMBER: Adds a flat value (e.g., GENERIC_MAX_HEALTH;ADD_NUMBER;2.0 adds 1 heart).
+#       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
 # -------------------------------------------------------------------------------------------
 
 items:

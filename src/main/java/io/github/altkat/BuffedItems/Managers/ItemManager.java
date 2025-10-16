@@ -4,17 +4,10 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.BuffedItemEffect;
 import org.bukkit.Material;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
+import java.util.*;
 
 public class ItemManager {
 
@@ -44,6 +37,10 @@ public class ItemManager {
             Material material = Material.matchMaterial(itemSection.getString("material", "STONE"));
             boolean glow = itemSection.getBoolean("glow", false);
             String permission = itemSection.getString("permission");
+
+            if (permission != null && (permission.equals(ConfigManager.NO_PERMISSION) || permission.trim().isEmpty())) {
+                permission = null;
+            }
 
             Map<String, BuffedItemEffect> effects = new HashMap<>();
             ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");

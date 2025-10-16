@@ -9,6 +9,7 @@ import java.util.Collections;
 public class ConfigManager {
 
     private static BuffedItems plugin;
+    public static final String NO_PERMISSION = "NONE";
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
@@ -16,7 +17,13 @@ public class ConfigManager {
 
     public static void setItemValue(String itemId, String path, Object value) {
         String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
-        plugin.getConfig().set(fullPath, value);
+
+        if ("permission".equals(path) && value == null) {
+            plugin.getConfig().set(fullPath, NO_PERMISSION);
+        } else {
+            plugin.getConfig().set(fullPath, value);
+        }
+
         saveConfiguration();
     }
 
@@ -42,7 +49,6 @@ public class ConfigManager {
         plugin.reloadConfig();
         plugin.getItemManager().loadItems();
     }
-
 
     public static void reloadConfig() {
         plugin.reloadConfig();
