@@ -2,17 +2,15 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
-import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AttributeListMenu extends Menu {
     private final BuffedItems plugin;
-    private final String TARGET_SLOT = "INVENTORY";
 
     public AttributeListMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
@@ -21,7 +19,7 @@ public class AttributeListMenu extends Menu {
 
     @Override
     public String getMenuName() {
-        return "Attributes for Slot: " + TARGET_SLOT;
+        return "Attributes for Slot: " + playerMenuUtility.getTargetSlot();
     }
 
     @Override
@@ -33,24 +31,37 @@ public class AttributeListMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
         String itemId = playerMenuUtility.getItemToEditId();
+        String targetSlot = playerMenuUtility.getTargetSlot();
+        Player p = (Player) e.getWhoClicked();
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
-                new ItemEditorMenu(playerMenuUtility, plugin).open();
+                new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
                 break;
             case ANVIL:
                 new AttributeSelectorMenu(playerMenuUtility, plugin).open();
                 break;
             case IRON_SWORD:
-                if (e.isRightClick()){
-                    String attributeName = ChatColor.stripColor(e.getCurrentItem().getItemMeta().getDisplayName());
+                String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
+                List<String> attributes = plugin.getConfig().getStringList(configPath);
+                int clickedSlot = e.getSlot();
 
-                    List<String> attributes = plugin.getConfig().getStringList("items." + itemId + ".effects." + TARGET_SLOT + ".attributes");
-                    attributes.removeIf(s -> s.startsWith(attributeName + ";"));
+                if (clickedSlot >= attributes.size()) return;
 
-                    ConfigManager.setItemValue(itemId, "effects." + TARGET_SLOT + ".attributes", attributes);
-                    e.getWhoClicked().sendMessage("§aAttribute '" + attributeName + "' has been removed.");
+                String attributeString = attributes.get(clickedSlot);
+                String attributeName = attributeString.split(";")[0];
+
+                if (e.isRightClick()) {
+                    attributes.remove(clickedSlot);
+                    ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
+                    p.sendMessage("§aAttribute '" + attributeName + "' has been removed from slot " + targetSlot + ".");
                     this.open();
+                } else if (e.isLeftClick()) {
+                    playerMenuUtility.setWaitingForChatInput(true);
+                    playerMenuUtility.setEditIndex(clickedSlot);
+                    playerMenuUtility.setChatInputPath("attributes.edit");
+                    p.closeInventory();
+                    p.sendMessage("§aPlease type the new amount for '" + attributeName + "' in chat (e.g., 2.0, -1.5, 0.1).");
                 }
                 break;
         }
@@ -58,19 +69,19 @@ public class AttributeListMenu extends Menu {
 
     @Override
     public void setMenuItems() {
-        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd New Attribute", "§7Adds an attribute to the §e" + TARGET_SLOT + " §7slot."));
-        addBackButton(new ItemEditorMenu(playerMenuUtility, plugin));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd New Attribute", "§7Adds an attribute to the §e" + playerMenuUtility.getTargetSlot() + " §7slot."));
+        addBackButton(new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE));
 
-        List<String> attributesConfig = plugin.getConfig().getStringList("items." + playerMenuUtility.getItemToEditId() + ".effects." + TARGET_SLOT + ".attributes");
+        String configPath = "items." + playerMenuUtility.getItemToEditId() + ".effects." + playerMenuUtility.getTargetSlot() + ".attributes";
+        List<String> attributesConfig = plugin.getConfig().getStringList(configPath);
 
         if (!attributesConfig.isEmpty()) {
-            int slot = 0;
-            for (String attrString : attributesConfig) {
-                if (slot >= getSlots() - 9) break;
+            for (int i = 0; i < attributesConfig.size(); i++) {
+                if (i >= getSlots() - 9) break;
+                String attrString = attributesConfig.get(i);
                 String[] parts = attrString.split(";");
-                inventory.setItem(slot, makeItem(Material.IRON_SWORD, "§b" + parts[0],
-                        "§7Operation: §e" + parts[1], "§7Amount: §e" + parts[2], "", "§cRight-Click to Delete"));
-                slot++;
+                inventory.setItem(i, makeItem(Material.IRON_SWORD, "§b" + parts[0],
+                        "§7Operation: §e" + parts[1], "§7Amount: §e" + parts[2], "", "§aLeft-Click to Edit Amount", "§cRight-Click to Delete"));
             }
         }
         setFillerGlass();

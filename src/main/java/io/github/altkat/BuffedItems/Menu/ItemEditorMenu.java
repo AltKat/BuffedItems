@@ -62,10 +62,10 @@ public class ItemEditorMenu extends Menu {
                 new MaterialSelectorMenu(playerMenuUtility, plugin).open();
                 break;
             case POTION:
-                new PotionEffectListMenu(playerMenuUtility, plugin).open();
+                new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.POTION_EFFECT).open();
                 break;
             case IRON_SWORD:
-                new AttributeListMenu(playerMenuUtility, plugin).open();
+                new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
                 break;
         }
     }
@@ -85,7 +85,6 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material",
                 "§7Current: §e" + item.getMaterial().name()));
 
-        String loreString = item.getLore().isEmpty() ? "§cNone" : item.getLore().stream().map(s -> "§f- " + s).collect(Collectors.joining("\n"));
         inventory.setItem(14, makeItem(Material.BOOK, "§aEdit Lore",
                 "§7Click to modify the item's lore."));
 
@@ -96,10 +95,10 @@ public class ItemEditorMenu extends Menu {
                 "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
 
         inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects",
-                "§7Click to manage potion effects."));
+                "§7Click to manage potion effects for a specific slot."));
 
         inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes",
-                "§7Click to manage attributes."));
+                "§7Click to manage attributes for a specific slot."));
 
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));

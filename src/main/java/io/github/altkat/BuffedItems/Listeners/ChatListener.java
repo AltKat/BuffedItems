@@ -16,7 +16,6 @@ import java.util.List;
 public class ChatListener implements Listener {
 
     private final BuffedItems plugin;
-    private final String TARGET_SLOT = "INVENTORY";
 
     public ChatListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -32,11 +31,10 @@ public class ChatListener implements Listener {
             String input = e.getMessage();
             String path = pmu.getChatInputPath();
             String itemId = pmu.getItemToEditId();
+            String targetSlot = pmu.getTargetSlot();
 
             Bukkit.getScheduler().runTask(plugin, () -> {
-
-
-                if (path.equals("createnewitem")) {
+                if ("createnewitem".equals(path)) {
                     String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
                     if (ConfigManager.createNewItem(newItemId)) {
                         p.sendMessage("§aNew item '" + newItemId + "' created. Now editing...");
@@ -46,7 +44,6 @@ public class ChatListener implements Listener {
                         p.sendMessage("§cError: An item with the ID '" + newItemId + "' already exists.");
                         new MainMenu(pmu, plugin).open();
                     }
-
                 } else if (path.startsWith("lore.")) {
                     BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
                     List<String> currentLore = new ArrayList<>(item.getLore());
@@ -65,9 +62,27 @@ public class ChatListener implements Listener {
                     ConfigManager.setItemValue(itemId, "lore", currentLore);
                     p.sendMessage("§aLore has been updated!");
                     new LoreEditorMenu(pmu, plugin).open();
+                } else if ("attributes.edit".equals(path)) {
+                    String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
+                    List<String> attributes = plugin.getConfig().getStringList(configPath);
+                    int index = pmu.getEditIndex();
 
+                    if (index != -1 && index < attributes.size()) {
+                        try {
+                            double newAmount = Double.parseDouble(input);
+                            String[] parts = attributes.get(index).split(";");
+                            String newAttributeString = parts[0] + ";" + parts[1] + ";" + newAmount;
+                            attributes.set(index, newAttributeString);
+                            ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
+                            p.sendMessage("§aAttribute amount has been updated!");
+                        } catch (NumberFormatException ex) {
+                            p.sendMessage("§cInvalid amount. Please enter a number (e.g., 2.0, -1.5).");
+                        }
+                    }
+                    pmu.setEditIndex(-1);
+                    new AttributeListMenu(pmu, plugin).open();
                 } else if (path.startsWith("attributes.add.")) {
-                    String configPath = "items." + itemId + ".effects." + TARGET_SLOT + ".attributes";
+                    String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
                     List<String> attributes = plugin.getConfig().getStringList(configPath);
                     try {
                         String[] parts = path.substring(15).split("\\.");
@@ -77,7 +92,7 @@ public class ChatListener implements Listener {
 
                         for (String existingAttr : attributes) {
                             if (existingAttr.startsWith(attributeName + ";")) {
-                                p.sendMessage("§cError: This attribute already exists on the item.");
+                                p.sendMessage("§cError: This attribute already exists on the item in this slot.");
                                 new AttributeListMenu(pmu, plugin).open();
                                 return;
                             }
@@ -85,16 +100,33 @@ public class ChatListener implements Listener {
 
                         String newAttributeString = attributeName + ";" + operationName + ";" + amount;
                         attributes.add(newAttributeString);
-                        ConfigManager.setItemValue(itemId, "effects." + TARGET_SLOT + ".attributes", attributes);
+                        ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
                         p.sendMessage("§aAttribute has been added!");
                     } catch (Exception ex) {
                         p.sendMessage("§cInvalid input. The original list was not modified.");
                     }
                     new AttributeListMenu(pmu, plugin).open();
+                } else if ("potion_effects.edit".equals(path)) {
+                    String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
+                    List<String> effects = plugin.getConfig().getStringList(configPath);
+                    int index = pmu.getEditIndex();
 
-
+                    if (index != -1 && index < effects.size()) {
+                        try {
+                            int newLevel = Integer.parseInt(input);
+                            String effectName = effects.get(index).split(";")[0];
+                            String newEffectString = effectName + ";" + newLevel;
+                            effects.set(index, newEffectString);
+                            ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".potion_effects", effects);
+                            p.sendMessage("§aPotion effect level has been updated!");
+                        } catch (NumberFormatException ex) {
+                            p.sendMessage("§cInvalid level. Please enter a whole number (e.g., 1, 2, 5).");
+                        }
+                    }
+                    pmu.setEditIndex(-1);
+                    new PotionEffectListMenu(pmu, plugin).open();
                 } else if (path.startsWith("potion_effects.add.")) {
-                    String configPath = "items." + itemId + ".effects." + TARGET_SLOT + ".potion_effects";
+                    String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
                     List<String> effects = plugin.getConfig().getStringList(configPath);
                     try {
                         String effectName = path.substring(19);
@@ -102,7 +134,7 @@ public class ChatListener implements Listener {
 
                         for (String existingEffect : effects) {
                             if (existingEffect.startsWith(effectName + ";")) {
-                                p.sendMessage("§cError: This potion effect already exists on the item.");
+                                p.sendMessage("§cError: This potion effect already exists on the item in this slot.");
                                 new PotionEffectListMenu(pmu, plugin).open();
                                 return;
                             }
@@ -110,14 +142,12 @@ public class ChatListener implements Listener {
 
                         String newEffectString = effectName + ";" + level;
                         effects.add(newEffectString);
-                        ConfigManager.setItemValue(itemId, "effects." + TARGET_SLOT + ".potion_effects", effects);
+                        ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".potion_effects", effects);
                         p.sendMessage("§aEffect has been added!");
                     } catch (Exception ex) {
                         p.sendMessage("§cInvalid input. The original list was not modified.");
                     }
                     new PotionEffectListMenu(pmu, plugin).open();
-
-
                 } else if ("permission".equals(path)) {
                     if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
                         ConfigManager.setItemValue(itemId, "permission", null);
