@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Commands;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Menu.MainMenu;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -48,6 +49,18 @@ public class Commands implements CommandExecutor {
                     return true;
                 }
                 return handleListCommand(sender);
+            case "menu":
+                if (!sender.hasPermission("buffeditems.command.menu")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                if (sender instanceof Player) {
+                    Player p = (Player) sender;
+                    new MainMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
+                } else {
+                    sender.sendMessage(ChatColor.RED + "This command can only be used by players.");
+                }
+                return true;
             default:
                 sender.sendMessage(ChatColor.RED + "Unknown subcommand. Use /buffeditems for help.");
                 return true;
@@ -64,6 +77,9 @@ public class Commands implements CommandExecutor {
         }
         if (sender.hasPermission("buffeditems.command.list")) {
             sender.sendMessage(ChatColor.GOLD + "/bi list");
+        }
+        if (sender.hasPermission("buffeditems.command.menu")) {
+            sender.sendMessage(ChatColor.GOLD + "/bi menu");
         }
     }
 

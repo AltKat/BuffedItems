@@ -4,15 +4,19 @@ import io.github.altkat.BuffedItems.Commands.Commands;
 import io.github.altkat.BuffedItems.Commands.TabCompleterHandler;
 import io.github.altkat.BuffedItems.Handlers.ConfigUpdater;
 import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
+import io.github.altkat.BuffedItems.Listeners.MenuListener;
 import io.github.altkat.BuffedItems.Listeners.PlayerQuitListener;
 import io.github.altkat.BuffedItems.Managers.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.Managers.EffectManager;
 import io.github.altkat.BuffedItems.Managers.ItemManager;
+import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public final class BuffedItems extends JavaPlugin {
 
@@ -20,6 +24,7 @@ public final class BuffedItems extends JavaPlugin {
     private EffectManager effectManager;
     private EffectApplicatorTask effectApplicatorTask;
     private ActiveAttributeManager activeAttributeManager;
+    private static final HashMap<Player, PlayerMenuUtility> playerMenuUtilityMap = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -69,12 +74,24 @@ public final class BuffedItems extends JavaPlugin {
         this.getCommand("buffeditems").setExecutor(new Commands(this));
         this.getCommand("buffeditems").setTabCompleter(new TabCompleterHandler(this));
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
+        getServer().getPluginManager().registerEvents(new MenuListener(), this);
     }
 
     private void startEffectTask() {
         effectApplicatorTask = new EffectApplicatorTask(this);
         effectApplicatorTask.runTaskTimer(this, 0L, 20L);
         getLogger().info("Effect applicator task has been started.");
+    }
+
+    public static PlayerMenuUtility getPlayerMenuUtility(Player p) {
+        PlayerMenuUtility playerMenuUtility;
+        if (!(playerMenuUtilityMap.containsKey(p))) {
+            playerMenuUtility = new PlayerMenuUtility(p);
+            playerMenuUtilityMap.put(p, playerMenuUtility);
+            return playerMenuUtility;
+        } else {
+            return playerMenuUtilityMap.get(p);
+        }
     }
 
     public EffectManager getEffectManager() {
