@@ -33,11 +33,11 @@ public final class BuffedItems extends JavaPlugin {
         registerListenersAndCommands();
         startEffectTask();
 
-        final int SPIGOT_RESOURCE_ID = 999999;
+        final int SPIGOT_RESOURCE_ID = 129550;
         new UpdateChecker(this, SPIGOT_RESOURCE_ID).getVersion(newVersion -> {
             if (UpdateChecker.isNewerVersion(this.getDescription().getVersion(), newVersion)) {
                 getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §eA new update is available! Version: " + newVersion);
-                getLogger().warning("Download it from: https://www.spigotmc.org/resources/buffed-items.999999/");
+                getLogger().warning("Download it from: https://www.spigotmc.org/resources/buffeditems.129550/");
             } else {
                 getServer().getConsoleSender().sendMessage("§f[BuffedItems] You are using the latest version. (" + this.getDescription().getVersion() + ")");
             }
