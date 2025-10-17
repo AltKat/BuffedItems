@@ -28,8 +28,10 @@ public class AttributeOperationSelectorMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
-        if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new AttributeSelectorMenu(playerMenuUtility, plugin).open();
+        if (e.getCurrentItem().getType() == Material.BARRIER || e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) {
+            if (e.getCurrentItem().getType() == Material.BARRIER) {
+                new AttributeSelectorMenu(playerMenuUtility, plugin).open();
+            }
             return;
         }
 
