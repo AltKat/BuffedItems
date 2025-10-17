@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.BuffedItemEffect;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffectType;
 
@@ -34,7 +35,8 @@ public class ItemManager {
 
             String displayName = itemSection.getString("display_name", "Default Name");
             List<String> lore = itemSection.getStringList("lore");
-            Material material = Material.matchMaterial(itemSection.getString("material", "STONE"));
+            String materialName = itemSection.getString("material", "STONE");
+            Material material = Material.matchMaterial(materialName);
             boolean glow = itemSection.getBoolean("glow", false);
             String permission = itemSection.getString("permission");
 
@@ -42,50 +44,72 @@ public class ItemManager {
                 permission = null;
             }
 
+            BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, new HashMap<>(), permission);
+
+            if (material == null) {
+                String errorMsg = "Invalid Material: '" + materialName + "'";
+                buffedItem.addErrorMessage("§c" + errorMsg);
+                plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                buffedItem.setMaterial(Material.BARRIER);
+            }
+
             Map<String, BuffedItemEffect> effects = new HashMap<>();
             ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
             if (effectsSection != null) {
                 for (String slot : effectsSection.getKeys(false)) {
-                    Map<PotionEffectType, Integer> potionEffects = new HashMap<>();
                     ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
-                    if(slotSection == null) continue;
+                    if (slotSection == null) continue;
+
+                    Map<PotionEffectType, Integer> potionEffects = new HashMap<>();
+                    List<String> attributeStrings = new ArrayList<>();
 
                     List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
                     for (String effectString : potionEffectStrings) {
                         try {
                             String[] parts = effectString.split(";");
-                            PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
-                            int level = Integer.parseInt(parts[1]);
-                            if (type != null) {
-                                potionEffects.put(type, level);
+                            String effectName = parts[0].toUpperCase();
+                            PotionEffectType type = PotionEffectType.getByName(effectName);
+                            if (type == null) {
+                                String errorMsg = "Invalid PotionEffect: '" + effectName + "'";
+                                buffedItem.addErrorMessage("§c" + errorMsg);
+                                plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                                continue;
                             }
+                            int level = Integer.parseInt(parts[1]);
+                            potionEffects.put(type, level);
                         } catch (Exception e) {
-                            plugin.getLogger().warning("Invalid potion effect format for item '" + itemId + "': " + effectString);
+                            buffedItem.addErrorMessage("§cCorrupt PotionEffect format: §e'" + effectString + "'");
                         }
                     }
-                    List<String> attributeStrings = slotSection.getStringList("attributes");
 
-                    for (String attrString : attributeStrings) {
+                    List<String> originalAttributeStrings = slotSection.getStringList("attributes");
+                    for (String attrString : originalAttributeStrings) {
                         try {
                             String[] parts = attrString.split(";");
                             String attributeName = parts[0].toUpperCase();
+                            Attribute.valueOf(attributeName);
+                            attributeStrings.add(attrString);
+
                             UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attributeName).getBytes());
                             managedAttributeUUIDs.add(modifierUUID);
-                        } catch (Exception ignored) {
+                        } catch (IllegalArgumentException e) {
+                            String errorMsg = "Invalid Attribute: '" + attrString.split(";")[0] + "'";
+                            buffedItem.addErrorMessage("§c" + errorMsg);
+                            plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                        } catch (Exception e) {
+                            buffedItem.addErrorMessage("§cCorrupt Attribute format: §e'" + attrString + "'");
                         }
                     }
-
                     effects.put(slot.toUpperCase(), new BuffedItemEffect(potionEffects, attributeStrings));
                 }
             }
 
-            if (material == null) {
-                plugin.getLogger().warning("Invalid material for item '" + itemId + "'. Skipping.");
-                continue;
+            BuffedItem finalBuffedItem = new BuffedItem(itemId, displayName, lore, buffedItem.getMaterial(), glow, effects, permission);
+            if (!buffedItem.isValid()) {
+                buffedItem.getErrorMessages().forEach(finalBuffedItem::addErrorMessage);
             }
 
-            BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, effects, permission);
-            buffedItems.put(itemId, buffedItem);
+            buffedItems.put(itemId, finalBuffedItem);
         }
         plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config.");
     }

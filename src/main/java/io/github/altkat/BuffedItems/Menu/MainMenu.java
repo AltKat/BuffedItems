@@ -44,10 +44,23 @@ public class MainMenu extends PaginatedMenu {
     public void handleMenu(InventoryClickEvent e) {
         Player p = (Player) e.getWhoClicked();
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
+        ItemStack clickedItem = e.getCurrentItem();
+
+        if (clickedItem == null) return;
+
+        if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING)) {
+            String itemId = clickedItem.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
+            playerMenuUtility.setItemToEditId(itemId);
+
+            if (e.isLeftClick()) {
+                new ItemEditorMenu(playerMenuUtility, plugin).open();
+            } else if (e.isRightClick()) {
+                new ConfirmationMenu(playerMenuUtility, plugin, itemId).open();
+            }
+            return;
+        }
 
         if (handlePageChange(e, items.size())) return;
-
-        if (e.getCurrentItem() == null) return;
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
@@ -109,20 +122,33 @@ public class MainMenu extends PaginatedMenu {
                 if (index >= items.size()) break;
 
                 BuffedItem currentItem = items.get(index);
-                ItemStack itemStack = new ItemBuilder(currentItem, plugin).build();
+                ItemStack itemStack;
 
+                if (currentItem.isValid()) {
+                    itemStack = new ItemBuilder(currentItem, plugin).build();
+                    ItemMeta meta = itemStack.getItemMeta();
+                    List<String> newLore = (meta.getLore() != null) ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+                    newLore.add("");
+                    newLore.add("§eLeft-Click to Edit");
+                    newLore.add("§cRight-Click to Delete");
+                    meta.setLore(newLore);
+                    itemStack.setItemMeta(meta);
+                } else {
+                    itemStack = new ItemStack(Material.BARRIER);
+                    ItemMeta meta = itemStack.getItemMeta();
+                    meta.setDisplayName("§c§lERROR: " + currentItem.getId());
+                    List<String> errorLore = new ArrayList<>();
+                    errorLore.add("§7This item has configuration errors.");
+                    errorLore.add("");
+                    errorLore.addAll(currentItem.getErrorMessages());
+                    errorLore.add("");
+                    errorLore.add("§eLeft-Click to Edit and fix the errors.");
+                    meta.setLore(errorLore);
 
-                ItemMeta meta = itemStack.getItemMeta();
-
-                List<String> currentLore = meta.getLore();
-                List<String> newLore = (currentLore != null) ? new ArrayList<>(currentLore) : new ArrayList<>();
-
-                newLore.add("");
-                newLore.add("§eLeft-Click to Edit");
-                newLore.add("§cRight-Click to Delete");
-                meta.setLore(newLore);
-                itemStack.setItemMeta(meta);
-
+                    NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
+                    meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, currentItem.getId());
+                    itemStack.setItemMeta(meta);
+                }
                 inventory.addItem(itemStack);
             }
         }

@@ -2,7 +2,6 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -30,40 +29,43 @@ public class AttributeListMenu extends Menu {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
+
+        Player p = (Player) e.getWhoClicked();
         String itemId = playerMenuUtility.getItemToEditId();
         String targetSlot = playerMenuUtility.getTargetSlot();
-        Player p = (Player) e.getWhoClicked();
+        Material clickedType = e.getCurrentItem().getType();
+        int clickedSlot = e.getSlot();
 
-        switch (e.getCurrentItem().getType()) {
-            case BARRIER:
-                new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
-                break;
-            case ANVIL:
-                new AttributeSelectorMenu(playerMenuUtility, plugin).open();
-                break;
-            case IRON_SWORD:
-                String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
-                List<String> attributes = plugin.getConfig().getStringList(configPath);
-                int clickedSlot = e.getSlot();
+        if (clickedType == Material.ANVIL && clickedSlot == 49) {
+            new AttributeSelectorMenu(playerMenuUtility, plugin).open();
+            return;
+        }
 
-                if (clickedSlot >= attributes.size()) return;
+        if (clickedType == Material.BARRIER && e.getSlot() == getSlots() - 1) {
+            new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
+            return;
+        }
 
-                String attributeString = attributes.get(clickedSlot);
-                String attributeName = attributeString.split(";")[0];
+        if (clickedSlot < 45) {
+            String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
+            List<String> attributes = plugin.getConfig().getStringList(configPath);
 
-                if (e.isRightClick()) {
-                    attributes.remove(clickedSlot);
-                    ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
-                    p.sendMessage("§aAttribute '" + attributeName + "' has been removed from slot " + targetSlot + ".");
-                    this.open();
-                } else if (e.isLeftClick()) {
-                    playerMenuUtility.setWaitingForChatInput(true);
-                    playerMenuUtility.setEditIndex(clickedSlot);
-                    playerMenuUtility.setChatInputPath("attributes.edit");
-                    p.closeInventory();
-                    p.sendMessage("§aPlease type the new amount for '" + attributeName + "' in chat (e.g., 2.0, -1.5, 0.1).");
-                }
-                break;
+            if (clickedSlot >= attributes.size()) return;
+
+            if (e.isRightClick()) {
+                String removedInfo = attributes.get(clickedSlot);
+                attributes.remove(clickedSlot);
+                ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
+                p.sendMessage("§aEntry removed: §e" + removedInfo);
+                this.open();
+            }
+            else if (e.isLeftClick() && clickedType == Material.IRON_SWORD) {
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setEditIndex(clickedSlot);
+                playerMenuUtility.setChatInputPath("attributes.edit");
+                p.closeInventory();
+                p.sendMessage("§aPlease type the new amount for the attribute in chat.");
+            }
         }
     }
 
@@ -80,8 +82,14 @@ public class AttributeListMenu extends Menu {
                 if (i >= getSlots() - 9) break;
                 String attrString = attributesConfig.get(i);
                 String[] parts = attrString.split(";");
-                inventory.setItem(i, makeItem(Material.IRON_SWORD, "§b" + parts[0],
-                        "§7Operation: §e" + parts[1], "§7Amount: §e" + parts[2], "", "§aLeft-Click to Edit Amount", "§cRight-Click to Delete"));
+
+                if (parts.length == 3) {
+                    inventory.setItem(i, makeItem(Material.IRON_SWORD, "§b" + parts[0],
+                            "§7Operation: §e" + parts[1], "§7Amount: §e" + parts[2], "", "§aLeft-Click to Edit Amount", "§cRight-Click to Delete"));
+                } else {
+                    inventory.setItem(i, makeItem(Material.BARRIER, "§c§lCORRUPT ENTRY",
+                            "§7This line is malformed in config.yml:", "§e" + attrString, "", "§cRight-Click to Delete this entry."));
+                }
             }
         }
         setFillerGlass();
