@@ -13,6 +13,7 @@ public class PlayerMenuUtility {
     private boolean waitingForChatInput = false;
     private String chatInputPath;
     private String attributeToEdit;
+    private boolean isNavigating = false;
 
 
     public PlayerMenuUtility(Player owner) {
@@ -69,5 +70,13 @@ public class PlayerMenuUtility {
 
     public void setEditIndex(int editIndex) {
         this.editIndex = editIndex;
+    }
+
+    public boolean isNavigating() {
+        return isNavigating;
+    }
+
+    public void setNavigating(boolean navigating) {
+        isNavigating = navigating;
     }
 }

@@ -33,6 +33,8 @@ public class AttributeSelectorMenu extends PaginatedMenu {
 
     @Override
     public void handleMenu(InventoryClickEvent e) {
+        playerMenuUtility.setNavigating(true);
+
         if (handlePageChange(e, attributes.size())) return;
 
         if (e.getCurrentItem().getType() == Material.BARRIER) {

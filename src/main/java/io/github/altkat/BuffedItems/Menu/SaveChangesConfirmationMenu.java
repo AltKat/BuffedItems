@@ -6,20 +6,18 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
-public class ConfirmationMenu extends Menu {
+public class SaveChangesConfirmationMenu extends Menu {
 
     private final BuffedItems plugin;
-    private final String itemToDeleteId;
 
-    public ConfirmationMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin, String itemToDeleteId) {
+    public SaveChangesConfirmationMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
-        this.itemToDeleteId = itemToDeleteId;
     }
 
     @Override
     public String getMenuName() {
-        return "Delete: " + itemToDeleteId + "?";
+        return "You have unsaved changes!";
     }
 
     @Override
@@ -36,14 +34,13 @@ public class ConfirmationMenu extends Menu {
         playerMenuUtility.setNavigating(true);
 
         switch (e.getCurrentItem().getType()) {
-            case GREEN_WOOL:
-                ConfigManager.setItemValue(itemToDeleteId, null, null);
-                p.sendMessage("§aItem '" + itemToDeleteId + "' has been successfully deleted.");
+            case RED_WOOL:
+                ConfigManager.discardChanges();
+                p.sendMessage("§cUnsaved changes have been discarded.");
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
-            case RED_WOOL:
-                p.sendMessage("§cDeletion cancelled.");
-                new MainMenu(playerMenuUtility, plugin).open();
+            case GREEN_WOOL:
+                new ItemEditorMenu(playerMenuUtility, plugin).open();
                 break;
             default:
                 playerMenuUtility.setNavigating(false);
@@ -53,8 +50,8 @@ public class ConfirmationMenu extends Menu {
 
     @Override
     public void setMenuItems() {
-        inventory.setItem(11, makeItem(Material.GREEN_WOOL, "§aConfirm Deletion", "§7This action cannot be undone."));
-        inventory.setItem(15, makeItem(Material.RED_WOOL, "§cCancel", "§7Return to the main menu."));
+        inventory.setItem(11, makeItem(Material.RED_WOOL, "§cDiscard Changes & Exit", "§7All changes made will be lost."));
+        inventory.setItem(15, makeItem(Material.GREEN_WOOL, "§aCancel", "§7Return to the item editor."));
         setFillerGlass();
     }
 }

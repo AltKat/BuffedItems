@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import org.bukkit.ChatColor;
@@ -48,6 +49,8 @@ public class MainMenu extends PaginatedMenu {
 
         if (clickedItem == null) return;
 
+        playerMenuUtility.setNavigating(true);
+
         if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING)) {
             String itemId = clickedItem.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
             playerMenuUtility.setItemToEditId(itemId);
@@ -64,6 +67,7 @@ public class MainMenu extends PaginatedMenu {
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
+                ConfigManager.saveConfigIfDirty();
                 p.closeInventory();
                 break;
             case ANVIL:
@@ -102,6 +106,7 @@ public class MainMenu extends PaginatedMenu {
                         new ConfirmationMenu(playerMenuUtility, plugin, itemId).open();
                     }
                 }
+                playerMenuUtility.setNavigating(false);
                 break;
         }
     }

@@ -2,7 +2,6 @@ package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import org.bukkit.configuration.file.FileConfiguration;
-
 import java.io.File;
 import java.util.Collections;
 
@@ -10,9 +9,26 @@ public class ConfigManager {
 
     private static BuffedItems plugin;
     public static final String NO_PERMISSION = "NONE";
+    private static boolean needsSave = false;
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
+    }
+
+    private static void markAsNeedsSave() {
+        needsSave = true;
+    }
+
+    public static boolean isDirty() {
+        return needsSave;
+    }
+
+    public static void discardChanges() {
+        if (isDirty()) {
+            plugin.reloadConfig();
+            plugin.getItemManager().loadItems();
+            needsSave = false;
+        }
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
@@ -24,7 +40,8 @@ public class ConfigManager {
             plugin.getConfig().set(fullPath, value);
         }
 
-        saveConfiguration();
+        markAsNeedsSave();
+        plugin.getItemManager().loadItems();
     }
 
     public static boolean createNewItem(String itemId) {
@@ -35,19 +52,23 @@ public class ConfigManager {
         config.set("items." + itemId + ".display_name", "&f" + itemId);
         config.set("items." + itemId + ".material", "STONE");
         config.set("items." + itemId + ".lore", Collections.singletonList("&7A new BuffedItem."));
-        saveConfiguration();
+        markAsNeedsSave();
+        plugin.getItemManager().loadItems();
         return true;
     }
 
-    private static void saveConfiguration() {
+    public static void saveConfigIfDirty() {
+        if (!needsSave) {
+            return;
+        }
         try {
+            plugin.getLogger().info("Saving configuration changes to config.yml...");
             plugin.saveConfig();
+            needsSave = false;
         } catch (Exception e) {
             plugin.getLogger().severe("Could not save config.yml!");
             e.printStackTrace();
         }
-        plugin.reloadConfig();
-        plugin.getItemManager().loadItems();
     }
 
     public static void reloadConfig() {

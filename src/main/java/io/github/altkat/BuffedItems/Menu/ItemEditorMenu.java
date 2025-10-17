@@ -30,13 +30,22 @@ public class ItemEditorMenu extends Menu {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         Player p = (Player) e.getWhoClicked();
-        BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
+        playerMenuUtility.setNavigating(true);
 
         if (e.getCurrentItem() == null) return;
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
-                new MainMenu(playerMenuUtility, plugin).open();
+                if (ConfigManager.isDirty()) {
+                    new SaveChangesConfirmationMenu(playerMenuUtility, plugin).open();
+                } else {
+                    new MainMenu(playerMenuUtility, plugin).open();
+                }
+                break;
+            case EMERALD:
+                ConfigManager.saveConfigIfDirty();
+                p.sendMessage("§aChanges have been saved successfully!");
+                this.open();
                 break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);
@@ -55,6 +64,7 @@ public class ItemEditorMenu extends Menu {
                 p.sendMessage("§7(Type 'none' or 'remove' to clear the permission)");
                 break;
             case BEACON:
+                BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
                 ConfigManager.setItemValue(item.getId(), "glow", !item.hasGlow());
                 this.open();
                 break;
@@ -66,6 +76,9 @@ public class ItemEditorMenu extends Menu {
                 break;
             case IRON_SWORD:
                 new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
+                break;
+            default:
+                playerMenuUtility.setNavigating(false);
                 break;
         }
     }
@@ -79,27 +92,19 @@ public class ItemEditorMenu extends Menu {
             return;
         }
 
-        inventory.setItem(10, makeItem(Material.NAME_TAG, "§aChange Display Name",
-                "§7Current: " + item.getDisplayName()));
+        inventory.setItem(10, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + item.getDisplayName()));
+        inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
+        inventory.setItem(14, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
+        inventory.setItem(16, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
+        inventory.setItem(28, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
+        inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
+        inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
 
-        inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material",
-                "§7Current: §e" + item.getMaterial().name()));
-
-        inventory.setItem(14, makeItem(Material.BOOK, "§aEdit Lore",
-                "§7Click to modify the item's lore."));
-
-        inventory.setItem(16, makeItem(Material.PAPER, "§aSet Permission",
-                "§7Current: §e" + item.getPermission().orElse("§cNone")));
-
-        inventory.setItem(28, makeItem(Material.BEACON, "§aToggle Glow",
-                "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
-
-        inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects",
-                "§7Click to manage potion effects for a specific slot."));
-
-        inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes",
-                "§7Click to manage attributes for a specific slot."));
-
+        if (ConfigManager.isDirty()) {
+            inventory.setItem(40, makeItem(Material.EMERALD, "§a§lSave Changes", "§7Click to write all pending changes", "§7to the config.yml file."));
+        } else {
+            inventory.setItem(40, makeItem(Material.GRAY_DYE, "§7No Changes to Save", "§8Make an edit to enable saving."));
+        }
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
         setFillerGlass();
