@@ -66,7 +66,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         checkItem(inventory.getChestplate(), "CHESTPLATE", activeItems);
         checkItem(inventory.getLeggings(), "LEGGINGS", activeItems);
         checkItem(inventory.getBoots(), "BOOTS", activeItems);
-        for (ItemStack item : inventory.getContents()) {
+        for (ItemStack item : inventory.getStorageContents()) {
             checkItem(item, "INVENTORY", activeItems);
         }
         return activeItems;
