@@ -83,12 +83,36 @@ public class AttributeListMenu extends Menu {
                 String attrString = attributesConfig.get(i);
                 String[] parts = attrString.split(";");
 
+                boolean isValid = false;
                 if (parts.length == 3) {
+                    try {
+                        org.bukkit.attribute.Attribute.valueOf(parts[0].toUpperCase());
+                        org.bukkit.attribute.AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
+                        Double.parseDouble(parts[2]);
+                        isValid = true;
+                    } catch (IllegalArgumentException | NullPointerException e) {
+                        isValid = false;
+                    }
+                }
+
+                if (isValid) {
                     inventory.setItem(i, makeItem(Material.IRON_SWORD, "§b" + parts[0],
                             "§7Operation: §e" + parts[1], "§7Amount: §e" + parts[2], "", "§aLeft-Click to Edit Amount", "§cRight-Click to Delete"));
                 } else {
                     inventory.setItem(i, makeItem(Material.BARRIER, "§c§lCORRUPT ENTRY",
-                            "§7This line is malformed in config.yml:", "§e" + attrString, "", "§cRight-Click to Delete this entry."));
+                            "§7This line is malformed in config.yml:",
+                            "§e" + attrString,
+                            "",
+                            "§cPossible Errors:",
+                            "§7- Using ':' instead of the correct ';'.",
+                            "§7- Missing a value (e.g., 'ATTRIBUTE;OPERATION').",
+                            "§7- A typo in an Attribute or Operation name.",
+                            "§7- Amount is not a number (use '.' for decimals, not ',').",
+                            "§7- Accidental spaces before/after values.",
+                            "",
+                            "§aCorrect Format: §eGENERIC_MAX_HEALTH;ADD_NUMBER;4.0",
+                            "",
+                            "§cRight-Click to Delete this entry."));
                 }
             }
         }
