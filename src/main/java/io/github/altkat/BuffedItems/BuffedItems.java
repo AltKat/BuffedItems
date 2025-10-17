@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.Commands.Commands;
 import io.github.altkat.BuffedItems.Commands.TabCompleterHandler;
 import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
 import io.github.altkat.BuffedItems.Listeners.ChatListener;
+import io.github.altkat.BuffedItems.Listeners.ItemConsumeListener;
 import io.github.altkat.BuffedItems.Listeners.MenuListener;
 import io.github.altkat.BuffedItems.Listeners.PlayerQuitListener;
 import io.github.altkat.BuffedItems.Managers.*;
@@ -66,6 +67,7 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
+        getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
     }
 
     private void startEffectTask() {
