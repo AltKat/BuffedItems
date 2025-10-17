@@ -38,7 +38,7 @@ public final class BuffedItems extends JavaPlugin {
                 getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §eA new update is available! Version: " + newVersion);
                 getLogger().warning("Download it from: https://www.spigotmc.org/resources/buffeditems.129550/");
             } else {
-                getServer().getConsoleSender().sendMessage("§f[BuffedItems] You are using the latest version. (" + this.getDescription().getVersion() + ")");
+                getLogger().info("You are using the latest version. (" + this.getDescription().getVersion() + ")");
             }
         });
 
