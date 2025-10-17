@@ -118,8 +118,15 @@ public class Commands implements CommandExecutor {
     }
 
     private boolean handleReloadCommand(CommandSender sender) {
+        boolean hadUnsavedChanges = ConfigManager.isDirty();
+        ConfigManager.saveConfigIfDirty();
         ConfigManager.reloadConfig();
-        sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded.");
+
+        if (hadUnsavedChanges) {
+            sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been saved and reloaded.");
+        } else {
+            sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded.");
+        }
         return true;
     }
 

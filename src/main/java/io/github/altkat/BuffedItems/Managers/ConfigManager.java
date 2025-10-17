@@ -26,7 +26,7 @@ public class ConfigManager {
     public static void discardChanges() {
         if (isDirty()) {
             plugin.reloadConfig();
-            plugin.getItemManager().loadItems();
+            plugin.getItemManager().loadItems(true);
             needsSave = false;
         }
     }
@@ -41,7 +41,7 @@ public class ConfigManager {
         }
 
         markAsNeedsSave();
-        plugin.getItemManager().loadItems();
+        plugin.getItemManager().loadItems(true);
     }
 
     public static boolean createNewItem(String itemId) {
@@ -53,7 +53,7 @@ public class ConfigManager {
         config.set("items." + itemId + ".material", "STONE");
         config.set("items." + itemId + ".lore", Collections.singletonList("&7A new BuffedItem."));
         markAsNeedsSave();
-        plugin.getItemManager().loadItems();
+        plugin.getItemManager().loadItems(true);
         return true;
     }
 
@@ -78,6 +78,6 @@ public class ConfigManager {
             plugin.saveConfig();
         }
         plugin.reloadConfig();
-        plugin.getItemManager().loadItems();
+        plugin.getItemManager().loadItems(false);
     }
 }

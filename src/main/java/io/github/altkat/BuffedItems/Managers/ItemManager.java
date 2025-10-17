@@ -20,7 +20,7 @@ public class ItemManager {
         this.plugin = plugin;
     }
 
-    public void loadItems() {
+    public void loadItems(boolean silent) {
         buffedItems.clear();
         managedAttributeUUIDs.clear();
         ConfigurationSection itemsSection = plugin.getConfig().getConfigurationSection("items");
@@ -111,7 +111,9 @@ public class ItemManager {
 
             buffedItems.put(itemId, finalBuffedItem);
         }
-        plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config.");
+        if (!silent) {
+            plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config.");
+        }
     }
 
     public BuffedItem getBuffedItem(String itemId) {

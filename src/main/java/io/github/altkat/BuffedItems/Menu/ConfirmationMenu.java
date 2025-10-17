@@ -38,6 +38,7 @@ public class ConfirmationMenu extends Menu {
         switch (e.getCurrentItem().getType()) {
             case GREEN_WOOL:
                 ConfigManager.setItemValue(itemToDeleteId, null, null);
+                ConfigManager.saveConfigIfDirty();
                 p.sendMessage("§aItem '" + itemToDeleteId + "' has been successfully deleted.");
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;

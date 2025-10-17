@@ -55,7 +55,7 @@ public final class BuffedItems extends JavaPlugin {
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
-        itemManager.loadItems();
+        itemManager.loadItems(false);
     }
 
     private void registerListenersAndCommands() {
