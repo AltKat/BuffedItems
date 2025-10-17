@@ -48,11 +48,22 @@ public class EffectManager {
     public void applyAttributeEffects(Player player, String itemId, String slot, List<String> attributes) {
         EquipmentSlot equipmentSlot = getEquipmentSlot(slot);
         for (String attrString : attributes) {
+
+            Attribute attribute;
+            AttributeModifier.Operation operation;
+            double amount;
+
             try {
                 String[] parts = attrString.split(";");
-                Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
-                AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
-                double amount = Double.parseDouble(parts[2]);
+                attribute = Attribute.valueOf(parts[0].toUpperCase());
+                operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
+                amount = Double.parseDouble(parts[2]);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Invalid attribute format for item '" + itemId + "': " + attrString);
+                continue;
+            }
+
+            try {
                 AttributeInstance instance = player.getAttribute(attribute);
                 if (instance == null) continue;
 
@@ -61,11 +72,25 @@ public class EffectManager {
                 AttributeModifier modifier = new AttributeModifier(modifierUUID, modifierName, amount, operation, equipmentSlot);
 
                 plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), modifier);
-                if (!instance.getModifiers().contains(modifier)) {
+
+                boolean alreadyApplied = false;
+                for (AttributeModifier existingModifier : instance.getModifiers()) {
+                    if (existingModifier.getUniqueId().equals(modifierUUID)) {
+                        alreadyApplied = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyApplied) {
                     instance.addModifier(modifier);
                 }
+
+            } catch (IllegalArgumentException e) {
+                if (!e.getMessage().contains("Modifier is already applied")) {
+                    plugin.getLogger().warning("An unexpected error occurred while applying attribute '" + attribute.name() + "' for item '" + itemId + "': " + e.getMessage());
+                }
             } catch (Exception e) {
-                plugin.getLogger().warning("Invalid attribute format for item '" + itemId + "': " + attrString);
+                plugin.getLogger().warning("An unexpected error occurred while applying attribute '" + attribute.name() + "' for item '" + itemId + "': " + e.getMessage());
             }
         }
     }
