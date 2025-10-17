@@ -29,6 +29,7 @@ public final class BuffedItems extends JavaPlugin {
         new Metrics(this, 27592);
 
         saveDefaultConfig();
+        getConfig().options().copyHeader(true);
 
         initializeManagers();
         registerListenersAndCommands();

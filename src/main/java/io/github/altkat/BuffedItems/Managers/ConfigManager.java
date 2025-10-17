@@ -3,7 +3,7 @@ package io.github.altkat.BuffedItems.Managers;
 import io.github.altkat.BuffedItems.BuffedItems;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.Collections;
 
 public class ConfigManager {
@@ -51,6 +51,11 @@ public class ConfigManager {
     }
 
     public static void reloadConfig() {
+        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        if (!configFile.exists()) {
+            plugin.getLogger().warning("config.yml not found! Attempting to recover from memory...");
+            plugin.saveConfig();
+        }
         plugin.reloadConfig();
         plugin.getItemManager().loadItems();
     }

@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Commands;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.Menu.MainMenu;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
@@ -117,8 +118,7 @@ public class Commands implements CommandExecutor {
     }
 
     private boolean handleReloadCommand(CommandSender sender) {
-        plugin.reloadConfig();
-        plugin.getItemManager().loadItems();
+        ConfigManager.reloadConfig();
         sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded.");
         return true;
     }
