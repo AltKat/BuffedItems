@@ -99,6 +99,10 @@ public class ItemEditorMenu extends Menu {
                 playerMenuUtility.setNavigating(true);
                 new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
                 break;
+            case REDSTONE_TORCH:
+                playerMenuUtility.setNavigating(true);
+                new ItemFlagsMenu(playerMenuUtility, plugin).open();
+                break;
             default:
                 playerMenuUtility.setNavigating(false);
                 break;
@@ -123,6 +127,7 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
         inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
         inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current (even unsaved) changes.", "§cThis does not save the item."));
+        inventory.setItem(34, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
         if (ConfigManager.isDirty()) {
             inventory.setItem(43, makeItem(Material.EMERALD, "§a§lSave Changes", "§7Click to write all pending changes", "§7to the config.yml file."));
         } else {

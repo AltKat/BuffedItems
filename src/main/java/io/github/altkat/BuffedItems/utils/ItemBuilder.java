@@ -37,9 +37,32 @@ public class ItemBuilder {
                 .collect(Collectors.toList());
         meta.setLore(coloredLore);
 
+        if (buffedItem.getFlag("UNBREAKABLE")) {
+            meta.setUnbreakable(true);
+        }
+
         if (buffedItem.hasGlow()) {
             meta.addEnchant(Enchantment.LUCK, 1, false);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        if (buffedItem.getFlag("HIDE_ENCHANTS")) {
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+        if (buffedItem.getFlag("HIDE_ATTRIBUTES")) {
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        }
+        if (buffedItem.getFlag("HIDE_UNBREAKABLE")) {
+            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+        }
+        if (buffedItem.getFlag("HIDE_DESTROYS")) {
+            meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+        }
+        if (buffedItem.getFlag("HIDE_PLACED_ON")) {
+            meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
+        }
+        if (buffedItem.getFlag("HIDE_POTION_EFFECTS")) {
+            meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
         }
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");

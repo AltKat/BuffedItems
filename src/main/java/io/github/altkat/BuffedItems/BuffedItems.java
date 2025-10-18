@@ -9,9 +9,13 @@ import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public final class BuffedItems extends JavaPlugin {
 
@@ -19,7 +23,8 @@ public final class BuffedItems extends JavaPlugin {
     private EffectManager effectManager;
     private ActiveAttributeManager activeAttributeManager;
     private EffectApplicatorTask effectApplicatorTask;
-    private static final HashMap<Player, PlayerMenuUtility> playerMenuUtilityMap = new HashMap<>();
+    private static final HashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new HashMap<>();
+    private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -47,6 +52,7 @@ public final class BuffedItems extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        ConfigManager.saveConfigIfDirty();
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §cBuffedItems has been disabled!");
     }
 
@@ -67,6 +73,7 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
         getServer().getPluginManager().registerEvents(new InventoryCloseListener(this), this);
+        getServer().getPluginManager().registerEvents(new ItemProtectionListener(this), this);
     }
 
     private void startEffectTask() {
@@ -75,11 +82,26 @@ public final class BuffedItems extends JavaPlugin {
     }
 
     public static PlayerMenuUtility getPlayerMenuUtility(Player p) {
-        return playerMenuUtilityMap.computeIfAbsent(p, PlayerMenuUtility::new);
+        PlayerMenuUtility playerMenuUtility;
+        UUID playerUUID = p.getUniqueId();
+
+        if (playerMenuUtilityMap.containsKey(playerUUID)) {
+            return playerMenuUtilityMap.get(playerUUID);
+        } else {
+            playerMenuUtility = new PlayerMenuUtility(p);
+            playerMenuUtilityMap.put(playerUUID, playerMenuUtility);
+            return playerMenuUtility;
+        }
     }
 
     public ItemManager getItemManager() { return itemManager; }
     public EffectManager getEffectManager() { return effectManager; }
     public ActiveAttributeManager getActiveAttributeManager() { return activeAttributeManager; }
     public EffectApplicatorTask getEffectApplicatorTask() { return effectApplicatorTask; }
+    public Map<UUID, List<ItemStack>> getDeathKeptItems() {
+        return deathKeptItems;
+    }
+    public static void removePlayerMenuUtility(UUID uuid) {
+        playerMenuUtilityMap.remove(uuid);
+    }
 }

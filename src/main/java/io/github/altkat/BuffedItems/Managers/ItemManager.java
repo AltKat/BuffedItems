@@ -44,6 +44,14 @@ public class ItemManager {
                 permission = null;
             }
 
+            Map<String, Boolean> flags = new HashMap<>();
+            ConfigurationSection flagsSection = itemSection.getConfigurationSection("flags");
+            if (flagsSection != null) {
+                for (String flagKey : flagsSection.getKeys(false)) {
+                    flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
+                }
+            }
+
             BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, new HashMap<>(), permission);
 
             if (material == null) {
@@ -104,7 +112,7 @@ public class ItemManager {
                 }
             }
 
-            BuffedItem finalBuffedItem = new BuffedItem(itemId, displayName, lore, buffedItem.getMaterial(), glow, effects, permission);
+            BuffedItem finalBuffedItem = new BuffedItem(itemId, displayName, lore, buffedItem.getMaterial(), glow, effects, permission, flags);
             if (!buffedItem.isValid()) {
                 buffedItem.getErrorMessages().forEach(finalBuffedItem::addErrorMessage);
             }

@@ -35,7 +35,8 @@ public class InventoryCloseListener implements Listener {
                 e.getInventory().getHolder() instanceof LoreEditorMenu ||
                 e.getInventory().getHolder() instanceof AttributeListMenu ||
                 e.getInventory().getHolder() instanceof PotionEffectListMenu ||
-                e.getInventory().getHolder() instanceof SlotSelectionMenu)
+                e.getInventory().getHolder() instanceof SlotSelectionMenu ||
+                e.getInventory().getHolder() instanceof ItemFlagsMenu)
         {
             if (ConfigManager.isDirty()) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {

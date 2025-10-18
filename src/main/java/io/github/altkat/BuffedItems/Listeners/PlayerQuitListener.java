@@ -19,5 +19,7 @@ public class PlayerQuitListener implements Listener {
         Player player = event.getPlayer();
         plugin.getEffectApplicatorTask().playerQuit(player);
         plugin.getActiveAttributeManager().clearPlayer(player.getUniqueId());
+        plugin.getDeathKeptItems().remove(player.getUniqueId());
+        BuffedItems.removePlayerMenuUtility(player.getUniqueId());
     }
 }

@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Listeners;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,7 +27,17 @@ public class ItemConsumeListener implements Listener {
             return;
         }
 
-        if (consumedItem.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING)) {
+        String itemId = consumedItem.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
+        if (itemId == null) {
+            return;
+        }
+
+        BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
+        if (buffedItem == null) {
+            return;
+        }
+
+        if (buffedItem.getFlag("PREVENT_CONSUME")) {
             e.setCancelled(true);
         }
     }

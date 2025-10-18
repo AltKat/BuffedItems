@@ -34,7 +34,30 @@
 #     - Attribute List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/attribute/Attribute.html
 #     - OPERATIONS:
 #       - ADD_NUMBER: Adds a flat value (e.g., GENERIC_MAX_HEALTH;ADD_NUMBER;2.0 adds 1 heart).
+#       - ADD_SCALAR: Adds a percentage of the base value (less common).
 #       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
+#
+# flags: (Optional) This section controls item behaviors and appearances.
+#   Set any flag to 'true' or 'false' to override its default value.
+#   Available Flags (with their NEW default values):
+#     - UNBREAKABLE: (Default: false) Prevents durability loss.
+#     - HIDE_ATTRIBUTES: (Default: true) Hides the default attribute text.
+#     - HIDE_ENCHANTS: (Default: true) Hides enchantment text.
+#     - HIDE_UNBREAKABLE: (Default: true) Hides the 'Unbreakable' text.
+#     - HIDE_POTION_EFFECTS: (Default: true) Hides potion/arrow effect text.
+#     - HIDE_DESTROYS: (Default: true) Hides 'Can Destroy:' list (Adventure mode).
+#     - HIDE_PLACED_ON: (Default: true) Hides 'Can Be Placed On:' list (Adventure mode).
+#     - PREVENT_ANVIL_USE: (Default: false) Blocks use in anvils (rename, repair, enchant).
+#     - PREVENT_ENCHANT_TABLE: (Default: false) Blocks use in enchanting tables.
+#     - PREVENT_SMITHING_USE: (Default: false) Blocks use in smithing tables.
+#     - PREVENT_CRAFTING_USE: (Default: true) Blocks use as a crafting ingredient.
+#     - PREVENT_DROP: (Default: false) Blocks dropping the item (Q key/inventory drag).
+#     - PREVENT_CONSUME: (Default: false) Blocks eating or drinking the item.
+#     - PREVENT_PLACEMENT: (Default: true) Blocks placing the item (blocks, boats, armor stands).
+#     - PREVENT_DEATH_DROP: (Default: false) Keeps the item on death.
+#     - PREVENT_INTERACT: (Default: false) Prevents using the item (right-click actions like Flint&Steel, Hoe).
+#   Note: Flags marked with (Default: true) will be active even if not specified in the config.
+#         You only need to add them if you want to explicitly set them to 'false'.
 # -------------------------------------------------------------------------------------------
 
 items:
