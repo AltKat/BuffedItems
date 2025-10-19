@@ -3,8 +3,10 @@ package io.github.altkat.BuffedItems.Managers;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.BuffedItemEffect;
+import io.github.altkat.BuffedItems.utils.ParsedAttribute;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffectType;
 
@@ -84,11 +86,10 @@ public class ItemManager {
                     if (slotSection == null) continue;
 
                     Map<PotionEffectType, Integer> potionEffects = new HashMap<>();
-                    List<String> attributeStrings = new ArrayList<>();
+                    List<ParsedAttribute> parsedAttributes = new ArrayList<>();
 
                     List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
                     ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
-
                     for (String effectString : potionEffectStrings) {
                         try {
                             String[] parts = effectString.split(";");
@@ -114,15 +115,23 @@ public class ItemManager {
                     for (String attrString : originalAttributeStrings) {
                         try {
                             String[] parts = attrString.split(";");
-                            String attributeName = parts[0].toUpperCase();
-                            Attribute.valueOf(attributeName);
-                            attributeStrings.add(attrString);
+                            if (parts.length != 3) {
+                                throw new IllegalArgumentException("Attribute string must have 3 parts separated by ';'. Found: " + attrString);
+                            }
 
-                            UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attributeName).getBytes());
+                            Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
+                            AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
+                            double amount = Double.parseDouble(parts[2]);
+
+                            UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attribute.name()).getBytes());
+
+                            parsedAttributes.add(new ParsedAttribute(attribute, operation, amount, modifierUUID));
+
                             managedAttributeUUIDs.add(modifierUUID);
-                            ConfigManager.sendDebugMessage("[ItemManager] Registered attribute UUID: " + modifierUUID + " for " + attributeName);
+                            ConfigManager.sendDebugMessage("[ItemManager] Pre-parsed and cached attribute UUID: " + modifierUUID + " for " + attribute.name());
+
                         } catch (IllegalArgumentException e) {
-                            String errorMsg = "Invalid Attribute: '" + attrString.split(";")[0] + "'";
+                            String errorMsg = "Invalid Attribute or Operation: '" + attrString + "'. Error: " + e.getMessage();
                             buffedItem.addErrorMessage("§c" + errorMsg);
                             plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
                         } catch (Exception e) {
@@ -130,7 +139,8 @@ public class ItemManager {
                             plugin.getLogger().warning("[Item: " + itemId + "] Corrupt attribute format: " + attrString);
                         }
                     }
-                    effects.put(slot.toUpperCase(), new BuffedItemEffect(potionEffects, attributeStrings));
+
+                    effects.put(slot.toUpperCase(), new BuffedItemEffect(potionEffects, parsedAttributes));
                 }
             }
 
@@ -161,6 +171,12 @@ public class ItemManager {
     public Map<String, BuffedItem> getLoadedItems() {
         return new HashMap<>(buffedItems);
     }
+
+    /**
+     * Gets the set of all attribute UUIDs managed by this plugin.
+     * This is crucial for cleaning up orphaned modifiers on player join.
+     * @return A Set of UUIDs.
+     */
     public Set<UUID> getManagedAttributeUUIDs() {
         return managedAttributeUUIDs;
     }

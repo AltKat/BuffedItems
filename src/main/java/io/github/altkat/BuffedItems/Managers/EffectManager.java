@@ -11,7 +11,6 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
-
 public class EffectManager {
 
     private final BuffedItems plugin;
@@ -22,7 +21,13 @@ public class EffectManager {
         this.plugin = plugin;
     }
 
-    public void applyOrRefreshPotionEffects(Player player, Map<PotionEffectType, Integer> desiredEffects) {
+    /**
+     * Applies or refreshes potion effects on a player based on the desired effects map.
+     * @param player The player to apply effects to.
+     * @param desiredEffects A map of PotionEffectType to the desired level (1-based).
+     * @param debugTick Only log "optimal" or "skipping" messages if true.
+     */
+    public void applyOrRefreshPotionEffects(Player player, Map<PotionEffectType, Integer> desiredEffects, boolean debugTick) {
         for (Map.Entry<PotionEffectType, Integer> entry : desiredEffects.entrySet()) {
             PotionEffectType type = entry.getKey();
             int amplifier = entry.getValue() - 1;
@@ -40,12 +45,21 @@ public class EffectManager {
                 }
                 player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, true));
             } else {
-                ConfigManager.sendDebugMessage("[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");
+                if(debugTick) {
+                    ConfigManager.sendDebugMessage("[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");
+                }
             }
         }
     }
 
-    public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects, Set<PotionEffectType> desiredEffects) {
+    /**
+     * Removes potion effects previously managed by this plugin that are no longer required.
+     * @param player The player to remove effects from.
+     * @param lastAppliedEffects The set of effect types applied in the previous tick.
+     * @param desiredEffects The set of effect types desired in the current tick.
+     * @param debugTick Only log "not removing" messages if true.
+     */
+    public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects, Set<PotionEffectType> desiredEffects, boolean debugTick) {
         Set<PotionEffectType> effectsToRemove = new HashSet<>(lastAppliedEffects);
         effectsToRemove.removeAll(desiredEffects);
 
@@ -54,7 +68,7 @@ public class EffectManager {
             if (currentEffect != null && currentEffect.getDuration() <= EFFECT_DURATION_TICKS) {
                 ConfigManager.sendDebugMessage("[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
                 player.removePotionEffect(type);
-            } else if (currentEffect != null) {
+            } else if (currentEffect != null && debugTick) {
                 ConfigManager.sendDebugMessage("[Potion] Not removing effect " + type.getName() + " from " + player.getName() + " as its duration ("+currentEffect.getDuration()+") suggests it's not managed by BuffedItems.");
             }
         }
@@ -120,7 +134,6 @@ public class EffectManager {
                     plugin.getLogger().severe("  Item: " + itemId + ", Slot: " + slot + ", Attribute String: " + attrString);
                     plugin.getLogger().severe("  Player: " + player.getName());
                     plugin.getLogger().severe("  Error: " + e.getMessage());
-
                     plugin.getLogger().severe("Stack trace for modifier application failure:");
                     for(StackTraceElement element : e.getStackTrace()) {
                         plugin.getLogger().severe("    at " + element.toString());
@@ -130,11 +143,6 @@ public class EffectManager {
         }
     }
 
-    /**
-     * Clears all attribute modifiers tracked by this plugin from a player.
-     * Uses removeModifier(AttributeModifier). Since it returns void, we cannot confirm removal.
-     * @param player The player whose attributes should be cleared.
-     */
     public void clearAllAttributes(Player player) {
         UUID playerUUID = player.getUniqueId();
         ConfigManager.sendDebugMessage("[Attribute] Clearing all tracked attributes for " + player.getName());
@@ -173,15 +181,6 @@ public class EffectManager {
         cleanupOrphanedModifiers(player);
     }
 
-    /**
-     * Removes a specific attribute modifier from a player if it exists and is tracked.
-     * Tries to find the modifier object by UUID first.
-     * Since removeModifier returns void, we cannot confirm removal from instance.
-     * NOTE: This method is currently marked as unused in the IDE screenshot.
-     * @param player The player.
-     * @param attribute The attribute the modifier affects.
-     * @param modifierUUID The UUID of the modifier to remove.
-     */
     public void removeAttributeModifier(Player player, Attribute attribute, UUID modifierUUID) {
         AttributeInstance instance = player.getAttribute(attribute);
         AttributeModifier modifierToRemove = null;
@@ -215,12 +214,6 @@ public class EffectManager {
     }
 
 
-    /**
-     * Checks for and removes any attribute modifiers managed by this plugin
-     * that might still be on the player but are no longer tracked.
-     * Uses removeModifier(AttributeModifier). Since it returns void, we cannot confirm removal.
-     * @param player The player to clean up.
-     */
     private void cleanupOrphanedModifiers(Player player) {
         Set<UUID> managedUUIDs = plugin.getItemManager().getManagedAttributeUUIDs();
         if (managedUUIDs.isEmpty()) return;

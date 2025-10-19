@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.Managers.EffectManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.BuffedItemEffect;
+import io.github.altkat.BuffedItems.utils.ParsedAttribute;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -43,15 +44,16 @@ public class EffectApplicatorTask extends BukkitRunnable {
         boolean debugTick = (tickCount % 20 == 0);
 
         if (debugTick) {
-            ConfigManager.sendDebugMessage("[Task] Running effect applicator (tick: " + tickCount + ", players: " + Bukkit.getOnlinePlayers().size() + ")");
+            ConfigManager.sendDebugMessage("[Task] Running effect applicator check (tick: " + tickCount + ", players: " + Bukkit.getOnlinePlayers().size() + ")");
         }
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID playerUUID = player.getUniqueId();
 
-            List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player);
+            List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player, debugTick);
             Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
-            Map<UUID, ParsedModifierInfo> desiredModifiersByUUID = new HashMap<>();
+            Map<UUID, ParsedAttribute> desiredModifiersByUUID = new HashMap<>();
+            Map<UUID, String[]> desiredModifierContext = new HashMap<>();
 
 
             if (debugTick && !activeItems.isEmpty()) {
@@ -62,37 +64,25 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 BuffedItem item = entry.getKey();
                 String slot = entry.getValue();
 
-
                 if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
-                    ConfigManager.sendDebugMessage("[Task] Player " + player.getName() + " lacks permission for item: " + item.getId() + " (requires: " + item.getPermission().get() + ")");
                     continue;
                 }
 
                 if (item.getEffects().containsKey(slot)) {
-                    ConfigManager.sendDebugMessage("[Task] Processing effects from " + item.getId() + " in slot " + slot + " for " + player.getName());
                     BuffedItemEffect itemEffects = item.getEffects().get(slot);
 
                     itemEffects.getPotionEffects().forEach((type, level) ->
                             desiredPotionEffects.merge(type, level, Integer::max));
 
-                    for (String attrString : itemEffects.getAttributes()) {
-                        try {
-                            String[] parts = attrString.split(";");
-                            if (parts.length != 3) continue;
+                    for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
+                        UUID modifierUUID = parsedAttr.getUuid();
 
-                            Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
-                            AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
-                            double amount = Double.parseDouble(parts[2]);
-                            UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + item.getId() + "." + slot + "." + attribute.name()).getBytes());
-
-                            if (desiredModifiersByUUID.containsKey(modifierUUID)) {
-                                plugin.getLogger().warning("Duplicate modifier UUID detected: " + modifierUUID + " for item " + item.getId() + " in slot " + slot + ". Overwriting previous definition.");
-                            }
-                            desiredModifiersByUUID.put(modifierUUID, new ParsedModifierInfo(attribute, operation, amount, item.getId(), slot));
-
-                        } catch (Exception e) {
-                            plugin.getLogger().warning("[Task] Error parsing attribute string '" + attrString + "' for item " + item.getId() + " in slot " + slot + ": " + e.getMessage());
+                        if (desiredModifiersByUUID.containsKey(modifierUUID)) {
+                            plugin.getLogger().warning("Duplicate modifier UUID detected during task run: " + modifierUUID + " for item " + item.getId() + ". This is unexpected.");
                         }
+
+                        desiredModifiersByUUID.put(modifierUUID, parsedAttr);
+                        desiredModifierContext.put(modifierUUID, new String[]{item.getId(), slot});
                     }
                 }
             }
@@ -111,13 +101,19 @@ public class EffectApplicatorTask extends BukkitRunnable {
             }
 
             Map<String, List<String>> attributesToAddByItemSlot = new HashMap<>();
-            for (Map.Entry<UUID, ParsedModifierInfo> desiredEntry : desiredModifiersByUUID.entrySet()) {
-                UUID desiredUUID = desiredEntry.getKey();
-                ParsedModifierInfo desiredInfo = desiredEntry.getValue();
 
-                if (!attributeManager.hasModifier(playerUUID, desiredInfo.attribute, desiredUUID)) {
-                    String key = desiredInfo.itemId + "." + desiredInfo.slot;
-                    String attrString = desiredInfo.attribute.name() + ";" + desiredInfo.operation.name() + ";" + desiredInfo.amount;
+            for (Map.Entry<UUID, ParsedAttribute> desiredEntry : desiredModifiersByUUID.entrySet()) {
+                UUID desiredUUID = desiredEntry.getKey();
+                ParsedAttribute desiredAttr = desiredEntry.getValue();
+
+                if (!attributeManager.hasModifier(playerUUID, desiredAttr.getAttribute(), desiredUUID)) {
+                    String[] context = desiredModifierContext.get(desiredUUID);
+                    String itemId = context[0];
+                    String slot = context[1];
+                    String key = itemId + "." + slot;
+
+                    String attrString = desiredAttr.getAttribute().name() + ";" + desiredAttr.getOperation().name() + ";" + desiredAttr.getAmount();
+
                     attributesToAddByItemSlot.computeIfAbsent(key, k -> new ArrayList<>()).add(attrString);
                     ConfigManager.sendDebugMessage("[Task] Marking modifier for addition: " + desiredUUID + " (" + attrString + ") via " + key);
                 }
@@ -126,7 +122,6 @@ public class EffectApplicatorTask extends BukkitRunnable {
             for (ModifierToRemove toRemove : modifiersToRemove) {
                 effectManager.removeAttributeModifier(player, toRemove.attribute, toRemove.uuid);
             }
-
             for (Map.Entry<String, List<String>> toAddEntry : attributesToAddByItemSlot.entrySet()) {
                 String[] itemSlotKey = toAddEntry.getKey().split("\\.");
                 String itemId = itemSlotKey[0];
@@ -136,68 +131,52 @@ public class EffectApplicatorTask extends BukkitRunnable {
             }
 
             Set<PotionEffectType> lastApplied = managedEffects.getOrDefault(playerUUID, Collections.emptySet());
-            effectManager.removeObsoletePotionEffects(player, lastApplied, desiredPotionEffects.keySet());
-            effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects);
+            effectManager.removeObsoletePotionEffects(player, lastApplied, desiredPotionEffects.keySet(), debugTick);
+            effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
             managedEffects.put(playerUUID, desiredPotionEffects.keySet());
         }
     }
 
-
-    /**
-     * Scans player's inventory (main hand, offhand, armor, storage) for BuffedItems.
-     * @param player The player whose inventory to scan.
-     * @return A list of Map Entries, where the key is the BuffedItem found and the value is the slot name (e.g., "MAIN_HAND").
-     */
-    private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player) {
+    private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player, boolean debugTick) {
         List<Map.Entry<BuffedItem, String>> activeItems = new ArrayList<>();
         PlayerInventory inventory = player.getInventory();
 
-        checkItem(inventory.getItemInMainHand(), "MAIN_HAND", activeItems, player);
-        checkItem(inventory.getItemInOffHand(), "OFF_HAND", activeItems, player);
-        checkItem(inventory.getHelmet(), "HELMET", activeItems, player);
-        checkItem(inventory.getChestplate(), "CHESTPLATE", activeItems, player);
-        checkItem(inventory.getLeggings(), "LEGGINGS", activeItems, player);
-        checkItem(inventory.getBoots(), "BOOTS", activeItems, player);
+        checkItem(inventory.getItemInMainHand(), "MAIN_HAND", activeItems, player, debugTick);
+        checkItem(inventory.getItemInOffHand(), "OFF_HAND", activeItems, player, debugTick);
+        checkItem(inventory.getHelmet(), "HELMET", activeItems, player, debugTick);
+        checkItem(inventory.getChestplate(), "CHESTPLATE", activeItems, player, debugTick);
+        checkItem(inventory.getLeggings(), "LEGGINGS", activeItems, player, debugTick);
+        checkItem(inventory.getBoots(), "BOOTS", activeItems, player, debugTick);
 
         for (ItemStack item : inventory.getStorageContents()) {
-            checkItem(item, "INVENTORY", activeItems, player);
+            checkItem(item, "INVENTORY", activeItems, player, debugTick);
         }
 
         return activeItems;
     }
 
-    /**
-     * Helper method to check a single ItemStack for the BuffedItem NBT tag.
-     * If found and valid, adds it to the list of active items.
-     * @param item The ItemStack to check.
-     * @param slot The name of the slot this item is in.
-     * @param activeItems The list to add the found BuffedItem entry to.
-     * @param player The player owning the item (for debug messages).
-     */
-    private void checkItem(ItemStack item, String slot, List<Map.Entry<BuffedItem, String>> activeItems, Player player) {
+    private void checkItem(ItemStack item, String slot, List<Map.Entry<BuffedItem, String>> activeItems, Player player, boolean debugTick) {
         if (item == null || !item.hasItemMeta() || item.getItemMeta().getPersistentDataContainer().isEmpty()) {
             return;
         }
-
         if (item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING)) {
             String itemId = item.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
             if (itemId != null) {
                 BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
                 if (buffedItem != null) {
                     activeItems.add(new AbstractMap.SimpleEntry<>(buffedItem, slot));
-                    ConfigManager.sendDebugMessage("[Task] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
+                    if(debugTick) {
+                        ConfigManager.sendDebugMessage("[Task] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
+                    }
                 } else {
-                    ConfigManager.sendDebugMessage("[Task] Unknown BuffedItem ID found on item: " + itemId + " (player: " + player.getName() + ", slot: "+slot+")");
+                    if(debugTick) {
+                        ConfigManager.sendDebugMessage("[Task] Unknown BuffedItem ID found on item: " + itemId + " (player: " + player.getName() + ", slot: "+slot+")");
+                    }
                 }
             }
         }
     }
 
-    /**
-     * Called when a player quits to clean up managed potion effects.
-     * Attribute cleanup is handled separately by the PlayerQuitListener calling EffectManager.clearAllAttributes.
-     * @param player The player who quit.
-     */
     public void playerQuit(Player player) {
         ConfigManager.sendDebugMessage("[Task] Removing player potion effect tracking: " + player.getName());
         managedEffects.remove(player.getUniqueId());
@@ -205,23 +184,6 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {
         return managedEffects.getOrDefault(playerUUID, Collections.emptySet());
-    }
-
-    /** Simple data class to hold parsed modifier info before applying. */
-    private static class ParsedModifierInfo {
-        final Attribute attribute;
-        final AttributeModifier.Operation operation;
-        final double amount;
-        final String itemId;
-        final String slot;
-
-        ParsedModifierInfo(Attribute attribute, AttributeModifier.Operation operation, double amount, String itemId, String slot) {
-            this.attribute = attribute;
-            this.operation = operation;
-            this.amount = amount;
-            this.itemId = itemId;
-            this.slot = slot;
-        }
     }
 
     /** Simple data class to hold info needed for modifier removal. */

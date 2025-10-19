@@ -8,18 +8,18 @@ import java.util.Map;
 public class BuffedItemEffect {
 
     private final Map<PotionEffectType, Integer> potionEffects;
-    private final List<String> attributes;
+    private final List<ParsedAttribute> parsedAttributes;
 
-    public BuffedItemEffect(Map<PotionEffectType, Integer> potionEffects, List<String> attributes) {
+    public BuffedItemEffect(Map<PotionEffectType, Integer> potionEffects, List<ParsedAttribute> parsedAttributes) {
         this.potionEffects = potionEffects;
-        this.attributes = attributes;
+        this.parsedAttributes = parsedAttributes;
     }
 
     public Map<PotionEffectType, Integer> getPotionEffects() {
         return potionEffects;
     }
 
-    public List<String> getAttributes() {
-        return attributes;
+    public List<ParsedAttribute> getParsedAttributes() {
+        return parsedAttributes;
     }
 }
