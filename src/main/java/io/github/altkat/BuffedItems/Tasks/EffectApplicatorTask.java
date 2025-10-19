@@ -19,6 +19,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private final BuffedItems plugin;
     private final NamespacedKey nbtKey;
     private final Map<UUID, Set<PotionEffectType>> managedEffects = new ConcurrentHashMap<>();
+    private int tickCount = 0;
 
     public EffectApplicatorTask(BuffedItems plugin) {
         this.plugin = plugin;
@@ -27,8 +28,20 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     @Override
     public void run() {
+        tickCount++;
+        boolean debugMode = plugin.getConfig().getBoolean("debug-mode", false);
+
+        if (debugMode && tickCount % 20 == 0) {
+            plugin.getLogger().fine("[Task] Running effect applicator (tick: " + tickCount + ", players: " + Bukkit.getOnlinePlayers().size() + ")");
+        }
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player);
+
+            if (debugMode && !activeItems.isEmpty()) {
+                plugin.getLogger().fine("[Task] Found " + activeItems.size() + " active item(s) for " + player.getName());
+            }
+
             Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
 
             plugin.getEffectManager().clearAllAttributes(player);
@@ -38,10 +51,15 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 String slot = entry.getValue();
 
                 if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
+                    plugin.getLogger().fine("[Task] Player " + player.getName() + " lacks permission for item: " + item.getId() + " (requires: " + item.getPermission().get() + ")");
                     continue;
                 }
 
                 if (item.getEffects().containsKey(slot)) {
+                    if (debugMode) {
+                        plugin.getLogger().fine("[Task] Applying effects from " + item.getId() + " in slot " + slot + " for " + player.getName());
+                    }
+
                     item.getEffects().get(slot).getPotionEffects().forEach((type, level) ->
                             desiredPotionEffects.merge(type, level, Integer::max));
                     plugin.getEffectManager().applyAttributeEffects(player, item.getId(), slot, item.getEffects().get(slot).getAttributes());
@@ -60,30 +78,37 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player) {
         List<Map.Entry<BuffedItem, String>> activeItems = new ArrayList<>();
         PlayerInventory inventory = player.getInventory();
-        checkItem(inventory.getItemInMainHand(), "MAIN_HAND", activeItems);
-        checkItem(inventory.getItemInOffHand(), "OFF_HAND", activeItems);
-        checkItem(inventory.getHelmet(), "HELMET", activeItems);
-        checkItem(inventory.getChestplate(), "CHESTPLATE", activeItems);
-        checkItem(inventory.getLeggings(), "LEGGINGS", activeItems);
-        checkItem(inventory.getBoots(), "BOOTS", activeItems);
+
+        checkItem(inventory.getItemInMainHand(), "MAIN_HAND", activeItems, player);
+        checkItem(inventory.getItemInOffHand(), "OFF_HAND", activeItems, player);
+        checkItem(inventory.getHelmet(), "HELMET", activeItems, player);
+        checkItem(inventory.getChestplate(), "CHESTPLATE", activeItems, player);
+        checkItem(inventory.getLeggings(), "LEGGINGS", activeItems, player);
+        checkItem(inventory.getBoots(), "BOOTS", activeItems, player);
+
         for (ItemStack item : inventory.getStorageContents()) {
-            checkItem(item, "INVENTORY", activeItems);
+            checkItem(item, "INVENTORY", activeItems, player);
         }
+
         return activeItems;
     }
 
-    private void checkItem(ItemStack item, String slot, List<Map.Entry<BuffedItem, String>> activeItems) {
+    private void checkItem(ItemStack item, String slot, List<Map.Entry<BuffedItem, String>> activeItems, Player player) {
         if (item == null || !item.hasItemMeta()) return;
         if (item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING)) {
             String itemId = item.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
             BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
             if (buffedItem != null) {
                 activeItems.add(new AbstractMap.SimpleEntry<>(buffedItem, slot));
+                plugin.getLogger().fine("[Task] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
+            } else {
+                plugin.getLogger().warning("[Task] Unknown BuffedItem ID in player inventory: " + itemId + " (player: " + player.getName() + ")");
             }
         }
     }
 
     public void playerQuit(Player player) {
+        plugin.getLogger().fine("[Task] Removing player from tracking: " + player.getName());
         managedEffects.remove(player.getUniqueId());
     }
 

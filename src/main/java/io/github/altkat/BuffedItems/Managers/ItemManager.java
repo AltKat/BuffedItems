@@ -21,17 +21,29 @@ public class ItemManager {
     }
 
     public void loadItems(boolean silent) {
+        long startTime = System.currentTimeMillis();
+
         buffedItems.clear();
         managedAttributeUUIDs.clear();
+
         ConfigurationSection itemsSection = plugin.getConfig().getConfigurationSection("items");
         if (itemsSection == null) {
             plugin.getLogger().warning("No 'items' section found in config.yml.");
             return;
         }
 
+        plugin.getLogger().fine("[ItemManager] Loading items from config...");
+        int validItems = 0;
+        int invalidItems = 0;
+
         for (String itemId : itemsSection.getKeys(false)) {
+            plugin.getLogger().fine("[ItemManager] Processing item: " + itemId);
+
             ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
-            if (itemSection == null) continue;
+            if (itemSection == null) {
+                plugin.getLogger().fine("[ItemManager] Skipping null section for: " + itemId);
+                continue;
+            }
 
             String displayName = itemSection.getString("display_name", "Default Name");
             List<String> lore = itemSection.getStringList("lore");
@@ -50,6 +62,7 @@ public class ItemManager {
                 for (String flagKey : flagsSection.getKeys(false)) {
                     flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
                 }
+                plugin.getLogger().fine("[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
             }
 
             BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, new HashMap<>(), permission);
@@ -64,6 +77,8 @@ public class ItemManager {
             Map<String, BuffedItemEffect> effects = new HashMap<>();
             ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
             if (effectsSection != null) {
+                plugin.getLogger().fine("[ItemManager] Item " + itemId + " has effects section");
+
                 for (String slot : effectsSection.getKeys(false)) {
                     ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
                     if (slotSection == null) continue;
@@ -72,6 +87,8 @@ public class ItemManager {
                     List<String> attributeStrings = new ArrayList<>();
 
                     List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
+                    plugin.getLogger().fine("[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
+
                     for (String effectString : potionEffectStrings) {
                         try {
                             String[] parts = effectString.split(";");
@@ -87,10 +104,13 @@ public class ItemManager {
                             potionEffects.put(type, level);
                         } catch (Exception e) {
                             buffedItem.addErrorMessage("§cCorrupt PotionEffect format: §e'" + effectString + "'");
+                            plugin.getLogger().warning("[Item: " + itemId + "] Corrupt effect format: " + effectString);
                         }
                     }
 
                     List<String> originalAttributeStrings = slotSection.getStringList("attributes");
+                    plugin.getLogger().fine("[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
+
                     for (String attrString : originalAttributeStrings) {
                         try {
                             String[] parts = attrString.split(";");
@@ -100,12 +120,14 @@ public class ItemManager {
 
                             UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attributeName).getBytes());
                             managedAttributeUUIDs.add(modifierUUID);
+                            plugin.getLogger().fine("[ItemManager] Registered attribute UUID: " + modifierUUID + " for " + attributeName);
                         } catch (IllegalArgumentException e) {
                             String errorMsg = "Invalid Attribute: '" + attrString.split(";")[0] + "'";
                             buffedItem.addErrorMessage("§c" + errorMsg);
                             plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
                         } catch (Exception e) {
                             buffedItem.addErrorMessage("§cCorrupt Attribute format: §e'" + attrString + "'");
+                            plugin.getLogger().warning("[Item: " + itemId + "] Corrupt attribute format: " + attrString);
                         }
                     }
                     effects.put(slot.toUpperCase(), new BuffedItemEffect(potionEffects, attributeStrings));
@@ -115,13 +137,21 @@ public class ItemManager {
             BuffedItem finalBuffedItem = new BuffedItem(itemId, displayName, lore, buffedItem.getMaterial(), glow, effects, permission, flags);
             if (!buffedItem.isValid()) {
                 buffedItem.getErrorMessages().forEach(finalBuffedItem::addErrorMessage);
+                invalidItems++;
+            } else {
+                validItems++;
             }
 
             buffedItems.put(itemId, finalBuffedItem);
         }
+
+        long elapsedTime = System.currentTimeMillis() - startTime;
+
         if (!silent) {
-            plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config.");
+            plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config (" + validItems + " valid, " + invalidItems + " with errors) in " + elapsedTime + "ms");
         }
+
+        plugin.getLogger().fine("[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
     }
 
     public BuffedItem getBuffedItem(String itemId) {

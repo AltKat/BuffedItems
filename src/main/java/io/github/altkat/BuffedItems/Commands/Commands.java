@@ -89,31 +89,44 @@ public class Commands implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "Usage: /buffeditems give <player> <item_id> [amount]");
             return true;
         }
+
+        plugin.getLogger().fine("[Command] Give command: player=" + args[1] + ", item=" + args[2] + ", amount=" + (args.length >= 4 ? args[3] : "1"));
+
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
             sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            plugin.getLogger().fine("[Command] Player not found: " + args[1]);
             return true;
         }
+
         String itemId = args[2];
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
         if (buffedItem == null) {
             sender.sendMessage(ChatColor.RED + "Item not found in config: " + itemId);
+            plugin.getLogger().fine("[Command] Item not found: " + itemId);
             return true;
         }
+
         int amount = 1;
         if (args.length >= 4) {
             try {
                 amount = Integer.parseInt(args[3]);
             } catch (NumberFormatException e) {
                 sender.sendMessage(ChatColor.RED + "Invalid amount: " + args[3]);
+                plugin.getLogger().fine("[Command] Invalid amount: " + args[3]);
                 return true;
             }
         }
+
         ItemStack itemStack = new ItemBuilder(buffedItem, plugin).build();
         itemStack.setAmount(amount);
         target.getInventory().addItem(itemStack);
+
         sender.sendMessage(ChatColor.GREEN + "Gave " + amount + "x " + buffedItem.getDisplayName() + ChatColor.GREEN + " to " + target.getName());
         target.sendMessage(ChatColor.GREEN + "You have received " + amount + "x " + buffedItem.getDisplayName());
+
+        plugin.getLogger().info("Gave " + amount + "x " + itemId + " to " + target.getName() + " (by: " + sender.getName() + ")");
+
         return true;
     }
 

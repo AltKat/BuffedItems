@@ -19,11 +19,20 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
+        plugin.getLogger().fine("[Quit] Cleaning up player: " + player.getName());
+        
         plugin.getEffectManager().clearAllAttributes(player);
+
         plugin.getEffectApplicatorTask().playerQuit(player);
+
         plugin.getActiveAttributeManager().clearPlayer(player.getUniqueId());
         plugin.getDeathKeptItems().remove(player.getUniqueId());
         BuffedItems.removePlayerMenuUtility(player.getUniqueId());
-        plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId()).forEach(player::removePotionEffect);
+
+        int effectCount = plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId()).size();
+        plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
+                .forEach(player::removePotionEffect);
+
+        plugin.getLogger().fine("[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
     }
 }

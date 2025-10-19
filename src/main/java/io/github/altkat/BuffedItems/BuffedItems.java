@@ -53,16 +53,28 @@ public final class BuffedItems extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        getLogger().fine("[Shutdown] Cleaning up all online players...");
+
+        int playerCount = Bukkit.getOnlinePlayers().size();
+        int successCount = 0;
+        int failCount = 0;
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
+                getLogger().fine("[Shutdown] Clearing effects for: " + player.getName());
                 effectManager.clearAllAttributes(player);
+
                 effectApplicatorTask.getManagedEffects(player.getUniqueId())
                         .forEach(player::removePotionEffect);
+
+                successCount++;
             } catch (Exception e) {
+                failCount++;
                 getLogger().warning("Failed to clear effects for player " + player.getName() + ": " + e.getMessage());
             }
         }
 
+        getLogger().info("Cleanup complete: " + successCount + "/" + playerCount + " players cleaned" + (failCount > 0 ? " (" + failCount + " failed)" : ""));
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §cBuffedItems has been disabled!");
     }
 
