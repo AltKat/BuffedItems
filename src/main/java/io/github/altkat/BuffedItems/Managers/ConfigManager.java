@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.Managers;
 import io.github.altkat.BuffedItems.BuffedItems;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
+
 import java.io.File;
 import java.util.Collections;
 

@@ -9,8 +9,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.stream.Collectors;
-
 public class ItemEditorMenu extends Menu {
     private final BuffedItems plugin;
 

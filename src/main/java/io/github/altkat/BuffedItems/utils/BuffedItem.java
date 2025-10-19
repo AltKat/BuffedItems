@@ -1,6 +1,5 @@
 package io.github.altkat.BuffedItems.utils;
 
-import io.github.altkat.BuffedItems.Menu.ItemFlagsMenu;
 import org.bukkit.Material;
 
 import java.util.*;
