@@ -47,8 +47,8 @@ public class EffectManager {
 
     public void applyAttributeEffects(Player player, String itemId, String slot, List<String> attributes) {
         EquipmentSlot equipmentSlot = getEquipmentSlot(slot);
-        for (String attrString : attributes) {
 
+        for (String attrString : attributes) {
             Attribute attribute;
             AttributeModifier.Operation operation;
             double amount;
@@ -63,49 +63,73 @@ public class EffectManager {
                 continue;
             }
 
-            try {
-                AttributeInstance instance = player.getAttribute(attribute);
-                if (instance == null) continue;
+            AttributeInstance instance = player.getAttribute(attribute);
+            if (instance == null) {
+                plugin.getLogger().warning("Player does not have attribute '" + attribute.name() + "' (item: " + itemId + ")");
+                continue;
+            }
 
-                UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attribute.name()).getBytes());
-                String modifierName = "buffeditems." + itemId;
-                AttributeModifier modifier = new AttributeModifier(modifierUUID, modifierName, amount, operation, equipmentSlot);
+            UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attribute.name()).getBytes());
+            String modifierName = "buffeditems." + itemId;
+            AttributeModifier modifier = new AttributeModifier(modifierUUID, modifierName, amount, operation, equipmentSlot);
 
-                plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), modifier);
+            boolean alreadyApplied = instance.getModifiers().stream()
+                    .anyMatch(m -> m.getUniqueId().equals(modifierUUID));
 
-                boolean alreadyApplied = false;
-                for (AttributeModifier existingModifier : instance.getModifiers()) {
-                    if (existingModifier.getUniqueId().equals(modifierUUID)) {
-                        alreadyApplied = true;
-                        break;
-                    }
-                }
-
-                if (!alreadyApplied) {
+            if (!alreadyApplied) {
+                try {
                     instance.addModifier(modifier);
+                    plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), modifier);
+                } catch (Exception e) {
+                    plugin.getLogger().severe("CRITICAL: Failed to apply attribute modifier!");
+                    plugin.getLogger().severe("  Item: " + itemId);
+                    plugin.getLogger().severe("  Attribute: " + attribute.name());
+                    plugin.getLogger().severe("  Player: " + player.getName());
+                    plugin.getLogger().severe("  Error: " + e.getMessage());
+                    e.printStackTrace();
                 }
-
-            } catch (IllegalArgumentException e) {
-                if (!e.getMessage().contains("Modifier is already applied")) {
-                    plugin.getLogger().warning("An unexpected error occurred while applying attribute '" + attribute.name() + "' for item '" + itemId + "': " + e.getMessage());
-                }
-            } catch (Exception e) {
-                plugin.getLogger().warning("An unexpected error occurred while applying attribute '" + attribute.name() + "' for item '" + itemId + "': " + e.getMessage());
             }
         }
     }
 
     public void clearAllAttributes(Player player) {
-        List<AttributeModifier> modifiersToRemove = plugin.getActiveAttributeManager().getAndClearModifiers(player.getUniqueId());
-        if (modifiersToRemove == null || modifiersToRemove.isEmpty()) return;
+        List<AttributeModifier> modifiersToRemove = plugin.getActiveAttributeManager()
+                .getAndClearModifiers(player.getUniqueId());
+
+        Set<UUID> managedUUIDs = plugin.getItemManager().getManagedAttributeUUIDs();
+        boolean hadOrphans = false;
 
         for (Attribute attribute : Attribute.values()) {
             AttributeInstance instance = player.getAttribute(attribute);
-            if (instance != null) {
+            if (instance == null) continue;
+
+            if (modifiersToRemove != null) {
                 for (AttributeModifier modifier : modifiersToRemove) {
-                    instance.removeModifier(modifier);
+                    try {
+                        instance.removeModifier(modifier);
+                    } catch (Exception e) {
+                        plugin.getLogger().fine("Could not remove modifier (already removed?): " + e.getMessage());
+                    }
                 }
             }
+
+            List<AttributeModifier> orphanedModifiers = instance.getModifiers().stream()
+                    .filter(mod -> managedUUIDs.contains(mod.getUniqueId()))
+                    .collect(java.util.stream.Collectors.toList());
+
+            for (AttributeModifier orphan : orphanedModifiers) {
+                try {
+                    instance.removeModifier(orphan);
+                    hadOrphans = true;
+                    plugin.getLogger().fine("Cleaned orphaned modifier: " + orphan.getUniqueId());
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to remove orphaned modifier: " + e.getMessage());
+                }
+            }
+        }
+
+        if (hadOrphans) {
+            plugin.getLogger().info("Cleaned stale attribute modifiers for player: " + player.getName());
         }
     }
 

@@ -43,10 +43,27 @@ public class ConfigManager {
     public static void reloadConfig() {
         File configFile = new File(plugin.getDataFolder(), "config.yml");
         if (!configFile.exists()) {
-            plugin.getLogger().warning("config.yml not found! Attempting to recover from memory...");
-            plugin.saveConfig();
+            plugin.getLogger().warning("config.yml not found! Creating default config...");
+            try {
+                plugin.saveDefaultConfig();
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to create default config: " + e.getMessage());
+                return;
+            }
         }
         plugin.reloadConfig();
         plugin.getItemManager().loadItems(false);
+        updateDebugMode();
+    }
+
+    public static void updateDebugMode() {
+        boolean debugMode = plugin.getConfig().getBoolean("debug-mode", false);
+
+        if (debugMode) {
+            plugin.getLogger().setLevel(java.util.logging.Level.FINE);
+            plugin.getLogger().info("[Debug Mode] Enabled - Detailed logs will be shown");
+        } else {
+            plugin.getLogger().setLevel(java.util.logging.Level.INFO);
+        }
     }
 }

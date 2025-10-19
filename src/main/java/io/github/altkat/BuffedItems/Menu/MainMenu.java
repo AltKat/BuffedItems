@@ -88,22 +88,6 @@ public class MainMenu extends PaginatedMenu {
                     }
                 }
                 break;
-            case LAVA_BUCKET:
-
-                p.sendMessage("§cEşya silme menüsü yakında eklenecek!");
-                break;
-            default:
-                if (e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING)) {
-                    String itemId = e.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
-                    playerMenuUtility.setItemToEditId(itemId);
-
-                    if (e.isLeftClick()) {
-                        new ItemEditorMenu(playerMenuUtility, plugin).open();
-                    } else if (e.isRightClick()) {
-                        new ConfirmationMenu(playerMenuUtility, plugin, itemId).open();
-                    }
-                }
-                break;
         }
     }
 

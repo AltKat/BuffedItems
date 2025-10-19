@@ -33,7 +33,7 @@ public class ChatListener implements Listener {
             String itemId = pmu.getItemToEditId();
             String targetSlot = pmu.getTargetSlot();
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
 
                 if ("createnewitem".equals(path)) {
                     String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
@@ -163,7 +163,7 @@ public class ChatListener implements Listener {
                     p.sendMessage("§aValue has been updated!");
                     new ItemEditorMenu(pmu, plugin).open();
                 }
-            });
+            }, 1L);
             pmu.setWaitingForChatInput(false);
         }
     }

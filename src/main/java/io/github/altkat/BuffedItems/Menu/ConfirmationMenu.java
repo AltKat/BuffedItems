@@ -43,8 +43,6 @@ public class ConfirmationMenu extends Menu {
                 p.sendMessage("§cDeletion cancelled.");
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
-            default:
-                break;
         }
     }
 

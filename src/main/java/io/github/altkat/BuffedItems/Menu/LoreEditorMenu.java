@@ -85,8 +85,6 @@ public class LoreEditorMenu extends PaginatedMenu {
                     this.open();
                 }
                 break;
-            default:
-                break;
         }
     }
 

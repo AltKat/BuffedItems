@@ -8,6 +8,7 @@ import io.github.altkat.BuffedItems.Managers.*;
 import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -52,11 +53,22 @@ public final class BuffedItems extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            try {
+                effectManager.clearAllAttributes(player);
+                effectApplicatorTask.getManagedEffects(player.getUniqueId())
+                        .forEach(player::removePotionEffect);
+            } catch (Exception e) {
+                getLogger().warning("Failed to clear effects for player " + player.getName() + ": " + e.getMessage());
+            }
+        }
+
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §cBuffedItems has been disabled!");
     }
 
     private void initializeManagers() {
         ConfigManager.setup(this);
+        ConfigManager.updateDebugMode();
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
@@ -67,6 +79,7 @@ public final class BuffedItems extends JavaPlugin {
         getCommand("buffeditems").setExecutor(new Commands(this));
         getCommand("buffeditems").setTabCompleter(new TabCompleterHandler(this));
 
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);

@@ -59,6 +59,7 @@
 #   Note: Flags marked with (Default: true) will be active even if not specified in the config.
 #         You only need to add them if you want to explicitly set them to 'false'.
 # -------------------------------------------------------------------------------------------
+debug-mode: false
 
 items:
   bunny_charm:

@@ -65,7 +65,6 @@ public class AttributeListMenu extends Menu {
                 playerMenuUtility.setChatInputPath("attributes.edit");
                 p.closeInventory();
                 p.sendMessage("§aPlease type the new amount for the attribute in chat.");
-                return;
             }
         }
     }

@@ -86,4 +86,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
     public void playerQuit(Player player) {
         managedEffects.remove(player.getUniqueId());
     }
+
+    public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {
+        return managedEffects.getOrDefault(playerUUID, Collections.emptySet());
+    }
 }

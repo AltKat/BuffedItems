@@ -45,10 +45,10 @@ public class ItemEditorMenu extends Menu {
                     ItemStack clone = new ItemBuilder(itemToClone, plugin).build();
                     p.getInventory().addItem(clone);
                     p.sendMessage("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory.");
-                    p.closeInventory();
                 } else {
                     p.sendMessage("§cCould not generate test copy. Item not found in memory.");
                 }
+                p.closeInventory();
                 break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);
@@ -83,8 +83,6 @@ public class ItemEditorMenu extends Menu {
             case REDSTONE_TORCH:
                 new ItemFlagsMenu(playerMenuUtility, plugin).open();
                 break;
-            default:
-                break;
         }
     }
 
@@ -104,7 +102,7 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(28, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
         inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
         inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
-        inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current (even unsaved) changes.", "§cThis does not save the item."));
+        inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current changes."));
         inventory.setItem(34, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
