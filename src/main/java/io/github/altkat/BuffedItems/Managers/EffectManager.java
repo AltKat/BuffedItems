@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
@@ -141,6 +142,22 @@ public class EffectManager {
                 }
             }
         }
+    }
+
+    public void forceAttributeReCheckAllPlayers() {
+        ConfigManager.sendDebugMessage("[EffectManager] Forcing attribute re-check for all (" + Bukkit.getOnlinePlayers().size() + ") online players...");
+
+        // This must run on the main thread, which it should be
+        // since it's called from ConfigManager (triggered by a command or chat listener task)
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            ConfigManager.sendDebugMessage("[EffectManager] Clearing attributes for " + player.getName() + " to force re-application...");
+            // By clearing all tracked attributes...
+            clearAllAttributes(player);
+            // ...we ensure the EffectApplicatorTask's next run will see
+            // "tracked" as empty and "desired" (from inventory) as full,
+            // forcing it to re-apply everything using the new cached values.
+        }
+        ConfigManager.sendDebugMessage("[EffectManager] Force re-check triggered. Changes will apply on the next task run (within 1 second).");
     }
 
     public void clearAllAttributes(Player player) {

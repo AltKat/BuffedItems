@@ -37,6 +37,7 @@ public class ConfigManager {
         plugin.reloadConfig();
         plugin.getItemManager().loadItems(false);
         updateDebugMode();
+        plugin.getEffectManager().forceAttributeReCheckAllPlayers();
 
         long elapsedTime = System.currentTimeMillis() - startTime;
         ConfigManager.sendDebugMessage("[Config] Reload complete in " + elapsedTime + "ms");
@@ -69,6 +70,7 @@ public class ConfigManager {
 
         plugin.saveConfig();
         plugin.getItemManager().loadItems(true);
+        plugin.getEffectManager().forceAttributeReCheckAllPlayers();
     }
 
     public static boolean createNewItem(String itemId) {
