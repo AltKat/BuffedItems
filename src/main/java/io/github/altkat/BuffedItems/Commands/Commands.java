@@ -90,12 +90,12 @@ public class Commands implements CommandExecutor {
             return true;
         }
 
-        plugin.getLogger().fine("[Command] Give command: player=" + args[1] + ", item=" + args[2] + ", amount=" + (args.length >= 4 ? args[3] : "1"));
+        ConfigManager.sendDebugMessage("[Command] Give command: player=" + args[1] + ", item=" + args[2] + ", amount=" + (args.length >= 4 ? args[3] : "1"));
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
             sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
-            plugin.getLogger().fine("[Command] Player not found: " + args[1]);
+            ConfigManager.sendDebugMessage("[Command] Player not found: " + args[1]);
             return true;
         }
 
@@ -103,7 +103,7 @@ public class Commands implements CommandExecutor {
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
         if (buffedItem == null) {
             sender.sendMessage(ChatColor.RED + "Item not found in config: " + itemId);
-            plugin.getLogger().fine("[Command] Item not found: " + itemId);
+            ConfigManager.sendDebugMessage("[Command] Item not found: " + itemId);
             return true;
         }
 
@@ -113,7 +113,7 @@ public class Commands implements CommandExecutor {
                 amount = Integer.parseInt(args[3]);
             } catch (NumberFormatException e) {
                 sender.sendMessage(ChatColor.RED + "Invalid amount: " + args[3]);
-                plugin.getLogger().fine("[Command] Invalid amount: " + args[3]);
+                ConfigManager.sendDebugMessage("[Command] Invalid amount: " + args[3]);
                 return true;
             }
         }

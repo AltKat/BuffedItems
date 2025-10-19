@@ -53,7 +53,7 @@ public final class BuffedItems extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getLogger().fine("[Shutdown] Cleaning up all online players...");
+        ConfigManager.sendDebugMessage("[Shutdown] Cleaning up all online players...");
 
         int playerCount = Bukkit.getOnlinePlayers().size();
         int successCount = 0;
@@ -61,7 +61,7 @@ public final class BuffedItems extends JavaPlugin {
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
-                getLogger().fine("[Shutdown] Clearing effects for: " + player.getName());
+                ConfigManager.sendDebugMessage("[Shutdown] Clearing effects for: " + player.getName());
                 effectManager.clearAllAttributes(player);
 
                 effectApplicatorTask.getManagedEffects(player.getUniqueId())

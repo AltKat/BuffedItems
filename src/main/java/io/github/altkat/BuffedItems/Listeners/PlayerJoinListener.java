@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Listeners;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
@@ -25,7 +26,7 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        plugin.getLogger().fine("[Join] Checking for stale modifiers on " + player.getName());
+        ConfigManager.sendDebugMessage("[Join] Checking for stale modifiers on " + player.getName());
 
         Set<UUID> managedUUIDs = plugin.getItemManager().getManagedAttributeUUIDs();
         int cleanedCount = 0;
@@ -39,9 +40,9 @@ public class PlayerJoinListener implements Listener {
                     try {
                         instance.removeModifier(mod);
                         cleanedCount++;
-                        plugin.getLogger().fine("[Join] Cleaned stale modifier: " + mod.getUniqueId() + " from " + attribute.name());
+                        ConfigManager.sendDebugMessage("[Join] Cleaned stale modifier: " + mod.getUniqueId() + " from " + attribute.name());
                     } catch (Exception e) {
-                        plugin.getLogger().fine("[Join] Could not remove stale modifier: " + e.getMessage());
+                        ConfigManager.sendDebugMessage("[Join] Could not remove stale modifier: " + e.getMessage());
                     }
                 }
             }
@@ -50,7 +51,7 @@ public class PlayerJoinListener implements Listener {
         if (cleanedCount > 0) {
             plugin.getLogger().info("Cleaned " + cleanedCount + " stale modifier(s) from " + player.getName() + " on join");
         } else {
-            plugin.getLogger().fine("[Join] No stale modifiers found for " + player.getName());
+            ConfigManager.sendDebugMessage("[Join] No stale modifiers found for " + player.getName());
         }
     }
 }

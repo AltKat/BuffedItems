@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Tasks;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -29,19 +30,15 @@ public class EffectApplicatorTask extends BukkitRunnable {
     @Override
     public void run() {
         tickCount++;
-        boolean debugMode = plugin.getConfig().getBoolean("debug-mode", false);
-
-        if (debugMode && tickCount % 20 == 0) {
-            plugin.getLogger().fine("[Task] Running effect applicator (tick: " + tickCount + ", players: " + Bukkit.getOnlinePlayers().size() + ")");
+        if (tickCount % 20 == 0) {
+            ConfigManager.sendDebugMessage("[Task] Running effect applicator (tick: " + tickCount + ", players: " + Bukkit.getOnlinePlayers().size() + ")");
         }
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player);
-
-            if (debugMode && !activeItems.isEmpty()) {
-                plugin.getLogger().fine("[Task] Found " + activeItems.size() + " active item(s) for " + player.getName());
+            if (!activeItems.isEmpty()) {
+                ConfigManager.sendDebugMessage("[Task] Found " + activeItems.size() + " active item(s) for " + player.getName());
             }
-
             Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
 
             plugin.getEffectManager().clearAllAttributes(player);
@@ -51,14 +48,13 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 String slot = entry.getValue();
 
                 if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
-                    plugin.getLogger().fine("[Task] Player " + player.getName() + " lacks permission for item: " + item.getId() + " (requires: " + item.getPermission().get() + ")");
+                    ConfigManager.sendDebugMessage("[Task] Player " + player.getName() + " lacks permission for item: " + item.getId() + " (requires: " + item.getPermission().get() + ")");
                     continue;
                 }
 
                 if (item.getEffects().containsKey(slot)) {
-                    if (debugMode) {
-                        plugin.getLogger().fine("[Task] Applying effects from " + item.getId() + " in slot " + slot + " for " + player.getName());
-                    }
+
+                    ConfigManager.sendDebugMessage("[Task] Applying effects from " + item.getId() + " in slot " + slot + " for " + player.getName());
 
                     item.getEffects().get(slot).getPotionEffects().forEach((type, level) ->
                             desiredPotionEffects.merge(type, level, Integer::max));
@@ -100,7 +96,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
             BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
             if (buffedItem != null) {
                 activeItems.add(new AbstractMap.SimpleEntry<>(buffedItem, slot));
-                plugin.getLogger().fine("[Task] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
+                ConfigManager.sendDebugMessage("[Task] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
             } else {
                 plugin.getLogger().warning("[Task] Unknown BuffedItem ID in player inventory: " + itemId + " (player: " + player.getName() + ")");
             }
@@ -108,7 +104,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     }
 
     public void playerQuit(Player player) {
-        plugin.getLogger().fine("[Task] Removing player from tracking: " + player.getName());
+        ConfigManager.sendDebugMessage("[Task] Removing player from tracking: " + player.getName());
         managedEffects.remove(player.getUniqueId());
     }
 

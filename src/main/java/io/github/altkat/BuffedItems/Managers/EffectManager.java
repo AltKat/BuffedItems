@@ -32,16 +32,16 @@ public class EffectManager {
             PotionEffect existingEffect = player.getPotionEffect(type);
 
             if (existingEffect == null) {
-                plugin.getLogger().fine("[Potion] Applying new effect to " + player.getName() + ": " + type.getName() + " " + (amplifier + 1));
+                ConfigManager.sendDebugMessage("[Potion] Applying new effect to " + player.getName() + ": " + type.getName() + " " + (amplifier + 1));
                 player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false));
             } else if (existingEffect.getAmplifier() < amplifier) {
-                plugin.getLogger().fine("[Potion] Upgrading effect for " + player.getName() + ": " + type.getName() + " " + (existingEffect.getAmplifier() + 1) + " → " + (amplifier + 1));
+                ConfigManager.sendDebugMessage("[Potion] Upgrading effect for " + player.getName() + ": " + type.getName() + " " + (existingEffect.getAmplifier() + 1) + " → " + (amplifier + 1));
                 player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false));
             } else if (existingEffect.getDuration() < REFRESH_THRESHOLD_TICKS) {
-                plugin.getLogger().fine("[Potion] Refreshing effect for " + player.getName() + ": " + type.getName() + " (duration: " + existingEffect.getDuration() + " → " + EFFECT_DURATION_TICKS + ")");
+                ConfigManager.sendDebugMessage("[Potion] Refreshing effect for " + player.getName() + ": " + type.getName() + " (duration: " + existingEffect.getDuration() + " → " + EFFECT_DURATION_TICKS + ")");
                 player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false));
             } else {
-                plugin.getLogger().fine("[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");
+                ConfigManager.sendDebugMessage("[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");
             }
         }
     }
@@ -49,14 +49,14 @@ public class EffectManager {
     public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects, Set<PotionEffectType> desiredEffects) {
         for (PotionEffectType type : lastAppliedEffects) {
             if (!desiredEffects.contains(type)) {
-                plugin.getLogger().fine("[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
+                ConfigManager.sendDebugMessage("[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
                 player.removePotionEffect(type);
             }
         }
     }
 
     public void applyAttributeEffects(Player player, String itemId, String slot, List<String> attributes) {
-        plugin.getLogger().fine("[Attribute] Processing " + attributes.size() + " attributes for " + player.getName() + " (item: " + itemId + ", slot: " + slot + ")");
+        ConfigManager.sendDebugMessage("[Attribute] Processing " + attributes.size() + " attributes for " + player.getName() + " (item: " + itemId + ", slot: " + slot + ")");
 
         EquipmentSlot equipmentSlot = getEquipmentSlot(slot);
 
@@ -71,7 +71,7 @@ public class EffectManager {
                 operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                 amount = Double.parseDouble(parts[2]);
 
-                plugin.getLogger().fine("[Attribute] Parsed: " + attribute.name() + " " + operation.name() + " " + amount);
+                ConfigManager.sendDebugMessage("[Attribute] Parsed: " + attribute.name() + " " + operation.name() + " " + amount);
             } catch (Exception e) {
                 plugin.getLogger().warning("Invalid attribute format for item '" + itemId + "': " + attrString);
                 continue;
@@ -91,12 +91,12 @@ public class EffectManager {
                     .anyMatch(m -> m.getUniqueId().equals(modifierUUID));
 
             if (alreadyApplied) {
-                plugin.getLogger().fine("[Attribute] Modifier already exists for " + player.getName() + ": " + attribute.name() + " (skipping)");
+                ConfigManager.sendDebugMessage("[Attribute] Modifier already exists for " + player.getName() + ": " + attribute.name() + " (skipping)");
             } else {
                 try {
                     instance.addModifier(modifier);
                     plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), modifier);
-                    plugin.getLogger().fine("[Attribute] Applied modifier to " + player.getName() + ": " + attribute.name() + " " + operation.name() + " " + amount);
+                    ConfigManager.sendDebugMessage("[Attribute] Applied modifier to " + player.getName() + ": " + attribute.name() + " " + operation.name() + " " + amount);
                 } catch (Exception e) {
                     plugin.getLogger().severe("CRITICAL: Failed to apply attribute modifier!");
                     plugin.getLogger().severe("  Item: " + itemId);
@@ -110,17 +110,17 @@ public class EffectManager {
     }
 
     public void clearAllAttributes(Player player) {
-        plugin.getLogger().fine("[Attribute] Clearing all attributes for " + player.getName());
+        ConfigManager.sendDebugMessage("[Attribute] Clearing all attributes for " + player.getName());
 
         List<AttributeModifier> modifiersToRemove = plugin.getActiveAttributeManager()
                 .getAndClearModifiers(player.getUniqueId());
 
         if (modifiersToRemove == null || modifiersToRemove.isEmpty()) {
-            plugin.getLogger().fine("[Attribute] No registered modifiers to remove for " + player.getName());
+            ConfigManager.sendDebugMessage("[Attribute] No registered modifiers to remove for " + player.getName());
             return;
         }
 
-        plugin.getLogger().fine("[Attribute] Removing " + modifiersToRemove.size() + " registered modifiers from " + player.getName());
+        ConfigManager.sendDebugMessage("[Attribute] Removing " + modifiersToRemove.size() + " registered modifiers from " + player.getName());
 
         Set<UUID> managedUUIDs = plugin.getItemManager().getManagedAttributeUUIDs();
         int removedCount = 0;
@@ -134,9 +134,9 @@ public class EffectManager {
                 try {
                     instance.removeModifier(modifier);
                     removedCount++;
-                    plugin.getLogger().fine("[Attribute] Removed modifier from " + attribute.name() + ": " + modifier.getUniqueId());
+                    ConfigManager.sendDebugMessage("[Attribute] Removed modifier from " + attribute.name() + ": " + modifier.getUniqueId());
                 } catch (Exception e) {
-                    plugin.getLogger().fine("[Attribute] Could not remove modifier (already removed?): " + e.getMessage());
+                    ConfigManager.sendDebugMessage("[Attribute] Could not remove modifier (already removed?): " + e.getMessage());
                 }
             }
 
@@ -148,7 +148,7 @@ public class EffectManager {
                 try {
                     instance.removeModifier(orphan);
                     orphanCount++;
-                    plugin.getLogger().fine("[Attribute] Cleaned orphaned modifier from " + attribute.name() + ": " + orphan.getUniqueId());
+                    ConfigManager.sendDebugMessage("[Attribute] Cleaned orphaned modifier from " + attribute.name() + ": " + orphan.getUniqueId());
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to remove orphaned modifier: " + e.getMessage());
                 }
@@ -159,7 +159,7 @@ public class EffectManager {
             plugin.getLogger().info("Cleaned " + orphanCount + " stale attribute modifier(s) for player: " + player.getName());
         }
 
-        plugin.getLogger().fine("[Attribute] Cleanup complete for " + player.getName() + " (removed: " + removedCount + ", orphaned: " + orphanCount + ")");
+        ConfigManager.sendDebugMessage("[Attribute] Cleanup complete for " + player.getName() + " (removed: " + removedCount + ", orphaned: " + orphanCount + ")");
     }
 
     private EquipmentSlot getEquipmentSlot(String slot) {

@@ -32,16 +32,16 @@ public class ItemManager {
             return;
         }
 
-        plugin.getLogger().fine("[ItemManager] Loading items from config...");
+        ConfigManager.sendDebugMessage("[ItemManager] Loading items from config...");
         int validItems = 0;
         int invalidItems = 0;
 
         for (String itemId : itemsSection.getKeys(false)) {
-            plugin.getLogger().fine("[ItemManager] Processing item: " + itemId);
+            ConfigManager.sendDebugMessage("[ItemManager] Processing item: " + itemId);
 
             ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
             if (itemSection == null) {
-                plugin.getLogger().fine("[ItemManager] Skipping null section for: " + itemId);
+                ConfigManager.sendDebugMessage("[ItemManager] Skipping null section for: " + itemId);
                 continue;
             }
 
@@ -62,7 +62,7 @@ public class ItemManager {
                 for (String flagKey : flagsSection.getKeys(false)) {
                     flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
                 }
-                plugin.getLogger().fine("[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
+                ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
             }
 
             BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, new HashMap<>(), permission);
@@ -77,7 +77,7 @@ public class ItemManager {
             Map<String, BuffedItemEffect> effects = new HashMap<>();
             ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
             if (effectsSection != null) {
-                plugin.getLogger().fine("[ItemManager] Item " + itemId + " has effects section");
+                ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " has effects section");
 
                 for (String slot : effectsSection.getKeys(false)) {
                     ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
@@ -87,7 +87,7 @@ public class ItemManager {
                     List<String> attributeStrings = new ArrayList<>();
 
                     List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
-                    plugin.getLogger().fine("[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
+                    ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
 
                     for (String effectString : potionEffectStrings) {
                         try {
@@ -109,7 +109,7 @@ public class ItemManager {
                     }
 
                     List<String> originalAttributeStrings = slotSection.getStringList("attributes");
-                    plugin.getLogger().fine("[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
+                    ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
 
                     for (String attrString : originalAttributeStrings) {
                         try {
@@ -120,7 +120,7 @@ public class ItemManager {
 
                             UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attributeName).getBytes());
                             managedAttributeUUIDs.add(modifierUUID);
-                            plugin.getLogger().fine("[ItemManager] Registered attribute UUID: " + modifierUUID + " for " + attributeName);
+                            ConfigManager.sendDebugMessage("[ItemManager] Registered attribute UUID: " + modifierUUID + " for " + attributeName);
                         } catch (IllegalArgumentException e) {
                             String errorMsg = "Invalid Attribute: '" + attrString.split(";")[0] + "'";
                             buffedItem.addErrorMessage("§c" + errorMsg);
@@ -151,7 +151,7 @@ public class ItemManager {
             plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config (" + validItems + " valid, " + invalidItems + " with errors) in " + elapsedTime + "ms");
         }
 
-        plugin.getLogger().fine("[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
+        ConfigManager.sendDebugMessage("[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
     }
 
     public BuffedItem getBuffedItem(String itemId) {

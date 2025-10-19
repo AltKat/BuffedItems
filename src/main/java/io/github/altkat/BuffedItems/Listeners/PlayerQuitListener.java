@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Listeners;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,8 +20,8 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        plugin.getLogger().fine("[Quit] Cleaning up player: " + player.getName());
-        
+        ConfigManager.sendDebugMessage("[Quit] Cleaning up player: " + player.getName());
+
         plugin.getEffectManager().clearAllAttributes(player);
 
         plugin.getEffectApplicatorTask().playerQuit(player);
@@ -33,6 +34,6 @@ public class PlayerQuitListener implements Listener {
         plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
                 .forEach(player::removePotionEffect);
 
-        plugin.getLogger().fine("[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
+        ConfigManager.sendDebugMessage("[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
     }
 }
