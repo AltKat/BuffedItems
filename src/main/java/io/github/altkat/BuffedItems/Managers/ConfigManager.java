@@ -9,26 +9,9 @@ public class ConfigManager {
 
     private static BuffedItems plugin;
     public static final String NO_PERMISSION = "NONE";
-    private static boolean needsSave = false;
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
-    }
-
-    private static void markAsNeedsSave() {
-        needsSave = true;
-    }
-
-    public static boolean isDirty() {
-        return needsSave;
-    }
-
-    public static void discardChanges() {
-        if (isDirty()) {
-            plugin.reloadConfig();
-            plugin.getItemManager().loadItems(true);
-            needsSave = false;
-        }
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
@@ -40,7 +23,7 @@ public class ConfigManager {
             plugin.getConfig().set(fullPath, value);
         }
 
-        markAsNeedsSave();
+        plugin.saveConfig();
         plugin.getItemManager().loadItems(true);
     }
 
@@ -52,23 +35,9 @@ public class ConfigManager {
         config.set("items." + itemId + ".display_name", "&f" + itemId);
         config.set("items." + itemId + ".material", "STONE");
         config.set("items." + itemId + ".lore", Collections.singletonList("&7A new BuffedItem."));
-        markAsNeedsSave();
+        plugin.saveConfig();
         plugin.getItemManager().loadItems(true);
         return true;
-    }
-
-    public static void saveConfigIfDirty() {
-        if (!needsSave) {
-            return;
-        }
-        try {
-            plugin.getLogger().info("Saving configuration changes to config.yml...");
-            plugin.saveConfig();
-            needsSave = false;
-        } catch (Exception e) {
-            plugin.getLogger().severe("Could not save config.yml!");
-            e.printStackTrace();
-        }
     }
 
     public static void reloadConfig() {

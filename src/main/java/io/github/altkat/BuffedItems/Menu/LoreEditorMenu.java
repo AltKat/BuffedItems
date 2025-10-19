@@ -40,8 +40,6 @@ public class LoreEditorMenu extends PaginatedMenu {
 
         if (e.getCurrentItem() == null) return;
 
-        playerMenuUtility.setNavigating(true);
-
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
                 new ItemEditorMenu(playerMenuUtility, plugin).open();
@@ -88,7 +86,6 @@ public class LoreEditorMenu extends PaginatedMenu {
                 }
                 break;
             default:
-                playerMenuUtility.setNavigating(false);
                 break;
         }
     }

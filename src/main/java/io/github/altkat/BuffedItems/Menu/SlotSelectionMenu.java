@@ -36,8 +36,6 @@ public class SlotSelectionMenu extends Menu {
         Player p = (Player) e.getWhoClicked();
         if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-        playerMenuUtility.setNavigating(true);
-
         if (e.getCurrentItem().getType() == Material.BARRIER) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;

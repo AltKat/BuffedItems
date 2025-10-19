@@ -60,15 +60,12 @@ public class ItemFlagsMenu extends Menu {
         Player p = (Player) e.getWhoClicked();
         if (e.getCurrentItem() == null) return;
 
-        playerMenuUtility.setNavigating(true);
-
         if (e.getCurrentItem().getType() == Material.BARRIER) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
         if (e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) {
-            playerMenuUtility.setNavigating(false);
             return;
         }
 
@@ -87,8 +84,6 @@ public class ItemFlagsMenu extends Menu {
             p.sendMessage("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled"));
 
             this.open();
-        } else {
-            playerMenuUtility.setNavigating(false);
         }
     }
 
@@ -97,7 +92,6 @@ public class ItemFlagsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) {
             playerMenuUtility.getOwner().sendMessage("§cError: Item not found.");
-            playerMenuUtility.setNavigating(true);
             new MainMenu(playerMenuUtility, plugin).open();
             return;
         }

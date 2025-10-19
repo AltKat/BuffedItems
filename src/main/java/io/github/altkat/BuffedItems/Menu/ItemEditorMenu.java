@@ -37,18 +37,7 @@ public class ItemEditorMenu extends Menu {
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
-                playerMenuUtility.setNavigating(true);
-                if (ConfigManager.isDirty()) {
-                    new SaveChangesConfirmationMenu(playerMenuUtility, plugin).open();
-                } else {
-                    new MainMenu(playerMenuUtility, plugin).open();
-                }
-                break;
-            case EMERALD:
-                playerMenuUtility.setNavigating(true);
-                ConfigManager.saveConfigIfDirty();
-                p.sendMessage("§aChanges have been saved successfully!");
-                this.open();
+                new MainMenu(playerMenuUtility, plugin).open();
                 break;
             case CHEST_MINECART:
                 BuffedItem itemToClone = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
@@ -56,25 +45,21 @@ public class ItemEditorMenu extends Menu {
                     ItemStack clone = new ItemBuilder(itemToClone, plugin).build();
                     p.getInventory().addItem(clone);
                     p.sendMessage("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory.");
-                    playerMenuUtility.setNavigating(true);
                     p.closeInventory();
                 } else {
                     p.sendMessage("§cCould not generate test copy. Item not found in memory.");
                 }
                 break;
             case NAME_TAG:
-                playerMenuUtility.setNavigating(true);
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("display_name");
                 p.closeInventory();
                 p.sendMessage("§aPlease type the new display name in chat. Use '&' for color codes.");
                 break;
             case BOOK:
-                playerMenuUtility.setNavigating(true);
                 new LoreEditorMenu(playerMenuUtility, plugin).open();
                 break;
             case PAPER:
-                playerMenuUtility.setNavigating(true);
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("permission");
                 p.closeInventory();
@@ -82,29 +67,23 @@ public class ItemEditorMenu extends Menu {
                 p.sendMessage("§7(Type 'none' or 'remove' to clear the permission)");
                 break;
             case BEACON:
-                playerMenuUtility.setNavigating(true);
                 BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
                 ConfigManager.setItemValue(item.getId(), "glow", !item.hasGlow());
                 this.open();
                 break;
             case GRASS_BLOCK:
-                playerMenuUtility.setNavigating(true);
                 new MaterialSelectorMenu(playerMenuUtility, plugin).open();
                 break;
             case POTION:
-                playerMenuUtility.setNavigating(true);
                 new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.POTION_EFFECT).open();
                 break;
             case IRON_SWORD:
-                playerMenuUtility.setNavigating(true);
                 new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
                 break;
             case REDSTONE_TORCH:
-                playerMenuUtility.setNavigating(true);
                 new ItemFlagsMenu(playerMenuUtility, plugin).open();
                 break;
             default:
-                playerMenuUtility.setNavigating(false);
                 break;
         }
     }
@@ -114,7 +93,6 @@ public class ItemEditorMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
         if (item == null) {
             playerMenuUtility.getOwner().sendMessage("§cError: Item could not be found. Returning to main menu.");
-            playerMenuUtility.setNavigating(true);
             new MainMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -128,11 +106,6 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
         inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current (even unsaved) changes.", "§cThis does not save the item."));
         inventory.setItem(34, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
-        if (ConfigManager.isDirty()) {
-            inventory.setItem(43, makeItem(Material.EMERALD, "§a§lSave Changes", "§7Click to write all pending changes", "§7to the config.yml file."));
-        } else {
-            inventory.setItem(43, makeItem(Material.GRAY_DYE, "§7No Changes to Save", "§8Make an edit to enable saving."));
-        }
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
         setFillerGlass();

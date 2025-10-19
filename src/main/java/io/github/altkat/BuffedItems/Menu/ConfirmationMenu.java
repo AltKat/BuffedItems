@@ -33,12 +33,9 @@ public class ConfirmationMenu extends Menu {
 
         if (e.getCurrentItem() == null) return;
 
-        playerMenuUtility.setNavigating(true);
-
         switch (e.getCurrentItem().getType()) {
             case GREEN_WOOL:
                 ConfigManager.setItemValue(itemToDeleteId, null, null);
-                ConfigManager.saveConfigIfDirty();
                 p.sendMessage("§aItem '" + itemToDeleteId + "' has been successfully deleted.");
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
@@ -47,7 +44,6 @@ public class ConfirmationMenu extends Menu {
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
             default:
-                playerMenuUtility.setNavigating(false);
                 break;
         }
     }

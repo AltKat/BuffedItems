@@ -36,8 +36,6 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
-        playerMenuUtility.setNavigating(true);
-
         if (handlePageChange(e, effectTypes.size())) {
             return;
         }

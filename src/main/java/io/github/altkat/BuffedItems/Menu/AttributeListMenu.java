@@ -30,8 +30,6 @@ public class AttributeListMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
-        playerMenuUtility.setNavigating(true);
-
         Player p = (Player) e.getWhoClicked();
         String itemId = playerMenuUtility.getItemToEditId();
         String targetSlot = playerMenuUtility.getTargetSlot();
@@ -68,11 +66,7 @@ public class AttributeListMenu extends Menu {
                 p.closeInventory();
                 p.sendMessage("§aPlease type the new amount for the attribute in chat.");
                 return;
-            } else {
-                playerMenuUtility.setNavigating(false);
             }
-        } else {
-            playerMenuUtility.setNavigating(false);
         }
     }
 

@@ -52,7 +52,6 @@ public final class BuffedItems extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        ConfigManager.saveConfigIfDirty();
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §cBuffedItems has been disabled!");
     }
 
@@ -72,7 +71,6 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
-        getServer().getPluginManager().registerEvents(new InventoryCloseListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemProtectionListener(this), this);
     }
 

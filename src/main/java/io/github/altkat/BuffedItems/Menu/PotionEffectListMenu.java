@@ -36,8 +36,6 @@ public class PotionEffectListMenu extends Menu {
 
         if (e.getCurrentItem() == null) return;
 
-        playerMenuUtility.setNavigating(true);
-
         Material clickedType = e.getCurrentItem().getType();
         int clickedSlot = e.getSlot();
 
@@ -56,7 +54,6 @@ public class PotionEffectListMenu extends Menu {
             List<String> effects = plugin.getConfig().getStringList(configPath);
 
             if (clickedSlot >= effects.size()) {
-                playerMenuUtility.setNavigating(false);
                 return;
             }
 
@@ -74,11 +71,7 @@ public class PotionEffectListMenu extends Menu {
                 String effectName = effects.get(clickedSlot).split(";")[0];
                 p.closeInventory();
                 p.sendMessage("§aPlease type the new level for '" + effectName + "' in chat.");
-            } else {
-                playerMenuUtility.setNavigating(false);
             }
-        } else {
-            playerMenuUtility.setNavigating(false);
         }
     }
 
