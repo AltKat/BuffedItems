@@ -122,8 +122,8 @@ public class Commands implements CommandExecutor {
         itemStack.setAmount(amount);
         target.getInventory().addItem(itemStack);
 
-        sender.sendMessage(ChatColor.GREEN + "Gave " + amount + "x " + buffedItem.getDisplayName() + ChatColor.GREEN + " to " + target.getName());
-        target.sendMessage(ChatColor.GREEN + "You have received " + amount + "x " + buffedItem.getDisplayName());
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
+        target.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aYou have received &e" + amount + "x &r" + buffedItem.getDisplayName()));
 
         plugin.getLogger().info("Gave " + amount + "x " + itemId + " to " + target.getName() + " (by: " + sender.getName() + ")");
 
