@@ -37,6 +37,7 @@ public class ConfigManager {
         plugin.reloadConfig();
         plugin.getItemManager().loadItems(false);
         updateDebugMode();
+        plugin.reloadConfigSettings();
         invalidateAllPlayerCaches();
 
         long elapsedTime = System.currentTimeMillis() - startTime;
@@ -51,10 +52,6 @@ public class ConfigManager {
         }
     }
 
-    /**
-     * Sends a debug message (String)
-     * @deprecated Use sendDebugMessage(Supplier<String>) for performance
-     */
     @Deprecated
     public static void sendDebugMessage(String message) {
         if (debugMode) {
@@ -62,12 +59,6 @@ public class ConfigManager {
         }
     }
 
-    /**
-     * Sends a debug message (with Lazy evaluation)
-     * This method only constructs the string if debug mode is enabled, providing a performance gain.
-     *
-     * Usage: ConfigManager.sendDebugMessage(() -> "[Task] Player: " + player.getName());
-     */
     public static void sendDebugMessage(Supplier<String> messageSupplier) {
         if (debugMode) {
             String message = messageSupplier.get();
@@ -85,10 +76,8 @@ public class ConfigManager {
         } else {
             plugin.getConfig().set(fullPath, value);
         }
-
-        plugin.saveConfig();
-        plugin.getItemManager().loadItems(true);
-        invalidateAllPlayerCaches();
+        plugin.getItemManager().reloadSingleItem(itemId);
+        plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
     }
 
     public static boolean createNewItem(String itemId) {
@@ -104,8 +93,7 @@ public class ConfigManager {
         config.set("items." + itemId + ".material", "STONE");
         config.set("items." + itemId + ".lore", Collections.singletonList("&7A new BuffedItem."));
 
-        plugin.saveConfig();
-        plugin.getItemManager().loadItems(true);
+        plugin.getItemManager().reloadSingleItem(itemId);
 
         plugin.getLogger().info("Created new item: " + itemId);
         return true;
@@ -115,10 +103,6 @@ public class ConfigManager {
         return debugMode;
     }
 
-    /**
-     * Clears the caches of all online players.
-     * Should be called after config changes.
-     */
     private static void invalidateAllPlayerCaches() {
         if (plugin.getEffectApplicatorTask() == null) {
             return;
@@ -128,7 +112,7 @@ public class ConfigManager {
         sendDebugMessage(() -> "[Config] Invalidating cache for all (" + playerCount + ") online players after config change...");
 
         for (org.bukkit.entity.Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
-            plugin.getEffectApplicatorTask().invalidateCache(player.getUniqueId());
+            plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
         }
 
         sendDebugMessage(() -> "[Config] Cache invalidation complete. Changes will apply on next tick.");

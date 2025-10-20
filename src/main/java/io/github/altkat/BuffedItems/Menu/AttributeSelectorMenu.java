@@ -33,20 +33,26 @@ public class AttributeSelectorMenu extends PaginatedMenu {
 
     @Override
     public void handleMenu(InventoryClickEvent e) {
+        if (e.getCurrentItem() == null) return;
 
-        if (handlePageChange(e, attributes.size())) return;
+        int clickedSlot = e.getSlot();
+        Material clickedType = e.getCurrentItem().getType();
 
-        if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new AttributeListMenu(playerMenuUtility, plugin).open();
+        if (clickedSlot < this.maxItemsPerPage) {
+            String attributeName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
+            playerMenuUtility.setAttributeToEdit(attributeName);
+
+            new AttributeOperationSelectorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
+        if (handlePageChange(e, attributes.size())) {
+            return;
+        }
 
-        String attributeName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
-        playerMenuUtility.setAttributeToEdit(attributeName);
-
-
-        new AttributeOperationSelectorMenu(playerMenuUtility, plugin).open();
+        if (clickedType == Material.BARRIER && clickedSlot == 49) {
+            new AttributeListMenu(playerMenuUtility, plugin).open();
+        }
     }
 
     @Override

@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -70,6 +71,20 @@ public class MainMenu extends PaginatedMenu {
                 p.closeInventory();
                 p.sendMessage("§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword').");
                 break;
+            case EMERALD:
+                if (e.getSlot() == 52) {
+                    try {
+                        plugin.saveConfig();
+                        plugin.restartAutoSaveTask();
+                        p.sendMessage("§aBuffedItems configuration has been saved successfully!");
+                        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
+                    } catch (Exception ex) {
+                        p.sendMessage("§cAn error occurred while saving the config. Check the console.");
+                        p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                        plugin.getLogger().severe("Failed to manually save config: " + ex.getMessage());
+                    }
+                }
+                break;
             case ARROW:
                 if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Next")) {
 
@@ -93,6 +108,13 @@ public class MainMenu extends PaginatedMenu {
 
         addMenuControls();
         inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
+        long autoSaveMinutes = plugin.getAutoSaveIntervalTicks() / 20 / 60;
+
+        inventory.setItem(52, makeItem(Material.EMERALD, "§aManual Save",
+                "§7The plugin auto-saves every " + autoSaveMinutes + " minutes.",
+                "§7Click here to save changes to config.yml",
+                "§7immediately and reset the auto-save timer."));
+
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
 
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());

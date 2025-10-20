@@ -15,6 +15,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,8 @@ public final class BuffedItems extends JavaPlugin {
     private EffectApplicatorTask effectApplicatorTask;
     private static final HashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new HashMap<>();
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
+    private BukkitTask autoSaveTask;
+    private long autoSaveIntervalTicks = 6000L;
 
     @Override
     public void onEnable() {
@@ -40,6 +44,7 @@ public final class BuffedItems extends JavaPlugin {
         initializeManagers();
         registerListenersAndCommands();
         startEffectTask();
+        startAutoSaveTask();
 
         final int SPIGOT_RESOURCE_ID = 129550;
         new UpdateChecker(this, SPIGOT_RESOURCE_ID).getVersion(newVersion -> {
@@ -77,6 +82,13 @@ public final class BuffedItems extends JavaPlugin {
             }
         }
 
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+        }
+
+        ConfigManager.sendDebugMessage(() -> "[Shutdown] Saving final config...");
+        saveConfig();
+
         getLogger().info("Cleanup complete: " + successCount + "/" + playerCount + " players cleaned" + (failCount > 0 ? " (" + failCount + " failed)" : ""));
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §cBuffedItems has been disabled!");
     }
@@ -84,6 +96,8 @@ public final class BuffedItems extends JavaPlugin {
     private void initializeManagers() {
         ConfigManager.setup(this);
         ConfigManager.updateDebugMode();
+        this.autoSaveIntervalTicks = getConfig().getLong("auto-save-interval-minutes", 5) * 20 * 60;
+        ConfigManager.sendDebugMessage(() -> "[Config] Auto-save interval set to " + (this.autoSaveIntervalTicks / 20 / 60) + " minutes (" + this.autoSaveIntervalTicks + " ticks).");
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
@@ -121,12 +135,44 @@ public final class BuffedItems extends JavaPlugin {
         }
     }
 
+    private void startAutoSaveTask() {
+        this.autoSaveTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                ConfigManager.sendDebugMessage(() -> "[AutoSave] Saving configuration to disk...");
+                saveConfig();
+                ConfigManager.sendDebugMessage(() -> "[AutoSave] Configuration saved.");
+            }
+        }.runTaskTimerAsynchronously(this, this.autoSaveIntervalTicks, this.autoSaveIntervalTicks);
+    }
+
+    private void updateAutoSaveIntervalVariable() {
+        this.autoSaveIntervalTicks = getConfig().getLong("auto-save-interval-minutes", 5) * 20 * 60;
+        ConfigManager.sendDebugMessage(() -> "[Config] Auto-save interval set to " + (this.autoSaveIntervalTicks / 20 / 60) + " minutes (" + this.autoSaveIntervalTicks + " ticks).");
+    }
+
+    public void reloadConfigSettings() {
+        updateAutoSaveIntervalVariable();
+        restartAutoSaveTask();
+    }
+
+    public void restartAutoSaveTask() {
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+            ConfigManager.sendDebugMessage(() -> "[AutoSave] Auto-save timer reset by manual save or reload command.");
+        }
+        startAutoSaveTask();
+    }
+
     public ItemManager getItemManager() { return itemManager; }
     public EffectManager getEffectManager() { return effectManager; }
     public ActiveAttributeManager getActiveAttributeManager() { return activeAttributeManager; }
     public EffectApplicatorTask getEffectApplicatorTask() { return effectApplicatorTask; }
     public Map<UUID, List<ItemStack>> getDeathKeptItems() {
         return deathKeptItems;
+    }
+    public long getAutoSaveIntervalTicks() {
+        return this.autoSaveIntervalTicks;
     }
     public static void removePlayerMenuUtility(UUID uuid) {
         playerMenuUtilityMap.remove(uuid);

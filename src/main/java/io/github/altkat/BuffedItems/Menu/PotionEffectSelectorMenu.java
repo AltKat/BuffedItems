@@ -36,25 +36,27 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
+        int clickedSlot = e.getSlot();
+        Material clickedType = e.getCurrentItem().getType();
+
+        if (clickedSlot < this.maxItemsPerPage) {
+            Player p = (Player) e.getWhoClicked();
+            String effectName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
+
+            playerMenuUtility.setWaitingForChatInput(true);
+            playerMenuUtility.setChatInputPath("potion_effects.add." + effectName);
+            p.closeInventory();
+            p.sendMessage("§aPlease type the Potion Level (e.g., 1, 2, 5) in chat.");
+            return;
+        }
+
         if (handlePageChange(e, effectTypes.size())) {
             return;
         }
 
-        if (e.getCurrentItem().getType() == Material.BARRIER) {
+        if (clickedType == Material.BARRIER && clickedSlot == 49) {
             new PotionEffectListMenu(playerMenuUtility, plugin).open();
-            return;
         }
-
-
-        Player p = (Player) e.getWhoClicked();
-        String effectName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
-
-
-        playerMenuUtility.setWaitingForChatInput(true);
-
-        playerMenuUtility.setChatInputPath("potion_effects.add." + effectName);
-        p.closeInventory();
-        p.sendMessage("§aPlease type the Potion Level (e.g., 1, 2, 5) in chat.");
     }
 
     @Override

@@ -13,10 +13,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Commands implements CommandExecutor {
 
     private final BuffedItems plugin;
     private final String noPermissionMessage = ChatColor.RED + "You do not have permission to use this command.";
+    private final Map<String, Long> reloadConfirmations = new HashMap<>();
+    private static final long CONFIRM_TIMEOUT_MS = 5000;
 
     public Commands(BuffedItems plugin) {
         this.plugin = plugin;
@@ -38,6 +43,12 @@ public class Commands implements CommandExecutor {
                     return true;
                 }
                 return handleGiveCommand(sender, args);
+            case "save":
+                if (!sender.hasPermission("buffeditems.command.reload")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                return handleSaveCommand(sender);
             case "reload":
                 if (!sender.hasPermission("buffeditems.command.reload")) {
                     sender.sendMessage(noPermissionMessage);
@@ -74,7 +85,8 @@ public class Commands implements CommandExecutor {
             sender.sendMessage(ChatColor.GOLD + "/bi give <player> <item_id> [amount]");
         }
         if (sender.hasPermission("buffeditems.command.reload")) {
-            sender.sendMessage(ChatColor.GOLD + "/bi reload");
+            sender.sendMessage(ChatColor.GOLD + "/bi save (Saves menu changes to config.yml)");
+            sender.sendMessage(ChatColor.GOLD + "/bi reload (Loads config.yml, discards unsaved changes)");
         }
         if (sender.hasPermission("buffeditems.command.list")) {
             sender.sendMessage(ChatColor.GOLD + "/bi list");
@@ -131,8 +143,40 @@ public class Commands implements CommandExecutor {
     }
 
     private boolean handleReloadCommand(CommandSender sender) {
-        ConfigManager.reloadConfig();
-        sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded.");
+        String senderName = sender.getName();
+        long currentTime = System.currentTimeMillis();
+        Long expiryTime = reloadConfirmations.get(senderName);
+
+        if (expiryTime != null && currentTime < expiryTime) {
+            reloadConfirmations.remove(senderName);
+            ConfigManager.sendDebugMessage(() -> "[Reload] Reload confirmed. Reloading from disk.");
+            ConfigManager.reloadConfig();
+            sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded from config.yml.");
+            sender.sendMessage(ChatColor.GREEN + "Unsaved changes made via GUI (if any) have been discarded.");
+
+        } else {
+            reloadConfirmations.put(senderName, currentTime + CONFIRM_TIMEOUT_MS);
+            sender.sendMessage(ChatColor.YELLOW + "==================[ " + ChatColor.RED + "WARNING" + ChatColor.YELLOW + " ]==================");
+            sender.sendMessage(ChatColor.RED + "You are about to reload from 'config.yml'.");
+            sender.sendMessage(ChatColor.RED + "Any changes made via " + ChatColor.GOLD + "/bi menu" + ChatColor.RED + " that were");
+            sender.sendMessage(ChatColor.RED + "NOT saved with " + ChatColor.GOLD + "/bi save" + ChatColor.RED + " WILL BE LOST.");
+            sender.sendMessage(ChatColor.YELLOW + "Type " + ChatColor.GOLD + "/bi reload" + ChatColor.YELLOW + " again within 5 seconds to confirm.");
+            sender.sendMessage(ChatColor.YELLOW + "===============================================");
+        }
+        return true;
+    }
+
+    private boolean handleSaveCommand(CommandSender sender) {
+        try {
+            ConfigManager.sendDebugMessage(() -> "[Save] Saving pending changes to disk...");
+            plugin.saveConfig();
+            plugin.restartAutoSaveTask();
+            ConfigManager.sendDebugMessage(() -> "[Save] Save complete.");
+            sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been saved to config.yml.");
+        } catch (Exception e) {
+            sender.sendMessage(ChatColor.RED + "Error: Could not save config.yml. Check console.");
+            plugin.getLogger().severe("[Save] Failed to save config: " + e.getMessage());
+        }
         return true;
     }
 

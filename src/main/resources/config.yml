@@ -1,3 +1,23 @@
+# ===================================================================
+#                         !!! IMPORTANT !!!
+#       PLEASE USE /bi menu IN-GAME INSTEAD OF EDITING THIS FILE.
+# ===================================================================
+#
+# HOW THIS CONFIG WORKS:
+#
+# 1. Use /bi menu to make changes.
+#    (Changes are stored in memory for performance)
+#
+# 2. Use /bi save to write your changes from memory to this file.
+#    (The plugin also auto-saves every X minutes)
+#
+# 3. Use /bi reload ONLY if you have manually edited this file.
+#
+# WARNING: /bi reload LOADS this file from disk and DISCARDS
+#          any unsaved changes made via /bi menu.
+#
+# ===================================================================
+
 # -------------------------------------------------------------------------------------------
 # BuffedItems - Plugin Configuration v${project.version}
 # Author: StreetMelodeez
@@ -60,6 +80,7 @@
 #         You only need to add them if you want to explicitly set them to 'false'.
 # -------------------------------------------------------------------------------------------
 debug-mode: false
+auto-save-interval-minutes: 5
 
 items:
   bunny_charm:

@@ -20,6 +20,11 @@ public abstract class PaginatedMenu extends Menu {
 
     public boolean handlePageChange(InventoryClickEvent e, int listSize) {
         if (e.getCurrentItem().getType() == Material.ARROW) {
+
+            if (e.getSlot() < this.maxItemsPerPage) {
+                return false;
+            }
+
             if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Next")) {
                 if (!((page + 1) * maxItemsPerPage >= listSize)) {
                     page++;

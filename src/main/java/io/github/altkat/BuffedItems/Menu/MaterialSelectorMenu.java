@@ -38,24 +38,28 @@ public class MaterialSelectorMenu extends PaginatedMenu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
-        if (handlePageChange(e, materials.size())) {
-            return;
-        }
+        int clickedSlot = e.getSlot();
+        Material clickedType = e.getCurrentItem().getType();
 
-        if (e.getCurrentItem().getType() == Material.BARRIER) {
+        if (clickedSlot < this.maxItemsPerPage) {
+            String itemId = playerMenuUtility.getItemToEditId();
+
+            ConfigManager.setItemValue(itemId, "material", clickedType.name());
+
+            Player p = (Player) e.getWhoClicked();
+            p.sendMessage("§aMaterial has been updated to " + clickedType.name());
+
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        Material selectedMaterial = e.getCurrentItem().getType();
-        String itemId = playerMenuUtility.getItemToEditId();
+        if (handlePageChange(e, materials.size())) {
+            return;
+        }
 
-        ConfigManager.setItemValue(itemId, "material", selectedMaterial.name());
-
-        Player p = (Player) e.getWhoClicked();
-        p.sendMessage("§aMaterial has been updated to " + selectedMaterial.name());
-
-        new ItemEditorMenu(playerMenuUtility, plugin).open();
+        if (clickedType == Material.BARRIER && clickedSlot == 49) {
+            new ItemEditorMenu(playerMenuUtility, plugin).open();
+        }
     }
 
     @Override

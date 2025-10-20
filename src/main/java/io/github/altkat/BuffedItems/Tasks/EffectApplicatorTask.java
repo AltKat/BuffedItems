@@ -19,6 +19,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EffectApplicatorTask extends BukkitRunnable {
 
@@ -29,6 +30,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     private final Map<UUID, Set<PotionEffectType>> managedEffects = new HashMap<>();
     private final Map<UUID, CachedPlayerData> playerCache = new HashMap<>();
+    private final Set<UUID> playersToUpdate = ConcurrentHashMap.newKeySet();
+
     private int tickCount = 0;
 
     public EffectApplicatorTask(BuffedItems plugin) {
@@ -43,11 +46,26 @@ public class EffectApplicatorTask extends BukkitRunnable {
         tickCount++;
         boolean debugTick = (tickCount % 20 == 0);
 
-        if (debugTick) {
-            ConfigManager.sendDebugMessage("[Task] Running effect applicator check (tick: " + tickCount + ", players: " + Bukkit.getOnlinePlayers().size() + ")");
+        if (playersToUpdate.isEmpty()) {
+            return;
         }
 
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        Set<UUID> playersToProcess;
+        synchronized (playersToUpdate) {
+            playersToProcess = new HashSet<>(playersToUpdate);
+            playersToUpdate.clear();
+        }
+
+        if (debugTick) {
+            ConfigManager.sendDebugMessage("[Task] Running effect applicator check for " + playersToProcess.size() + " modified players...");
+        }
+
+        for (UUID playerUUID : playersToProcess) {
+            Player player = Bukkit.getPlayer(playerUUID);
+
+            if (player == null || !player.isOnline()) {
+                continue;
+            }
             processPlayer(player, debugTick);
         }
     }
@@ -55,18 +73,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private void processPlayer(Player player, boolean debugTick) {
         UUID playerUUID = player.getUniqueId();
 
-        CachedPlayerData cached = playerCache.get(playerUUID);
-        int currentHash = calculateInventoryHash(player);
-
-        if (cached != null && cached.inventoryHash == currentHash) {
-            if (!cached.desiredPotionEffects.isEmpty()) {
-                effectManager.applyOrRefreshPotionEffects(player, cached.desiredPotionEffects, debugTick);
-            }
-            return;
-        }
-
-        if (debugTick || cached == null) {
-            ConfigManager.sendDebugMessage("[Task] Cache miss for " + player.getName() + " - performing full scan");
+        if (debugTick) {
+            ConfigManager.sendDebugMessage("[Task] Performing full scan for " + player.getName());
         }
 
         List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player, debugTick);
@@ -156,56 +164,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
         effectManager.removeObsoletePotionEffects(player, lastApplied, desiredPotionEffects.keySet(), debugTick);
         effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
         managedEffects.put(playerUUID, desiredPotionEffects.keySet());
-        playerCache.put(playerUUID, new CachedPlayerData(currentHash, desiredPotionEffects, activeItems));
-    }
 
-    /**
-     * Calculates the hash value of the player's inventory.
-     * If the inventory hasn't changed, it returns the same hash, thus preventing unnecessary scanning.
-     */
-    private int calculateInventoryHash(Player player) {
-        PlayerInventory inv = player.getInventory();
-        int hash = 0;
-
-        hash = 31 * hash + hashItem(inv.getItemInMainHand());
-        hash = 31 * hash + hashItem(inv.getItemInOffHand());
-        hash = 31 * hash + hashItem(inv.getHelmet());
-        hash = 31 * hash + hashItem(inv.getChestplate());
-        hash = 31 * hash + hashItem(inv.getLeggings());
-        hash = 31 * hash + hashItem(inv.getBoots());
-
-        ItemStack[] contents = inv.getStorageContents();
-        for (int i = 0; i < contents.length; i++) {
-            if (contents[i] != null && contents[i].hasItemMeta()) {
-                ItemStack item = contents[i];
-                if (item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING)) {
-                    hash = 31 * hash + hashItem(item);
-                }
-            }
-        }
-
-        return hash;
-    }
-
-    /**
-     * Calculates the hash value of an item
-     */
-    private int hashItem(ItemStack item) {
-        if (item == null || item.getType().isAir()) {
-            return 0;
-        }
-
-        int hash = item.getType().hashCode();
-        hash = 31 * hash + item.getAmount();
-
-        if (item.hasItemMeta()) {
-            String itemId = item.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
-            if (itemId != null) {
-                hash = 31 * hash + itemId.hashCode();
-            }
-        }
-
-        return hash;
+        playerCache.put(playerUUID, new CachedPlayerData(desiredPotionEffects, activeItems));
     }
 
     private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player, boolean debugTick) {
@@ -253,16 +213,28 @@ public class EffectApplicatorTask extends BukkitRunnable {
         UUID uuid = player.getUniqueId();
         managedEffects.remove(uuid);
         playerCache.remove(uuid);
+        playersToUpdate.remove(uuid);
     }
 
-    /**
-     * Clear the player's cache - Should be called on inventory change
-     */
-    public void invalidateCache(UUID playerUUID) {
-        CachedPlayerData cached = playerCache.get(playerUUID);
-        if (cached != null) {
-            ConfigManager.sendDebugMessage("[Task] Cache invalidated for player: " + playerUUID);
-            playerCache.remove(playerUUID);
+    public void markPlayerForUpdate(UUID playerUUID) {
+        playersToUpdate.add(playerUUID);
+    }
+
+    public void invalidateCacheForHolding(String itemId) {
+        ConfigManager.sendDebugMessage(() -> "[Task] Invalidating cache for players holding: " + itemId);
+        for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
+            UUID playerUUID = entry.getKey();
+            CachedPlayerData data = entry.getValue();
+
+            if (data == null || data.activeItems == null) continue;
+
+            boolean isHolding = data.activeItems.stream()
+                    .anyMatch(itemEntry -> itemEntry.getKey().getId().equals(itemId));
+
+            if (isHolding) {
+                markPlayerForUpdate(playerUUID);
+                ConfigManager.sendDebugMessage(() -> "[Task] --> Marked " + playerUUID);
+            }
         }
     }
 
@@ -270,25 +242,19 @@ public class EffectApplicatorTask extends BukkitRunnable {
         return managedEffects.getOrDefault(playerUUID, Collections.emptySet());
     }
 
-    /**
-     * Cache class - Holds the player's current state
-     */
     private static class CachedPlayerData {
-        final int inventoryHash;
+
         final Map<PotionEffectType, Integer> desiredPotionEffects;
         final List<Map.Entry<BuffedItem, String>> activeItems;
 
-        CachedPlayerData(int inventoryHash, Map<PotionEffectType, Integer> desiredPotionEffects,
+        CachedPlayerData(Map<PotionEffectType, Integer> desiredPotionEffects,
                          List<Map.Entry<BuffedItem, String>> activeItems) {
-            this.inventoryHash = inventoryHash;
+
             this.desiredPotionEffects = new HashMap<>(desiredPotionEffects);
             this.activeItems = new ArrayList<>(activeItems);
         }
     }
 
-    /**
-     * Class that holds modifier removal information
-     */
     private static class ModifierToRemove {
         final Attribute attribute;
         final UUID uuid;
