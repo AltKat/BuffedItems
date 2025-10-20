@@ -34,16 +34,16 @@ public class ItemManager {
             return;
         }
 
-        ConfigManager.sendDebugMessage("[ItemManager] Loading items from config...");
+        ConfigManager.sendDebugMessage(() -> "[ItemManager] Loading items from config...");
         int validItems = 0;
         int invalidItems = 0;
 
         for (String itemId : itemsSection.getKeys(false)) {
-            ConfigManager.sendDebugMessage("[ItemManager] Processing item: " + itemId);
+            ConfigManager.sendDebugMessage(() -> "[ItemManager] Processing item: " + itemId);
 
             ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
             if (itemSection == null) {
-                ConfigManager.sendDebugMessage("[ItemManager] Skipping null section for: " + itemId);
+                ConfigManager.sendDebugMessage(() -> "[ItemManager] Skipping null section for: " + itemId);
                 continue;
             }
 
@@ -64,7 +64,7 @@ public class ItemManager {
                 for (String flagKey : flagsSection.getKeys(false)) {
                     flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
                 }
-                ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
+                ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
             }
 
             BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, new HashMap<>(), permission);
@@ -79,7 +79,7 @@ public class ItemManager {
             Map<String, BuffedItemEffect> effects = new HashMap<>();
             ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
             if (effectsSection != null) {
-                ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " has effects section");
+                ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " has effects section");
 
                 for (String slot : effectsSection.getKeys(false)) {
                     ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
@@ -89,7 +89,7 @@ public class ItemManager {
                     List<ParsedAttribute> parsedAttributes = new ArrayList<>();
 
                     List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
-                    ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
+                    ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
                     for (String effectString : potionEffectStrings) {
                         try {
                             String[] parts = effectString.split(";");
@@ -110,7 +110,7 @@ public class ItemManager {
                     }
 
                     List<String> originalAttributeStrings = slotSection.getStringList("attributes");
-                    ConfigManager.sendDebugMessage("[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
+                    ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
 
                     for (String attrString : originalAttributeStrings) {
                         try {
@@ -128,7 +128,7 @@ public class ItemManager {
                             parsedAttributes.add(new ParsedAttribute(attribute, operation, amount, modifierUUID));
 
                             managedAttributeUUIDs.add(modifierUUID);
-                            ConfigManager.sendDebugMessage("[ItemManager] Pre-parsed and cached attribute UUID: " + modifierUUID + " for " + attribute.name());
+                            ConfigManager.sendDebugMessage(() -> "[ItemManager] Pre-parsed and cached attribute UUID: " + modifierUUID + " for " + attribute.name());
 
                         } catch (IllegalArgumentException e) {
                             String errorMsg = "Invalid Attribute or Operation: '" + attrString + "'. Error: " + e.getMessage();
@@ -161,7 +161,7 @@ public class ItemManager {
             plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config (" + validItems + " valid, " + invalidItems + " with errors) in " + elapsedTime + "ms");
         }
 
-        ConfigManager.sendDebugMessage("[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
+        ConfigManager.sendDebugMessage(() -> "[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
     }
 
     public BuffedItem getBuffedItem(String itemId) {

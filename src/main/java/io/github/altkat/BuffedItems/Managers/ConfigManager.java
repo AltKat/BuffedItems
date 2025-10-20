@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 public class ConfigManager {
 
@@ -17,11 +18,10 @@ public class ConfigManager {
         plugin = pluginInstance;
     }
 
-
     public static void reloadConfig() {
         long startTime = System.currentTimeMillis();
 
-        ConfigManager.sendDebugMessage("[Config] Reloading configuration...");
+        sendDebugMessage(() -> "[Config] Reloading configuration...");
 
         File configFile = new File(plugin.getDataFolder(), "config.yml");
         if (!configFile.exists()) {
@@ -37,10 +37,10 @@ public class ConfigManager {
         plugin.reloadConfig();
         plugin.getItemManager().loadItems(false);
         updateDebugMode();
-        plugin.getEffectManager().forceAttributeReCheckAllPlayers();
+        invalidateAllPlayerCaches();
 
         long elapsedTime = System.currentTimeMillis() - startTime;
-        ConfigManager.sendDebugMessage("[Config] Reload complete in " + elapsedTime + "ms");
+        sendDebugMessage(() -> "[Config] Reload complete in " + elapsedTime + "ms");
     }
 
     public static void updateDebugMode() {
@@ -51,14 +51,32 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Sends a debug message (String)
+     * @deprecated Use sendDebugMessage(Supplier<String>) for performance
+     */
+    @Deprecated
     public static void sendDebugMessage(String message) {
         if (debugMode) {
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] &e[Debug] &r" + message ));
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] &e[Debug] &r" + message));
+        }
+    }
+
+    /**
+     * Sends a debug message (with Lazy evaluation)
+     * This method only constructs the string if debug mode is enabled, providing a performance gain.
+     *
+     * Usage: ConfigManager.sendDebugMessage(() -> "[Task] Player: " + player.getName());
+     */
+    public static void sendDebugMessage(Supplier<String> messageSupplier) {
+        if (debugMode) {
+            String message = messageSupplier.get();
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] &e[Debug] &r" + message));
         }
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
-        ConfigManager.sendDebugMessage("[Config] Setting value: items." + itemId + "." + path + " = " + value);
+        sendDebugMessage(() -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
 
         String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
 
@@ -70,15 +88,15 @@ public class ConfigManager {
 
         plugin.saveConfig();
         plugin.getItemManager().loadItems(true);
-        plugin.getEffectManager().forceAttributeReCheckAllPlayers();
+        invalidateAllPlayerCaches();
     }
 
     public static boolean createNewItem(String itemId) {
-        ConfigManager.sendDebugMessage("[Config] Creating new item: " + itemId);
+        sendDebugMessage(() -> "[Config] Creating new item: " + itemId);
 
         FileConfiguration config = plugin.getConfig();
         if (config.contains("items." + itemId)) {
-            ConfigManager.sendDebugMessage("[Config] Item already exists: " + itemId);
+            sendDebugMessage(() -> "[Config] Item already exists: " + itemId);
             return false;
         }
 
@@ -95,5 +113,24 @@ public class ConfigManager {
 
     public static boolean isDebugMode() {
         return debugMode;
+    }
+
+    /**
+     * Clears the caches of all online players.
+     * Should be called after config changes.
+     */
+    private static void invalidateAllPlayerCaches() {
+        if (plugin.getEffectApplicatorTask() == null) {
+            return;
+        }
+
+        int playerCount = org.bukkit.Bukkit.getOnlinePlayers().size();
+        sendDebugMessage(() -> "[Config] Invalidating cache for all (" + playerCount + ") online players after config change...");
+
+        for (org.bukkit.entity.Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
+            plugin.getEffectApplicatorTask().invalidateCache(player.getUniqueId());
+        }
+
+        sendDebugMessage(() -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
     }
 }

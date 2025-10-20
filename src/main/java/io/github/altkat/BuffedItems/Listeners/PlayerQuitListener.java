@@ -20,7 +20,7 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        ConfigManager.sendDebugMessage("[Quit] Cleaning up player: " + player.getName());
+        ConfigManager.sendDebugMessage(() -> "[Quit] Cleaning up player: " + player.getName());
 
         plugin.getEffectManager().clearAllAttributes(player);
 
@@ -34,6 +34,6 @@ public class PlayerQuitListener implements Listener {
         plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
                 .forEach(player::removePotionEffect);
 
-        ConfigManager.sendDebugMessage("[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
+        ConfigManager.sendDebugMessage(() -> "[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
     }
 }
