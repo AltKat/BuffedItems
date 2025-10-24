@@ -29,6 +29,8 @@ public class EffectManager {
      * @param debugTick Only log "optimal" or "skipping" messages if true.
      */
     public void applyOrRefreshPotionEffects(Player player, Map<PotionEffectType, Integer> desiredEffects, boolean debugTick) {
+        final boolean showIcon = ConfigManager.shouldShowPotionIcons();
+
         for (Map.Entry<PotionEffectType, Integer> entry : desiredEffects.entrySet()) {
             PotionEffectType type = entry.getKey();
             int amplifier = entry.getValue() - 1;
@@ -37,14 +39,14 @@ public class EffectManager {
 
             if (existingEffect == null) {
                 ConfigManager.sendDebugMessage(() -> "[Potion] Applying new effect to " + player.getName() + ": " + type.getName() + " " + (amplifier + 1));
-                player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, true));
+                player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, showIcon));
             } else if (existingEffect.getAmplifier() < amplifier || (existingEffect.getAmplifier() == amplifier && existingEffect.getDuration() < REFRESH_THRESHOLD_TICKS)) {
                 if (existingEffect.getAmplifier() < amplifier) {
                     ConfigManager.sendDebugMessage(() -> "[Potion] Upgrading effect for " + player.getName() + ": " + type.getName() + " " + (existingEffect.getAmplifier() + 1) + " -> " + (amplifier + 1));
                 } else {
                     ConfigManager.sendDebugMessage(() -> "[Potion] Refreshing effect for " + player.getName() + ": " + type.getName() + " (duration: " + existingEffect.getDuration() + " -> " + EFFECT_DURATION_TICKS + ")");
                 }
-                player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, true));
+                player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, showIcon));
             } else {
                 if(debugTick) {
                     ConfigManager.sendDebugMessage(() -> "[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");

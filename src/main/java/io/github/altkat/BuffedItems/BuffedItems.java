@@ -95,7 +95,7 @@ public final class BuffedItems extends JavaPlugin {
 
     private void initializeManagers() {
         ConfigManager.setup(this);
-        ConfigManager.updateDebugMode();
+        ConfigManager.loadGlobalSettings();
         this.autoSaveIntervalTicks = getConfig().getLong("auto-save-interval-minutes", 5) * 20 * 60;
         ConfigManager.sendDebugMessage(() -> "[Config] Auto-save interval set to " + (this.autoSaveIntervalTicks / 20 / 60) + " minutes (" + this.autoSaveIntervalTicks + " ticks).");
         itemManager = new ItemManager(this);

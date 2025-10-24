@@ -1,3 +1,8 @@
+# -------------------------------------------------------------------------------------------
+# BuffedItems - Plugin Configuration v${project.version}
+# Author: StreetMelodeez
+# -------------------------------------------------------------------------------------------
+
 # ===================================================================
 #                         !!! IMPORTANT !!!
 #       PLEASE USE /bi menu IN-GAME INSTEAD OF EDITING THIS FILE.
@@ -6,22 +11,19 @@
 # HOW THIS CONFIG WORKS:
 #
 # 1. Use /bi menu to make changes.
-#    (Changes are stored in memory for performance)
+#    (Changes are stored ONLY in memory initially)
 #
 # 2. Use /bi save to write your changes from memory to this file.
-#    (The plugin also auto-saves every X minutes)
+#    (The plugin also auto-saves periodically - see 'auto-save-interval-minutes' below)
 #
-# 3. Use /bi reload ONLY if you have manually edited this file.
+# 3. Use /bi reload ONLY if you have MANUALLY edited this file
+#    and want to load those changes, discarding any unsaved menu edits.
 #
-# WARNING: /bi reload LOADS this file from disk and DISCARDS
-#          any unsaved changes made via /bi menu.
+# WARNING: /bi reload requires confirmation and WILL DISCARD
+#          any unsaved changes made via /bi menu. Use /bi save first!
 #
 # ===================================================================
 
-# -------------------------------------------------------------------------------------------
-# BuffedItems - Plugin Configuration v${project.version}
-# Author: StreetMelodeez
-# -------------------------------------------------------------------------------------------
 # Welcome to the configuration file for BuffedItems!
 # Here you can create unique items with permanent effects and attributes.
 # For full control, use the in-game editor: /bi menu
@@ -80,7 +82,14 @@
 #         You only need to add them if you want to explicitly set them to 'false'.
 # -------------------------------------------------------------------------------------------
 debug-mode: false
+
+# How often the plugin automatically saves changes made via /bi menu
+# to this file (in minutes). Use /bi save for immediate saving.
 auto-save-interval-minutes: 5
+
+# If true, potion effect icons given by this plugin will be visible
+# in the inventory and on the HUD. If false, effects are active but invisible.
+show-potion-icons: true
 
 items:
   bunny_charm:

@@ -13,6 +13,7 @@ public class ConfigManager {
     private static BuffedItems plugin;
     public static final String NO_PERMISSION = "NONE";
     private static boolean debugMode = false;
+    private static boolean showPotionIcons = true;
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
@@ -36,7 +37,7 @@ public class ConfigManager {
 
         plugin.reloadConfig();
         plugin.getItemManager().loadItems(false);
-        updateDebugMode();
+        loadGlobalSettings();
         plugin.reloadConfigSettings();
         invalidateAllPlayerCaches();
 
@@ -44,8 +45,9 @@ public class ConfigManager {
         sendDebugMessage(() -> "[Config] Reload complete in " + elapsedTime + "ms");
     }
 
-    public static void updateDebugMode() {
+    public static void loadGlobalSettings() {
         debugMode = plugin.getConfig().getBoolean("debug-mode", false);
+        showPotionIcons = plugin.getConfig().getBoolean("show-potion-icons", true);
 
         if (debugMode) {
             plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] §e[Debug Mode] Enabled - Detailed logs will be shown."));
@@ -99,10 +101,6 @@ public class ConfigManager {
         return true;
     }
 
-    public static boolean isDebugMode() {
-        return debugMode;
-    }
-
     private static void invalidateAllPlayerCaches() {
         if (plugin.getEffectApplicatorTask() == null) {
             return;
@@ -116,5 +114,13 @@ public class ConfigManager {
         }
 
         sendDebugMessage(() -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
+    }
+
+    public static boolean isDebugMode() {
+        return debugMode;
+    }
+
+    public static boolean shouldShowPotionIcons() {
+        return showPotionIcons;
     }
 }

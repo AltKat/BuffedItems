@@ -86,7 +86,7 @@ public class Commands implements CommandExecutor {
         }
         if (sender.hasPermission("buffeditems.command.reload")) {
             sender.sendMessage(ChatColor.GOLD + "/bi save (Saves menu changes to config.yml)");
-            sender.sendMessage(ChatColor.GOLD + "/bi reload (Loads config.yml, discards unsaved changes)");
+            sender.sendMessage(ChatColor.GOLD + "/bi reload (Loads config.yml, discards unsaved in-game made changes)");
         }
         if (sender.hasPermission("buffeditems.command.list")) {
             sender.sendMessage(ChatColor.GOLD + "/bi list");
@@ -138,6 +138,11 @@ public class Commands implements CommandExecutor {
         target.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aYou have received &e" + amount + "x &r" + buffedItem.getDisplayName()));
 
         plugin.getLogger().info("Gave " + amount + "x " + itemId + " to " + target.getName() + " (by: " + sender.getName() + ")");
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            plugin.getEffectApplicatorTask().markPlayerForUpdate(target.getUniqueId());
+            ConfigManager.sendDebugMessage(() -> "[Command] Marked " + target.getName() + " for update after receiving item via /bi give.");
+        }, 1L);
 
         return true;
     }
