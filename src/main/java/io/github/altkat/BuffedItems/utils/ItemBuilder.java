@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.utils;
 
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -42,29 +43,31 @@ public class ItemBuilder {
             meta.setUnbreakable(true);
         }
 
-        if (buffedItem.hasGlow()) {
-            meta.addEnchant(Enchantment.LUCK, 1, false);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
+        boolean hasRealEnchants = !buffedItem.getEnchantments().isEmpty();
 
-        Map<Enchantment, Integer> enchantments = buffedItem.getEnchantments();
-        if (!enchantments.isEmpty()) {
-            for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+        if (hasRealEnchants) {
+            for (Map.Entry<Enchantment, Integer> entry : buffedItem.getEnchantments().entrySet()) {
                 Enchantment enchantment = entry.getKey();
                 int level = entry.getValue();
                 try {
                     meta.addEnchant(enchantment, level, true);
-                    plugin.getLogger().info("Applied enchantment: " + enchantment.getKey().getKey() + " Level: " + level);
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Failed to apply enchantment " + enchantment.getKey().getKey() +
+                    ConfigManager.sendDebugMessage(() ->"Failed to apply enchantment " + enchantment.getKey().getKey() +
                             " with level " + level + " to item " + buffedItem.getId() + ": " + e.getMessage());
                 }
+            }
+        }
+
+        if (buffedItem.hasGlow()) {
+            if (!hasRealEnchants || buffedItem.getFlag("HIDE_ENCHANTS")) {
+                meta.addEnchant(Enchantment.LUCK, 1, false);
             }
         }
 
         if (buffedItem.getFlag("HIDE_ENCHANTS")) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
+
         if (buffedItem.getFlag("HIDE_ATTRIBUTES")) {
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         }

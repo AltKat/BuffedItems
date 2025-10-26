@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -43,10 +44,15 @@ public class ItemEditorMenu extends Menu {
                     ItemStack clone = new ItemBuilder(itemToClone, plugin).build();
                     p.getInventory().addItem(clone);
                     p.sendMessage("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory.");
+
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
+                        ConfigManager.sendDebugMessage(() -> "[Menu] Marked " + p.getName() + " for update after receiving item via Test Copy button.");
+                    }, 1L);
+
                 } else {
                     p.sendMessage("§cCould not generate test copy. Item not found in memory.");
                 }
-                p.closeInventory();
                 break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);

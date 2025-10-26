@@ -32,7 +32,7 @@ public class ItemManager {
 
         ConfigurationSection itemsSection = plugin.getConfig().getConfigurationSection("items");
         if (itemsSection == null) {
-            plugin.getLogger().warning("No 'items' section found in config.yml.");
+            ConfigManager.sendDebugMessage(() ->"No 'items' section found in config.yml.");
             return;
         }
 
@@ -112,7 +112,7 @@ public class ItemManager {
         if (material == null) {
             String errorMsg = "Invalid Material: '" + materialName + "'";
             buffedItem.addErrorMessage("§c" + errorMsg);
-            plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+            ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
             buffedItem.setMaterial(Material.BARRIER);
         }
 
@@ -138,14 +138,14 @@ public class ItemManager {
                         if (type == null) {
                             String errorMsg = "Invalid PotionEffect: '" + effectName + "'";
                             buffedItem.addErrorMessage("§c" + errorMsg);
-                            plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                            ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
                             continue;
                         }
                         int level = Integer.parseInt(parts[1]);
                         potionEffects.put(type, level);
                     } catch (Exception e) {
                         buffedItem.addErrorMessage("§cCorrupt PotionEffect format: §e'" + effectString + "'");
-                        plugin.getLogger().warning("[Item: " + itemId + "] Corrupt effect format: " + effectString);
+                        ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Corrupt effect format: " + effectString);
                     }
                 }
 
@@ -173,10 +173,10 @@ public class ItemManager {
                     } catch (IllegalArgumentException e) {
                         String errorMsg = "Invalid Attribute or Operation: '" + attrString + "'. Error: " + e.getMessage();
                         buffedItem.addErrorMessage("§c" + errorMsg);
-                        plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                        ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
                     } catch (Exception e) {
                         buffedItem.addErrorMessage("§cCorrupt Attribute format: §e'" + attrString + "'");
-                        plugin.getLogger().warning("[Item: " + itemId + "] Corrupt attribute format: " + attrString);
+                        ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Corrupt attribute format: " + attrString);
                     }
                 }
 
@@ -199,17 +199,17 @@ public class ItemManager {
                 if (enchantment == null) {
                     String errorMsg = "Invalid Enchantment name: '" + enchName + "'";
                     buffedItem.addErrorMessage("§c" + errorMsg);
-                    plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                    ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
                     continue;
                 }
                 int level = Integer.parseInt(parts[1]);
                 if (level <= 0) {
-                    plugin.getLogger().warning("[Item: " + itemId + "] Enchantment level for " + enchName + " must be positive, found: " + level + ". Skipping.");
+                    ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Enchantment level for " + enchName + " must be positive, found: " + level + ". Skipping.");
                     continue;
                 }
 
                 if (enchantments.containsKey(enchantment)) {
-                    plugin.getLogger().warning("[Item: " + itemId + "] Duplicate enchantment found: '" + enchName + "'. Using the first definition.");
+                    ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Duplicate enchantment found: '" + enchName + "'. Using the first definition.");
                     continue;
                 }
 
@@ -218,10 +218,10 @@ public class ItemManager {
 
             } catch (NumberFormatException e) {
                 buffedItem.addErrorMessage("§cInvalid Enchantment level format: §e'" + enchString + "'");
-                plugin.getLogger().warning("[Item: " + itemId + "] Invalid enchantment level format: " + enchString);
+                ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Invalid enchantment level format: " + enchString);
             } catch (Exception e) {
                 buffedItem.addErrorMessage("§cCorrupt Enchantment format: §e'" + enchString + "' Error: " + e.getMessage());
-                plugin.getLogger().warning("[Item: " + itemId + "] Corrupt enchantment format: " + enchString + " | Error: " + e.getMessage());
+                ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Corrupt enchantment format: " + enchString + " | Error: " + e.getMessage());
             }
         }
 
