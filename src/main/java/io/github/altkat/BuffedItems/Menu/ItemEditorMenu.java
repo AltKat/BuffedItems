@@ -47,7 +47,7 @@ public class ItemEditorMenu extends Menu {
 
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
-                        ConfigManager.sendDebugMessage(() -> "[Menu] Marked " + p.getName() + " for update after receiving item via Test Copy button.");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Menu] Marked " + p.getName() + " for update after receiving item via Test Copy button.");
                     }, 1L);
 
                 } else {

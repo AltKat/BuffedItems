@@ -92,7 +92,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         }
 
         if (debugTick && !playersToScanFully.isEmpty()) {
-            ConfigManager.sendDebugMessage(() -> "[Task] Running FULL scan (Attributes Only) for " + playersToScanFully.size() + " modified players...");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running FULL scan (Attributes Only) for " + playersToScanFully.size() + " modified players...");
         }
 
         for (UUID playerUUID : playersToScanFully) {
@@ -106,8 +106,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
         // 2. POTION APPLY/REFRESH (ALL CACHED PLAYERS - Potions Only)
 
-        if (debugTick) {
-            ConfigManager.sendDebugMessage(() -> "[Task] Running POTION APPLY/REFRESH for " + playerCache.size() + " cached players...");
+        if (debugTick && !playerCache.isEmpty()) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running POTION APPLY/REFRESH for " + playerCache.size() + " cached players...");
         }
 
         List<UUID> offlinePlayers = new ArrayList<>();
@@ -147,7 +147,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 managedEffects.remove(offlineUUID); // Also remove from managed effects
             }
             if (debugTick) {
-                ConfigManager.sendDebugMessage(() -> "[Task] Cleaned up " + offlinePlayers.size() + " offline player(s) from cache");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Cleaned up " + offlinePlayers.size() + " offline player(s) from cache");
             }
         }
     }
@@ -161,7 +161,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         UUID playerUUID = player.getUniqueId();
 
         if (debugTick) {
-            ConfigManager.sendDebugMessage(() -> "[Task-FullScan] Performing attribute scan for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task-FullScan] Performing attribute scan for " + player.getName());
         }
 
         List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player, debugTick);
@@ -170,7 +170,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         Map<UUID, String[]> desiredModifierContext = new HashMap<>();
 
         if (debugTick && !activeItems.isEmpty()) {
-            ConfigManager.sendDebugMessage(() -> "[Task-FullScan] Found " + activeItems.size() + " active item(s) for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Found " + activeItems.size() + " active item(s) for " + player.getName());
         }
 
         // Calculate desired state (Attributes AND Potions) based on current inventory
@@ -213,7 +213,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 if (!desiredModifiersByUUID.containsKey(trackedModifier.getUniqueId())) {
                     modifiersToRemove.add(new ModifierToRemove(trackedAttribute, trackedModifier.getUniqueId()));
                     if (debugTick) {
-                        ConfigManager.sendDebugMessage(() -> "[Task-FullScan] Marking modifier for removal: " + trackedModifier.getUniqueId() + " on " + trackedAttribute.name());
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Marking modifier for removal: " + trackedModifier.getUniqueId() + " on " + trackedAttribute.name());
                     }
                 }
             }
@@ -235,7 +235,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
                 attributesToAddByItemSlot.computeIfAbsent(key, k -> new ArrayList<>()).add(attrString);
                 if (debugTick) {
-                    ConfigManager.sendDebugMessage(() -> "[Task-FullScan] Marking modifier for addition: " + desiredUUID + " (" + attrString + ") via " + key);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Marking modifier for addition: " + desiredUUID + " (" + attrString + ") via " + key);
                 }
             }
         }
@@ -295,16 +295,18 @@ public class EffectApplicatorTask extends BukkitRunnable {
             if (buffedItem != null) {
                 activeItems.add(new AbstractMap.SimpleEntry<>(buffedItem, slot));
                 if (debugTick) {
-                    ConfigManager.sendDebugMessage(() -> "[Task-FindItem] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Task-FindItem] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
                 }
-            } else if (debugTick) {
-                ConfigManager.sendDebugMessage(() -> "[Task-FindItem] Unknown BuffedItem ID found on item: " + itemId + " (player: " + player.getName() + ", slot: " + slot + ")");
+            } else {
+                if (debugTick) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Task-FindItem] Unknown BuffedItem ID found on item: " + itemId + " (player: " + player.getName() + ", slot: " + slot + ")");
+                }
             }
         }
     }
 
     public void playerQuit(Player player) {
-        ConfigManager.sendDebugMessage(() -> "[Task] Removing player data: " + player.getName());
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Task] Removing player data: " + player.getName());
         UUID uuid = player.getUniqueId();
         managedEffects.remove(uuid);
         playerCache.remove(uuid);
@@ -324,7 +326,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
      * are updated in the next tick.
      */
     public void invalidateCacheForHolding(String itemId) {
-        ConfigManager.sendDebugMessage(() -> "[Task] Invalidating cache for players holding: " + itemId);
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Invalidating cache for players holding: " + itemId);
+        int markedCount = 0;
         for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
             UUID playerUUID = entry.getKey();
             CachedPlayerData data = entry.getValue();
@@ -336,9 +339,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
             if (isHolding) {
                 markPlayerForUpdate(playerUUID);
-                ConfigManager.sendDebugMessage(() -> "[Task] --> Marked " + playerUUID);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Marked player " + playerUUID + " due to holding " + itemId);
             }
         }
+        final int finalMarkedCount = markedCount;
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Marked " + finalMarkedCount + " player(s) for update due to holding " + itemId);
     }
 
     public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {

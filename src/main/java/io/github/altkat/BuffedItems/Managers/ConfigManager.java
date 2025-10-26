@@ -12,8 +12,14 @@ public class ConfigManager {
 
     private static BuffedItems plugin;
     public static final String NO_PERMISSION = "NONE";
-    private static boolean debugMode = false;
+    private static int debugLevel = 0;
     private static boolean showPotionIcons = true;
+
+    public static final int DEBUG_OFF = 0;
+    public static final int DEBUG_INFO = 1;      // Basic plugin status
+    public static final int DEBUG_TASK = 2;      // Core task loops, major events
+    public static final int DEBUG_DETAILED = 3;  // Per-player effect details
+    public static final int DEBUG_VERBOSE = 4;   // GUI, Chat, Inventory events (spammy)
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
@@ -22,7 +28,7 @@ public class ConfigManager {
     public static void reloadConfig() {
         long startTime = System.currentTimeMillis();
 
-        sendDebugMessage(() -> "[Config] Reloading configuration...");
+        sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
 
         File configFile = new File(plugin.getDataFolder(), "config.yml");
         if (!configFile.exists()) {
@@ -42,34 +48,41 @@ public class ConfigManager {
         invalidateAllPlayerCaches();
 
         long elapsedTime = System.currentTimeMillis() - startTime;
-        sendDebugMessage(() -> "[Config] Reload complete in " + elapsedTime + "ms");
+        sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
     }
 
     public static void loadGlobalSettings() {
-        debugMode = plugin.getConfig().getBoolean("debug-mode", false);
+        debugLevel = plugin.getConfig().getInt("debug-level", 0);
+        if (debugLevel < 0) {
+            debugLevel = 0;
+        }
+
         showPotionIcons = plugin.getConfig().getBoolean("show-potion-icons", true);
 
-        if (debugMode) {
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] §e[Debug Mode] Enabled - Detailed logs will be shown."));
+        if (isDebugLevelEnabled(DEBUG_INFO)) {
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    "&9[&6BuffedItems&9] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level."));
         }
     }
 
-    @Deprecated
-    public static void sendDebugMessage(String message) {
-        if (debugMode) {
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] &e[Debug] &r" + message));
-        }
-    }
-
-    public static void sendDebugMessage(Supplier<String> messageSupplier) {
-        if (debugMode) {
+    /**
+     * Sends a debug message (with Lazy evaluation) if the specified level is enabled.
+     * Prepends the message with "[L<level>]".
+     *
+     * @param level The debug level required to show this message.
+     * @param messageSupplier The message supplier (only called if level is met).
+     */
+    public static void sendDebugMessage(int level, Supplier<String> messageSupplier) {
+        if (debugLevel >= level) {
             String message = messageSupplier.get();
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&9[&6BuffedItems&9] &e[Debug] &r" + message));
+            String prefix = "&9[&6BuffedItems&9] &e[L" + level + "] &r";
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    prefix + message));
         }
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
-        sendDebugMessage(() -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
+        sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
 
         String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
 
@@ -83,11 +96,11 @@ public class ConfigManager {
     }
 
     public static boolean createNewItem(String itemId) {
-        sendDebugMessage(() -> "[Config] Creating new item: " + itemId);
+        sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new item: " + itemId);
 
         FileConfiguration config = plugin.getConfig();
         if (config.contains("items." + itemId)) {
-            sendDebugMessage(() -> "[Config] Item already exists: " + itemId);
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Item already exists: " + itemId);
             return false;
         }
 
@@ -107,17 +120,22 @@ public class ConfigManager {
         }
 
         int playerCount = org.bukkit.Bukkit.getOnlinePlayers().size();
-        sendDebugMessage(() -> "[Config] Invalidating cache for all (" + playerCount + ") online players after config change...");
+        sendDebugMessage(DEBUG_TASK, () -> "[Config] Invalidating cache for all (" + playerCount + ") online players after config change...");
 
         for (org.bukkit.entity.Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
             plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
         }
 
-        sendDebugMessage(() -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
+        sendDebugMessage(DEBUG_TASK, () -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
     }
 
-    public static boolean isDebugMode() {
-        return debugMode;
+    /**
+     * Checks if the specified debug level (or higher) is currently enabled.
+     * @param level The level to check (e.g., ConfigManager.DEBUG_DETAILED).
+     * @return true if logging is enabled for this level.
+     */
+    public static boolean isDebugLevelEnabled(int level) {
+        return debugLevel >= level;
     }
 
     public static boolean shouldShowPotionIcons() {

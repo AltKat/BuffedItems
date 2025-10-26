@@ -19,9 +19,9 @@ public class PlayerJoinListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        ConfigManager.sendDebugMessage(() -> "[Join] Cleaning up any potentially stale tracked/orphaned attributes for " + player.getName());
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Join] Cleaning up any potentially stale tracked/orphaned attributes for " + player.getName());
         plugin.getEffectManager().clearAllAttributes(player);
-        ConfigManager.sendDebugMessage(() -> "[Join] Attribute cleanup check finished for " + player.getName());
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Join] Attribute cleanup check finished for " + player.getName());
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
     }
 }

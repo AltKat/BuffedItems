@@ -52,7 +52,7 @@ public class ItemBuilder {
                 try {
                     meta.addEnchant(enchantment, level, true);
                 } catch (IllegalArgumentException e) {
-                    ConfigManager.sendDebugMessage(() ->"Failed to apply enchantment " + enchantment.getKey().getKey() +
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[ItemBuilder] Failed to apply enchantment " + enchantment.getKey().getKey() +
                             " with level " + level + " to item " + buffedItem.getId() + ": " + e.getMessage());
                 }
             }

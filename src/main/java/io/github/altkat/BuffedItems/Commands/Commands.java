@@ -68,6 +68,7 @@ public class Commands implements CommandExecutor {
                 }
                 if (sender instanceof Player) {
                     Player p = (Player) sender;
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Opening main menu for " + p.getName());
                     new MainMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {
                     sender.sendMessage(ChatColor.RED + "This command can only be used by players.");
@@ -102,12 +103,12 @@ public class Commands implements CommandExecutor {
             return true;
         }
 
-        ConfigManager.sendDebugMessage("[Command] Give command: player=" + args[1] + ", item=" + args[2] + ", amount=" + (args.length >= 4 ? args[3] : "1"));
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Give command: player=" + args[1] + ", item=" + args[2] + ", amount=" + (args.length >= 4 ? args[3] : "1"));
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
             sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
-            ConfigManager.sendDebugMessage("[Command] Player not found: " + args[1]);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Player not found: " + args[1]);
             return true;
         }
 
@@ -115,7 +116,7 @@ public class Commands implements CommandExecutor {
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
         if (buffedItem == null) {
             sender.sendMessage(ChatColor.RED + "Item not found in config: " + itemId);
-            ConfigManager.sendDebugMessage("[Command] Item not found: " + itemId);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Item not found: " + itemId);
             return true;
         }
 
@@ -125,7 +126,7 @@ public class Commands implements CommandExecutor {
                 amount = Integer.parseInt(args[3]);
             } catch (NumberFormatException e) {
                 sender.sendMessage(ChatColor.RED + "Invalid amount: " + args[3]);
-                ConfigManager.sendDebugMessage("[Command] Invalid amount: " + args[3]);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Invalid amount: " + args[3]);
                 return true;
             }
         }
@@ -141,7 +142,7 @@ public class Commands implements CommandExecutor {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             plugin.getEffectApplicatorTask().markPlayerForUpdate(target.getUniqueId());
-            ConfigManager.sendDebugMessage(() -> "[Command] Marked " + target.getName() + " for update after receiving item via /bi give.");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Command] Marked " + target.getName() + " for update after receiving item via /bi give.");
         }, 1L);
 
         return true;
@@ -154,13 +155,14 @@ public class Commands implements CommandExecutor {
 
         if (expiryTime != null && currentTime < expiryTime) {
             reloadConfirmations.remove(senderName);
-            ConfigManager.sendDebugMessage(() -> "[Reload] Reload confirmed. Reloading from disk.");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Reload confirmed by " + senderName + ". Reloading from disk.");
             ConfigManager.reloadConfig();
             sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded from config.yml.");
             sender.sendMessage(ChatColor.GREEN + "Unsaved changes made via GUI (if any) have been discarded.");
 
         } else {
             reloadConfirmations.put(senderName, currentTime + CONFIRM_TIMEOUT_MS);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Confirmation requested by " + senderName + ".");
             sender.sendMessage(ChatColor.YELLOW + "==================[ " + ChatColor.RED + "WARNING" + ChatColor.YELLOW + " ]==================");
             sender.sendMessage(ChatColor.RED + "You are about to reload from 'config.yml'.");
             sender.sendMessage(ChatColor.RED + "Any changes made via " + ChatColor.GOLD + "/bi menu" + ChatColor.RED + " that were");
@@ -173,10 +175,10 @@ public class Commands implements CommandExecutor {
 
     private boolean handleSaveCommand(CommandSender sender) {
         try {
-            ConfigManager.sendDebugMessage(() -> "[Save] Saving pending changes to disk...");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Saving pending changes to disk triggered by " + sender.getName() + "...");
             plugin.saveConfig();
             plugin.restartAutoSaveTask();
-            ConfigManager.sendDebugMessage(() -> "[Save] Save complete.");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Save complete.");
             sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been saved to config.yml.");
         } catch (Exception e) {
             sender.sendMessage(ChatColor.RED + "Error: Could not save config.yml. Check console.");

@@ -104,6 +104,6 @@ public class InventoryChangeListener implements Listener {
 
     private void scheduleInventoryCheck(Player player) {
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
-        ConfigManager.sendDebugMessage(() -> "[InventoryChange] Marked " + player.getName() + " for update due to inventory change");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] Marked " + player.getName() + " for update due to inventory change");
     }
 }

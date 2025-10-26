@@ -81,7 +81,15 @@
 #   Note: Flags marked with (Default: true) will be active even if not specified in the config.
 #         You only need to add them if you want to explicitly set them to 'false'.
 # -------------------------------------------------------------------------------------------
-debug-mode: false
+
+# Debug Logging Level: Controls how much detail is printed to the console.
+# Higher numbers show more information. Recommended for normal use: 0 or 1.
+# 0 = OFF: Only errors and critical warnings.
+# 1 = INFO: Basic plugin status (loading, commands, save/reload).
+# 2 = TASK: Level 1 + Core task loops and major events (EffectApplicatorTask).
+# 3 = DETAILED: Level 2 + Per-player effect application/removal details (EffectManager).
+# 4 = VERBOSE: Level 3 + GUI clicks, chat inputs, inventory changes (Listeners).
+debug-level: 1
 
 # How often the plugin automatically saves changes made via /bi menu
 # to this file (in minutes). Use /bi save for immediate saving.
@@ -93,85 +101,221 @@ show-potion-icons: true
 
 items:
   bunny_charm:
-    display_name: "&aBunny's Charm"
+    display_name: '&aBunny''s Charm'
     lore:
-      - "&7A small charm infused with the spirit of a rabbit."
-      - ""
-      - "&6Passive Effect:"
-      - "&7- When held in your off-hand, grants"
-      - "&7  permanent Jump Boost II and Slow Falling I."
-    material: "RABBIT_FOOT"
+      - '&7A charm pulsating with leporine energy.'
+      - ''
+      - '&6Passive Effect (Off Hand):'
+      - '&7- Grants permanent Jump Boost II & Slow Falling I.'
+    material: RABBIT_FOOT
     glow: true
     effects:
       OFF_HAND:
         potion_effects:
-          - "JUMP;2"
-          - "SLOW_FALLING;1"
+          - JUMP;2
+          - SLOW_FALLING;1
+    flags:
+      PREVENT_CRAFTING_USE: true
   miners_dream:
-    display_name: "&bMiner's Dream"
+    display_name: '&bMiner''s Dream'
     lore:
-      - "&7This pickaxe hums with an ancient energy."
-      - ""
-      - "&6Active Effect:"
-      - "&7- When held in your main hand, grants"
-      - "&7  permanent Haste II."
-      - ""
-      - "&6Enchantments:"
-      - "&7- Efficiency V"
-    material: "DIAMOND_PICKAXE"
-    glow: false
+      - '&7This pickaxe hums with earthen energy.'
+      - ''
+      - '&6Active Effect (Main Hand):'
+      - '&7- Grants permanent Haste II.'
+      - '&6Enchantments:'
+      - '&7- Efficiency V, Unbreaking III'
+    material: DIAMOND_PICKAXE
+    glow: true
     effects:
       MAIN_HAND:
         potion_effects:
-          - "FAST_DIGGING;2"
+          - FAST_DIGGING;2
     enchantments:
-      - "DIG_SPEED;5" # Efficiency V
+      - DIG_SPEED;5
+      - DURABILITY;3
+    flags:
+      HIDE_ENCHANTS: false
   warriors_talisman:
-    display_name: "&cWarrior's Talisman"
+    display_name: '&cWarrior''s Talisman'
     lore:
-      - "&7Forged in dragon's fire, this talisman"
-      - "&7bolsters the wearer's life force."
-      - ""
-      - "&6Passive Effect:"
-      - "&7- As long as this is in your inventory,"
-      - "&7  you gain +2 Hearts and +1 Armor Toughness."
-      - "&cRequires Permission: buffeditems.item.warrior"
-    material: "NETHERITE_INGOT"
+      - '&7Forged in dragon''s fire, this talisman'
+      - '&7bolsters the wearer''s life force.'
+      - ''
+      - '&6Passive Effect (Inventory):'
+      - '&7- Grants +2 Hearts & +1 Armor Toughness.'
+      - '&cRequires Permission: buffeditems.item.warrior'
+    material: NETHERITE_INGOT
     glow: true
-    permission: "buffeditems.item.warrior"
+    permission: buffeditems.item.warrior
     effects:
       INVENTORY:
         attributes:
-          - "GENERIC_MAX_HEALTH;ADD_NUMBER;4.0"
-          - "GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0"
+          - GENERIC_MAX_HEALTH;ADD_NUMBER;4.0
+          - GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0
+    flags:
+      HIDE_ATTRIBUTES: false
   helmet_of_wisdom:
-    display_name: "&9Helmet of Wisdom"
+    display_name: '&9Helmet of Wisdom'
     lore:
-      - "&7This helmet clears the mind and reveals the unseen."
-      - ""
-      - "&6Passive Effect:"
-      - "&7- While worn as a helmet, grants permanent"
-      - "&7  Night Vision and Water Breathing."
-    material: "DIAMOND_HELMET"
+      - '&7This helmet clears the mind and reveals the unseen.'
+      - ''
+      - '&6Passive Effect (Helmet):'
+      - '&7- Grants permanent Night Vision & Water Breathing.'
+      - '&6Enchantments:'
+      - '&7- Respiration III'
+    material: DIAMOND_HELMET
     glow: true
     effects:
       HELMET:
         potion_effects:
-          - "NIGHT_VISION;1"
-          - "WATER_BREATHING;1"
+          - NIGHT_VISION;1
+          - WATER_BREATHING;1
+    enchantments:
+      - OXYGEN;3
   berserkers_greaves:
-    display_name: "&4Berserker's Greaves"
+    display_name: '&4Berserker''s Greaves'
     lore:
-      - "&7Boots stained with the fury of countless battles."
-      - ""
-      - "&6Passive Effect:"
-      - "&7- While worn as boots, grants a permanent"
-      - "&7  +10% bonus to your movement speed but"
-      - "&7  reduces your armor by a small amount."
-    material: "NETHERITE_BOOTS"
-    glow: false
+      - '&7Boots stained with the fury of countless battles.'
+      - ''
+      - '&6Passive Effect (Boots):'
+      - '&7- Grants +15% Movement Speed.'
+      - '&7- Slightly reduces Armor.'
+      - '&6Enchantments:'
+      - '&7- Feather Falling IV'
+    material: NETHERITE_BOOTS
+    glow: true
     effects:
       BOOTS:
         attributes:
-          - "GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.10"
-          - "GENERIC_ARMOR;ADD_NUMBER;-1.0"
+          - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
+          - GENERIC_ARMOR;ADD_NUMBER;-1.0
+    enchantments:
+      - PROTECTION_FALL;4
+    flags:
+      HIDE_ATTRIBUTES: false
+  swiftness_boots:
+    display_name: '&bBoots of Swiftness'
+    lore:
+      - '&7Feel the wind beneath your feet.'
+      - ''
+      - '&6Passive Effect:'
+      - '&7- While worn, grants permanent Speed II.'
+    material: IRON_BOOTS
+    glow: true
+    effects:
+      BOOTS:
+        potion_effects:
+          - SPEED;2
+  guardian_chestplate:
+    display_name: '&eGuardian''s Chestplate'
+    lore:
+      - '&7Imbued with protective energies.'
+      - ''
+      - '&6Passive Effect:'
+      - '&7- While worn, grants +4 Armor and +2 Knockback Resistance.'
+      - '&cRequires Permission: buffeditems.item.guardian'
+    material: DIAMOND_CHESTPLATE
+    permission: buffeditems.item.guardian
+    effects:
+      CHESTPLATE:
+        attributes:
+          - GENERIC_ARMOR;ADD_NUMBER;4.0
+          - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.2
+  legendary_sword:
+    display_name: '&6Legendary Sword'
+    lore:
+      - ''
+      - '&7A blade whispered about in legends.'
+    material: NETHERITE_SWORD
+    glow: true
+    enchantments:
+      - DAMAGE_ALL;7
+      - FIRE_ASPECT;2
+      - LOOT_BONUS_MOBS;3
+      - SWEEPING_EDGE;3
+    flags:
+      UNBREAKABLE: true
+      HIDE_ENCHANTS: false
+  amulet_of_vitality:
+    display_name: '&cAmulet of Vitality'
+    lore:
+      - '&7A pulsating gem that enhances life force.'
+      - ''
+      - '&6Passive Effect:'
+      - '&7- While in inventory, grants +1 Heart and Regeneration I.'
+    material: HEART_OF_THE_SEA
+    glow: true
+    effects:
+      INVENTORY:
+        potion_effects:
+          - REGENERATION;1
+        attributes:
+          - GENERIC_MAX_HEALTH;ADD_NUMBER;2.0
+  axe_of_the_berserker:
+    display_name: '&4Axe of the Berserker'
+    lore:
+      - '&7Unleash your fury!'
+      - ''
+      - '&6Active Effect (Main Hand):'
+      - '&7- Grants Strength I.'
+      - '&6Enchantments:'
+      - '&7- Sharpness V, Unbreaking III'
+    material: NETHERITE_AXE
+    glow: true
+    effects:
+      MAIN_HAND:
+        potion_effects:
+          - INCREASE_DAMAGE;1
+    enchantments:
+      - DAMAGE_ALL;5
+      - DURABILITY;3
+    flags:
+      PREVENT_DROP: true
+      PREVENT_DEATH_DROP: true
+      HIDE_ENCHANTS: false
+  helmet_of_the_deep:
+    display_name: '&3Helmet of the Deep'
+    lore:
+      - '&7Breathe easy beneath the waves.'
+      - ''
+      - '&6Passive Effect (Helmet):'
+      - '&7- Grants permanent Water Breathing.'
+      - '&6Enchantments:'
+      - '&7- Aqua Affinity I, Protection IV'
+    material: TURTLE_HELMET
+    glow: true
+    effects:
+      HELMET:
+        potion_effects:
+          - WATER_BREATHING;1
+    enchantments:
+      - WATER_WORKER;1
+      - PROTECTION_ENVIRONMENTAL;4
+    flags:
+      HIDE_ENCHANTS: false
+  orb_of_elements:
+    display_name: '&dOrb of Elements'
+    lore:
+      - '&7Harness the power of fire and frost.'
+      - ''
+      - '&6Passive Effect (Off Hand):'
+      - '&7- Grants Fire Resistance I.'
+      - '&7- Increases Attack Speed slightly.'
+      - '&6Enchantments:'
+      - '&7- Mending I'
+    material: MAGMA_CREAM
+    glow: true
+    effects:
+      OFF_HAND:
+        potion_effects:
+          - FIRE_RESISTANCE;1
+        attributes:
+          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.05
+    enchantments:
+      - MENDING;1
+    flags:
+      PREVENT_CRAFTING_USE: false
+      PREVENT_ANVIL_USE: true
+      HIDE_ATTRIBUTES: false
+      HIDE_ENCHANTS: false

@@ -32,18 +32,18 @@ public class ItemManager {
 
         ConfigurationSection itemsSection = plugin.getConfig().getConfigurationSection("items");
         if (itemsSection == null) {
-            ConfigManager.sendDebugMessage(() ->"No 'items' section found in config.yml.");
+            plugin.getLogger().warning("No 'items' section found in config.yml.");
             return;
         }
 
-        ConfigManager.sendDebugMessage(() -> "[ItemManager] Loading items from config...");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Loading items from config...");
         int validItems = 0;
         int invalidItems = 0;
 
         for (String itemId : itemsSection.getKeys(false)) {
             ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
             if (itemSection == null) {
-                ConfigManager.sendDebugMessage(() -> "[ItemManager] Skipping null section for: " + itemId);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Skipping null section for: " + itemId);
                 continue;
             }
 
@@ -62,7 +62,7 @@ public class ItemManager {
             plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config (" + validItems + " valid, " + invalidItems + " with errors) in " + elapsedTime + "ms");
         }
 
-        ConfigManager.sendDebugMessage(() -> "[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Tracking " + managedAttributeUUIDs.size() + " attribute UUIDs");
     }
 
     public void reloadSingleItem(String itemId) {
@@ -75,17 +75,17 @@ public class ItemManager {
 
         if (itemSection == null) {
             buffedItems.remove(itemId);
-            ConfigManager.sendDebugMessage(() -> "[ItemManager] Unloaded deleted item: " + itemId);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Unloaded deleted item: " + itemId);
             return;
         }
 
         BuffedItem newItem = parseItem(itemSection, itemId);
         buffedItems.put(itemId, newItem);
-        ConfigManager.sendDebugMessage(() -> "[ItemManager] Reloaded single item: " + itemId + " (Valid: " + newItem.isValid() + ")");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Reloaded single item: " + itemId + " (Valid: " + newItem.isValid() + ")");
     }
 
     private BuffedItem parseItem(ConfigurationSection itemSection, String itemId) {
-        ConfigManager.sendDebugMessage(() -> "[ItemManager] Processing item: " + itemId);
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Processing item: " + itemId);
 
         String displayName = itemSection.getString("display_name", "Default Name");
         List<String> lore = itemSection.getStringList("lore");
@@ -104,7 +104,7 @@ public class ItemManager {
             for (String flagKey : flagsSection.getKeys(false)) {
                 flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
             }
-            ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
         }
 
         BuffedItem buffedItem = new BuffedItem(itemId, displayName, lore, material, glow, new HashMap<>(), permission);
@@ -112,14 +112,14 @@ public class ItemManager {
         if (material == null) {
             String errorMsg = "Invalid Material: '" + materialName + "'";
             buffedItem.addErrorMessage("§c" + errorMsg);
-            ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] " + errorMsg);
             buffedItem.setMaterial(Material.BARRIER);
         }
 
         Map<String, BuffedItemEffect> effects = new HashMap<>();
         ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
         if (effectsSection != null) {
-            ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " has effects section");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has effects section");
 
             for (String slot : effectsSection.getKeys(false)) {
                 ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
@@ -129,7 +129,7 @@ public class ItemManager {
                 List<ParsedAttribute> parsedAttributes = new ArrayList<>();
 
                 List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
-                ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
                 for (String effectString : potionEffectStrings) {
                     try {
                         String[] parts = effectString.split(";");
@@ -138,19 +138,19 @@ public class ItemManager {
                         if (type == null) {
                             String errorMsg = "Invalid PotionEffect: '" + effectName + "'";
                             buffedItem.addErrorMessage("§c" + errorMsg);
-                            ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] " + errorMsg);
                             continue;
                         }
                         int level = Integer.parseInt(parts[1]);
                         potionEffects.put(type, level);
                     } catch (Exception e) {
                         buffedItem.addErrorMessage("§cCorrupt PotionEffect format: §e'" + effectString + "'");
-                        ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Corrupt effect format: " + effectString);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] Corrupt effect format: " + effectString + " | Error: " + e.getMessage());
                     }
                 }
 
                 List<String> originalAttributeStrings = slotSection.getStringList("attributes");
-                ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
 
                 for (String attrString : originalAttributeStrings) {
                     try {
@@ -168,15 +168,15 @@ public class ItemManager {
                         parsedAttributes.add(new ParsedAttribute(attribute, operation, amount, modifierUUID));
 
                         managedAttributeUUIDs.add(modifierUUID);
-                        ConfigManager.sendDebugMessage(() -> "[ItemManager] Pre-parsed and cached attribute UUID: " + modifierUUID + " for " + attribute.name());
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[ItemManager] Pre-parsed and cached attribute UUID: " + modifierUUID + " for " + attribute.name());
 
                     } catch (IllegalArgumentException e) {
                         String errorMsg = "Invalid Attribute or Operation: '" + attrString + "'. Error: " + e.getMessage();
                         buffedItem.addErrorMessage("§c" + errorMsg);
-                        ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] " + errorMsg);
                     } catch (Exception e) {
                         buffedItem.addErrorMessage("§cCorrupt Attribute format: §e'" + attrString + "'");
-                        ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Corrupt attribute format: " + attrString);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] Corrupt attribute format: " + attrString + " | Error: " + e.getMessage());
                     }
                 }
 
@@ -186,7 +186,7 @@ public class ItemManager {
 
         Map<Enchantment, Integer> enchantments = new HashMap<>();
         List<String> enchantmentStrings = itemSection.getStringList("enchantments");
-        ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " has " + enchantmentStrings.size() + " enchantments listed.");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has " + enchantmentStrings.size() + " enchantments listed.");
 
         for (String enchString : enchantmentStrings) {
             try {
@@ -199,29 +199,29 @@ public class ItemManager {
                 if (enchantment == null) {
                     String errorMsg = "Invalid Enchantment name: '" + enchName + "'";
                     buffedItem.addErrorMessage("§c" + errorMsg);
-                    ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] " + errorMsg);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] " + errorMsg);
                     continue;
                 }
                 int level = Integer.parseInt(parts[1]);
                 if (level <= 0) {
-                    ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Enchantment level for " + enchName + " must be positive, found: " + level + ". Skipping.");
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->"[Item: " + itemId + "] Enchantment level for " + enchName + " must be positive, found: " + level + ". Skipping.");
                     continue;
                 }
 
                 if (enchantments.containsKey(enchantment)) {
-                    ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Duplicate enchantment found: '" + enchName + "'. Using the first definition.");
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->"[Item: " + itemId + "] Duplicate enchantment found: '" + enchName + "'. Using the first definition.");
                     continue;
                 }
 
                 enchantments.put(enchantment, level);
-                ConfigManager.sendDebugMessage(() -> "[ItemManager] Parsed enchantment: " + enchantment.getKey().getKey() + " Level: " + level);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Parsed enchantment: " + enchantment.getKey().getKey() + " Level: " + level);
 
             } catch (NumberFormatException e) {
                 buffedItem.addErrorMessage("§cInvalid Enchantment level format: §e'" + enchString + "'");
-                ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Invalid enchantment level format: " + enchString);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] Invalid enchantment level format: " + enchString);
             } catch (Exception e) {
                 buffedItem.addErrorMessage("§cCorrupt Enchantment format: §e'" + enchString + "' Error: " + e.getMessage());
-                ConfigManager.sendDebugMessage(() ->"[Item: " + itemId + "] Corrupt enchantment format: " + enchString + " | Error: " + e.getMessage());
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[Item: " + itemId + "] Corrupt enchantment format: " + enchString + " | Error: " + e.getMessage());
             }
         }
 
@@ -236,7 +236,7 @@ public class ItemManager {
     private void cleanupOldUUIDs(BuffedItem item) {
         if (item == null || item.getEffects() == null) return;
 
-        ConfigManager.sendDebugMessage(() -> "[ItemManager] Cleaning up old UUIDs for: " + item.getId());
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[ItemManager] Cleaning up old UUIDs for: " + item.getId());
         for (BuffedItemEffect effect : item.getEffects().values()) {
             if (effect.getParsedAttributes() == null) continue;
             for (ParsedAttribute attr : effect.getParsedAttributes()) {

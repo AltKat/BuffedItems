@@ -34,13 +34,13 @@ public class ChatListener implements Listener {
             String itemId = pmu.getItemToEditId();
             String targetSlot = pmu.getTargetSlot();
 
-            ConfigManager.sendDebugMessage(() -> "[Chat] Processing input from " + p.getName() + ": path=" + path + ", input=" + input);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Processing input from " + p.getName() + ": path=" + path + ", input=" + input);
 
             Bukkit.getScheduler().runTask(plugin, () -> {
 
                 if ("createnewitem".equals(path)) {
                     String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Creating new item: " + newItemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Creating new item: " + newItemId);
 
                     if (ConfigManager.createNewItem(newItemId)) {
                         p.sendMessage("§aNew item '" + newItemId + "' created. Now editing...");
@@ -51,7 +51,7 @@ public class ChatListener implements Listener {
                         new MainMenu(pmu, plugin).open();
                     }
                 } else if (path.startsWith("lore.")) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Updating lore for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Updating lore for item: " + itemId);
                     BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
                     if (item == null) {
                         p.sendMessage("§cError: Item '" + itemId + "' not found in memory.");
@@ -62,13 +62,13 @@ public class ChatListener implements Listener {
 
                     if (path.equals("lore.add")) {
                         currentLore.add(input);
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Added new lore line");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Added new lore line to " + itemId);
                     } else {
                         try {
                             int index = Integer.parseInt(path.substring(5));
                             if (index >= 0 && index < currentLore.size()) {
                                 currentLore.set(index, input);
-                                ConfigManager.sendDebugMessage(() -> "[Chat] Updated lore line " + index);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Updated lore line " + index + " for " + itemId);
                             }else {
                                 p.sendMessage("§cError: Invalid lore index.");
                                 new LoreEditorMenu(pmu, plugin).open();
@@ -76,6 +76,7 @@ public class ChatListener implements Listener {
                             }
                         } catch (NumberFormatException ex) {
                             p.sendMessage("§cError: Could not parse lore index from path: " + path);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Could not parse lore index from path: " + path);
                             new LoreEditorMenu(pmu, plugin).open();
                             return;
                         }
@@ -85,7 +86,7 @@ public class ChatListener implements Listener {
                     new LoreEditorMenu(pmu, plugin).open();
 
                 } else if ("attributes.edit".equals(path)) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Editing attribute amount for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing attribute amount for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
                     List<String> attributes = plugin.getConfig().getStringList(configPath);
                     int index = pmu.getEditIndex();
@@ -99,23 +100,26 @@ public class ChatListener implements Listener {
                                 attributes.set(index, newAttributeString);
                                 ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
                                 p.sendMessage("§aAttribute amount has been updated!");
-                                ConfigManager.sendDebugMessage(() -> "[Chat] Updated attribute: " + newAttributeString);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Updated attribute: " + newAttributeString + " for " + itemId);
                             } else {
                                 p.sendMessage("§cError: Corrupted attribute data found in config for index " + index);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Corrupted attribute data in config for item " + itemId + " at index " + index);
                             }
                         } catch (NumberFormatException ex) {
                             p.sendMessage("§cInvalid amount. Please enter a number (e.g., 2.0, -1.5).");
-                            ConfigManager.sendDebugMessage(() -> "[Chat] Invalid number format: " + input);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
                         } catch (ArrayIndexOutOfBoundsException ex) {
                             p.sendMessage("§cError: Could not parse existing attribute data at index " + index);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Could not parse attribute data in config for item " + itemId + " at index " + index);
                         }
                     }else {
                         p.sendMessage("§cError: Invalid edit index for attribute.");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid edit index " + index + " for attributes on item " + itemId);
                     }
                     pmu.setEditIndex(-1);
                     new AttributeListMenu(pmu, plugin).open();
                 } else if (path.startsWith("attributes.add.")) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Adding new attribute for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new attribute for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
                     List<String> attributes = plugin.getConfig().getStringList(configPath);
                     try {
@@ -130,7 +134,7 @@ public class ChatListener implements Listener {
                         boolean exists = attributes.stream().anyMatch(s -> s.toUpperCase().startsWith(attributeName.toUpperCase() + ";"));
                         if (exists) {
                             p.sendMessage("§cError: This attribute already exists on the item in this slot.");
-                            ConfigManager.sendDebugMessage(() -> "[Chat] Attribute already exists: " + attributeName);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Attribute " + attributeName + " already exists for " + itemId + " in slot " + targetSlot);
                             new AttributeListMenu(pmu, plugin).open();
                             return;
                         }
@@ -139,12 +143,13 @@ public class ChatListener implements Listener {
                         attributes.add(newAttributeString);
                         ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
                         p.sendMessage("§aAttribute has been added!");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Added attribute: " + newAttributeString);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added attribute: " + newAttributeString + " for " + itemId);
                     } catch (NumberFormatException ex) {
                         p.sendMessage("§cInvalid amount. Please enter a number (e.g., 2.0, -1.5).");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Invalid number format: " + input);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
                     } catch (IllegalArgumentException ex) {
                         p.sendMessage("§cError: Invalid attribute or operation name in path: " + path + ". " + ex.getMessage());
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Failed to add attribute due to invalid path/enum: " + path + " - " + ex.getMessage());
                         plugin.getLogger().warning("[Chat] Failed to add attribute due to invalid path/enum: " + path);
                     } catch (Exception ex) {
                         p.sendMessage("§cAn unexpected error occurred. The original list was not modified.");
@@ -152,7 +157,7 @@ public class ChatListener implements Listener {
                     }
                     new AttributeListMenu(pmu, plugin).open();
                 } else if ("potion_effects.edit".equals(path)) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Editing potion effect level for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing potion effect level for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
                     List<String> effects = plugin.getConfig().getStringList(configPath);
                     int index = pmu.getEditIndex();
@@ -172,23 +177,26 @@ public class ChatListener implements Listener {
                                 effects.set(index, newEffectString);
                                 ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".potion_effects", effects);
                                 p.sendMessage("§aPotion effect level has been updated!");
-                                ConfigManager.sendDebugMessage(() -> "[Chat] Updated effect: " + newEffectString);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Updated effect: " + newEffectString + " for " + itemId);
                             } else {
                                 p.sendMessage("§cError: Corrupted potion effect data found in config for index " + index);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Corrupted potion effect data in config for item " + itemId + " at index " + index);
                             }
                         } catch (NumberFormatException ex) {
                             p.sendMessage("§cInvalid level. Please enter a whole number (e.g., 1, 2, 5).");
-                            ConfigManager.sendDebugMessage(() -> "[Chat] Invalid number format: " + input);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
                         } catch (ArrayIndexOutOfBoundsException ex) {
                             p.sendMessage("§cError: Could not parse existing potion effect data at index " + index);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Could not parse potion effect data in config for item " + itemId + " at index " + index);
                         }
                     } else {
                         p.sendMessage("§cError: Invalid edit index for potion effect.");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid edit index " + index + " for potion effects on item " + itemId);
                     }
                     pmu.setEditIndex(-1);
                     new PotionEffectListMenu(pmu, plugin).open();
                 } else if (path.startsWith("potion_effects.add.")) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Adding new potion effect for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new potion effect for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
                     List<String> effects = new ArrayList<>(plugin.getConfig().getStringList(configPath));
                     try {
@@ -207,7 +215,7 @@ public class ChatListener implements Listener {
                         boolean exists = effects.stream().anyMatch(s -> s.toUpperCase().startsWith(effectName.toUpperCase() + ";"));
                         if (exists) {
                             p.sendMessage("§cError: This potion effect already exists on the item in this slot.");
-                            ConfigManager.sendDebugMessage(() -> "[Chat] Effect already exists: " + effectName);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Effect " + effectName + " already exists for " + itemId + " in slot " + targetSlot);
                             new PotionEffectListMenu(pmu, plugin).open();
                             return;
                         }
@@ -216,12 +224,13 @@ public class ChatListener implements Listener {
                         effects.add(newEffectString);
                         ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".potion_effects", effects);
                         p.sendMessage("§aEffect has been added!");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Added effect: " + newEffectString);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added effect: " + newEffectString + " for " + itemId);
                     } catch (NumberFormatException ex) {
                         p.sendMessage("§cInvalid level. Please enter a whole number (e.g., 1, 2, 5).");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Invalid number format: " + input);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
                     } catch (IllegalArgumentException ex) {
                         p.sendMessage("§cError: Invalid effect name in path: " + path + ". " + ex.getMessage());
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Failed to add effect due to invalid path/enum: " + path + " - " + ex.getMessage());
                         plugin.getLogger().warning("[Chat] Failed to add effect due to invalid path/enum: " + path);
                     } catch (Exception ex) {
                         p.sendMessage("§cAn unexpected error occurred. The original list was not modified.");
@@ -230,7 +239,7 @@ public class ChatListener implements Listener {
                     new PotionEffectListMenu(pmu, plugin).open();
 
                 }else if ("enchantments.edit".equals(path)) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Editing enchantment level for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing enchantment level for item: " + itemId);
                     String configPath = "items." + itemId + ".enchantments";
                     List<String> enchantments = new ArrayList<>(plugin.getConfig().getStringList(configPath));
                     int index = pmu.getEditIndex();
@@ -248,6 +257,7 @@ public class ChatListener implements Listener {
                                 String enchantName = parts[0];
                                 if (Enchantment.getByName(enchantName.toUpperCase()) == null) {
                                     p.sendMessage("§cError: Corrupted enchantment name '" + enchantName + "' found in config.");
+                                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Corrupted enchantment name in config for item " + itemId + " at index " + index + ": " + enchantName);
                                     new EnchantmentListMenu(pmu, plugin).open();
                                     return;
                                 }
@@ -255,24 +265,27 @@ public class ChatListener implements Listener {
                                 enchantments.set(index, newEnchantString);
                                 ConfigManager.setItemValue(itemId, "enchantments", enchantments);
                                 p.sendMessage("§aEnchantment level has been updated!");
-                                ConfigManager.sendDebugMessage(() -> "[Chat] Updated enchantment: " + newEnchantString);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Updated enchantment: " + newEnchantString + " for " + itemId);
                             } else {
                                 p.sendMessage("§cError: Corrupted enchantment data found in config for index " + index);
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Corrupted enchantment data in config for item " + itemId + " at index " + index);
                             }
                         } catch (NumberFormatException ex) {
                             p.sendMessage("§cInvalid level. Please enter a whole number (e.g., 1, 5, 10).");
-                            ConfigManager.sendDebugMessage(() -> "[Chat] Invalid number format: " + input);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
                         } catch (ArrayIndexOutOfBoundsException ex) {
                             p.sendMessage("§cError: Could not parse existing enchantment data at index " + index);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Could not parse enchantment data in config for item " + itemId + " at index " + index);
                         }
                     } else {
                         p.sendMessage("§cError: Invalid edit index for enchantment.");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid edit index " + index + " for enchantments on item " + itemId);
                     }
                     pmu.setEditIndex(-1);
                     new EnchantmentListMenu(pmu, plugin).open();
 
                 } else if (path.startsWith("enchantments.add.")) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Adding new enchantment for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new enchantment for item: " + itemId);
                     String configPath = "items." + itemId + ".enchantments";
                     List<String> enchantments = new ArrayList<>(plugin.getConfig().getStringList(configPath));
                     try {
@@ -292,7 +305,7 @@ public class ChatListener implements Listener {
                         boolean exists = enchantments.stream().anyMatch(s -> s.toUpperCase().startsWith(enchantName.toUpperCase() + ";"));
                         if (exists) {
                             p.sendMessage("§cError: This enchantment already exists on the item.");
-                            ConfigManager.sendDebugMessage(() -> "[Chat] Enchantment already exists: " + enchantName);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Enchantment " + enchantName + " already exists for " + itemId);
                             new EnchantmentListMenu(pmu, plugin).open();
                             return;
                         }
@@ -301,12 +314,13 @@ public class ChatListener implements Listener {
                         enchantments.add(newEnchantString);
                         ConfigManager.setItemValue(itemId, "enchantments", enchantments);
                         p.sendMessage("§aEnchantment has been added!");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Added enchantment: " + newEnchantString);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added enchantment: " + newEnchantString + " for " + itemId);
                     } catch (NumberFormatException ex) {
                         p.sendMessage("§cInvalid level. Please enter a whole number (e.g., 1, 5, 10).");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Invalid number format: " + input);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
                     } catch (IllegalArgumentException ex) {
                         p.sendMessage("§cError: Invalid enchantment name in path: " + path + ". " + ex.getMessage());
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Failed to add enchantment due to invalid path/enum: " + path + " - " + ex.getMessage());
                         plugin.getLogger().warning("[Chat] Failed to add enchantment due to invalid path/enum: " + path);
                     } catch (Exception ex) {
                         p.sendMessage("§cAn unexpected error occurred. The original list was not modified.");
@@ -315,24 +329,25 @@ public class ChatListener implements Listener {
                     new EnchantmentListMenu(pmu, plugin).open();
 
                 } else if ("permission".equals(path)) {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Setting permission for item: " + itemId);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting permission for item: " + itemId);
                     if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
                         ConfigManager.setItemValue(itemId, "permission", null);
                         p.sendMessage("§aPermission has been removed.");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Removed permission");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Removed permission for " + itemId);
                     } else {
                         ConfigManager.setItemValue(itemId, "permission", input);
                         p.sendMessage("§aPermission has been set!");
-                        ConfigManager.sendDebugMessage(() -> "[Chat] Set permission: " + input);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Set permission for " + itemId + " to: " + input);
                     }
                     new ItemEditorMenu(pmu, plugin).open();
                 } else {
-                    ConfigManager.sendDebugMessage(() -> "[Chat] Setting generic value: " + path + " = " + input);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting generic value: " + path + " = " + input + " for " + itemId);
                     if ("display_name".equals(path) || "material".equals(path)) {
                         ConfigManager.setItemValue(itemId, path, input);
                         p.sendMessage("§aValue for '" + path + "' has been updated!");
                     } else {
                         p.sendMessage("§cError: Unknown or unsupported direct chat edit path: " + path);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Attempted to set unknown path via chat: " + path + " for item " + itemId);
                         plugin.getLogger().warning("[Chat] Attempted to set unknown path via chat: " + path);
                         new MainMenu(pmu, plugin).open();
                         return;

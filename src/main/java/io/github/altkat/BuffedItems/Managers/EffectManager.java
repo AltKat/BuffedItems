@@ -1,7 +1,6 @@
 package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
@@ -38,18 +37,18 @@ public class EffectManager {
             PotionEffect existingEffect = player.getPotionEffect(type);
 
             if (existingEffect == null) {
-                ConfigManager.sendDebugMessage(() -> "[Potion] Applying new effect to " + player.getName() + ": " + type.getName() + " " + (amplifier + 1));
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Applying new effect to " + player.getName() + ": " + type.getName() + " " + (amplifier + 1));
                 player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, showIcon));
             } else if (existingEffect.getAmplifier() < amplifier || (existingEffect.getAmplifier() == amplifier && existingEffect.getDuration() < REFRESH_THRESHOLD_TICKS)) {
                 if (existingEffect.getAmplifier() < amplifier) {
-                    ConfigManager.sendDebugMessage(() -> "[Potion] Upgrading effect for " + player.getName() + ": " + type.getName() + " " + (existingEffect.getAmplifier() + 1) + " -> " + (amplifier + 1));
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Upgrading effect for " + player.getName() + ": " + type.getName() + " " + (existingEffect.getAmplifier() + 1) + " -> " + (amplifier + 1));
                 } else {
-                    ConfigManager.sendDebugMessage(() -> "[Potion] Refreshing effect for " + player.getName() + ": " + type.getName() + " (duration: " + existingEffect.getDuration() + " -> " + EFFECT_DURATION_TICKS + ")");
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Refreshing effect for " + player.getName() + ": " + type.getName() + " (duration: " + existingEffect.getDuration() + " -> " + EFFECT_DURATION_TICKS + ")");
                 }
                 player.addPotionEffect(new PotionEffect(type, EFFECT_DURATION_TICKS, amplifier, true, false, showIcon));
             } else {
                 if(debugTick) {
-                    ConfigManager.sendDebugMessage(() -> "[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Effect already optimal for " + player.getName() + ": " + type.getName() + " (skipping)");
                 }
             }
         }
@@ -69,16 +68,16 @@ public class EffectManager {
         for (PotionEffectType type : effectsToRemove) {
             PotionEffect currentEffect = player.getPotionEffect(type);
             if (currentEffect != null && currentEffect.getDuration() <= EFFECT_DURATION_TICKS) {
-                ConfigManager.sendDebugMessage(() -> "[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
                 player.removePotionEffect(type);
             } else if (currentEffect != null && debugTick) {
-                ConfigManager.sendDebugMessage(() -> "[Potion] Not removing effect " + type.getName() + " from " + player.getName() + " as its duration ("+currentEffect.getDuration()+") suggests it's not managed by BuffedItems.");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Not removing effect " + type.getName() + " from " + player.getName() + " as its duration ("+currentEffect.getDuration()+") suggests it's not managed by BuffedItems.");
             }
         }
     }
 
     public void applyAttributeEffects(Player player, String itemId, String slot, List<String> attributes) {
-        ConfigManager.sendDebugMessage(() -> "[Attribute] Processing " + attributes.size() + " attributes for " + player.getName() + " (item: " + itemId + ", slot: " + slot + ")");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Processing " + attributes.size() + " attributes for " + player.getName() + " (item: " + itemId + ", slot: " + slot + ")");
         EquipmentSlot equipmentSlot = getEquipmentSlot(slot);
 
         for (String attrString : attributes) {
@@ -94,7 +93,7 @@ public class EffectManager {
                 operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                 amount = Double.parseDouble(parts[2]);
                 modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attribute.name()).getBytes());
-                ConfigManager.sendDebugMessage(() -> "[Attribute] Parsed: " + attribute.name() + " " + operation.name() + " " + amount + " UUID: " + modifierUUID);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Parsed: " + attribute.name() + " " + operation.name() + " " + amount + " UUID: " + modifierUUID);
             } catch (Exception e) {
                 plugin.getLogger().warning("Invalid attribute format for item '" + itemId + "' in slot '" + slot + "': " + attrString + " | Error: " + e.getMessage());
                 continue;
@@ -107,7 +106,7 @@ public class EffectManager {
             }
 
             if (plugin.getActiveAttributeManager().hasModifier(player.getUniqueId(), attribute, modifierUUID)) {
-                ConfigManager.sendDebugMessage(() -> "[Attribute] Modifier " + modifierUUID + " already tracked for " + player.getName() + " on " + attribute.name() + " (skipping apply)");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " already tracked for " + player.getName() + " on " + attribute.name() + " (skipping apply)");
                 continue;
             }
 
@@ -122,14 +121,14 @@ public class EffectManager {
 
             if (alreadyApplied) {
                 plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, existingMod);
-                ConfigManager.sendDebugMessage(() -> "[Attribute] Modifier " + modifierUUID + " found on player but wasn't tracked. Re-tracking now.");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " found on player but wasn't tracked. Re-tracking now.");
             } else {
                 String modifierName = "buffeditems." + itemId + "." + slot;
                 AttributeModifier modifier = new AttributeModifier(modifierUUID, modifierName, amount, operation, equipmentSlot);
                 try {
                     instance.addModifier(modifier);
                     plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, modifier);
-                    ConfigManager.sendDebugMessage(() -> "[Attribute] Applied modifier " + modifierUUID + " to " + player.getName() + ": " + attribute.name() + " " + operation.name() + " " + amount);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Applied modifier " + modifierUUID + " to " + player.getName() + ": " + attribute.name() + " " + operation.name() + " " + amount);
                 } catch (IllegalArgumentException e) {
                     plugin.getLogger().warning("Attempted to add duplicate attribute modifier UUID: " + modifierUUID + " for " + attribute.name() + " on player " + player.getName() + ". " + e.getMessage());
                 } catch (Exception e) {
@@ -148,12 +147,12 @@ public class EffectManager {
 
     public void clearAllAttributes(Player player) {
         UUID playerUUID = player.getUniqueId();
-        ConfigManager.sendDebugMessage(() -> "[Attribute] Clearing all tracked attributes for " + player.getName());
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Attribute] Clearing all tracked attributes for " + player.getName());
 
         Map<Attribute, List<AttributeModifier>> trackedModifiersMap = plugin.getActiveAttributeManager().getAndClearModifiers(playerUUID);
 
         if (trackedModifiersMap == null || trackedModifiersMap.isEmpty()) {
-            ConfigManager.sendDebugMessage(() -> "[Attribute] No tracked modifiers to remove for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] No tracked modifiers to remove for " + player.getName());
             cleanupOrphanedModifiers(player);
             return;
         }
@@ -165,7 +164,7 @@ public class EffectManager {
             AttributeInstance instance = player.getAttribute(attribute);
 
             if (instance == null) {
-                ConfigManager.sendDebugMessage(() -> "[Attribute] Player " + player.getName() + " missing attribute " + attribute.name() + " during clear operation.");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Player " + player.getName() + " missing attribute " + attribute.name() + " during clear operation.");
                 continue;
             }
 
@@ -173,7 +172,7 @@ public class EffectManager {
                 try {
                     instance.removeModifier(modifier);
                     attemptedRemoveCount++;
-                    ConfigManager.sendDebugMessage(() -> "[Attribute] Attempted removal of tracked modifier " + modifier.getUniqueId() + " from " + attribute.name());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Attempted removal of tracked modifier " + modifier.getUniqueId() + " from " + attribute.name());
                 } catch (Exception e) {
                     plugin.getLogger().warning("Error removing modifier " + modifier.getUniqueId() + " for attribute " + attribute.name() + " from player " + player.getName() + ": " + e.getMessage());
                 }
@@ -181,7 +180,7 @@ public class EffectManager {
         }
 
         final int finalAttemptedRemoveCount = attemptedRemoveCount;
-        ConfigManager.sendDebugMessage(() -> "[Attribute] Finished clearing tracked attributes for " + player.getName() + " (Attempted removals: " + finalAttemptedRemoveCount + ")");
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Attribute] Finished clearing tracked attributes for " + player.getName() + " (Attempted removals: " + finalAttemptedRemoveCount + ")");
         cleanupOrphanedModifiers(player);
     }
 
@@ -200,20 +199,20 @@ public class EffectManager {
             if (modifierToRemove != null) {
                 try {
                     instance.removeModifier(modifierToRemove);
-                    ConfigManager.sendDebugMessage(() -> "[Attribute] Attempted removal of modifier " + modifierUUID + " from " + attribute.name() + " instance for player " + player.getName());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Attempted removal of modifier " + modifierUUID + " from " + attribute.name() + " instance for player " + player.getName());
                 } catch (Exception e){
                     plugin.getLogger().warning("Error removing modifier " + modifierUUID + " for attribute " + attribute.name() + " from player instance " + player.getName() + ": " + e.getMessage());
                 }
             } else {
-                ConfigManager.sendDebugMessage(() -> "[Attribute] Modifier " + modifierUUID + " for " + attribute.name() + " not found on player instance " + player.getName() + " during specific removal attempt.");
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " for " + attribute.name() + " not found on player instance " + player.getName() + " during specific removal attempt.");
             }
         } else {
-            ConfigManager.sendDebugMessage(() -> "[Attribute] Player " + player.getName() + " missing attribute " + attribute.name() + " during specific modifier removal attempt.");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Player " + player.getName() + " missing attribute " + attribute.name() + " during specific modifier removal attempt.");
         }
 
         boolean removedFromTracking = plugin.getActiveAttributeManager().removeModifier(player.getUniqueId(), attribute, modifierUUID);
         if(removedFromTracking) {
-            ConfigManager.sendDebugMessage(() -> "[Attribute] Removed modifier " + modifierUUID + " from tracking for attribute " + attribute.name() + " for player " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Removed modifier " + modifierUUID + " from tracking for attribute " + attribute.name() + " for player " + player.getName());
         }
     }
 
@@ -242,7 +241,7 @@ public class EffectManager {
                 try {
                     instance.removeModifier(orphan);
                     orphanAttemptCount++;
-                    ConfigManager.sendDebugMessage(() -> "[Attribute] Attempted cleanup of orphaned modifier from " + attribute.name() + ": " + orphan.getUniqueId());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Attempted cleanup of orphaned modifier from " + attribute.name() + ": " + orphan.getUniqueId());
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to remove orphaned modifier " + orphan.getUniqueId() + " for attribute " + attribute.name() + " from player " + player.getName() + ": " + e.getMessage());
                 }
@@ -252,7 +251,7 @@ public class EffectManager {
         if (orphanAttemptCount > 0) {
             final int finalOrphanAttemptCount = orphanAttemptCount;
             String playerName = player.getName();
-            ConfigManager.sendDebugMessage(() -> "[Attribute] Attempted to clean " + finalOrphanAttemptCount + " orphaned modifier(s) for player " + playerName);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Attribute] Attempted to clean " + finalOrphanAttemptCount + " orphaned modifier(s) for player " + playerName);
         }
     }
 
