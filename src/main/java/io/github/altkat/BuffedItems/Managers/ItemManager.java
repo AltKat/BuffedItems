@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
@@ -17,6 +18,7 @@ public class ItemManager {
     private final BuffedItems plugin;
     private final Map<String, BuffedItem> buffedItems = new HashMap<>();
     private final Set<UUID> managedAttributeUUIDs = new HashSet<>();
+
 
     public ItemManager(BuffedItems plugin) {
         this.plugin = plugin;
@@ -182,7 +184,48 @@ public class ItemManager {
             }
         }
 
-        BuffedItem finalBuffedItem = new BuffedItem(itemId, displayName, lore, buffedItem.getMaterial(), glow, effects, permission, flags);
+        Map<Enchantment, Integer> enchantments = new HashMap<>();
+        List<String> enchantmentStrings = itemSection.getStringList("enchantments");
+        ConfigManager.sendDebugMessage(() -> "[ItemManager] Item " + itemId + " has " + enchantmentStrings.size() + " enchantments listed.");
+
+        for (String enchString : enchantmentStrings) {
+            try {
+                String[] parts = enchString.split(";");
+                if (parts.length != 2) {
+                    throw new IllegalArgumentException("Must be format ENCHANTMENT_NAME;LEVEL");
+                }
+                String enchName = parts[0].toUpperCase();
+                Enchantment enchantment = Enchantment.getByName(enchName);
+                if (enchantment == null) {
+                    String errorMsg = "Invalid Enchantment name: '" + enchName + "'";
+                    buffedItem.addErrorMessage("§c" + errorMsg);
+                    plugin.getLogger().warning("[Item: " + itemId + "] " + errorMsg);
+                    continue;
+                }
+                int level = Integer.parseInt(parts[1]);
+                if (level <= 0) {
+                    plugin.getLogger().warning("[Item: " + itemId + "] Enchantment level for " + enchName + " must be positive, found: " + level + ". Skipping.");
+                    continue;
+                }
+
+                if (enchantments.containsKey(enchantment)) {
+                    plugin.getLogger().warning("[Item: " + itemId + "] Duplicate enchantment found: '" + enchName + "'. Using the first definition.");
+                    continue;
+                }
+
+                enchantments.put(enchantment, level);
+                ConfigManager.sendDebugMessage(() -> "[ItemManager] Parsed enchantment: " + enchantment.getKey().getKey() + " Level: " + level);
+
+            } catch (NumberFormatException e) {
+                buffedItem.addErrorMessage("§cInvalid Enchantment level format: §e'" + enchString + "'");
+                plugin.getLogger().warning("[Item: " + itemId + "] Invalid enchantment level format: " + enchString);
+            } catch (Exception e) {
+                buffedItem.addErrorMessage("§cCorrupt Enchantment format: §e'" + enchString + "' Error: " + e.getMessage());
+                plugin.getLogger().warning("[Item: " + itemId + "] Corrupt enchantment format: " + enchString + " | Error: " + e.getMessage());
+            }
+        }
+
+        BuffedItem finalBuffedItem = new BuffedItem(itemId, displayName, lore, material, glow, effects, permission, flags, enchantments);
         if (!buffedItem.isValid()) {
             buffedItem.getErrorMessages().forEach(finalBuffedItem::addErrorMessage);
         }

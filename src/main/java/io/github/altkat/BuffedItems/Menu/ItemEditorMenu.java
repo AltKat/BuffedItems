@@ -66,8 +66,10 @@ public class ItemEditorMenu extends Menu {
                 break;
             case BEACON:
                 BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
-                ConfigManager.setItemValue(item.getId(), "glow", !item.hasGlow());
-                this.open();
+                if (item != null) {
+                    ConfigManager.setItemValue(item.getId(), "glow", !item.hasGlow());
+                    this.open();
+                }
                 break;
             case GRASS_BLOCK:
                 new MaterialSelectorMenu(playerMenuUtility, plugin).open();
@@ -80,6 +82,9 @@ public class ItemEditorMenu extends Menu {
                 break;
             case REDSTONE_TORCH:
                 new ItemFlagsMenu(playerMenuUtility, plugin).open();
+                break;
+            case ENCHANTED_BOOK:
+                new EnchantmentListMenu(playerMenuUtility, plugin).open();
                 break;
         }
     }
@@ -97,11 +102,13 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(14, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
         inventory.setItem(16, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
+        inventory.setItem(24, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
         inventory.setItem(28, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
         inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
         inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
-        inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current changes."));
         inventory.setItem(34, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
+        inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current changes."));
+
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
         setFillerGlass();

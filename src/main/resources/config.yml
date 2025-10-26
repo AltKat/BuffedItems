@@ -64,7 +64,7 @@
 #   Available Flags (with their NEW default values):
 #     - UNBREAKABLE: (Default: false) Prevents durability loss.
 #     - HIDE_ATTRIBUTES: (Default: true) Hides the default attribute text.
-#     - HIDE_ENCHANTS: (Default: true) Hides enchantment text.
+#     - HIDE_ENCHANTS: (Default: false) Hides enchantment text.
 #     - HIDE_UNBREAKABLE: (Default: true) Hides the 'Unbreakable' text.
 #     - HIDE_POTION_EFFECTS: (Default: true) Hides potion/arrow effect text.
 #     - HIDE_DESTROYS: (Default: true) Hides 'Can Destroy:' list (Adventure mode).
@@ -115,12 +115,17 @@ items:
       - "&6Active Effect:"
       - "&7- When held in your main hand, grants"
       - "&7  permanent Haste II."
+      - ""
+      - "&6Enchantments:"
+      - "&7- Efficiency V"
     material: "DIAMOND_PICKAXE"
     glow: false
     effects:
       MAIN_HAND:
         potion_effects:
           - "FAST_DIGGING;2"
+    enchantments:
+      - "DIG_SPEED;5" # Efficiency V
   warriors_talisman:
     display_name: "&cWarrior's Talisman"
     lore:

@@ -10,6 +10,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ItemBuilder {
@@ -44,6 +45,21 @@ public class ItemBuilder {
         if (buffedItem.hasGlow()) {
             meta.addEnchant(Enchantment.LUCK, 1, false);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        Map<Enchantment, Integer> enchantments = buffedItem.getEnchantments();
+        if (!enchantments.isEmpty()) {
+            for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+                Enchantment enchantment = entry.getKey();
+                int level = entry.getValue();
+                try {
+                    meta.addEnchant(enchantment, level, true);
+                    plugin.getLogger().info("Applied enchantment: " + enchantment.getKey().getKey() + " Level: " + level);
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Failed to apply enchantment " + enchantment.getKey().getKey() +
+                            " with level " + level + " to item " + buffedItem.getId() + ": " + e.getMessage());
+                }
+            }
         }
 
         if (buffedItem.getFlag("HIDE_ENCHANTS")) {

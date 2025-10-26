@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.utils;
 
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 
 import java.util.*;
 
@@ -12,12 +13,14 @@ public class BuffedItem {
     private final boolean glow;
     private final Map<String, BuffedItemEffect> effects;
     private final Optional<String> permission;
+    private final Map<Enchantment, Integer> enchantments;
+
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
 
     private final Map<String, Boolean> flags;
 
-    public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission, Map<String, Boolean> flags) {
+    public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -26,6 +29,7 @@ public class BuffedItem {
         this.effects = effects;
         this.permission = Optional.ofNullable(permission);
         this.flags = (flags != null) ? flags : new HashMap<>();
+        this.enchantments = (enchantments != null) ? enchantments : new HashMap<>();
     }
 
     public Map<String, Boolean> getFlags() {
@@ -37,7 +41,7 @@ public class BuffedItem {
         DEFAULT_TRUE_FLAGS = new HashSet<>(Arrays.asList(
                 //"UNBREAKABLE",
                 "HIDE_ATTRIBUTES",
-                "HIDE_ENCHANTS",
+                //"HIDE_ENCHANTS",
                 "HIDE_UNBREAKABLE",
                 "HIDE_POTION_EFFECTS",
                 "HIDE_DESTROYS",
@@ -64,7 +68,11 @@ public class BuffedItem {
     }
 
     public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission) {
-        this(id, displayName, lore, material, glow, effects, permission, null);
+        this(id, displayName, lore, material, glow, effects, permission, null, null);
+    }
+
+    public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission, Map<String, Boolean> flags) {
+        this(id, displayName, lore, material, glow, effects, permission, flags, null);
     }
 
     public String getId() {
@@ -109,5 +117,9 @@ public class BuffedItem {
 
     public void setMaterial(Material material) {
         this.material = material;
+    }
+
+    public Map<Enchantment, Integer> getEnchantments() {
+        return enchantments;
     }
 }
