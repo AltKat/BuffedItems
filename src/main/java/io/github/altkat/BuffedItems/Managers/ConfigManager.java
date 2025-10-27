@@ -129,13 +129,12 @@ public class ConfigManager {
         sendDebugMessage(DEBUG_TASK, () -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
     }
 
-    /**
-     * Checks if the specified debug level (or higher) is currently enabled.
-     * @param level The level to check (e.g., ConfigManager.DEBUG_DETAILED).
-     * @return true if logging is enabled for this level.
-     */
     public static boolean isDebugLevelEnabled(int level) {
         return debugLevel >= level;
+    }
+
+    public static int getDebugLevel() {
+        return debugLevel;
     }
 
     public static boolean shouldShowPotionIcons() {

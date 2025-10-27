@@ -2,6 +2,7 @@ name: BuffedItems
 version: '${project.version}'
 main: io.github.altkat.BuffedItems.BuffedItems
 api-version: '1.16'
+softdepend: [Nexo, ItemsAdder]
 authors: [StreetMelodeez(AltKat)]
 description: Create custom items with permanent potion effects and attributes.
 commands:

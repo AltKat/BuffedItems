@@ -340,7 +340,48 @@ public class ChatListener implements Listener {
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Set permission for " + itemId + " to: " + input);
                     }
                     new ItemEditorMenu(pmu, plugin).open();
-                } else {
+
+                } else if ("custom_model_data".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                            () -> "[Chat] Setting custom-model-data for item: " + itemId);
+
+                    if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
+                        ConfigManager.setItemValue(itemId, "custom-model-data", null);
+                        p.sendMessage("§aCustom Model Data has been removed.");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                                () -> "[Chat] Removed custom-model-data for " + itemId);
+                    } else {
+                        try {
+                            int directValue = Integer.parseInt(input);
+                            if (directValue < 0) {
+                                p.sendMessage("§cCustom Model Data must be positive!");
+                                new ItemEditorMenu(pmu, plugin).open();
+                                return;
+                            }
+                            ConfigManager.setItemValue(itemId, "custom-model-data", directValue);
+                            p.sendMessage("§aCustom Model Data set to: §e" + directValue);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                                    () -> "[Chat] Set direct custom-model-data for " + itemId + ": " + directValue);
+                        } catch (NumberFormatException ex) {
+                            if (input.contains(":")) {
+                                ConfigManager.setItemValue(itemId, "custom-model-data", input);
+                                p.sendMessage("§aCustom Model Data set to: §e" + input);
+                                p.sendMessage("§7It will be resolved on next reload/save.");
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                                        () -> "[Chat] Set external custom-model-data for " + itemId + ": " + input);
+                            } else {
+                                p.sendMessage("§cInvalid format! Use:");
+                                p.sendMessage("§e100001 §7(direct integer)");
+                                p.sendMessage("§eitemsadder:item_id");
+                                p.sendMessage("§enexo:item_id");
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                                        () -> "[Chat] Invalid custom-model-data format from " + p.getName() + ": " + input);
+                            }
+                        }
+                    }
+                    new ItemEditorMenu(pmu, plugin).open();
+                }
+                else {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting generic value: " + path + " = " + input + " for " + itemId);
                     if ("display_name".equals(path) || "material".equals(path)) {
                         ConfigManager.setItemValue(itemId, path, input);

@@ -92,6 +92,16 @@ public class ItemEditorMenu extends Menu {
             case ENCHANTED_BOOK:
                 new EnchantmentListMenu(playerMenuUtility, plugin).open();
                 break;
+            case ARMOR_STAND:
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setChatInputPath("custom_model_data");
+                p.closeInventory();
+                p.sendMessage("§aEnter Custom Model Data:");
+                p.sendMessage("§7Direct integer: §e100001");
+                p.sendMessage("§7ItemsAdder: §eitemsadder:fire_sword");
+                p.sendMessage("§7Nexo: §enexo:custom_helmet");
+                p.sendMessage("§7Type §6'none'§7 or §6'remove'§7 to clear.");
+                break;
         }
     }
 
@@ -108,6 +118,24 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(14, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
         inventory.setItem(16, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
+
+        String cmdDisplay;
+        if (item.getCustomModelData().isPresent()) {
+            cmdDisplay = "§e" + item.getCustomModelData().get();
+            if (item.getCustomModelDataRaw().isPresent()) {
+                String raw = item.getCustomModelDataRaw().get();
+                if (!raw.equals(String.valueOf(item.getCustomModelData().get()))) {
+                    cmdDisplay += " §7(" + raw + ")";
+                }
+            }
+        } else {
+            cmdDisplay = "§cNone";
+        }
+        inventory.setItem(22, makeItem(Material.ARMOR_STAND, "§dSet Custom Model Data",
+                "§7Current: " + cmdDisplay,
+                "§7Used for custom resource pack models.",
+                "§7Supports: Direct, ItemsAdder, Nexo"));
+
         inventory.setItem(24, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
         inventory.setItem(28, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
         inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));

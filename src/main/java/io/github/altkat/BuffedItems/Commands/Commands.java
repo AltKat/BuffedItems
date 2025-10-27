@@ -128,7 +128,6 @@ public class Commands implements CommandExecutor {
             }
             sender.sendMessage(ChatColor.YELLOW + "The item will still be given, but may not work as intended.");
             sender.sendMessage(ChatColor.YELLOW + "Please fix errors via /bi menu");
-            return true;
         }
 
         int amount = 1;

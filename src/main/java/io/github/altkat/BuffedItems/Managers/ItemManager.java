@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Handlers.CustomModelDataResolver;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utils.ParsedAttribute;
@@ -19,10 +20,12 @@ public class ItemManager {
     private final BuffedItems plugin;
     private final Map<String, BuffedItem> buffedItems = new HashMap<>();
     private final Set<UUID> managedAttributeUUIDs = new HashSet<>();
+    private final CustomModelDataResolver cmdResolver;
 
 
     public ItemManager(BuffedItems plugin) {
         this.plugin = plugin;
+        this.cmdResolver = new CustomModelDataResolver(plugin);
     }
 
     public void loadItems(boolean silent) {
@@ -120,6 +123,45 @@ public class ItemManager {
         }
 
         List<String> errorMessages = new ArrayList<>();
+
+        Integer customModelData;
+        String customModelDataRaw;
+
+        if (itemSection.contains("custom-model-data")) {
+            Object cmdValue = itemSection.get("custom-model-data");
+
+            if (cmdValue instanceof Integer) {
+                customModelDataRaw = String.valueOf(cmdValue);
+            } else if (cmdValue instanceof String) {
+                customModelDataRaw = (String) cmdValue;
+            } else {
+                customModelDataRaw = null;
+            }
+
+            if (customModelDataRaw != null) {
+                CustomModelDataResolver.CustomModelData resolved =
+                        cmdResolver.resolve(customModelDataRaw, itemId);
+
+                if (resolved != null) {
+                    customModelData = resolved.getValue();
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                            () -> "[ItemManager] Item " + itemId + " resolved custom-model-data: " +
+                                    customModelDataRaw + " -> " + customModelData +
+                                    " (source: " + resolved.getSource() + ")");
+                } else {
+                    customModelData = null;
+                    String errorMsg = "Invalid custom-model-data: '" + customModelDataRaw + "'";
+                    errorMessages.add("§c" + errorMsg);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                            () -> "[Item: " + itemId + "] " + errorMsg);
+                }
+            } else {
+                customModelData = null;
+            }
+        } else {
+            customModelDataRaw = null;
+            customModelData = null;
+        }
 
         if (material == null) {
             String errorMsg = "Invalid Material: '" + materialName + "'";
@@ -265,7 +307,9 @@ public class ItemManager {
                 effects,
                 permission,
                 flags,
-                enchantments
+                enchantments,
+                customModelData,
+                customModelDataRaw
         );
 
         for (String errorMsg : errorMessages) {

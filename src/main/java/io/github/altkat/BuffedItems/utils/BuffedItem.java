@@ -14,13 +14,18 @@ public class BuffedItem {
     private final Map<String, BuffedItemEffect> effects;
     private final Optional<String> permission;
     private final Map<Enchantment, Integer> enchantments;
+    private final Integer customModelData;
+    private final String customModelDataRaw;
 
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
 
     private final Map<String, Boolean> flags;
 
-    public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
+    public BuffedItem(String id, String displayName, List<String> lore, Material material,
+                      boolean glow, Map<String, BuffedItemEffect> effects, String permission,
+                      Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments,
+                      Integer customModelData, String customModelDataRaw) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -30,11 +35,11 @@ public class BuffedItem {
         this.permission = Optional.ofNullable(permission);
         this.flags = (flags != null) ? flags : new HashMap<>();
         this.enchantments = (enchantments != null) ? enchantments : new HashMap<>();
+        this.customModelData = customModelData;
+        this.customModelDataRaw = customModelDataRaw;
     }
 
-    public Map<String, Boolean> getFlags() {
-        return flags;
-    }
+
 
     private static final Set<String> DEFAULT_TRUE_FLAGS;
     static {
@@ -90,6 +95,7 @@ public class BuffedItem {
     public Map<String, BuffedItemEffect> getEffects() {
         return effects;
     }
+
     public Optional<String> getPermission() {
         return permission;
     }
@@ -107,11 +113,23 @@ public class BuffedItem {
         this.errorMessages.add(message);
     }
 
+    public Map<String, Boolean> getFlags() {
+        return flags;
+    }
+
     public void setMaterial(Material material) {
         this.material = material;
     }
 
     public Map<Enchantment, Integer> getEnchantments() {
         return enchantments;
+    }
+
+    public Optional<Integer> getCustomModelData() {
+        return Optional.ofNullable(customModelData);
+    }
+
+    public Optional<String> getCustomModelDataRaw() {
+        return Optional.ofNullable(customModelDataRaw);
     }
 }

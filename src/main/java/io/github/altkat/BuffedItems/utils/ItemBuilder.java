@@ -39,6 +39,15 @@ public class ItemBuilder {
                 .collect(Collectors.toList());
         meta.setLore(coloredLore);
 
+        if (buffedItem.getCustomModelData().isPresent()) {
+            meta.setCustomModelData(buffedItem.getCustomModelData().get());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                    () -> "[ItemBuilder] Applied custom model data: " +
+                            buffedItem.getCustomModelData().get() +
+                            " (raw: " + buffedItem.getCustomModelDataRaw().orElse("N/A") + ") " +
+                            "to item: " + buffedItem.getId());
+        }
+
         if (buffedItem.getFlag("UNBREAKABLE")) {
             meta.setUnbreakable(true);
         }

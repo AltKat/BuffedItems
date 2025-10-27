@@ -57,7 +57,15 @@ public final class BuffedItems extends JavaPlugin {
             }
         });
 
-        printStartupSummary();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading task running...");
+                itemManager.loadItems(false);
+                printStartupSummary();
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading complete.");
+            }
+        }.runTaskLater(this, 20L);
 
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §aBuffedItems has been enabled!");
     }
@@ -103,7 +111,6 @@ public final class BuffedItems extends JavaPlugin {
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
-        itemManager.loadItems(false);
     }
 
     private void registerListenersAndCommands() {
@@ -183,9 +190,21 @@ public final class BuffedItems extends JavaPlugin {
             getLogger().warning("  Run '/bi list' or '/bi menu' to view details.");
         }
 
-        String debugLevelInfo = ConfigManager.isDebugLevelEnabled(ConfigManager.DEBUG_INFO)
-                ? (ConfigManager.DEBUG_INFO + " (INFO)")
-                : "0 (OFF)";
+        int currentDebugLevel = ConfigManager.getDebugLevel();
+        String debugLevelInfo;
+
+        if (currentDebugLevel <= ConfigManager.DEBUG_OFF) { // 0
+            debugLevelInfo = "0 (OFF)";
+        } else if (currentDebugLevel == ConfigManager.DEBUG_INFO) { // 1
+            debugLevelInfo = "1 (INFO)";
+        } else if (currentDebugLevel == ConfigManager.DEBUG_TASK) { // 2
+            debugLevelInfo = "2 (TASK)";
+        } else if (currentDebugLevel == ConfigManager.DEBUG_DETAILED) { // 3
+            debugLevelInfo = "3 (DETAILED)";
+        } else { // 4+ (VERBOSE)
+            debugLevelInfo = currentDebugLevel + " (VERBOSE)";
+        }
+
         getLogger().info("  Debug Level: " + debugLevelInfo);
         getLogger().info("  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
         getLogger().info(separator);

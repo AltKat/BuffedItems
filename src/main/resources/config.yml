@@ -59,6 +59,11 @@
 #       - ADD_SCALAR: Adds a percentage of the base value (less common).
 #       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
 #
+# custom-model-data: (Optional) Set a custom model data integer for resource packs.
+#   - Direct: 100001
+#   - ItemsAdder: itemsadder:fire_sword
+#   - Nexo: nexo:custom_helmet
+#
 # flags: (Optional) This section controls item behaviors and appearances.
 #   Set any flag to 'true' or 'false' to override its default value.
 #   Available Flags (with their NEW default values):
