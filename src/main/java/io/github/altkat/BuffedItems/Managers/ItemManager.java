@@ -65,7 +65,7 @@ public class ItemManager {
         long elapsedTime = System.currentTimeMillis() - startTime;
 
         if (!silent) {
-            plugin.getLogger().info("Loaded " + buffedItems.size() + " buffed items from config (" + validItems + " valid, " + invalidItems + " with errors) in " + elapsedTime + "ms");
+            ConfigManager.logInfo("&aLoaded &e" + buffedItems.size() + "&a buffed items from config (&e" + validItems + "&a valid, &e" + invalidItems + "&c with errors&a) in &e" + elapsedTime + "&ams");
 
             if (invalidItems > 0) {
                 String separator = "============================================================";

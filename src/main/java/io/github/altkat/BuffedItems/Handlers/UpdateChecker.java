@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.Handlers;
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -34,7 +35,7 @@ public class UpdateChecker implements Listener {
                     consumer.accept(version);
                 }
             } catch (IOException exception) {
-                this.plugin.getLogger().info("Unable to check for updates: " + exception.getMessage());
+                ConfigManager.logInfo("&cUnable to check for updates: &e" + exception.getMessage());
             }
         });
     }

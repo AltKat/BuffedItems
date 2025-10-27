@@ -24,10 +24,10 @@ public class CustomModelDataResolver {
         nexoAvailable = Bukkit.getPluginManager().getPlugin("Nexo") != null;
 
         if (itemsAdderAvailable) {
-            plugin.getLogger().info("ItemsAdder detected - custom model data integration enabled");
+            ConfigManager.logInfo("&aItemsAdder detected - custom model data integration enabled (Version: " + serverVersion + ")");
         }
         if (nexoAvailable) {
-            plugin.getLogger().info("Nexo detected - custom model data integration enabled (Version: " + serverVersion + ")");
+            ConfigManager.logInfo("&aNexo detected - custom model data integration enabled (Version: " + serverVersion + ")");
         }
     }
 

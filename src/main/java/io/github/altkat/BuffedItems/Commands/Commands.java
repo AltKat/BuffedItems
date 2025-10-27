@@ -148,7 +148,7 @@ public class Commands implements CommandExecutor {
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
         target.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aYou have received &e" + amount + "x &r" + buffedItem.getDisplayName()));
 
-        plugin.getLogger().info("Gave " + amount + "x " + itemId + " to " + target.getName() + " (by: " + sender.getName() + ")");
+        ConfigManager.logInfo("&aGave &e" + amount + "x " + itemId + "&a to &e" + target.getName() + "&a (by: &e" + sender.getName() + "&a)");
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             plugin.getEffectApplicatorTask().markPlayerForUpdate(target.getUniqueId());

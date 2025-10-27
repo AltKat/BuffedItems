@@ -50,10 +50,10 @@ public final class BuffedItems extends JavaPlugin {
         final int SPIGOT_RESOURCE_ID = 129550;
         new UpdateChecker(this, SPIGOT_RESOURCE_ID).getVersion(newVersion -> {
             if (UpdateChecker.isNewerVersion(this.getDescription().getVersion(), newVersion)) {
-                getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §eA new update is available! Version: " + newVersion);
-                getLogger().warning("Download it from: https://www.spigotmc.org/resources/buffeditems.129550/");
+                ConfigManager.logInfo("§eA new update is available! Version: &a" + newVersion);
+                ConfigManager.logInfo("&eDownload it from: &ahttps://www.spigotmc.org/resources/buffeditems.129550/");
             } else {
-                getLogger().info("You are using the latest version. (" + this.getDescription().getVersion() + ")");
+                ConfigManager.logInfo("&aYou are using the latest version. (&e" + this.getDescription().getVersion() + "&a)");
             }
         });
 
@@ -67,7 +67,7 @@ public final class BuffedItems extends JavaPlugin {
             }
         }.runTaskLater(this, 20L);
 
-        getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §aBuffedItems has been enabled!");
+        ConfigManager.logInfo("§aBuffedItems has been enabled!");
     }
 
     @Override
@@ -100,8 +100,8 @@ public final class BuffedItems extends JavaPlugin {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Saving final config...");
         saveConfig();
 
-        getLogger().info("Cleanup complete: " + successCount + "/" + playerCount + " players cleaned" + (failCount > 0 ? " (" + failCount + " failed)" : ""));
-        getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §cBuffedItems has been disabled!");
+        ConfigManager.logInfo("&aCleanup complete: &e" + successCount + "/" + playerCount + "&a players cleaned" + (failCount > 0 ? "&c (" + failCount + " failed)" : ""));
+        ConfigManager.logInfo("§cBuffedItems has been disabled!");
     }
 
     private void initializeManagers() {
@@ -179,15 +179,15 @@ public final class BuffedItems extends JavaPlugin {
         long validItems = items.values().stream().filter(BuffedItem::isValid).count();
         long invalidItems = items.size() - validItems;
 
-        String separator = "==================================================";
-        getLogger().info(separator);
-        getLogger().info("BuffedItems v" + getDescription().getVersion() + " - Startup Summary");
-        getLogger().info("  Total Items: " + items.size());
-        getLogger().info("  Valid Items: " + validItems);
+        String separator = "&a==================================================";
+        ConfigManager.logInfo(separator);
+        ConfigManager.logInfo("&6BuffedItems v" + getDescription().getVersion() + " - Startup Summary");
+        ConfigManager.logInfo("&a  Total Items: " + items.size());
+        ConfigManager.logInfo("&a  Valid Items: " + validItems);
 
         if (invalidItems > 0) {
-            getLogger().warning("  Items with Errors: " + invalidItems);
-            getLogger().warning("  Run '/bi list' or '/bi menu' to view details.");
+            ConfigManager.logInfo("&c  Items with Errors: " + invalidItems);
+            ConfigManager.logInfo("&e  Run '/bi list' or '/bi menu' to view details.");
         }
 
         int currentDebugLevel = ConfigManager.getDebugLevel();
@@ -205,9 +205,9 @@ public final class BuffedItems extends JavaPlugin {
             debugLevelInfo = currentDebugLevel + " (VERBOSE)";
         }
 
-        getLogger().info("  Debug Level: " + debugLevelInfo);
-        getLogger().info("  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
-        getLogger().info(separator);
+        ConfigManager.logInfo("&a  Debug Level: " + debugLevelInfo);
+        ConfigManager.logInfo("&a  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
+        ConfigManager.logInfo(separator);
     }
 
     public ItemManager getItemManager() { return itemManager; }

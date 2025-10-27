@@ -21,6 +21,8 @@ public class ConfigManager {
     public static final int DEBUG_DETAILED = 3;  // Per-player effect details
     public static final int DEBUG_VERBOSE = 4;   // GUI, Chat, Inventory events (spammy)
 
+    private static final String PLUGIN_PREFIX = "§9[§6BuffedItems§9] ";
+
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
     }
@@ -81,6 +83,12 @@ public class ConfigManager {
         }
     }
 
+    public static void logInfo(String message) {
+        if (plugin == null) return;
+        String formattedMessage = PLUGIN_PREFIX + ChatColor.translateAlternateColorCodes('&', message);
+        plugin.getServer().getConsoleSender().sendMessage(formattedMessage);
+    }
+
     public static void setItemValue(String itemId, String path, Object value) {
         sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
 
@@ -110,7 +118,7 @@ public class ConfigManager {
 
         plugin.getItemManager().reloadSingleItem(itemId);
 
-        plugin.getLogger().info("Created new item: " + itemId);
+        ConfigManager.logInfo("&aCreated new item: &e" + itemId);
         return true;
     }
 

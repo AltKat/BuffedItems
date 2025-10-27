@@ -94,7 +94,7 @@
 # 2 = TASK: Level 1 + Core task loops and major events (EffectApplicatorTask).
 # 3 = DETAILED: Level 2 + Per-player effect application/removal details (EffectManager).
 # 4 = VERBOSE: Level 3 + GUI clicks, chat inputs, inventory changes (Listeners).
-debug-level: 1
+debug-level: 0
 
 # How often the plugin automatically saves changes made via /bi menu
 # to this file (in minutes). Use /bi save for immediate saving.
