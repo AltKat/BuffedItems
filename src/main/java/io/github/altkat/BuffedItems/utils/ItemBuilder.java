@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.utils;
 
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -19,11 +20,29 @@ public class ItemBuilder {
     private final BuffedItem buffedItem;
     private final ItemStack itemStack;
     private final Plugin plugin;
+    private final int serverVersion;
 
     public ItemBuilder(BuffedItem buffedItem, Plugin plugin) {
         this.buffedItem = buffedItem;
         this.plugin = plugin;
         this.itemStack = new ItemStack(buffedItem.getMaterial());
+        this.serverVersion = getMinecraftVersion();
+    }
+
+    private int getMinecraftVersion() {
+        String version = Bukkit.getBukkitVersion();
+        try {
+            String[] parts = version.split("-")[0].split("\\.");
+            if (parts.length >= 2) {
+                int major = Integer.parseInt(parts[0]);
+                int minor = Integer.parseInt(parts[1]);
+                int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
+                return (major * 100 + minor * 10 + patch);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Could not parse MC version: " + version);
+        }
+        return 1165;
     }
 
     public ItemStack build() {
@@ -40,12 +59,27 @@ public class ItemBuilder {
         meta.setLore(coloredLore);
 
         if (buffedItem.getCustomModelData().isPresent()) {
-            meta.setCustomModelData(buffedItem.getCustomModelData().get());
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                    () -> "[ItemBuilder] Applied custom model data: " +
-                            buffedItem.getCustomModelData().get() +
-                            " (raw: " + buffedItem.getCustomModelDataRaw().orElse("N/A") + ") " +
-                            "to item: " + buffedItem.getId());
+            int cmdValue = buffedItem.getCustomModelData().get();
+
+            if (serverVersion < 1210) {
+                meta.setCustomModelData(cmdValue);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                        () -> "[ItemBuilder] Applied CMD (legacy): " + cmdValue + " to " + buffedItem.getId());
+            } else {
+                try {
+                    meta.setCustomModelData(cmdValue);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                            () -> "[ItemBuilder] Applied CMD (Paper): " + cmdValue + " to " + buffedItem.getId());
+                } catch (Exception e) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                            () -> "[ItemBuilder] Legacy CMD failed, trying NMS for " + buffedItem.getId());
+                    try {
+                        applyCustomModelDataNMS(cmdValue);
+                    } catch (Exception nmsException) {
+                        plugin.getLogger().warning("[ItemBuilder] Failed to apply CMD via NMS: " + nmsException.getMessage());
+                    }
+                }
+            }
         }
 
         if (buffedItem.getFlag("UNBREAKABLE")) {
@@ -61,8 +95,9 @@ public class ItemBuilder {
                 try {
                     meta.addEnchant(enchantment, level, true);
                 } catch (IllegalArgumentException e) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->"[ItemBuilder] Failed to apply enchantment " + enchantment.getKey().getKey() +
-                            " with level " + level + " to item " + buffedItem.getId() + ": " + e.getMessage());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                            () -> "[ItemBuilder] Failed to apply enchantment " + enchantment.getKey().getKey() +
+                                    " with level " + level + " to item " + buffedItem.getId() + ": " + e.getMessage());
                 }
             }
         }
@@ -76,7 +111,6 @@ public class ItemBuilder {
         if (buffedItem.getFlag("HIDE_ENCHANTS")) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
-
         if (buffedItem.getFlag("HIDE_ATTRIBUTES")) {
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         }
@@ -98,5 +132,38 @@ public class ItemBuilder {
 
         itemStack.setItemMeta(meta);
         return itemStack;
+    }
+
+    private void applyCustomModelDataNMS(int cmdValue) throws Exception {
+        String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+
+        Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".inventory.CraftItemStack");
+
+        Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
+                .invoke(null, itemStack);
+
+        if (nmsStack == null) {
+            throw new IllegalStateException("NMS ItemStack is null");
+        }
+
+        Class<?> dataComponentTypeClass = Class.forName("net.minecraft.core.component.DataComponentType");
+        Class<?> dataComponentsClass = Class.forName("net.minecraft.core.component.DataComponents");
+
+        Object customModelDataComponent = dataComponentsClass.getField("CUSTOM_MODEL_DATA").get(null);
+
+        Class<?> customModelDataClass = Class.forName("net.minecraft.world.item.component.CustomModelData");
+        Object customModelDataValue = customModelDataClass.getConstructor(int.class).newInstance(cmdValue);
+
+        nmsStack.getClass()
+                .getMethod("b", dataComponentTypeClass, Object.class).invoke(nmsStack, customModelDataComponent, customModelDataValue);
+
+        ItemStack resultStack = (ItemStack) craftItemStackClass
+                .getMethod("asBukkitCopy", nmsStack.getClass())
+                .invoke(null, nmsStack);
+
+        itemStack.setItemMeta(resultStack.getItemMeta());
+
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                () -> "[ItemBuilder] Applied CMD via NMS: " + cmdValue);
     }
 }

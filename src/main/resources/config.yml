@@ -324,3 +324,18 @@ items:
       PREVENT_ANVIL_USE: true
       HIDE_ATTRIBUTES: false
       HIDE_ENCHANTS: false
+  test_direct_cmd:
+    display_name: '&eTest Direct CMD'
+    lore:
+      - '&7Direct integer test'
+    material: DIAMOND_SWORD
+    custom-model-data: 100001
+    glow: true
+
+  test_nexo_cmd:
+    display_name: '&bTest Nexo CMD'
+    lore:
+      - '&7Nexo integration test'
+    material: NETHERITE_SWORD
+    custom-model-data: 'nexo:forest_sword'
+    glow: true

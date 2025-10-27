@@ -11,9 +11,11 @@ public class CustomModelDataResolver {
     private final BuffedItems plugin;
     private boolean itemsAdderAvailable = false;
     private boolean nexoAvailable = false;
+    private final int serverVersion;
 
     public CustomModelDataResolver(BuffedItems plugin) {
         this.plugin = plugin;
+        this.serverVersion = getMinecraftVersion();
         detectExternalPlugins();
     }
 
@@ -25,21 +27,26 @@ public class CustomModelDataResolver {
             plugin.getLogger().info("ItemsAdder detected - custom model data integration enabled");
         }
         if (nexoAvailable) {
-            plugin.getLogger().info("Nexo detected - custom model data integration enabled");
+            plugin.getLogger().info("Nexo detected - custom model data integration enabled (Version: " + serverVersion + ")");
         }
     }
 
-    /**
-     * Resolves custom model data from various formats:
-     * - Direct integer: 100001
-     * - ItemsAdder: "itemsadder:fire_sword"
-     * - Nexo: "nexo:custom_helmet"
-     * - Oraxen: "oraxen:magic_wand" (future support)
-     *
-     * @param input The raw string from config
-     * @param itemId The BuffedItem ID (for logging)
-     * @return Resolved CustomModelData object or null if invalid
-     */
+    private int getMinecraftVersion() {
+        String version = Bukkit.getBukkitVersion();
+        try {
+            String[] parts = version.split("-")[0].split("\\.");
+            if (parts.length >= 2) {
+                int major = Integer.parseInt(parts[0]);
+                int minor = Integer.parseInt(parts[1]);
+                int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
+                return (major * 100 + minor * 10 + patch);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Could not parse Minecraft version: " + version);
+        }
+        return 1165;
+    }
+
     public CustomModelData resolve(String input, String itemId) {
         if (input == null || input.trim().isEmpty()) {
             return null;
@@ -47,7 +54,6 @@ public class CustomModelDataResolver {
 
         String trimmed = input.trim();
 
-        // Try direct integer first
         try {
             int value = Integer.parseInt(trimmed);
             if (value < 0) {
@@ -59,10 +65,9 @@ public class CustomModelDataResolver {
                     () -> "[CMD] Resolved direct integer custom-model-data for '" + itemId + "': " + value);
             return new CustomModelData(value, trimmed, CustomModelData.Source.DIRECT);
         } catch (NumberFormatException e) {
-            // Not a direct integer, try plugin formats
+            //
         }
 
-        // Check for plugin format (plugin:item_id)
         if (trimmed.contains(":")) {
             String[] parts = trimmed.split(":", 2);
             String pluginName = parts[0].toLowerCase();
@@ -95,7 +100,6 @@ public class CustomModelDataResolver {
         }
 
         try {
-            // ItemsAdder API integration via Reflection
             Class<?> customStackClass = Class.forName("dev.lone.itemsadder.api.CustomStack");
             Object customStack = customStackClass.getMethod("getInstance", String.class)
                     .invoke(null, externalItemId);
@@ -106,18 +110,14 @@ public class CustomModelDataResolver {
                 return null;
             }
 
-
             Object itemStackObj = customStackClass.getMethod("getItemStack").invoke(customStack);
             ItemStack itemStack = (ItemStack) itemStackObj;
-            ItemMeta itemMeta = itemStack.getItemMeta();
+            Integer cmd = extractCustomModelData(itemStack);
 
-            if (itemMeta != null && itemMeta.hasCustomModelData()) {
-                Integer cmd = itemMeta.getCustomModelData();
-
+            if (cmd != null) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                         () -> "[CMD] Resolved ItemsAdder custom-model-data for '" + buffedItemId + "': " +
                                 externalItemId + " -> " + cmd);
-
                 return new CustomModelData(cmd, rawValue, CustomModelData.Source.ITEMSADDER);
             }
 
@@ -128,7 +128,6 @@ public class CustomModelDataResolver {
         } catch (Exception e) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                     () -> "[CMD] Failed to resolve ItemsAdder custom-model-data for '" + buffedItemId + "': " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
@@ -141,7 +140,6 @@ public class CustomModelDataResolver {
         }
 
         try {
-            // Nexo API integration via Reflection
             Class<?> nexoItemsClass = Class.forName("com.nexomc.nexo.api.NexoItems");
             Object itemBuilder = nexoItemsClass.getMethod("itemFromId", String.class)
                     .invoke(null, externalItemId);
@@ -154,20 +152,17 @@ public class CustomModelDataResolver {
 
             Object itemStackObj = itemBuilder.getClass().getMethod("build").invoke(itemBuilder);
             ItemStack itemStack = (ItemStack) itemStackObj;
-            ItemMeta itemMeta = itemStack.getItemMeta();
+            Integer cmd = extractCustomModelData(itemStack);
 
-            if (itemMeta != null && itemMeta.hasCustomModelData()) {
-                Integer cmd = itemMeta.getCustomModelData();
-
+            if (cmd != null) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                         () -> "[CMD] Resolved Nexo custom-model-data for '" + buffedItemId + "': " +
-                                externalItemId + " -> " + cmd);
-
+                                externalItemId + " -> " + cmd + " (Version: " + serverVersion + ")");
                 return new CustomModelData(cmd, rawValue, CustomModelData.Source.NEXO);
             }
 
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                    () -> "[CMD] Nexo item '" + externalItemId + "' has no custom model data");
+                    () -> "[CMD] Nexo item '" + externalItemId + "' has no custom model data (Version: " + serverVersion + ")");
             return null;
 
         } catch (Exception e) {
@@ -178,15 +173,81 @@ public class CustomModelDataResolver {
         }
     }
 
+    private Integer extractCustomModelData(ItemStack itemStack) {
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            return null;
+        }
+
+        ItemMeta meta = itemStack.getItemMeta();
+
+        if (serverVersion < 1210) {
+            if (meta.hasCustomModelData()) {
+                return meta.getCustomModelData();
+            }
+            return null;
+        }
+
+        try {
+            if (meta.hasCustomModelData()) {
+                Integer oldValue = meta.getCustomModelData();
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                        () -> "[CMD] Found CMD via legacy method: " + oldValue);
+                return oldValue;
+            }
+
+            Class<?> itemMetaClass = meta.getClass();
+
+            try {
+                Object cmdValue = itemMetaClass.getMethod("getCustomModelData").invoke(meta);
+                if (cmdValue instanceof Integer) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                            () -> "[CMD] Found CMD via Paper API: " + cmdValue);
+                    return (Integer) cmdValue;
+                }
+            } catch (NoSuchMethodException ignored) {
+            }
+
+            Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit." +
+                    Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3] +
+                    ".inventory.CraftItemStack");
+
+            Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
+                    .invoke(null, itemStack);
+
+            if (nmsStack != null) {
+                Object components = nmsStack.getClass().getMethod("a").invoke(nmsStack);
+
+                if (components != null) {
+                    Object cmdComponent = components.getClass()
+                            .getMethod("a", Class.forName("net.minecraft.core.component.DataComponentType"))
+                            .invoke(components,
+                                    Class.forName("net.minecraft.core.component.DataComponents")
+                                            .getField("CUSTOM_MODEL_DATA").get(null));
+
+                    if (cmdComponent != null) {
+                        Integer value = (Integer) cmdComponent.getClass()
+                                .getMethod("value").invoke(cmdComponent);
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                                () -> "[CMD] Found CMD via NMS components: " + value);
+                        return value;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                    () -> "[CMD] Failed to extract CMD using reflection (1.21+): " + e.getMessage());
+        }
+
+        return null;
+    }
+
     private CustomModelData resolveOraxen(String externalItemId, String rawValue, String buffedItemId) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                 () -> "[CMD] Oraxen integration not yet implemented for item: " + buffedItemId);
         return null;
     }
 
-    /**
-     * Container class for resolved custom model data
-     */
     public static class CustomModelData {
         private final int value;
         private final String rawValue;
@@ -211,10 +272,10 @@ public class CustomModelDataResolver {
         }
 
         public enum Source {
-            DIRECT,     // Direct integer: 100001
-            ITEMSADDER, // ItemsAdder: itemsadder:fire_sword
-            NEXO,       // Nexo: nexo:custom_helmet
-            ORAXEN      // Oraxen: oraxen:magic_wand (future)
+            DIRECT,
+            ITEMSADDER,
+            NEXO,
+            ORAXEN
         }
     }
 
