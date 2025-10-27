@@ -54,7 +54,7 @@ public class EnchantmentListMenu extends Menu {
             return;
         }
 
-        if (clickedSlot < 45 && clickedType == Material.ENCHANTED_BOOK) {
+        if (clickedSlot < 45 && clickedType == Material.ENCHANTED_BOOK || clickedType == Material.BARRIER) {
             String configPath = "items." + itemId + ".enchantments";
             List<String> enchantmentsConfig = plugin.getConfig().getStringList(configPath);
 
@@ -68,10 +68,18 @@ public class EnchantmentListMenu extends Menu {
                 List<String> updatedList = new ArrayList<>(enchantmentsConfig);
                 updatedList.remove(clickedSlot);
                 ConfigManager.setItemValue(itemId, "enchantments", updatedList);
-                p.sendMessage("§aEnchantment '" + clickedEnchantString.split(";")[0] + "' removed.");
+
+                String enchantName = clickedEnchantString.contains(";")
+                        ? clickedEnchantString.split(";")[0]
+                        : clickedEnchantString;
+                p.sendMessage("§aEnchantment entry '" + enchantName + "' removed.");
+
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                        () -> "[EnchantmentList] Removed enchantment entry: " + clickedEnchantString + " for item: " + itemId);
+
                 this.open();
             }
-            else if (e.isLeftClick()) {
+            else if (e.isLeftClick() && clickedType == Material.ENCHANTED_BOOK) {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setEditIndex(clickedSlot);
                 playerMenuUtility.setChatInputPath("enchantments.edit");

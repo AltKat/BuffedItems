@@ -120,6 +120,17 @@ public class Commands implements CommandExecutor {
             return true;
         }
 
+        if (!buffedItem.isValid()) {
+            sender.sendMessage(ChatColor.RED + "⚠ WARNING: Item '" + itemId + "' has configuration errors!");
+            sender.sendMessage(ChatColor.YELLOW + "Errors:");
+            for (String error : buffedItem.getErrorMessages()) {
+                sender.sendMessage(ChatColor.GRAY + "  • " + error);
+            }
+            sender.sendMessage(ChatColor.YELLOW + "The item will still be given, but may not work as intended.");
+            sender.sendMessage(ChatColor.YELLOW + "Please fix errors via /bi menu");
+            return true;
+        }
+
         int amount = 1;
         if (args.length >= 4) {
             try {
@@ -188,10 +199,36 @@ public class Commands implements CommandExecutor {
     }
 
     private boolean handleListCommand(CommandSender sender) {
+        Map<String, BuffedItem> items = plugin.getItemManager().getLoadedItems();
+
         sender.sendMessage(ChatColor.YELLOW + "--- Available Buffed Items ---");
-        plugin.getItemManager().getLoadedItems().keySet().forEach(itemId -> {
-            sender.sendMessage(ChatColor.GOLD + "- " + itemId);
-        });
+
+        int validCount = 0;
+        int errorCount = 0;
+
+        for (Map.Entry<String, BuffedItem> entry : items.entrySet()) {
+            String itemId = entry.getKey();
+            BuffedItem item = entry.getValue();
+
+            if (item.isValid()) {
+                sender.sendMessage(ChatColor.GOLD + "✓ " + itemId);
+                validCount++;
+            } else {
+                sender.sendMessage(ChatColor.RED + "✗ " + itemId + ChatColor.GRAY + " (" + item.getErrorMessages().size() + " error(s))");
+                errorCount++;
+            }
+        }
+
+        sender.sendMessage("");
+        sender.sendMessage(ChatColor.GRAY + "Total: " + items.size() + " | " +
+                ChatColor.GREEN + "Valid: " + validCount + " | " +
+                ChatColor.RED + "Errors: " + errorCount);
+
+        if (errorCount > 0) {
+            sender.sendMessage(ChatColor.YELLOW + "Use " + ChatColor.GOLD + "/bi menu" +
+                    ChatColor.YELLOW + " to view and fix errors.");
+        }
+
         return true;
     }
 }

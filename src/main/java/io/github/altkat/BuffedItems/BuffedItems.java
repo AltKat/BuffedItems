@@ -10,6 +10,7 @@ import io.github.altkat.BuffedItems.Managers.EffectManager;
 import io.github.altkat.BuffedItems.Managers.ItemManager;
 import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
+import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -55,6 +56,8 @@ public final class BuffedItems extends JavaPlugin {
                 getLogger().info("You are using the latest version. (" + this.getDescription().getVersion() + ")");
             }
         });
+
+        printStartupSummary();
 
         getServer().getConsoleSender().sendMessage("§9[§6BuffedItems§9] §aBuffedItems has been enabled!");
     }
@@ -134,7 +137,7 @@ public final class BuffedItems extends JavaPlugin {
 
     private void updateAutoSaveIntervalVariable() {
         this.autoSaveIntervalTicks = getConfig().getLong("auto-save-interval-minutes", 5) * 20 * 60;
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Config] Auto-save interval set to " + (this.autoSaveIntervalTicks / 20 / 60) + " minutes (" + this.autoSaveIntervalTicks + " ticks)."); // Level 1
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Config] Auto-save interval set to " + (this.autoSaveIntervalTicks / 20 / 60) + " minutes (" + this.autoSaveIntervalTicks + " ticks).");
     }
 
     public void reloadConfigSettings() {
@@ -162,6 +165,30 @@ public final class BuffedItems extends JavaPlugin {
             playerMenuUtilityMap.put(playerUUID, playerMenuUtility);
             return playerMenuUtility;
         }
+    }
+
+    private void printStartupSummary() {
+        Map<String, BuffedItem> items = itemManager.getLoadedItems();
+        long validItems = items.values().stream().filter(BuffedItem::isValid).count();
+        long invalidItems = items.size() - validItems;
+
+        String separator = "==================================================";
+        getLogger().info(separator);
+        getLogger().info("BuffedItems v" + getDescription().getVersion() + " - Startup Summary");
+        getLogger().info("  Total Items: " + items.size());
+        getLogger().info("  Valid Items: " + validItems);
+
+        if (invalidItems > 0) {
+            getLogger().warning("  Items with Errors: " + invalidItems);
+            getLogger().warning("  Run '/bi list' or '/bi menu' to view details.");
+        }
+
+        String debugLevelInfo = ConfigManager.isDebugLevelEnabled(ConfigManager.DEBUG_INFO)
+                ? (ConfigManager.DEBUG_INFO + " (INFO)")
+                : "0 (OFF)";
+        getLogger().info("  Debug Level: " + debugLevelInfo);
+        getLogger().info("  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
+        getLogger().info(separator);
     }
 
     public ItemManager getItemManager() { return itemManager; }

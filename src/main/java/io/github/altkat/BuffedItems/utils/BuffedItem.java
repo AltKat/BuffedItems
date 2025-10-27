@@ -67,14 +67,6 @@ public class BuffedItem {
         return DEFAULT_TRUE_FLAGS.contains(id);
     }
 
-    public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission) {
-        this(id, displayName, lore, material, glow, effects, permission, null, null);
-    }
-
-    public BuffedItem(String id, String displayName, List<String> lore, Material material, boolean glow, Map<String, BuffedItemEffect> effects, String permission, Map<String, Boolean> flags) {
-        this(id, displayName, lore, material, glow, effects, permission, flags, null);
-    }
-
     public String getId() {
         return id;
     }
