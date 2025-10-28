@@ -21,22 +21,22 @@ public class ItemFlagsMenu extends Menu {
     private final String itemId;
 
     private final List<FlagInfo> flags = Arrays.asList(
-            new FlagInfo("HIDE_ATTRIBUTES", Material.BOOK, "Hide Attributes", "Hides the default attribute modifiers text (e.g., '+5 Attack Damage')."),
+            new FlagInfo("HIDE_ATTRIBUTES", Material.BOOK, "Hide Attributes", "Hides default attribute modifier text (e.g., '+5 Attack Damage')."),
             new FlagInfo("HIDE_ENCHANTS", Material.ENCHANTING_TABLE, "Hide Enchants", "Hides the enchantment list text."),
             new FlagInfo("HIDE_UNBREAKABLE", Material.BEDROCK, "Hide Unbreakable", "Hides the 'Unbreakable' text."),
-            new FlagInfo("HIDE_POTION_EFFECTS", Material.POTION, "Hide Potion Effects", "Hides effect text on Potions, Tipped Arrows, Suspicious Stew."),
-            new FlagInfo("HIDE_DESTROYS", Material.IRON_PICKAXE, "Hide Destroys", "Hides the 'Can Destroy:' block list (Adventure mode)."),
-            new FlagInfo("HIDE_PLACED_ON", Material.STONE, "Hide Placed On", "Hides the 'Can Be Placed On:' block list (Adventure mode)."),
-            new FlagInfo("PREVENT_ANVIL_USE", Material.CHAINMAIL_CHESTPLATE, "Prevent Anvil Use", "Prevents renaming, repairing, or combining enchantments in an anvil."),
-            new FlagInfo("PREVENT_ENCHANT_TABLE", Material.LAPIS_LAZULI, "Prevent Enchant Table", "Prevents the item from being placed in an enchanting table."),
-            new FlagInfo("PREVENT_SMITHING_USE", Material.SMITHING_TABLE, "Prevent Smithing Use", "Prevents the item from being used in a smithing table (base, addition, or template)."),
-            new FlagInfo("PREVENT_CRAFTING_USE", Material.CRAFTING_TABLE, "Prevent Crafting Use", "Prevents the item from being used as an ingredient in crafting recipes."),
-            new FlagInfo("PREVENT_DROP", Material.DROPPER, "Prevent Dropping", "Prevents the player from dropping the item (Q key or inventory drag)."),
-            new FlagInfo("PREVENT_CONSUME", Material.APPLE, "Prevent Consumption", "Prevents the item from being eaten, drunk (potions), or consumed."),
+            new FlagInfo("HIDE_POTION_EFFECTS", Material.POTION, "Hide Potion Effects", "Hides effect text on Potions, Arrows, Stew."),
+            new FlagInfo("HIDE_DESTROYS", Material.IRON_PICKAXE, "Hide Destroys", "Hides 'Can Destroy:' list (Adventure mode)."),
+            new FlagInfo("HIDE_PLACED_ON", Material.STONE, "Hide Placed On", "Hides 'Can Be Placed On:' list (Adventure mode)."),
+            new FlagInfo("PREVENT_ANVIL_USE", Material.CHAINMAIL_CHESTPLATE, "Prevent Anvil Use", "Prevents renaming, repairing, or combining in an anvil."),
+            new FlagInfo("PREVENT_ENCHANT_TABLE", Material.LAPIS_LAZULI, "Prevent Enchant Table", "Prevents placing the item in an enchanting table."),
+            new FlagInfo("PREVENT_SMITHING_USE", Material.SMITHING_TABLE, "Prevent Smithing Use", "Prevents using the item in a smithing table."),
+            new FlagInfo("PREVENT_CRAFTING_USE", Material.CRAFTING_TABLE, "Prevent Crafting Use", "Prevents using the item as a crafting ingredient."),
+            new FlagInfo("PREVENT_DROP", Material.DROPPER, "Prevent Drop/Store", "Prevents dropping (Q/drag), storing in containers, or item frames."),
+            new FlagInfo("PREVENT_CONSUME", Material.APPLE, "Prevent Consumption", "Prevents eating, drinking (potions), or consuming."),
             new FlagInfo("UNBREAKABLE", Material.ANVIL, "Unbreakable", "Prevents the item from losing durability."),
-            new FlagInfo("PREVENT_PLACEMENT", Material.GRASS_BLOCK, "Prevent Placement", "Prevents placing blocks, boats, minecarts, armor stands, item frames, paintings, etc."),
-            new FlagInfo("PREVENT_DEATH_DROP", Material.TOTEM_OF_UNDYING, "Prevent Death Drop", "Keeps the item in the player's inventory upon death."),
-            new FlagInfo("PREVENT_INTERACT", Material.STRUCTURE_VOID, "Prevent Use (Right-Click)", "Prevents most right-click actions (axe strip/wax, hoe till, shovel path, flint&steel, shield block, shear, spyglass, fishing rod, etc.). Does NOT prevent eating/drinking or block placement.")
+            new FlagInfo("PREVENT_PLACEMENT", Material.GRASS_BLOCK, "Prevent Placement", "Prevents placing blocks, boats, carts, armor stands, frames, etc."),
+            new FlagInfo("PREVENT_DEATH_DROP", Material.TOTEM_OF_UNDYING, "Prevent Death Drop", "Keeps the item in inventory upon death."),
+            new FlagInfo("PREVENT_INTERACT", Material.STRUCTURE_VOID, "Prevent Use (Right-Click)", "Prevents most right-clicks (axe strip, hoe till, flint&steel, shield, etc.).")
     );
 
     public ItemFlagsMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {

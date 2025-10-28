@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -15,12 +16,13 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
-import org.bukkit.event.inventory.PrepareSmithingEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.BlockInventoryHolder;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -207,5 +209,63 @@ public class ItemProtectionListener implements Listener {
             e.setCancelled(true);
             e.getPlayer().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-drop"));
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInventoryClickPreventDrop(InventoryClickEvent e) {
+        Inventory clickedInv = e.getClickedInventory();
+        ItemStack cursorItem = e.getCursor();
+        ItemStack currentItem = e.getCurrentItem();
+        InventoryAction action = e.getAction();
+
+        Inventory targetInventory = null;
+        ItemStack itemToCheck = null;
+
+        if (clickedInv != null && !(clickedInv.getHolder() instanceof Player) && cursorItem != null && cursorItem.getType() != Material.AIR) {
+
+            if (isContainerInventory(clickedInv)) {
+                targetInventory = clickedInv;
+                itemToCheck = cursorItem;
+            }
+        }
+        else if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY && currentItem != null && currentItem.getType() != Material.AIR) {
+            Inventory topInv = e.getView().getTopInventory();
+            Inventory bottomInv = e.getView().getBottomInventory();
+            Inventory sourceInv = e.getClickedInventory();
+
+            if (sourceInv != null && sourceInv.equals(bottomInv) && isContainerInventory(topInv)) {
+                targetInventory = topInv;
+                itemToCheck = currentItem;
+            }
+        }
+
+        if (targetInventory != null && itemToCheck != null && itemHasFlag(itemToCheck, "PREVENT_DROP")) {
+            e.setCancelled(true);
+            if (e.getWhoClicked() instanceof Player) {
+                ((Player) e.getWhoClicked()).sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-container-store"));
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInteractItemFramePreventDrop(PlayerInteractEntityEvent e) {
+        if (e.getRightClicked() instanceof ItemFrame) {
+            Player player = e.getPlayer();
+            ItemStack itemInHand = player.getInventory().getItem(e.getHand());
+
+            if (itemHasFlag(itemInHand, "PREVENT_DROP")) {
+                ItemFrame frame = (ItemFrame) e.getRightClicked();
+                if (frame.getItem() == null || frame.getItem().getType() == Material.AIR) {
+                    e.setCancelled(true);
+                    player.sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-itemframe-store"));
+                }
+            }
+        }
+    }
+
+    private boolean isContainerInventory(Inventory inv) {
+        if (inv == null) return false;
+        InventoryType type = inv.getType();
+        return inv.getHolder() instanceof BlockInventoryHolder && type != InventoryType.ENDER_CHEST;
     }
 }

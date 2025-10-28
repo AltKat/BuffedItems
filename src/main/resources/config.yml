@@ -341,3 +341,5 @@ messages:
   protection-prevent-drop: "&cYou cannot drop this item."
   protection-prevent-anvil-use: "&cThis special item cannot be used in an anvil."
   protection-prevent-smithing-use: "&cThis special item cannot be used in a smithing table."
+  protection-prevent-container-store: "&cYou cannot store this special item in a container."
+  protection-prevent-itemframe-store: "&cYou cannot place this special item in an item frame."
