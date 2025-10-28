@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -20,6 +21,9 @@ public class UpdateChecker implements Listener {
     private final int resourceId;
     private String latestVersion;
 
+    private static final int CONNECT_TIMEOUT_MS = 5000;
+    private static final int READ_TIMEOUT_MS = 5000;
+
     public UpdateChecker(BuffedItems plugin, int resourceId) {
         this.plugin = plugin;
         this.resourceId = resourceId;
@@ -28,14 +32,38 @@ public class UpdateChecker implements Listener {
 
     public void getVersion(final Consumer<String> consumer) {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            try (InputStream inputStream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + this.resourceId).openStream(); Scanner scanner = new Scanner(inputStream)) {
+            InputStream inputStream = null;
+            Scanner scanner = null;
+            try {
+                URL url = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + this.resourceId);
+                URLConnection connection = url.openConnection();
+
+                connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+                connection.setReadTimeout(READ_TIMEOUT_MS);
+
+                inputStream = connection.getInputStream();
+                scanner = new Scanner(inputStream);
+
                 if (scanner.hasNext()) {
                     String version = scanner.next();
                     this.latestVersion = version;
                     consumer.accept(version);
                 }
             } catch (IOException exception) {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->
+                        "[UpdateChecker] Unable to check for updates: " + exception.getClass().getSimpleName() + " - " + exception.getMessage());
                 ConfigManager.logInfo("&cUnable to check for updates: &e" + exception.getMessage());
+            } finally {
+                if (scanner != null) {
+                    scanner.close();
+                } else if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () ->
+                                "[UpdateChecker] Error closing input stream: " + e.getMessage());
+                    }
+                }
             }
         });
     }
