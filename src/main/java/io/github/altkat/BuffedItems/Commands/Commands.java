@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.Menu.MainMenu;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -12,9 +13,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Commands implements CommandExecutor {
 
@@ -143,6 +147,27 @@ public class Commands implements CommandExecutor {
 
         ItemStack itemStack = new ItemBuilder(buffedItem, plugin).build();
         itemStack.setAmount(amount);
+
+        if (plugin.isPlaceholderApiEnabled()) {
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                if (meta.hasDisplayName()) {
+                    String parsedName = PlaceholderAPI.setPlaceholders(target, meta.getDisplayName());
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', parsedName));
+                }
+
+                if (meta.hasLore()) {
+                    List<String> originalLore = meta.getLore();
+                    List<String> parsedLore = originalLore.stream()
+                            .map(line -> PlaceholderAPI.setPlaceholders(target, line))
+                            .map(line -> ChatColor.translateAlternateColorCodes('&', line))
+                            .collect(Collectors.toList());
+                    meta.setLore(parsedLore);
+                }
+                itemStack.setItemMeta(meta);
+            }
+        }
+
         target.getInventory().addItem(itemStack);
 
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));

@@ -4,11 +4,18 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ItemEditorMenu extends Menu {
     private final BuffedItems plugin;
@@ -42,6 +49,38 @@ public class ItemEditorMenu extends Menu {
                 BuffedItem itemToClone = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
                 if (itemToClone != null) {
                     ItemStack clone = new ItemBuilder(itemToClone, plugin).build();
+                    ItemMeta meta = clone.getItemMeta();
+
+                    if (meta != null) {
+                        String finalDisplayName = meta.hasDisplayName() ? meta.getDisplayName() : "";
+                        List<String> finalLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+
+                        if (plugin.isPlaceholderApiEnabled()) {
+
+                            finalDisplayName = PlaceholderAPI.setPlaceholders(p, finalDisplayName);
+
+                            finalLore = finalLore.stream()
+                                    .map(line -> PlaceholderAPI.setPlaceholders(p, line))
+                                    .collect(Collectors.toList());
+                        }
+
+                        finalDisplayName = ChatColor.translateAlternateColorCodes('&', finalDisplayName);
+                        finalLore = finalLore.stream()
+                                .map(line -> ChatColor.translateAlternateColorCodes('&', line))
+                                .collect(Collectors.toList());
+
+                        String suffix = ChatColor.translateAlternateColorCodes('&', " &7(TEST COPY)");
+                        finalDisplayName += suffix;
+
+                        finalLore.add("");
+                        finalLore.add(ChatColor.YELLOW + "Remember: This is a test copy.");
+                        finalLore.add(ChatColor.YELLOW + "It may not reflect saved changes yet.");
+
+                        meta.setDisplayName(finalDisplayName);
+                        meta.setLore(finalLore);
+                        clone.setItemMeta(meta);
+                    }
+
                     p.getInventory().addItem(clone);
                     p.sendMessage("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory.");
 

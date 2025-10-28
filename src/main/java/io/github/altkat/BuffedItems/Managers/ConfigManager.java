@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class ConfigManager {
@@ -136,7 +137,7 @@ public class ConfigManager {
 
         config.set("items." + itemId + ".display_name", "&f" + itemId);
         config.set("items." + itemId + ".material", "STONE");
-        config.set("items." + itemId + ".lore", Collections.singletonList("&7A new BuffedItem."));
+        config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
 
         plugin.getItemManager().reloadSingleItem(itemId);
 

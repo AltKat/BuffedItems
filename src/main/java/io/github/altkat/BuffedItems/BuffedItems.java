@@ -9,9 +9,11 @@ import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -31,10 +33,28 @@ public final class BuffedItems extends JavaPlugin {
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
     private BukkitTask autoSaveTask;
     private long autoSaveIntervalTicks = 6000L;
+    private Metrics metrics;
+    private boolean placeholderApiEnabled = false;
 
     @Override
     public void onEnable() {
-        new Metrics(this, 27592);
+        metrics = new Metrics(this, 27592);
+
+        metrics.addCustomChart(new SingleLineChart("total_items", () -> itemManager != null ? itemManager.getLoadedItems().size() : 0));
+
+        metrics.addCustomChart(new SingleLineChart("valid_items", () -> {
+            if (itemManager == null) return 0;
+            return (int) itemManager.getLoadedItems().values().stream()
+                    .filter(BuffedItem::isValid)
+                    .count();
+        }));
+
+        metrics.addCustomChart(new SingleLineChart("items_with_errors", () -> {
+            if (itemManager == null) return 0;
+            return (int) itemManager.getLoadedItems().values().stream()
+                    .filter(item -> !item.isValid())
+                    .count();
+        }));
 
         saveDefaultConfig();
         getConfig().options().copyHeader(true);
@@ -47,6 +67,14 @@ public final class BuffedItems extends JavaPlugin {
             e.printStackTrace();
         }
         reloadConfig();
+
+        PluginManager pm = getServer().getPluginManager();
+        if (pm.getPlugin("PlaceholderAPI") != null) {
+            placeholderApiEnabled = true;
+            ConfigManager.logInfo("&aPlaceholderAPI found! Enabling placeholder support.");
+        } else {
+            placeholderApiEnabled = false;
+        }
 
         initializeManagers();
         registerListenersAndCommands();
@@ -234,5 +262,8 @@ public final class BuffedItems extends JavaPlugin {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Util] Removing PlayerMenuUtility for " + uuid);
         }
         playerMenuUtilityMap.remove(uuid);
+    }
+    public boolean isPlaceholderApiEnabled() {
+        return placeholderApiEnabled;
     }
 }
