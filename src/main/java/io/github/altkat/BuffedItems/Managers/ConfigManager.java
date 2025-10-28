@@ -5,6 +5,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.function.Supplier;
 
@@ -25,6 +28,25 @@ public class ConfigManager {
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
+    }
+
+    public static void backupConfig() {
+        sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating config.yml backup to config.yml.backup...");
+        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
+
+        if (!configFile.exists()) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] config.yml does not exist, skipping backup.");
+            return;
+        }
+
+        try {
+            Files.copy(configFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Backup created successfully.");
+        } catch (IOException e) {
+            plugin.getLogger().warning("Could not create config backup: " + e.getMessage());
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Backup creation FAILED. Error: " + e.getMessage());
+        }
     }
 
     public static void reloadConfig() {

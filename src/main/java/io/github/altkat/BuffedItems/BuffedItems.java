@@ -98,7 +98,10 @@ public final class BuffedItems extends JavaPlugin {
         }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Saving final config...");
+        ConfigManager.backupConfig();
         saveConfig();
+
+        playerMenuUtilityMap.clear();
 
         ConfigManager.logInfo("&aCleanup complete: &e" + successCount + "/" + playerCount + "&a players cleaned" + (failCount > 0 ? "&c (" + failCount + " failed)" : ""));
         ConfigManager.logInfo("§cBuffedItems has been disabled!");
@@ -136,6 +139,7 @@ public final class BuffedItems extends JavaPlugin {
             @Override
             public void run() {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[AutoSave] Saving configuration to disk...");
+                ConfigManager.backupConfig();
                 saveConfig();
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[AutoSave] Configuration saved.");
             }

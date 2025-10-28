@@ -114,10 +114,26 @@ public class ItemEditorMenu extends Menu {
             return;
         }
 
-        inventory.setItem(10, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + item.getDisplayName()));
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+
+        for (int i = 0; i < 9; i++) {
+            inventory.setItem(i, filler);
+        }
+        for (int i = 36; i < 44; i++) {
+            inventory.setItem(i, filler);
+        }
+
+        inventory.setItem(9, filler);
+        inventory.setItem(17, filler);
+        inventory.setItem(18, filler);
+        inventory.setItem(26, filler);
+        inventory.setItem(27, filler);
+        inventory.setItem(35, filler);
+
+        inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + item.getDisplayName()));
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
-        inventory.setItem(14, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
-        inventory.setItem(16, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
+        inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
+        inventory.setItem(14, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
 
         String cmdDisplay;
         if (item.getCustomModelData().isPresent()) {
@@ -131,20 +147,19 @@ public class ItemEditorMenu extends Menu {
         } else {
             cmdDisplay = "§cNone";
         }
-        inventory.setItem(22, makeItem(Material.ARMOR_STAND, "§dSet Custom Model Data",
+        inventory.setItem(15, makeItem(Material.ARMOR_STAND, "§dSet Custom Model Data",
                 "§7Current: " + cmdDisplay,
                 "§7Used for custom resource pack models.",
                 "§7Supports: Direct, ItemsAdder, Nexo"));
 
-        inventory.setItem(24, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
-        inventory.setItem(28, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
-        inventory.setItem(30, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
-        inventory.setItem(32, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
-        inventory.setItem(34, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
-        inventory.setItem(42, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current changes."));
+        inventory.setItem(20, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
+        inventory.setItem(21, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
+        inventory.setItem(22, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
+        inventory.setItem(23, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
+        inventory.setItem(24, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
 
+        inventory.setItem(31, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current changes."));
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
-        setFillerGlass();
     }
 }

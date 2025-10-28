@@ -52,7 +52,7 @@ public class ItemFlagsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 27;
+        return 45;
     }
 
     @Override
@@ -60,30 +60,43 @@ public class ItemFlagsMenu extends Menu {
         Player p = (Player) e.getWhoClicked();
         if (e.getCurrentItem() == null) return;
 
-        if (e.getCurrentItem().getType() == Material.BARRIER) {
+        Material clickedType = e.getCurrentItem().getType();
+
+        if (clickedType == Material.BARRIER && e.getSlot() == getSlots() - 1) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) {
+        if (clickedType == Material.BLACK_STAINED_GLASS_PANE) {
             return;
         }
 
+        List<Integer> itemSlots = Arrays.asList(
+                11, 12, 13, 14, 15,
+                20, 21, 22, 23, 24,
+                29, 30, 31, 32, 33, 34
+        );
+
         int clickedSlot = e.getSlot();
-        if (clickedSlot >= 0 && clickedSlot < flags.size()) {
-            FlagInfo flag = flags.get(clickedSlot);
-            String clickedFlagName = flag.id;
 
-            BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
-            boolean currentValue = item.getFlag(clickedFlagName);
-            boolean newValue = !currentValue;
+        if (itemSlots.contains(clickedSlot)) {
+            int flagIndex = itemSlots.indexOf(clickedSlot);
 
-            String configPath = "flags." + clickedFlagName.toUpperCase();
-            ConfigManager.setItemValue(itemId, configPath, newValue);
+            if (flagIndex >= 0 && flagIndex < flags.size()) {
+                FlagInfo flag = flags.get(flagIndex);
+                String clickedFlagName = flag.id;
 
-            p.sendMessage("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled"));
+                BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
+                boolean currentValue = item.getFlag(clickedFlagName);
+                boolean newValue = !currentValue;
 
-            this.open();
+                String configPath = "flags." + clickedFlagName.toUpperCase();
+                ConfigManager.setItemValue(itemId, configPath, newValue);
+
+                p.sendMessage("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled"));
+
+                this.open();
+            }
         }
     }
 
@@ -96,7 +109,30 @@ public class ItemFlagsMenu extends Menu {
             return;
         }
 
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+
+        for (int i = 0; i < 9; i++) {
+            inventory.setItem(i, filler);
+        }
+        for (int i = 36; i < 44; i++) {
+            inventory.setItem(i, filler);
+        }
+
+        inventory.setItem(9, filler);
+        inventory.setItem(17, filler);
+        inventory.setItem(18, filler);
+        inventory.setItem(26, filler);
+        inventory.setItem(27, filler);
+        inventory.setItem(35, filler);
+
+        List<Integer> itemSlots = Arrays.asList(
+                11, 12, 13, 14, 15,
+                20, 21, 22, 23, 24,
+                29, 30, 31, 32, 33, 34
+        );
+
         for (int i = 0; i < flags.size(); i++) {
+            if (i >= itemSlots.size()) break;
             FlagInfo flag = flags.get(i);
             boolean isEnabled = item.getFlag(flag.id);
             String status = isEnabled ? "§aEnabled" : "§cDisabled";
@@ -118,11 +154,9 @@ public class ItemFlagsMenu extends Menu {
                 itemStack.setItemMeta(meta);
             }
 
-            inventory.setItem(i, itemStack);
+            inventory.setItem(itemSlots.get(i), itemStack);
         }
-
         addBackButton(new ItemEditorMenu(playerMenuUtility, plugin));
-        setFillerGlass();
     }
 
     private static class FlagInfo {

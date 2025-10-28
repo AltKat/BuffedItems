@@ -12,8 +12,8 @@ import java.util.List;
 
 public class LoreEditorMenu extends PaginatedMenu {
     private final BuffedItems plugin;
-    private int page = 0;
     private final int maxLinesPerPage = 36;
+    private final int MAX_TOTAL_LORE_LINES = 100;
 
     public LoreEditorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
@@ -45,28 +45,25 @@ public class LoreEditorMenu extends PaginatedMenu {
                 new ItemEditorMenu(playerMenuUtility, plugin).open();
                 break;
             case ANVIL:
+                if (lore.size() >= MAX_TOTAL_LORE_LINES) {
+                    p.sendMessage("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore.");
+                    p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("lore.add");
                 p.closeInventory();
                 p.sendMessage("§aPlease type the new lore line in chat. Use '&' for color codes.");
                 break;
             case PAPER:
+                if (lore.size() >= MAX_TOTAL_LORE_LINES) {
+                    p.sendMessage("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore.");
+                    p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
                 lore.add("");
                 ConfigManager.setItemValue(item.getId(), "lore", lore);
                 this.open();
-                break;
-            case ARROW:
-                if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Next")) {
-                    if (!((page + 1) * maxLinesPerPage >= lore.size())) {
-                        page++;
-                        super.open();
-                    }
-                } else if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Previous")) {
-                    if (page > 0) {
-                        page--;
-                        super.open();
-                    }
-                }
                 break;
             case BOOK:
                 int slotIndex = e.getSlot();

@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import org.bukkit.Material;
@@ -14,18 +15,18 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
 
 public class MainMenu extends PaginatedMenu {
 
     private final BuffedItems plugin;
-    private int page = 0;
 
-    private int maxItemsPerPage = 28;
+    private int maxItemsPerPage = 27;
 
     public MainMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
-        this.maxItemsPerPage = 28;
+        this.maxItemsPerPage = 27;
     }
 
     @Override
@@ -74,6 +75,7 @@ public class MainMenu extends PaginatedMenu {
             case EMERALD:
                 if (e.getSlot() == 52) {
                     try {
+                        ConfigManager.backupConfig();
                         plugin.saveConfig();
                         plugin.restartAutoSaveTask();
                         p.sendMessage("§aBuffedItems configuration has been saved successfully!");
@@ -85,26 +87,20 @@ public class MainMenu extends PaginatedMenu {
                     }
                 }
                 break;
-            case ARROW:
-                if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Next")) {
-
-                    if (!((page + 1) * maxItemsPerPage >= items.size())) {
-                        page++;
-                        super.open();
-                    }
-                } else if (e.getCurrentItem().getItemMeta().getDisplayName().contains("Back")) {
-
-                    if (page > 0) {
-                        page--;
-                        super.open();
-                    }
-                }
-                break;
         }
     }
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+
+        for (int i = 0; i < 9; i++) {
+            inventory.setItem(i, filler);
+        }
+
+        for (int i = 36; i < 45; i++) {
+            inventory.setItem(i, filler);
+        }
 
         addMenuControls();
         inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
@@ -117,7 +113,14 @@ public class MainMenu extends PaginatedMenu {
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
 
+        inventory.setItem(45, filler);
+        inventory.setItem(46, filler);
+        inventory.setItem(47, filler);
+        inventory.setItem(51, filler);
+
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
+
+        items.sort(Comparator.comparing(BuffedItem::getId));
 
 
         if (!items.isEmpty()) {
@@ -153,7 +156,7 @@ public class MainMenu extends PaginatedMenu {
                     meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, currentItem.getId());
                     itemStack.setItemMeta(meta);
                 }
-                inventory.addItem(itemStack);
+                inventory.setItem(i + 9, itemStack);
             }
         }
     }

@@ -13,10 +13,14 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChatListener implements Listener {
 
     private final BuffedItems plugin;
+
+    private static final Pattern PERMISSION_NODE_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
 
     public ChatListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -330,14 +334,22 @@ public class ChatListener implements Listener {
 
                 } else if ("permission".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting permission for item: " + itemId);
+
                     if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
                         ConfigManager.setItemValue(itemId, "permission", null);
                         p.sendMessage("§aPermission has been removed.");
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Removed permission for " + itemId);
                     } else {
-                        ConfigManager.setItemValue(itemId, "permission", input);
-                        p.sendMessage("§aPermission has been set!");
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Set permission for " + itemId + " to: " + input);
+                        Matcher matcher = PERMISSION_NODE_PATTERN.matcher(input);
+                        if (matcher.matches()) {
+                            ConfigManager.setItemValue(itemId, "permission", input);
+                            p.sendMessage("§aPermission has been set!");
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Set permission for " + itemId + " to: " + input);
+                        } else {
+                            p.sendMessage("§cInvalid permission node! Permissions can only contain letters, numbers, dots (.), hyphens (-), and underscores (_).");
+                            p.sendMessage("§cYour input was: §e" + input);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid permission node from " + p.getName() + ": " + input);
+                        }
                     }
                     new ItemEditorMenu(pmu, plugin).open();
 

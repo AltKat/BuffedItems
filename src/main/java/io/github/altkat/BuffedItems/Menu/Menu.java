@@ -42,7 +42,7 @@ public abstract class Menu implements InventoryHolder {
     protected void setFillerGlass() {
         for (int i = 0; i < getSlots(); i++) {
             if (inventory.getItem(i) == null) {
-                ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+                ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
                 ItemMeta fillerMeta = filler.getItemMeta();
                 fillerMeta.setDisplayName(" ");
                 filler.setItemMeta(fillerMeta);

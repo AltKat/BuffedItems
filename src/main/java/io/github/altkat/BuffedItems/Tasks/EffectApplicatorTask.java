@@ -28,8 +28,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private final ActiveAttributeManager attributeManager;
     private final EffectManager effectManager;
 
-    private final Map<UUID, Set<PotionEffectType>> managedEffects = new HashMap<>();
-    private final Map<UUID, CachedPlayerData> playerCache = new HashMap<>();
+    private final Map<UUID, Set<PotionEffectType>> managedEffects = new ConcurrentHashMap<>();
+    private final Map<UUID, CachedPlayerData> playerCache = new ConcurrentHashMap<>();
 
     private final Set<UUID> playersToUpdate = ConcurrentHashMap.newKeySet();
 

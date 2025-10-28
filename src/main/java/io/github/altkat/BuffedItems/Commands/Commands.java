@@ -186,6 +186,7 @@ public class Commands implements CommandExecutor {
     private boolean handleSaveCommand(CommandSender sender) {
         try {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Saving pending changes to disk triggered by " + sender.getName() + "...");
+            ConfigManager.backupConfig();
             plugin.saveConfig();
             plugin.restartAutoSaveTask();
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Save complete.");
