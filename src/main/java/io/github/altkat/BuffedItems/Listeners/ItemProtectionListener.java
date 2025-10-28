@@ -1,9 +1,11 @@
 package io.github.altkat.BuffedItems.Listeners;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -103,7 +105,7 @@ public class ItemProtectionListener implements Listener {
             if (item.getType().isBlock()) return;
 
             e.setCancelled(true);
-            e.getPlayer().sendMessage("§cYou cannot use this special item.");
+            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-interact"));
         }
     }
 
@@ -121,6 +123,7 @@ public class ItemProtectionListener implements Listener {
         {
             if (itemHasFlag(e.getItem(), "PREVENT_PLACEMENT")) {
                 e.setCancelled(true);
+                e.getPlayer().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-placement-entity"));
             }
         }
     }
@@ -129,6 +132,7 @@ public class ItemProtectionListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent e) {
         if (itemHasFlag(e.getItemInHand(), "PREVENT_PLACEMENT")) {
             e.setCancelled(true);
+            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-placement-block"));
         }
     }
 
@@ -136,16 +140,29 @@ public class ItemProtectionListener implements Listener {
     public void onHangingPlace(HangingPlaceEvent e) {
         if (itemHasFlag(e.getPlayer().getInventory().getItemInMainHand(), "PREVENT_PLACEMENT")) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage("§cYou cannot place this special item.");
+            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-placement"));
         }
     }
 
 
     @EventHandler
     public void onPrepareAnvil(PrepareAnvilEvent e) {
-        if (itemHasFlag(e.getInventory().getItem(0), "PREVENT_ANVIL_USE") ||
-                itemHasFlag(e.getInventory().getItem(1), "PREVENT_ANVIL_USE")) {
+        boolean prevent = itemHasFlag(e.getInventory().getItem(0), "PREVENT_ANVIL_USE") ||
+                itemHasFlag(e.getInventory().getItem(1), "PREVENT_ANVIL_USE");
+
+        if (prevent) {
             e.setResult(null);
+            for (HumanEntity viewer : e.getViewers()) {
+                if (viewer instanceof Player) {
+                    if (e.getInventory().getItem(0) != null && itemHasFlag(e.getInventory().getItem(0), "PREVENT_ANVIL_USE")) {
+                        ((Player) viewer).sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-anvil-use"));
+                        break;
+                    } else if (e.getInventory().getItem(1) != null && itemHasFlag(e.getInventory().getItem(1), "PREVENT_ANVIL_USE")) {
+                        ((Player) viewer).sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-anvil-use"));
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -153,15 +170,21 @@ public class ItemProtectionListener implements Listener {
     public void onEnchantItem(EnchantItemEvent e) {
         if (itemHasFlag(e.getItem(), "PREVENT_ENCHANT_TABLE")) {
             e.setCancelled(true);
-            e.getEnchanter().sendMessage("§cYou cannot enchant this special item.");
+            e.getEnchanter().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-enchant-table"));
         }
     }
 
     @EventHandler
     public void onPrepareSmithing(PrepareSmithingEvent e) {
-        if (itemHasFlag(e.getInventory().getItem(0), "PREVENT_SMITHING_USE") ||
-                itemHasFlag(e.getInventory().getItem(1), "PREVENT_SMITHING_USE")) {
+        boolean prevent = itemHasFlag(e.getInventory().getItem(0), "PREVENT_SMITHING_USE") ||
+                itemHasFlag(e.getInventory().getItem(1), "PREVENT_SMITHING_USE");
+
+        if (prevent) {
             e.setResult(null);
+            HumanEntity viewer = e.getView().getPlayer();
+            if (viewer instanceof Player) {
+                ((Player) viewer).sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-smithing-use"));
+            }
         }
     }
 
@@ -171,7 +194,7 @@ public class ItemProtectionListener implements Listener {
             if (itemHasFlag(item, "PREVENT_CRAFTING_USE")) {
                 e.setCancelled(true);
                 if (e.getWhoClicked() instanceof Player) {
-                    ((Player) e.getWhoClicked()).sendMessage("§cYou cannot use this special item in crafting.");
+                    ((Player) e.getWhoClicked()).sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-crafting-use"));
                 }
                 return;
             }
@@ -182,7 +205,7 @@ public class ItemProtectionListener implements Listener {
     public void onItemDrop(PlayerDropItemEvent e) {
         if (itemHasFlag(e.getItemDrop().getItemStack(), "PREVENT_DROP")) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage("§cYou cannot drop this item.");
+            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-drop"));
         }
     }
 }

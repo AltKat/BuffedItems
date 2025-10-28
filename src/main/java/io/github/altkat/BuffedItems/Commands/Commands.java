@@ -146,7 +146,12 @@ public class Commands implements CommandExecutor {
         target.getInventory().addItem(itemStack);
 
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
-        target.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aYou have received &e" + amount + "x &r" + buffedItem.getDisplayName()));
+
+        String messageToReceiver = ConfigManager.getPrefixedMessage("give-success-receiver")
+                .replace("{amount}", String.valueOf(amount))
+                .replace("{item_name}", buffedItem.getDisplayName());
+
+        target.sendMessage(ChatColor.translateAlternateColorCodes('&', messageToReceiver));
 
         ConfigManager.logInfo("&aGave &e" + amount + "x " + itemId + "&a to &e" + target.getName() + "&a (by: &e" + sender.getName() + "&a)");
 

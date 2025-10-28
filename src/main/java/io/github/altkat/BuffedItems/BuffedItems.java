@@ -4,10 +4,7 @@ import io.github.altkat.BuffedItems.Commands.Commands;
 import io.github.altkat.BuffedItems.Commands.TabCompleterHandler;
 import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
 import io.github.altkat.BuffedItems.Listeners.*;
-import io.github.altkat.BuffedItems.Managers.ActiveAttributeManager;
-import io.github.altkat.BuffedItems.Managers.ConfigManager;
-import io.github.altkat.BuffedItems.Managers.EffectManager;
-import io.github.altkat.BuffedItems.Managers.ItemManager;
+import io.github.altkat.BuffedItems.Managers.*;
 import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
@@ -41,6 +38,15 @@ public final class BuffedItems extends JavaPlugin {
 
         saveDefaultConfig();
         getConfig().options().copyHeader(true);
+        ConfigManager.setup(this);
+
+        try {
+            ConfigUpdater.update(this);
+        } catch (Exception e) {
+            getLogger().severe("CRITICAL: Failed to update or load config.yml. Plugin may not function correctly.");
+            e.printStackTrace();
+        }
+        reloadConfig();
 
         initializeManagers();
         registerListenersAndCommands();
@@ -108,7 +114,6 @@ public final class BuffedItems extends JavaPlugin {
     }
 
     private void initializeManagers() {
-        ConfigManager.setup(this);
         ConfigManager.loadGlobalSettings();
         updateAutoSaveIntervalVariable();
         itemManager = new ItemManager(this);

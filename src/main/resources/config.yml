@@ -324,3 +324,20 @@ items:
       PREVENT_ANVIL_USE: true
       HIDE_ATTRIBUTES: false
       HIDE_ENCHANTS: false
+
+messages:
+  prefix: "&9[&6BuffedItems&9] "
+
+  # /bi give
+  give-success-receiver: "&aYou have received &e{amount}x &r{item_name}&a."
+
+  # Item Protection Feedback
+  protection-prevent-interact: "&cYou cannot use this special item."
+  protection-prevent-placement: "&cYou cannot place this special item."
+  protection-prevent-placement-entity: "&cYou cannot place this special entity item."
+  protection-prevent-placement-block: "&cYou cannot place this special block."
+  protection-prevent-enchant-table: "&cYou cannot enchant this special item."
+  protection-prevent-crafting-use: "&cYou cannot use this special item in crafting."
+  protection-prevent-drop: "&cYou cannot drop this item."
+  protection-prevent-anvil-use: "&cThis special item cannot be used in an anvil."
+  protection-prevent-smithing-use: "&cThis special item cannot be used in a smithing table."

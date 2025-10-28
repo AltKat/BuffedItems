@@ -159,6 +159,12 @@ public class ConfigManager {
         sendDebugMessage(DEBUG_TASK, () -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
     }
 
+    public static String getPrefixedMessage(String path) {
+        String prefix = plugin.getConfig().getString("messages.prefix", "&9[&6BuffedItems&9] ");
+        String msg = plugin.getConfig().getString("messages." + path, "&cMissing message: messages." + path);
+        return ChatColor.translateAlternateColorCodes('&', prefix + msg);
+    }
+
     public static boolean isDebugLevelEnabled(int level) {
         return debugLevel >= level;
     }
