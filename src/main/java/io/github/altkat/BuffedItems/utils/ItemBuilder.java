@@ -2,9 +2,7 @@ package io.github.altkat.BuffedItems.utils;
 
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -15,7 +13,6 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ItemBuilder {
 
@@ -23,7 +20,6 @@ public class ItemBuilder {
     private final ItemStack itemStack;
     private final Plugin plugin;
     private final int serverVersion;
-    private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.legacyAmpersand();
 
     public ItemBuilder(BuffedItem buffedItem, Plugin plugin) {
         this.buffedItem = buffedItem;
@@ -54,11 +50,9 @@ public class ItemBuilder {
             return itemStack;
         }
 
-        meta.displayName(ampersandSerializer.deserialize(buffedItem.getDisplayName()));
+        meta.displayName(ConfigManager.fromLegacy(buffedItem.getDisplayName()));
 
-        List<Component> coloredLore = buffedItem.getLore().stream()
-                .map(ampersandSerializer::deserialize)
-                .collect(Collectors.toList());
+        List<Component> coloredLore = ConfigManager.loreFromLegacy(buffedItem.getLore());
         meta.lore(coloredLore);
 
         if (buffedItem.getCustomModelData().isPresent()) {

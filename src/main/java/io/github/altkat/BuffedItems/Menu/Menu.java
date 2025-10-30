@@ -1,7 +1,7 @@
 package io.github.altkat.BuffedItems.Menu;
 
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -20,8 +20,6 @@ public abstract class Menu implements InventoryHolder {
     protected Inventory inventory;
     protected PlayerMenuUtility playerMenuUtility;
 
-    private static final LegacyComponentSerializer sectionSerializer = LegacyComponentSerializer.legacySection();
-
     public Menu(PlayerMenuUtility playerMenuUtility) {
         this.playerMenuUtility = playerMenuUtility;
     }
@@ -34,7 +32,7 @@ public abstract class Menu implements InventoryHolder {
 
 
     public void open() {
-        inventory = Bukkit.createInventory(this, getSlots(), sectionSerializer.deserialize(getMenuName()));
+        inventory = Bukkit.createInventory(this, getSlots(), ConfigManager.fromSection(getMenuName()));
         this.setMenuItems();
         playerMenuUtility.getOwner().openInventory(inventory);
     }
@@ -50,7 +48,7 @@ public abstract class Menu implements InventoryHolder {
             if (inventory.getItem(i) == null) {
                 ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
                 ItemMeta fillerMeta = filler.getItemMeta();
-                fillerMeta.displayName(Component.text(" "));
+                fillerMeta.displayName(ConfigManager.fromSection(" "));
                 filler.setItemMeta(fillerMeta);
                 inventory.setItem(i, filler);
             }
@@ -61,7 +59,7 @@ public abstract class Menu implements InventoryHolder {
     protected void addBackButton(Menu targetMenu) {
         ItemStack back = new ItemStack(Material.BARRIER);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.displayName(sectionSerializer.deserialize("§cBack"));
+        backMeta.displayName(ConfigManager.fromSection("§cBack"));
         back.setItemMeta(backMeta);
 
         inventory.setItem(getSlots() - 1, back);
@@ -71,9 +69,9 @@ public abstract class Menu implements InventoryHolder {
     protected ItemStack makeItem(Material material, String displayName, String... lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(sectionSerializer.deserialize(displayName));
+        meta.displayName(ConfigManager.fromSection(displayName));
         List<Component> loreComponents = Arrays.stream(lore)
-                .map(sectionSerializer::deserialize)
+                .map(ConfigManager::fromSection)
                 .collect(Collectors.toList());
         meta.lore(loreComponents);
         item.setItemMeta(meta);

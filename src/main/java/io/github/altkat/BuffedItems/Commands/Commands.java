@@ -7,7 +7,6 @@ import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -28,8 +27,6 @@ public class Commands implements CommandExecutor {
     private final String noPermissionMessage = ChatColor.RED + "You do not have permission to use this command.";
     private final Map<String, Long> reloadConfirmations = new HashMap<>();
     private static final long CONFIRM_TIMEOUT_MS = 5000;
-    private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.legacyAmpersand();
-    private static final LegacyComponentSerializer sectionSerializer = LegacyComponentSerializer.legacySection();
 
     public Commands(BuffedItems plugin) {
         this.plugin = plugin;
@@ -158,9 +155,9 @@ public class Commands implements CommandExecutor {
                 if (meta.hasDisplayName()) {
                     Component originalName = meta.displayName();
                     if (originalName != null) {
-                        String legacyName = ampersandSerializer.serialize(originalName);
-                        String parsedName = PlaceholderAPI.setPlaceholders(target, legacyName);
-                        meta.displayName(sectionSerializer.deserialize(parsedName));
+                        String legacyNameWithSection = ConfigManager.toSection(originalName);
+                        String parsedName = PlaceholderAPI.setPlaceholders(target, legacyNameWithSection);
+                        meta.displayName(ConfigManager.fromSection(parsedName));
                     }
                 }
 
@@ -168,9 +165,9 @@ public class Commands implements CommandExecutor {
                     List<Component> originalLore = meta.lore();
                     if (originalLore != null) {
                         List<Component> parsedLore = originalLore.stream()
-                                .map(ampersandSerializer::serialize)
+                                .map(ConfigManager::toSection)
                                 .map(line -> PlaceholderAPI.setPlaceholders(target, line))
-                                .map(sectionSerializer::deserialize)
+                                .map(ConfigManager::fromSection)
                                 .collect(Collectors.toList());
                         meta.lore(parsedLore);
                     }

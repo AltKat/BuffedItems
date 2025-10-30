@@ -1,6 +1,8 @@
 package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -11,6 +13,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ConfigManager {
 
@@ -26,6 +29,48 @@ public class ConfigManager {
     public static final int DEBUG_VERBOSE = 4;   // GUI, Chat, Inventory events (spammy)
 
     private static final String PLUGIN_PREFIX = "§9[§6BuffedItems§9] ";
+
+    private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.builder()
+            .character('&')
+            .hexColors()
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build();
+
+    private static final LegacyComponentSerializer sectionSerializer = LegacyComponentSerializer.builder()
+            .character('§')
+            .hexColors()
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build();
+
+    public static Component fromLegacy(String text) {
+        if (text == null || text.isEmpty()) {
+            return Component.empty();
+        }
+        return ampersandSerializer.deserialize(text);
+    }
+
+    public static List<Component> loreFromLegacy(List<String> textLines) {
+        if (textLines == null || textLines.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return textLines.stream()
+                .map(ConfigManager::fromLegacy)
+                .collect(Collectors.toList());
+    }
+
+    public static Component fromSection(String text) {
+        if (text == null || text.isEmpty()) {
+            return Component.empty();
+        }
+        return sectionSerializer.deserialize(text);
+    }
+
+    public static String toSection(Component component) {
+        if (component == null) {
+            return "";
+        }
+        return sectionSerializer.serialize(component);
+    }
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
