@@ -1,14 +1,13 @@
 package io.github.altkat.BuffedItems.Listeners;
 
+import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -33,31 +32,6 @@ public class InventoryChangeListener implements Listener {
     private boolean isBuffedItem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING);
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
-    public void onPlayerInteract(PlayerInteractEvent e) {
-        Action action = e.getAction();
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) {
-            return;
-        }
-
-        ItemStack item = e.getItem();
-
-        if (isBuffedItem(item) && isEquippable(item.getType())) {
-            scheduleInventoryCheck(e.getPlayer());
-        }
-    }
-
-    private boolean isEquippable(Material type) {
-        String name = type.name();
-        return name.endsWith("_HELMET") ||
-                name.endsWith("_CHESTPLATE") ||
-                name.endsWith("_LEGGINGS") ||
-                name.endsWith("_BOOTS") ||
-                type == Material.ELYTRA ||
-                type == Material.SHIELD ||
-                type == Material.TURTLE_HELMET;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -126,10 +100,27 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onArmorChange(PlayerArmorChangeEvent e) {
+        Player player = e.getPlayer();
+        ItemStack oldItem = e.getOldItem();
+        ItemStack newItem = e.getNewItem();
+
+        if ((oldItem == null || oldItem.getType().isAir()) && (newItem == null || newItem.getType().isAir())) {
+            return;
+        }
+
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () ->
+                "[ArmorChangeListener] Armor change detected for " + player.getName() +
+                        " in slot " + e.getSlotType().name() + ". Scheduling IMMEDIATE update.");
+
+        plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+    }
+
     private void scheduleInventoryCheck(Player player) {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] Marked " + player.getName() + " for update (4-tick delay) due to inventory change");
-        }, 4L);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] Marked " + player.getName() + " for update due to inventory change");
+        }, 1L);
     }
 }
