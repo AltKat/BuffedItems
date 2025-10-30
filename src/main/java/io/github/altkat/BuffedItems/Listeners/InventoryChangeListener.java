@@ -2,18 +2,17 @@ package io.github.altkat.BuffedItems.Listeners;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerItemBreakEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
@@ -34,6 +33,31 @@ public class InventoryChangeListener implements Listener {
     private boolean isBuffedItem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        Action action = e.getAction();
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        ItemStack item = e.getItem();
+
+        if (isBuffedItem(item) && isEquippable(item.getType())) {
+            scheduleInventoryCheck(e.getPlayer());
+        }
+    }
+
+    private boolean isEquippable(Material type) {
+        String name = type.name();
+        return name.endsWith("_HELMET") ||
+                name.endsWith("_CHESTPLATE") ||
+                name.endsWith("_LEGGINGS") ||
+                name.endsWith("_BOOTS") ||
+                type == Material.ELYTRA ||
+                type == Material.SHIELD ||
+                type == Material.TURTLE_HELMET;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -103,7 +127,9 @@ public class InventoryChangeListener implements Listener {
     }
 
     private void scheduleInventoryCheck(Player player) {
-        plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] Marked " + player.getName() + " for update due to inventory change");
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] Marked " + player.getName() + " for update (4-tick delay) due to inventory change");
+        }, 4L);
     }
 }
