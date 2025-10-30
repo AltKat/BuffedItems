@@ -54,8 +54,16 @@ public class ItemProtectionListener implements Listener {
         return buffedItem.getFlag(flagName);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent e) {
+        Player player = e.getEntity();
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[DeathListener] Player " + player.getName() + " died. Cleaning up effects and cache.");
+
+        plugin.getEffectManager().clearAllAttributes(player);
+        plugin.getEffectApplicatorTask().playerQuit(player);
+        plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
+                .forEach(player::removePotionEffect);
+
         List<ItemStack> keptItems = new ArrayList<>();
         Iterator<ItemStack> iterator = e.getDrops().iterator();
 
@@ -89,6 +97,10 @@ public class ItemProtectionListener implements Listener {
             }
             itemsMap.remove(playerUuid);
         }
+        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[RespawnListener] Player " + e.getPlayer().getName() + " respawned. Scheduling inventory update (1-tick delay).");
+            plugin.getEffectApplicatorTask().markPlayerForUpdate(playerUuid);
+        }, 1L);
     }
 
     @EventHandler(priority = EventPriority.LOW)
