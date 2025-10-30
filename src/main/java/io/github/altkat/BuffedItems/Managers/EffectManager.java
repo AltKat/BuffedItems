@@ -21,12 +21,6 @@ public class EffectManager {
         this.plugin = plugin;
     }
 
-    /**
-     * Applies or refreshes potion effects on a player based on the desired effects map.
-     * @param player The player to apply effects to.
-     * @param desiredEffects A map of PotionEffectType to the desired level (1-based).
-     * @param debugTick Only log "optimal" or "skipping" messages if true.
-     */
     public void applyOrRefreshPotionEffects(Player player, Map<PotionEffectType, Integer> desiredEffects, boolean debugTick) {
         final boolean showIcon = ConfigManager.shouldShowPotionIcons();
 
@@ -54,13 +48,6 @@ public class EffectManager {
         }
     }
 
-    /**
-     * Removes potion effects previously managed by this plugin that are no longer required.
-     * @param player The player to remove effects from.
-     * @param lastAppliedEffects The set of effect types applied in the previous tick.
-     * @param desiredEffects The set of effect types desired in the current tick.
-     * @param debugTick Only log "not removing" messages if true.
-     */
     public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects, Set<PotionEffectType> desiredEffects, boolean debugTick) {
         Set<PotionEffectType> effectsToRemove = new HashSet<>(lastAppliedEffects);
         effectsToRemove.removeAll(desiredEffects);
@@ -76,8 +63,10 @@ public class EffectManager {
         }
     }
 
+
     public void applyAttributeEffects(Player player, String itemId, String slot, List<String> attributes) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Processing " + attributes.size() + " attributes for " + player.getName() + " (item: " + itemId + ", slot: " + slot + ")");
+
         EquipmentSlot equipmentSlot = getEquipmentSlot(slot);
 
         for (String attrString : attributes) {
@@ -123,8 +112,16 @@ public class EffectManager {
                 plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, existingMod);
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " found on player but wasn't tracked. Re-tracking now.");
             } else {
+
                 String modifierName = "buffeditems." + itemId + "." + slot;
-                AttributeModifier modifier = new AttributeModifier(modifierUUID, modifierName, amount, operation, equipmentSlot);
+                AttributeModifier modifier = new AttributeModifier(
+                        modifierUUID,
+                        modifierName,
+                        amount,
+                        operation,
+                        equipmentSlot
+                );
+
                 try {
                     instance.addModifier(modifier);
                     plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, modifier);

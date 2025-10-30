@@ -4,7 +4,9 @@ import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -51,7 +53,6 @@ public class ItemBuilder {
         }
 
         meta.displayName(ConfigManager.fromLegacy(buffedItem.getDisplayName()));
-
         List<Component> coloredLore = ConfigManager.loreFromLegacy(buffedItem.getLore());
         meta.lore(coloredLore);
 
@@ -77,6 +78,33 @@ public class ItemBuilder {
                     }
                 }
             }
+        }
+
+
+        for (Map.Entry<String, BuffedItemEffect> effectEntry : buffedItem.getEffects().entrySet()) {
+            String slotKey = effectEntry.getKey().toUpperCase();
+            BuffedItemEffect itemEffect = effectEntry.getValue();
+
+            EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
+
+            if (equipmentSlot != null) {
+                for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
+
+                    AttributeModifier modifier = new AttributeModifier(
+                            parsedAttr.getUuid(),
+                            "buffeditems." + buffedItem.getId() + "." + slotKey,
+                            parsedAttr.getAmount(),
+                            parsedAttr.getOperation(),
+                            equipmentSlot
+                    );
+
+                    meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[ItemBuilder] Natively applying attribute to " + buffedItem.getId() +
+                                    " for slot " + slotKey + ": " + parsedAttr.getAttribute().name());
+                }
+            }
+
         }
 
         if (buffedItem.getFlag("UNBREAKABLE")) {
@@ -160,5 +188,18 @@ public class ItemBuilder {
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                 () -> "[ItemBuilder] Applied CMD via NMS: " + cmdValue);
+    }
+
+    private EquipmentSlot getEquipmentSlot(String slot) {
+        switch (slot.toUpperCase()) {
+            case "MAIN_HAND": return EquipmentSlot.HAND;
+            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
+            case "HELMET": return EquipmentSlot.HEAD;
+            case "CHESTPLATE": return EquipmentSlot.CHEST;
+            case "LEGGINGS": return EquipmentSlot.LEGS;
+            case "BOOTS": return EquipmentSlot.FEET;
+            case "INVENTORY":
+            default: return null;
+        }
     }
 }
