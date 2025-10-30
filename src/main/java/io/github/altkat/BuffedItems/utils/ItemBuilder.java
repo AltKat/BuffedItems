@@ -1,6 +1,8 @@
 package io.github.altkat.BuffedItems.utils;
 
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
@@ -21,6 +23,7 @@ public class ItemBuilder {
     private final ItemStack itemStack;
     private final Plugin plugin;
     private final int serverVersion;
+    private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.legacyAmpersand();
 
     public ItemBuilder(BuffedItem buffedItem, Plugin plugin) {
         this.buffedItem = buffedItem;
@@ -51,12 +54,12 @@ public class ItemBuilder {
             return itemStack;
         }
 
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', buffedItem.getDisplayName()));
+        meta.displayName(ampersandSerializer.deserialize(buffedItem.getDisplayName()));
 
-        List<String> coloredLore = buffedItem.getLore().stream()
-                .map(line -> ChatColor.translateAlternateColorCodes('&', line))
+        List<Component> coloredLore = buffedItem.getLore().stream()
+                .map(ampersandSerializer::deserialize)
                 .collect(Collectors.toList());
-        meta.setLore(coloredLore);
+        meta.lore(coloredLore);
 
         if (buffedItem.getCustomModelData().isPresent()) {
             int cmdValue = buffedItem.getCustomModelData().get();
@@ -104,7 +107,7 @@ public class ItemBuilder {
 
         if (buffedItem.hasGlow()) {
             if (!hasRealEnchants || buffedItem.getFlag("HIDE_ENCHANTS")) {
-                meta.addEnchant(Enchantment.LUCK, 1, false);
+                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
             }
         }
 
@@ -123,8 +126,8 @@ public class ItemBuilder {
         if (buffedItem.getFlag("HIDE_PLACED_ON")) {
             meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
         }
-        if (buffedItem.getFlag("HIDE_POTION_EFFECTS")) {
-            meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+        if (buffedItem.getFlag("HIDE_ADDITIONAL_TOOLTIP")) {
+            meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         }
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
@@ -135,9 +138,7 @@ public class ItemBuilder {
     }
 
     private void applyCustomModelDataNMS(int cmdValue) throws Exception {
-        String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-
-        Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".inventory.CraftItemStack");
+        Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit.inventory.CraftItemStack");
 
         Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
                 .invoke(null, itemStack);

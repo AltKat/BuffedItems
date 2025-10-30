@@ -24,6 +24,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.SmithingTrimRecipe;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
@@ -190,15 +191,22 @@ public class ItemProtectionListener implements Listener {
 
     @EventHandler
     public void onPrepareSmithing(PrepareSmithingEvent e) {
-        boolean prevent = itemHasFlag(e.getInventory().getItem(0), "PREVENT_SMITHING_USE") ||
-                itemHasFlag(e.getInventory().getItem(1), "PREVENT_SMITHING_USE");
+        ItemStack base = e.getInventory().getItem(0);
+        ItemStack addition = e.getInventory().getItem(1);
+        ItemStack material = e.getInventory().getItem(2);
 
-        if (prevent) {
+        HumanEntity viewer = e.getView().getPlayer();
+        if (!(viewer instanceof Player player)) return;
+
+        boolean prevent = itemHasFlag(base, "PREVENT_SMITHING_USE")
+                || itemHasFlag(addition, "PREVENT_SMITHING_USE")
+                || itemHasFlag(material, "PREVENT_SMITHING_USE");
+
+        boolean isTrimRecipe = (e.getInventory().getRecipe() instanceof SmithingTrimRecipe);
+
+        if (prevent || isTrimRecipe) {
             e.setResult(null);
-            HumanEntity viewer = e.getView().getPlayer();
-            if (viewer instanceof Player) {
-                ((Player) viewer).sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-smithing-use"));
-            }
+            player.sendMessage(ConfigManager.getPrefixedMessage("protection-prevent-smithing-use"));
         }
     }
 

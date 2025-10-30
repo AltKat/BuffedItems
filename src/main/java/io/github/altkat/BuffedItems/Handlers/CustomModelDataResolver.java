@@ -207,9 +207,7 @@ public class CustomModelDataResolver {
             } catch (NoSuchMethodException ignored) {
             }
 
-            Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit." +
-                    Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3] +
-                    ".inventory.CraftItemStack");
+            Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit.inventory.CraftItemStack");
 
             Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
                     .invoke(null, itemStack);

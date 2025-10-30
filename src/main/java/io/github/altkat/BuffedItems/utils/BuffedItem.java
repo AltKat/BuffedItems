@@ -48,7 +48,7 @@ public class BuffedItem {
                 "HIDE_ATTRIBUTES",
                 //"HIDE_ENCHANTS",
                 "HIDE_UNBREAKABLE",
-                "HIDE_POTION_EFFECTS",
+                "HIDE_ADDITIONAL_TOOLTIP",
                 "HIDE_DESTROYS",
                 "HIDE_PLACED_ON",
                 //"PREVENT_ANVIL_USE",

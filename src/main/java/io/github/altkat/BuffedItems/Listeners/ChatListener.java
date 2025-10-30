@@ -4,12 +4,17 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.Menu.*;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
+import io.papermc.paper.event.player.AsyncChatEvent; // <-- Değişti
+import net.kyori.adventure.text.serializer.ComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer; // <-- Eklendi
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.yaml.snakeyaml.serializer.Serializer;
+// import org.bukkit.event.player.AsyncPlayerChatEvent; // <-- Kaldırıldı
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +32,16 @@ public class ChatListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent e) {
+    public void onPlayerChat(AsyncChatEvent e) { // <-- Değişti (AsyncPlayerChatEvent -> AsyncChatEvent)
         Player p = e.getPlayer();
         PlayerMenuUtility pmu = BuffedItems.getPlayerMenuUtility(p);
 
         if (pmu.isWaitingForChatInput()) {
             e.setCancelled(true);
-            String input = e.getMessage();
+
+            // Mesajı Adventure Component'ten düz metne çevir
+            String input = PlainTextComponentSerializer.plainText().serialize(e.message()); // <-- Değişti
+
             String path = pmu.getChatInputPath();
             String itemId = pmu.getItemToEditId();
             String targetSlot = pmu.getTargetSlot();
