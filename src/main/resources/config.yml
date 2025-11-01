@@ -61,9 +61,10 @@
 #       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
 #
 # custom-model-data: (Optional) Set a custom model data integer for resource packs.
-#   - Direct: 100001
-#   - ItemsAdder: itemsadder:fire_sword
-#   - Nexo: nexo:custom_helmet
+#   - custom-model-data: 12345              # Direct
+#   - custom-model-data: itemsadder:sword_1 # ItemsAdder
+#   - custom-model-data: nexo:custom_item   # Nexo
+#   - custom-model-data: oraxen:fire_bow    # Oraxen
 #
 # flags: (Optional) This section controls item behaviors and appearances.
 #   Set any flag to 'true' or 'false' to override its default value.

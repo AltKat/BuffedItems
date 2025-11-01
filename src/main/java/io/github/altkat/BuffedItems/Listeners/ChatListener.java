@@ -389,6 +389,7 @@ public class ChatListener implements Listener {
                                 p.sendMessage(ConfigManager.fromSection("§e100001 §7(direct integer)"));
                                 p.sendMessage(ConfigManager.fromSection("§eitemsadder:item_id"));
                                 p.sendMessage(ConfigManager.fromSection("§enexo:item_id"));
+                                p.sendMessage(ConfigManager.fromSection("§eoraxen:item_id"));
                                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                                         () -> "[Chat] Invalid custom-model-data format from " + p.getName() + ": " + input);
                             }

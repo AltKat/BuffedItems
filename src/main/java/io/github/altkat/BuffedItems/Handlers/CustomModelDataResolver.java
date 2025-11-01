@@ -11,40 +11,27 @@ public class CustomModelDataResolver {
     private final BuffedItems plugin;
     private boolean itemsAdderAvailable = false;
     private boolean nexoAvailable = false;
-    private final int serverVersion;
+    private boolean oraxenAvailable = false;
 
     public CustomModelDataResolver(BuffedItems plugin) {
         this.plugin = plugin;
-        this.serverVersion = getMinecraftVersion();
         detectExternalPlugins();
     }
 
     private void detectExternalPlugins() {
         itemsAdderAvailable = Bukkit.getPluginManager().getPlugin("ItemsAdder") != null;
         nexoAvailable = Bukkit.getPluginManager().getPlugin("Nexo") != null;
+        oraxenAvailable = Bukkit.getPluginManager().getPlugin("Oraxen") != null;
 
         if (itemsAdderAvailable) {
-            ConfigManager.logInfo("&aItemsAdder detected - custom model data integration enabled (Version: " + serverVersion + ")");
+            ConfigManager.logInfo("&aItemsAdder detected - custom model data integration enabled");
         }
         if (nexoAvailable) {
-            ConfigManager.logInfo("&aNexo detected - custom model data integration enabled (Version: " + serverVersion + ")");
+            ConfigManager.logInfo("&aNexo detected - custom model data integration enabled");
         }
-    }
-
-    private int getMinecraftVersion() {
-        String version = Bukkit.getBukkitVersion();
-        try {
-            String[] parts = version.split("-")[0].split("\\.");
-            if (parts.length >= 2) {
-                int major = Integer.parseInt(parts[0]);
-                int minor = Integer.parseInt(parts[1]);
-                int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
-                return (major * 100 + minor * 10 + patch);
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Could not parse Minecraft version: " + version);
+        if (oraxenAvailable) {
+            ConfigManager.logInfo("&aOraxen detected - custom model data integration enabled");
         }
-        return 1165;
     }
 
     public CustomModelData resolve(String input, String itemId) {
@@ -157,18 +144,58 @@ public class CustomModelDataResolver {
             if (cmd != null) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                         () -> "[CMD] Resolved Nexo custom-model-data for '" + buffedItemId + "': " +
-                                externalItemId + " -> " + cmd + " (Version: " + serverVersion + ")");
+                                externalItemId + " -> " + cmd);
                 return new CustomModelData(cmd, rawValue, CustomModelData.Source.NEXO);
             }
 
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                    () -> "[CMD] Nexo item '" + externalItemId + "' has no custom model data (Version: " + serverVersion + ")");
+                    () -> "[CMD] Nexo item '" + externalItemId + "' has no custom model data");
             return null;
 
         } catch (Exception e) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                     () -> "[CMD] Failed to resolve Nexo custom-model-data for '" + buffedItemId + "': " + e.getMessage());
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    private CustomModelData resolveOraxen(String externalItemId, String rawValue, String buffedItemId) {
+        if (Bukkit.getPluginManager().getPlugin("Oraxen") == null) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                    () -> "[CMD] Oraxen format used but plugin not found for item: " + buffedItemId);
+            return null;
+        }
+
+        try {
+            Class<?> oraxenItemsClass = Class.forName("io.th0rgal.oraxen.api.OraxenItems");
+            Object oraxenItem = oraxenItemsClass.getMethod("getItemById", String.class)
+                    .invoke(null, externalItemId);
+
+            if (oraxenItem == null) {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                        () -> "[CMD] Oraxen item not found: " + externalItemId + " (for BuffedItem: " + buffedItemId + ")");
+                return null;
+            }
+
+            Object itemStackObj = oraxenItem.getClass().getMethod("build").invoke(oraxenItem);
+            ItemStack itemStack = (ItemStack) itemStackObj;
+            Integer cmd = extractCustomModelData(itemStack);
+
+            if (cmd != null) {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                        () -> "[CMD] Resolved Oraxen custom-model-data for '" + buffedItemId + "': " +
+                                externalItemId + " -> " + cmd);
+                return new CustomModelData(cmd, rawValue, CustomModelData.Source.ORAXEN);
+            }
+
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                    () -> "[CMD] Oraxen item '" + externalItemId + "' has no custom model data");
+            return null;
+
+        } catch (Exception e) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                    () -> "[CMD] Failed to resolve Oraxen custom-model-data for '" + buffedItemId + "': " + e.getMessage());
             return null;
         }
     }
@@ -180,69 +207,10 @@ public class CustomModelDataResolver {
 
         ItemMeta meta = itemStack.getItemMeta();
 
-        if (serverVersion < 1210) {
-            if (meta.hasCustomModelData()) {
-                return meta.getCustomModelData();
-            }
-            return null;
+        if (meta.hasCustomModelData()) {
+            return meta.getCustomModelData();
         }
 
-        try {
-            if (meta.hasCustomModelData()) {
-                Integer oldValue = meta.getCustomModelData();
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                        () -> "[CMD] Found CMD via legacy method: " + oldValue);
-                return oldValue;
-            }
-
-            Class<?> itemMetaClass = meta.getClass();
-
-            try {
-                Object cmdValue = itemMetaClass.getMethod("getCustomModelData").invoke(meta);
-                if (cmdValue instanceof Integer) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                            () -> "[CMD] Found CMD via Paper API: " + cmdValue);
-                    return (Integer) cmdValue;
-                }
-            } catch (NoSuchMethodException ignored) {
-            }
-
-            Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit.inventory.CraftItemStack");
-
-            Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
-                    .invoke(null, itemStack);
-
-            if (nmsStack != null) {
-                Object components = nmsStack.getClass().getMethod("a").invoke(nmsStack);
-
-                if (components != null) {
-                    Object cmdComponent = components.getClass()
-                            .getMethod("a", Class.forName("net.minecraft.core.component.DataComponentType"))
-                            .invoke(components,
-                                    Class.forName("net.minecraft.core.component.DataComponents")
-                                            .getField("CUSTOM_MODEL_DATA").get(null));
-
-                    if (cmdComponent != null) {
-                        Integer value = (Integer) cmdComponent.getClass()
-                                .getMethod("value").invoke(cmdComponent);
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                                () -> "[CMD] Found CMD via NMS components: " + value);
-                        return value;
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                    () -> "[CMD] Failed to extract CMD using reflection (1.21+): " + e.getMessage());
-        }
-
-        return null;
-    }
-
-    private CustomModelData resolveOraxen(String externalItemId, String rawValue, String buffedItemId) {
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                () -> "[CMD] Oraxen integration not yet implemented for item: " + buffedItemId);
         return null;
     }
 

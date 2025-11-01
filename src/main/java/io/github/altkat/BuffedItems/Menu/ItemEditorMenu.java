@@ -137,6 +137,7 @@ public class ItemEditorMenu extends Menu {
                 p.sendMessage(ConfigManager.fromSection("§7Direct integer: §e100001"));
                 p.sendMessage(ConfigManager.fromSection("§7ItemsAdder: §eitemsadder:fire_sword"));
                 p.sendMessage(ConfigManager.fromSection("§7Nexo: §enexo:custom_helmet"));
+                p.sendMessage(ConfigManager.fromSection("§7Oraxen: §eoraxen:fire_bow"));
                 p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear."));
                 break;
         }
