@@ -36,6 +36,9 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     private int tickCount = 0;
 
+    private int staleCacheCheckTicks = 0;
+    private static final int STALE_CHECK_INTERVAL = 600;
+
     public EffectApplicatorTask(BuffedItems plugin) {
         this.plugin = plugin;
         this.nbtKey = new NamespacedKey(plugin, "buffeditem_id");
@@ -47,6 +50,15 @@ public class EffectApplicatorTask extends BukkitRunnable {
     public void run() {
         tickCount++;
         boolean debugTick = (tickCount % 20 == 0);
+
+        staleCacheCheckTicks++;
+        if (staleCacheCheckTicks >= STALE_CHECK_INTERVAL) {
+            staleCacheCheckTicks = 0;
+            if (debugTick) {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running periodic stale cache validation...");
+            }
+            validateCacheForStaleness(debugTick);
+        }
 
         Set<UUID> playersToScanFully;
         synchronized (playersToUpdate) {
@@ -214,6 +226,44 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 }
             }
         }
+    }
+
+    private void validateCacheForStaleness(boolean debugTick) {
+        for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
+            UUID playerUUID = entry.getKey();
+            Player player = Bukkit.getPlayer(playerUUID);
+
+            if (player == null || !player.isOnline()) continue;
+
+            List<Map.Entry<BuffedItem, String>> currentItems = findActiveItems(player, false);
+            CachedPlayerData cachedData = entry.getValue();
+
+            if (!isSameActiveItems(cachedData.activeItems, currentItems)) {
+                markPlayerForUpdate(playerUUID);
+                if (debugTick) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK,
+                            () -> "[Task-StaleCheck] Stale cache detected for " + player.getName() + ", marking for full update.");
+                }
+            }
+        }
+    }
+
+    private boolean isSameActiveItems(List<Map.Entry<BuffedItem, String>> cacheList,
+                                      List<Map.Entry<BuffedItem, String>> realList) {
+        if (cacheList.size() != realList.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < cacheList.size(); i++) {
+            Map.Entry<BuffedItem, String> cacheItem = cacheList.get(i);
+            Map.Entry<BuffedItem, String> realItem = realList.get(i);
+
+            if (!cacheItem.getKey().getId().equals(realItem.getKey().getId()) ||
+                    !cacheItem.getValue().equals(realItem.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void playerQuit(Player player) {

@@ -58,27 +58,35 @@ public class InventoryChangeListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
-            scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
+            if (isBuffedItem(e.getCurrentItem()) || isBuffedItem(e.getCursor())) {
+                scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
+            }
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent e) {
         if (e.getWhoClicked() instanceof Player) {
-            scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
+            if (isBuffedItem(e.getOldCursor()) || e.getNewItems().values().stream().anyMatch(this::isBuffedItem)) {
+                scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
+            }
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemPickup(EntityPickupItemEvent e) {
         if (e.getEntity() instanceof Player) {
-            scheduleInventoryCheckWithDebounce((Player) e.getEntity());
+            if (isBuffedItem(e.getItem().getItemStack())) {
+                scheduleInventoryCheckWithDebounce((Player) e.getEntity());
+            }
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemDrop(PlayerDropItemEvent e) {
-        scheduleInventoryCheckWithDebounce(e.getPlayer());
+        if (isBuffedItem(e.getItemDrop().getItemStack())) {
+            scheduleInventoryCheckWithDebounce(e.getPlayer());
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
