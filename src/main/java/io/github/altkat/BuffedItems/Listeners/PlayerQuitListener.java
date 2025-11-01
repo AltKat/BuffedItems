@@ -34,6 +34,8 @@ public class PlayerQuitListener implements Listener {
         plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
                 .forEach(player::removePotionEffect);
 
+        plugin.getInventoryChangeListener().clearPlayerData(player.getUniqueId());
+
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
     }
 }

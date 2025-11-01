@@ -67,8 +67,16 @@ public class InventoryChangeListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent e) {
         if (e.getWhoClicked() instanceof Player) {
-            if (isBuffedItem(e.getOldCursor()) || e.getNewItems().values().stream().anyMatch(this::isBuffedItem)) {
+            if (isBuffedItem(e.getOldCursor())) {
                 scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
+                return;
+            }
+
+            for (ItemStack item : e.getNewItems().values()) {
+                if (isBuffedItem(item)) {
+                    scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
+                    break;
+                }
             }
         }
     }
@@ -129,5 +137,11 @@ public class InventoryChangeListener implements Listener {
                         " in slot " + e.getSlotType().name() + ". Scheduling IMMEDIATE update.");
 
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+    }
+
+    public void clearPlayerData(UUID uuid) {
+        this.lastCheck.remove(uuid);
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                () -> "[InventoryChange] Cleared cached data for player: " + uuid);
     }
 }

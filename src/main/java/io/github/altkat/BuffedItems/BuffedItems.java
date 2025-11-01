@@ -35,6 +35,7 @@ public final class BuffedItems extends JavaPlugin {
     private long autoSaveIntervalTicks = 6000L;
     private Metrics metrics;
     private boolean placeholderApiEnabled = false;
+    private InventoryChangeListener inventoryChangeListener;
 
     @Override
     public void onEnable() {
@@ -159,7 +160,8 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemProtectionListener(this), this);
-        getServer().getPluginManager().registerEvents(new InventoryChangeListener(this), this);
+        inventoryChangeListener = new InventoryChangeListener(this);
+        getServer().getPluginManager().registerEvents(inventoryChangeListener, this);
     }
 
     private void startEffectTask() {
@@ -265,5 +267,8 @@ public final class BuffedItems extends JavaPlugin {
     }
     public boolean isPlaceholderApiEnabled() {
         return placeholderApiEnabled;
+    }
+    public InventoryChangeListener getInventoryChangeListener(){
+        return inventoryChangeListener;
     }
 }

@@ -272,6 +272,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         managedPotions.remove(uuid);
         playerCache.remove(uuid);
         playersToUpdate.remove(uuid);
+        attributeManager.clearPlayer(uuid);
     }
 
     public void markPlayerForUpdate(UUID playerUUID) {
@@ -287,8 +288,13 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
             if (data == null || data.activeItems == null) continue;
 
-            boolean isHolding = data.activeItems.stream()
-                    .anyMatch(itemEntry -> itemEntry.getKey().getId().equals(itemId));
+            boolean isHolding = false;
+            for (Map.Entry<BuffedItem, String> itemEntry : data.activeItems) {
+                if (itemEntry.getKey().getId().equals(itemId)) {
+                    isHolding = true;
+                    break;
+                }
+            }
 
             if (isHolding) {
                 markPlayerForUpdate(playerUUID);

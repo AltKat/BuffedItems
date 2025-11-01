@@ -40,7 +40,7 @@ public class ConfigUpdater {
         int keysAdded = 0;
 
         // Check all keys in the default config
-        for (String key : defaultConfig.getKeys(true)) {
+        for (String key : defaultConfig.getKeys(false)) {
 
             // !!! IMPORTANT !!!
             // If the key starts with 'items.', DO NOT TOUCH this section.
