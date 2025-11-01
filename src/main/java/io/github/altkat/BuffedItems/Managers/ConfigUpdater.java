@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import io.github.altkat.BuffedItems.BuffedItems;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import io.github.altkat.BuffedItems.Managers.ConfigManager;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;

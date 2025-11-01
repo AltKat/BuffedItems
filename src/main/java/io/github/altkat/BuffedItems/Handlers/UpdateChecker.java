@@ -1,8 +1,8 @@
 package io.github.altkat.BuffedItems.Handlers;
+
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
