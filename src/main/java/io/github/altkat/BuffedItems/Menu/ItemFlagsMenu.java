@@ -93,7 +93,7 @@ public class ItemFlagsMenu extends Menu {
                 String configPath = "flags." + clickedFlagName.toUpperCase();
                 ConfigManager.setItemValue(itemId, configPath, newValue);
 
-                p.sendMessage("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled"));
+                p.sendMessage(ConfigManager.fromSection("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled")));
 
                 this.open();
             }

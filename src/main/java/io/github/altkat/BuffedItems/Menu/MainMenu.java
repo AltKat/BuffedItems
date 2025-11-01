@@ -70,7 +70,7 @@ public class MainMenu extends PaginatedMenu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("createnewitem");
                 p.closeInventory();
-                p.sendMessage("§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword').");
+                p.sendMessage(ConfigManager.fromSection( "§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword')."));
                 break;
             case EMERALD:
                 if (e.getSlot() == 52) {
@@ -78,10 +78,10 @@ public class MainMenu extends PaginatedMenu {
                         ConfigManager.backupConfig();
                         plugin.saveConfig();
                         plugin.restartAutoSaveTask();
-                        p.sendMessage("§aBuffedItems configuration has been saved successfully!");
+                        p.sendMessage( ConfigManager.fromSection("§aBuffedItems configuration has been saved successfully!"));
                         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
                     } catch (Exception ex) {
-                        p.sendMessage("§cAn error occurred while saving the config. Check the console.");
+                        p.sendMessage( ConfigManager.fromSection("§cAn error occurred while saving the config. Check the console."));
                         p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         plugin.getLogger().severe("Failed to manually save config: " + ex.getMessage());
                     }

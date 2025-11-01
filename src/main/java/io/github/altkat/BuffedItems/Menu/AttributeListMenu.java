@@ -56,7 +56,7 @@ public class AttributeListMenu extends Menu {
                 String removedInfo = attributes.get(clickedSlot);
                 attributes.remove(clickedSlot);
                 ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
-                p.sendMessage("§aEntry removed: §e" + removedInfo);
+                p.sendMessage(ConfigManager.fromSection("§aEntry removed: §e" + removedInfo));
                 this.open();
             }
             else if (e.isLeftClick() && clickedType == Material.IRON_SWORD) {
@@ -64,7 +64,7 @@ public class AttributeListMenu extends Menu {
                 playerMenuUtility.setEditIndex(clickedSlot);
                 playerMenuUtility.setChatInputPath("attributes.edit");
                 p.closeInventory();
-                p.sendMessage("§aPlease type the new amount for the attribute in chat.");
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the new amount for the attribute in chat."));
             }
         }
     }

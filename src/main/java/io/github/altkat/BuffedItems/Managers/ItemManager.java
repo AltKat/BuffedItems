@@ -5,7 +5,6 @@ import io.github.altkat.BuffedItems.Handlers.CustomModelDataResolver;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utils.ParsedAttribute;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -77,7 +76,7 @@ public class ItemManager {
 
                     if (ConfigManager.isDebugLevelEnabled(ConfigManager.DEBUG_INFO)) {
                         for (String error : item.getErrorMessages()) {
-                            plugin.getLogger().warning("    - " + ChatColor.stripColor(error));
+                            plugin.getLogger().warning("    - " + ConfigManager.stripLegacy(error));
                         }
                     }
                 }

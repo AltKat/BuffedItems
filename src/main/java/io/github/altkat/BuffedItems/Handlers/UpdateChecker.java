@@ -74,8 +74,8 @@ public class UpdateChecker implements Listener {
         if (player.hasPermission("BuffedItems.admin")) {
             if (latestVersion != null && isNewerVersion(plugin.getDescription().getVersion(), latestVersion)) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    player.sendMessage(ChatColor.YELLOW + "A new version of BuffedItems is available! (" + latestVersion + ")");
-                    player.sendMessage(ChatColor.YELLOW + "Download it from: " + ChatColor.AQUA + "https://www.spigotmc.org/resources/buffeditems." + resourceId + "/");
+                    player.sendMessage(ConfigManager.fromSection("§eA new version of BuffedItems is available! (" + latestVersion + ")"));
+                    player.sendMessage(ConfigManager.fromSection("§eDownload it from: §b" + "https://www.spigotmc.org/resources/buffeditems." + resourceId + "/"));
                 }, 40L);
             }
         }

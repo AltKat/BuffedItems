@@ -46,18 +46,18 @@ public class LoreEditorMenu extends PaginatedMenu {
                 break;
             case ANVIL:
                 if (lore.size() >= MAX_TOTAL_LORE_LINES) {
-                    p.sendMessage("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore.");
+                    p.sendMessage(ConfigManager.fromSection("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
                     p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     return;
                 }
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("lore.add");
                 p.closeInventory();
-                p.sendMessage("§aPlease type the new lore line in chat. Use '&' for color codes.");
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the new lore line in chat. Use '&' for color codes."));
                 break;
             case PAPER:
                 if (lore.size() >= MAX_TOTAL_LORE_LINES) {
-                    p.sendMessage("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore.");
+                    p.sendMessage(ConfigManager.fromSection("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
                     p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     return;
                 }
@@ -75,7 +75,7 @@ public class LoreEditorMenu extends PaginatedMenu {
                     playerMenuUtility.setWaitingForChatInput(true);
                     playerMenuUtility.setChatInputPath("lore." + loreIndex);
                     p.closeInventory();
-                    p.sendMessage("§aPlease type the edited lore line in chat.");
+                    p.sendMessage(ConfigManager.fromSection("§aPlease type the edited lore line in chat."));
                 } else if (e.isRightClick()) {
                     lore.remove(loreIndex);
                     ConfigManager.setItemValue(item.getId(), "lore", lore);

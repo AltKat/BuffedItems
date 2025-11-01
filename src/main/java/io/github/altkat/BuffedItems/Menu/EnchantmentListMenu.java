@@ -72,7 +72,7 @@ public class EnchantmentListMenu extends Menu {
                 String enchantName = clickedEnchantString.contains(";")
                         ? clickedEnchantString.split(";")[0]
                         : clickedEnchantString;
-                p.sendMessage("§aEnchantment entry '" + enchantName + "' removed.");
+                p.sendMessage(ConfigManager.fromSection("§aEnchantment entry '" + enchantName + "' removed."));
 
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                         () -> "[EnchantmentList] Removed enchantment entry: " + clickedEnchantString + " for item: " + itemId);
@@ -85,7 +85,7 @@ public class EnchantmentListMenu extends Menu {
                 playerMenuUtility.setChatInputPath("enchantments.edit");
                 String enchantName = clickedEnchantString.split(";")[0];
                 p.closeInventory();
-                p.sendMessage("§aPlease type the new Level for '" + enchantName + "' in chat (e.g., 1, 5, 10).");
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the new Level for '" + enchantName + "' in chat (e.g., 1, 5, 10)."));
             }
         }
     }

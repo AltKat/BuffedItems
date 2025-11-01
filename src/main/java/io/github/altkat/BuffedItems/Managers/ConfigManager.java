@@ -2,8 +2,9 @@ package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -28,7 +29,9 @@ public class ConfigManager {
     public static final int DEBUG_DETAILED = 3;  // Per-player effect details
     public static final int DEBUG_VERBOSE = 4;   // GUI, Chat, Inventory events (spammy)
 
-    private static final String PLUGIN_PREFIX = "§9[§6BuffedItems§9] ";
+    private static final String PLUGIN_PREFIX_CONFIG = "&9[&6BuffedItems&9] ";
+
+    private static final PlainTextComponentSerializer plainTextSerializer = PlainTextComponentSerializer.plainText();
 
     private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.builder()
             .character('&')
@@ -46,7 +49,13 @@ public class ConfigManager {
         if (text == null || text.isEmpty()) {
             return Component.empty();
         }
-        return ampersandSerializer.deserialize(text);
+
+        Component component = ampersandSerializer.deserialize(text);
+
+        if (component.style().decoration(TextDecoration.ITALIC) == TextDecoration.State.NOT_SET) {
+            return component.style(style -> style.decoration(TextDecoration.ITALIC, false));
+        }
+        return component;
     }
 
     public static List<Component> loreFromLegacy(List<String> textLines) {
@@ -62,7 +71,13 @@ public class ConfigManager {
         if (text == null || text.isEmpty()) {
             return Component.empty();
         }
-        return sectionSerializer.deserialize(text);
+
+        Component component = sectionSerializer.deserialize(text);
+
+        if (component.style().decoration(TextDecoration.ITALIC) == TextDecoration.State.NOT_SET) {
+            return component.style(style -> style.decoration(TextDecoration.ITALIC, false));
+        }
+        return component;
     }
 
     public static String toSection(Component component) {
@@ -70,6 +85,20 @@ public class ConfigManager {
             return "";
         }
         return sectionSerializer.serialize(component);
+    }
+
+    public static String toPlainText(Component component) {
+        if (component == null) {
+            return "";
+        }
+        return plainTextSerializer.serialize(component);
+    }
+
+    public static String stripLegacy(String legacyText) {
+        if (legacyText == null || legacyText.isEmpty()) {
+            return "";
+        }
+        return plainTextSerializer.serialize(fromSection(legacyText));
     }
 
     public static void setup(BuffedItems pluginInstance) {
@@ -130,8 +159,9 @@ public class ConfigManager {
         showPotionIcons = plugin.getConfig().getBoolean("show-potion-icons", true);
 
         if (isDebugLevelEnabled(DEBUG_INFO)) {
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                    "&9[&6BuffedItems&9] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level."));
+            plugin.getServer().getConsoleSender().sendMessage(
+                    fromLegacy("&9[&6BuffedItems&9] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level.")
+            );
         }
     }
 
@@ -146,15 +176,13 @@ public class ConfigManager {
         if (debugLevel >= level) {
             String message = messageSupplier.get();
             String prefix = "&9[&6BuffedItems&9] &e[L" + level + "] &r";
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                    prefix + message));
+            plugin.getServer().getConsoleSender().sendMessage(fromLegacy(prefix + message));
         }
     }
 
     public static void logInfo(String message) {
         if (plugin == null) return;
-        String formattedMessage = PLUGIN_PREFIX + ChatColor.translateAlternateColorCodes('&', message);
-        plugin.getServer().getConsoleSender().sendMessage(formattedMessage);
+        plugin.getServer().getConsoleSender().sendMessage(fromLegacy(PLUGIN_PREFIX_CONFIG + message));
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
@@ -186,7 +214,7 @@ public class ConfigManager {
 
         plugin.getItemManager().reloadSingleItem(itemId);
 
-        ConfigManager.logInfo("&aCreated new item: &e" + itemId);
+        logInfo("&aCreated new item: &e" + itemId);
         return true;
     }
 
@@ -205,10 +233,10 @@ public class ConfigManager {
         sendDebugMessage(DEBUG_TASK, () -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
     }
 
-    public static String getPrefixedMessage(String path) {
-        String prefix = plugin.getConfig().getString("messages.prefix", "&9[&6BuffedItems&9] ");
+    public static Component getPrefixedMessageAsComponent(String path) {
+        String prefix = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
         String msg = plugin.getConfig().getString("messages." + path, "&cMissing message: messages." + path);
-        return ChatColor.translateAlternateColorCodes('&', prefix + msg);
+        return fromLegacy(prefix + msg);
     }
 
     public static boolean isDebugLevelEnabled(int level) {

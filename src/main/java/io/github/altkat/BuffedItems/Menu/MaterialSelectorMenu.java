@@ -47,7 +47,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             ConfigManager.setItemValue(itemId, "material", clickedType.name());
 
             Player p = (Player) e.getWhoClicked();
-            p.sendMessage("§aMaterial has been updated to " + clickedType.name());
+            p.sendMessage(ConfigManager.fromSection("§aMaterial has been updated to " + clickedType.name()));
 
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;

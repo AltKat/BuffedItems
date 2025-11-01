@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -46,7 +47,7 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("potion_effects.add." + effectName);
             p.closeInventory();
-            p.sendMessage("§aPlease type the Potion Level (e.g., 1, 2, 5) in chat.");
+            p.sendMessage(ConfigManager.fromSection("§aPlease type the Potion Level (e.g., 1, 2, 5) in chat."));
             return;
         }
 

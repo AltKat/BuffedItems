@@ -8,7 +8,6 @@ import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 public class Commands implements CommandExecutor {
 
     private final BuffedItems plugin;
-    private final String noPermissionMessage = ChatColor.RED + "You do not have permission to use this command.";
+    private final Component noPermissionMessage = ConfigManager.fromSection("§cYou do not have permission to use this command.");
     private final Map<String, Long> reloadConfirmations = new HashMap<>();
     private static final long CONFIRM_TIMEOUT_MS = 5000;
 
@@ -76,35 +75,35 @@ public class Commands implements CommandExecutor {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Opening main menu for " + p.getName());
                     new MainMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {
-                    sender.sendMessage(ChatColor.RED + "This command can only be used by players.");
+                    sender.sendMessage(ConfigManager.fromSection("§cThis command can only be used by players."));
                 }
                 return true;
             default:
-                sender.sendMessage(ChatColor.RED + "Unknown subcommand. Use /buffeditems for help.");
+                sender.sendMessage(ConfigManager.fromSection("§cUnknown subcommand. Use /buffeditems for help."));
                 return true;
         }
     }
 
     private void sendHelpMessage(CommandSender sender) {
-        sender.sendMessage(ChatColor.YELLOW + "--- BuffedItems Help ---");
+        sender.sendMessage(ConfigManager.fromSection("§e--- BuffedItems Help ---"));
         if (sender.hasPermission("buffeditems.command.give")) {
-            sender.sendMessage(ChatColor.GOLD + "/bi give <player> <item_id> [amount]");
+            sender.sendMessage(ConfigManager.fromSection("§6/bi give <player> <item_id> [amount]"));
         }
         if (sender.hasPermission("buffeditems.command.reload")) {
-            sender.sendMessage(ChatColor.GOLD + "/bi save (Saves menu changes to config.yml)");
-            sender.sendMessage(ChatColor.GOLD + "/bi reload (Loads config.yml, discards unsaved in-game made changes)");
+            sender.sendMessage(ConfigManager.fromSection("§6/bi save (Saves menu changes to config.yml)"));
+            sender.sendMessage(ConfigManager.fromSection("§6/bi reload (Loads config.yml, discards unsaved in-game made changes)"));
         }
         if (sender.hasPermission("buffeditems.command.list")) {
-            sender.sendMessage(ChatColor.GOLD + "/bi list");
+            sender.sendMessage(ConfigManager.fromSection("§6/bi list"));
         }
         if (sender.hasPermission("buffeditems.command.menu")) {
-            sender.sendMessage(ChatColor.GOLD + "/bi menu");
+            sender.sendMessage(ConfigManager.fromSection("§6/bi menu"));
         }
     }
 
     private boolean handleGiveCommand(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "Usage: /buffeditems give <player> <item_id> [amount]");
+            sender.sendMessage(ConfigManager.fromSection("§cUsage: /buffeditems give <player> <item_id> [amount]"));
             return true;
         }
 
@@ -112,7 +111,7 @@ public class Commands implements CommandExecutor {
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            sender.sendMessage(ConfigManager.fromSection("§cPlayer not found: " + args[1]));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Player not found: " + args[1]);
             return true;
         }
@@ -120,19 +119,19 @@ public class Commands implements CommandExecutor {
         String itemId = args[2];
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
         if (buffedItem == null) {
-            sender.sendMessage(ChatColor.RED + "Item not found in config: " + itemId);
+            sender.sendMessage(ConfigManager.fromSection("§cItem not found in config: " + itemId));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Item not found: " + itemId);
             return true;
         }
 
         if (!buffedItem.isValid()) {
-            sender.sendMessage(ChatColor.RED + "⚠ WARNING: Item '" + itemId + "' has configuration errors!");
-            sender.sendMessage(ChatColor.YELLOW + "Errors:");
+            sender.sendMessage(ConfigManager.fromSection("§c⚠ WARNING: Item '" + itemId + "' has configuration errors!"));
+            sender.sendMessage(ConfigManager.fromSection("§eErrors:"));
             for (String error : buffedItem.getErrorMessages()) {
-                sender.sendMessage(ChatColor.GRAY + "  • " + error);
+                sender.sendMessage(ConfigManager.fromSection("§7  • " + error));
             }
-            sender.sendMessage(ChatColor.YELLOW + "The item will still be given, but may not work as intended.");
-            sender.sendMessage(ChatColor.YELLOW + "Please fix errors via /bi menu");
+            sender.sendMessage(ConfigManager.fromSection("§eThe item will still be given, but may not work as intended."));
+            sender.sendMessage(ConfigManager.fromSection("§ePlease fix errors via /bi menu"));
         }
 
         int amount = 1;
@@ -140,7 +139,7 @@ public class Commands implements CommandExecutor {
             try {
                 amount = Integer.parseInt(args[3]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "Invalid amount: " + args[3]);
+                sender.sendMessage(ConfigManager.fromSection("§cInvalid amount: " + args[3]));
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Invalid amount: " + args[3]);
                 return true;
             }
@@ -178,13 +177,14 @@ public class Commands implements CommandExecutor {
 
         target.getInventory().addItem(itemStack);
 
-        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
+        sender.sendMessage(ConfigManager.fromLegacy("&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
 
-        String messageToReceiver = ConfigManager.getPrefixedMessage("give-success-receiver")
-                .replace("{amount}", String.valueOf(amount))
-                .replace("{item_name}", buffedItem.getDisplayName());
+        int finalAmount = amount;
+        Component messageToReceiver = ConfigManager.getPrefixedMessageAsComponent("give-success-receiver")
+                .replaceText(builder -> builder.matchLiteral("{amount}").replacement(String.valueOf(finalAmount)))
+                .replaceText(builder -> builder.matchLiteral("{item_name}").replacement(ConfigManager.fromLegacy(buffedItem.getDisplayName())));
 
-        target.sendMessage(ChatColor.translateAlternateColorCodes('&', messageToReceiver));
+        target.sendMessage(messageToReceiver);
 
         ConfigManager.logInfo("&aGave &e" + amount + "x " + itemId + "&a to &e" + target.getName() + "&a (by: &e" + sender.getName() + "&a)");
 
@@ -205,18 +205,18 @@ public class Commands implements CommandExecutor {
             reloadConfirmations.remove(senderName);
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Reload confirmed by " + senderName + ". Reloading from disk.");
             ConfigManager.reloadConfig();
-            sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been reloaded from config.yml.");
-            sender.sendMessage(ChatColor.GREEN + "Unsaved changes made via GUI (if any) have been discarded.");
+            sender.sendMessage(ConfigManager.fromSection("§aBuffedItems configuration has been reloaded from config.yml."));
+            sender.sendMessage(ConfigManager.fromSection("§aUnsaved changes made via GUI (if any) have been discarded."));
 
         } else {
             reloadConfirmations.put(senderName, currentTime + CONFIRM_TIMEOUT_MS);
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Confirmation requested by " + senderName + ".");
-            sender.sendMessage(ChatColor.YELLOW + "==================[ " + ChatColor.RED + "WARNING" + ChatColor.YELLOW + " ]==================");
-            sender.sendMessage(ChatColor.RED + "You are about to reload from 'config.yml'.");
-            sender.sendMessage(ChatColor.RED + "Any changes made via " + ChatColor.GOLD + "/bi menu" + ChatColor.RED + " that were");
-            sender.sendMessage(ChatColor.RED + "NOT saved with " + ChatColor.GOLD + "/bi save" + ChatColor.RED + " WILL BE LOST.");
-            sender.sendMessage(ChatColor.YELLOW + "Type " + ChatColor.GOLD + "/bi reload" + ChatColor.YELLOW + " again within 5 seconds to confirm.");
-            sender.sendMessage(ChatColor.YELLOW + "===============================================");
+            sender.sendMessage(ConfigManager.fromSection("§e==================[ §cWARNING §e]=================="));
+            sender.sendMessage(ConfigManager.fromSection("§cYou are about to reload from 'config.yml'."));
+            sender.sendMessage(ConfigManager.fromSection("§cAny changes made via §6/bi menu§c that were"));
+            sender.sendMessage(ConfigManager.fromSection("§cNOT saved with §6/bi save§c WILL BE LOST."));
+            sender.sendMessage(ConfigManager.fromSection("§eType §6/bi reload§e again within 5 seconds to confirm."));
+            sender.sendMessage(ConfigManager.fromSection("§e==============================================="));
         }
         return true;
     }
@@ -228,9 +228,9 @@ public class Commands implements CommandExecutor {
             plugin.saveConfig();
             plugin.restartAutoSaveTask();
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Save complete.");
-            sender.sendMessage(ChatColor.GREEN + "BuffedItems configuration has been saved to config.yml.");
+            sender.sendMessage(ConfigManager.fromSection("§aBuffedItems configuration has been saved to config.yml."));
         } catch (Exception e) {
-            sender.sendMessage(ChatColor.RED + "Error: Could not save config.yml. Check console.");
+            sender.sendMessage(ConfigManager.fromSection("§cError: Could not save config.yml. Check console."));
             plugin.getLogger().severe("[Save] Failed to save config: " + e.getMessage());
         }
         return true;
@@ -239,7 +239,7 @@ public class Commands implements CommandExecutor {
     private boolean handleListCommand(CommandSender sender) {
         Map<String, BuffedItem> items = plugin.getItemManager().getLoadedItems();
 
-        sender.sendMessage(ChatColor.YELLOW + "--- Available Buffed Items ---");
+        sender.sendMessage(ConfigManager.fromSection("§e--- Available Buffed Items ---"));
 
         int validCount = 0;
         int errorCount = 0;
@@ -249,22 +249,21 @@ public class Commands implements CommandExecutor {
             BuffedItem item = entry.getValue();
 
             if (item.isValid()) {
-                sender.sendMessage(ChatColor.GOLD + "✓ " + itemId);
+                sender.sendMessage(ConfigManager.fromSection("§6✓ " + itemId));
                 validCount++;
             } else {
-                sender.sendMessage(ChatColor.RED + "✗ " + itemId + ChatColor.GRAY + " (" + item.getErrorMessages().size() + " error(s))");
+                sender.sendMessage(ConfigManager.fromSection("§c✗ " + itemId + "§8 (" + item.getErrorMessages().size() + " error(s))"));
                 errorCount++;
             }
         }
 
-        sender.sendMessage("");
-        sender.sendMessage(ChatColor.GRAY + "Total: " + items.size() + " | " +
-                ChatColor.GREEN + "Valid: " + validCount + " | " +
-                ChatColor.RED + "Errors: " + errorCount);
+        sender.sendMessage(ConfigManager.fromSection(""));
+        sender.sendMessage(ConfigManager.fromSection("§7Total: " + items.size() + " | " +
+                "§aValid: " + validCount + " | " +
+                "§cErrors: " + errorCount));
 
         if (errorCount > 0) {
-            sender.sendMessage(ChatColor.YELLOW + "Use " + ChatColor.GOLD + "/bi menu" +
-                    ChatColor.YELLOW + " to view and fix errors.");
+            sender.sendMessage(ConfigManager.fromSection("§eUse §6/bi menu§e to view and fix errors."));
         }
 
         return true;

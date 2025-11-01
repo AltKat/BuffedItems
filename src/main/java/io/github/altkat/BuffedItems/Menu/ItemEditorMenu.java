@@ -5,8 +5,8 @@ import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -52,37 +52,35 @@ public class ItemEditorMenu extends Menu {
                     ItemMeta meta = clone.getItemMeta();
 
                     if (meta != null) {
-                        String finalDisplayName = meta.hasDisplayName() ? meta.getDisplayName() : "";
-                        List<String> finalLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+                        Component finalDisplayName = meta.displayName() != null ? meta.displayName() : Component.empty();
+                        List<Component> finalLore = meta.lore() != null ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
                         if (plugin.isPlaceholderApiEnabled()) {
-
-                            finalDisplayName = PlaceholderAPI.setPlaceholders(p, finalDisplayName);
+                            String legacyName = ConfigManager.toSection(finalDisplayName);
+                            String parsedName = PlaceholderAPI.setPlaceholders(p, legacyName);
+                            finalDisplayName = ConfigManager.fromSection(parsedName);
 
                             finalLore = finalLore.stream()
+                                    .map(ConfigManager::toSection)
                                     .map(line -> PlaceholderAPI.setPlaceholders(p, line))
+                                    .map(ConfigManager::fromSection)
                                     .collect(Collectors.toList());
                         }
 
-                        finalDisplayName = ChatColor.translateAlternateColorCodes('&', finalDisplayName);
-                        finalLore = finalLore.stream()
-                                .map(line -> ChatColor.translateAlternateColorCodes('&', line))
-                                .collect(Collectors.toList());
+                        Component suffix = ConfigManager.fromSection(" §7(TEST COPY)");
+                        finalDisplayName = finalDisplayName.append(suffix);
 
-                        String suffix = ChatColor.translateAlternateColorCodes('&', " &7(TEST COPY)");
-                        finalDisplayName += suffix;
+                        finalLore.add(Component.empty());
+                        finalLore.add(ConfigManager.fromSection("§eRemember: This is a test copy."));
+                        finalLore.add(ConfigManager.fromSection("§eIt may not reflect saved changes yet."));
 
-                        finalLore.add("");
-                        finalLore.add(ChatColor.YELLOW + "Remember: This is a test copy.");
-                        finalLore.add(ChatColor.YELLOW + "It may not reflect saved changes yet.");
-
-                        meta.setDisplayName(finalDisplayName);
-                        meta.setLore(finalLore);
+                        meta.displayName(finalDisplayName);
+                        meta.lore(finalLore);
                         clone.setItemMeta(meta);
                     }
 
                     p.getInventory().addItem(clone);
-                    p.sendMessage("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory.");
+                    p.sendMessage(ConfigManager.fromSection("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory."));
 
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
@@ -90,14 +88,14 @@ public class ItemEditorMenu extends Menu {
                     }, 1L);
 
                 } else {
-                    p.sendMessage("§cCould not generate test copy. Item not found in memory.");
+                    p.sendMessage(ConfigManager.fromSection("§cCould not generate test copy. Item not found in memory."));
                 }
                 break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("display_name");
                 p.closeInventory();
-                p.sendMessage("§aPlease type the new display name in chat. Use '&' for color codes.");
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the new display name in chat. Use '&' for color codes."));
                 break;
             case BOOK:
                 new LoreEditorMenu(playerMenuUtility, plugin).open();
@@ -106,8 +104,8 @@ public class ItemEditorMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("permission");
                 p.closeInventory();
-                p.sendMessage("§aPlease type the permission node in chat.");
-                p.sendMessage("§7(Type 'none' or 'remove' to clear the permission)");
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the permission node in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'none' or 'remove' to clear the permission)"));
                 break;
             case BEACON:
                 BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
@@ -135,11 +133,11 @@ public class ItemEditorMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("custom_model_data");
                 p.closeInventory();
-                p.sendMessage("§aEnter Custom Model Data:");
-                p.sendMessage("§7Direct integer: §e100001");
-                p.sendMessage("§7ItemsAdder: §eitemsadder:fire_sword");
-                p.sendMessage("§7Nexo: §enexo:custom_helmet");
-                p.sendMessage("§7Type §6'none'§7 or §6'remove'§7 to clear.");
+                p.sendMessage(ConfigManager.fromSection("§aEnter Custom Model Data:"));
+                p.sendMessage(ConfigManager.fromSection("§7Direct integer: §e100001"));
+                p.sendMessage(ConfigManager.fromSection("§7ItemsAdder: §eitemsadder:fire_sword"));
+                p.sendMessage(ConfigManager.fromSection("§7Nexo: §enexo:custom_helmet"));
+                p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear."));
                 break;
         }
     }
@@ -148,7 +146,7 @@ public class ItemEditorMenu extends Menu {
     public void setMenuItems() {
         BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
         if (item == null) {
-            playerMenuUtility.getOwner().sendMessage("§cError: Item could not be found. Returning to main menu.");
+            playerMenuUtility.getOwner().sendMessage(ConfigManager.fromSection("§cError: Item could not be found. Returning to main menu."));
             new MainMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -169,7 +167,9 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(27, filler);
         inventory.setItem(35, filler);
 
-        inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + item.getDisplayName()));
+        String currentName = item.getDisplayName().replace('&', '§');
+
+        inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
         inventory.setItem(14, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
