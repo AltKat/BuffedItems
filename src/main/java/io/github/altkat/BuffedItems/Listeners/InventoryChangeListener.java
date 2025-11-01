@@ -11,21 +11,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerItemBreakEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 
-
-
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InventoryChangeListener implements Listener {
 
     private final BuffedItems plugin;
     private final NamespacedKey nbtKey;
+
+    private final Map<UUID, Long> lastCheck = new ConcurrentHashMap<>();
+    private static final long DEBOUNCE_MS = 200;
 
     public InventoryChangeListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -37,45 +38,47 @@ public class InventoryChangeListener implements Listener {
         return item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING);
     }
 
+    private void scheduleInventoryCheckWithDebounce(Player player) {
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        Long last = lastCheck.get(uuid);
+
+        if (last == null || (now - last) >= DEBOUNCE_MS) {
+            lastCheck.put(uuid, now);
+
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] (Debounced) Marked " + player.getName() + " for update.");
+            }, 1L);
+        } else {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] (Debounced) Skipped marking " + player.getName() + " (rate limited).");
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
-            if (isBuffedItem(e.getCurrentItem()) || isBuffedItem(e.getCursor())) {
-                scheduleInventoryCheck((Player) e.getWhoClicked());
-            }
+            scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent e) {
         if (e.getWhoClicked() instanceof Player) {
-            if (isBuffedItem(e.getOldCursor())) {
-                scheduleInventoryCheck((Player) e.getWhoClicked());
-                return;
-            }
-            for (ItemStack item : e.getNewItems().values()) {
-                if (isBuffedItem(item)) {
-                    scheduleInventoryCheck((Player) e.getWhoClicked());
-                    return;
-                }
-            }
+            scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemPickup(EntityPickupItemEvent e) {
         if (e.getEntity() instanceof Player) {
-            if (isBuffedItem(e.getItem().getItemStack())) {
-                scheduleInventoryCheck((Player) e.getEntity());
-            }
+            scheduleInventoryCheckWithDebounce((Player) e.getEntity());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemDrop(PlayerDropItemEvent e) {
-        if (isBuffedItem(e.getItemDrop().getItemStack())) {
-            scheduleInventoryCheck(e.getPlayer());
-        }
+        scheduleInventoryCheckWithDebounce(e.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -85,21 +88,21 @@ public class InventoryChangeListener implements Listener {
         ItemStack newItem = inv.getItem(e.getNewSlot());
 
         if (isBuffedItem(oldItem) || isBuffedItem(newItem)) {
-            scheduleInventoryCheck(e.getPlayer());
+            scheduleInventoryCheckWithDebounce(e.getPlayer());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSwapHands(PlayerSwapHandItemsEvent e) {
         if (isBuffedItem(e.getMainHandItem()) || isBuffedItem(e.getOffHandItem())) {
-            scheduleInventoryCheck(e.getPlayer());
+            scheduleInventoryCheckWithDebounce(e.getPlayer());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemBreak(PlayerItemBreakEvent e) {
         if (isBuffedItem(e.getBrokenItem())) {
-            scheduleInventoryCheck(e.getPlayer());
+            scheduleInventoryCheckWithDebounce(e.getPlayer());
         }
     }
 
@@ -118,12 +121,5 @@ public class InventoryChangeListener implements Listener {
                         " in slot " + e.getSlotType().name() + ". Scheduling IMMEDIATE update.");
 
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
-    }
-
-    private void scheduleInventoryCheck(Player player) {
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[InventoryChange] Marked " + player.getName() + " for update due to inventory change");
-        }, 1L);
     }
 }

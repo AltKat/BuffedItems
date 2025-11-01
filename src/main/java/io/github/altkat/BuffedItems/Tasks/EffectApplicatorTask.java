@@ -28,10 +28,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private final ActiveAttributeManager attributeManager;
     private final EffectManager effectManager;
 
-    private final Map<UUID, Set<PotionEffectType>> managedEffects = new ConcurrentHashMap<>();
-    private final Map<UUID, CachedPlayerData> playerCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<PotionEffectType>> managedPotions = new ConcurrentHashMap<>();
 
     private final Set<UUID> playersToUpdate = ConcurrentHashMap.newKeySet();
+
+    private final Map<UUID, CachedPlayerData> playerCache = new ConcurrentHashMap<>();
 
     private int tickCount = 0;
 
@@ -44,7 +45,6 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     @Override
     public void run() {
-
         tickCount++;
         boolean debugTick = (tickCount % 20 == 0);
 
@@ -54,27 +54,28 @@ public class EffectApplicatorTask extends BukkitRunnable {
             playersToUpdate.clear();
         }
 
-        if (playersToScanFully.isEmpty() && playerCache.isEmpty()) {
-            return;
-        }
-
         if (debugTick && !playersToScanFully.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running FULL scan (Potions + INVENTORY Attributes) for " + playersToScanFully.size() + " modified players...");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running 'Slow Path' (Full Scan) for " + playersToScanFully.size() + " modified players...");
         }
 
         for (UUID playerUUID : playersToScanFully) {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null || !player.isOnline()) {
+                playerCache.remove(playerUUID);
                 continue;
             }
             processPlayer(player, debugTick);
         }
 
+
         if (debugTick && !playerCache.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running POTION APPLY/REFRESH for " + playerCache.size() + " cached players...");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running 'Fast Path' (Cache Check) for " + playerCache.size() + " cached players...");
         }
 
         List<UUID> offlinePlayers = new ArrayList<>();
+
+        Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
+        Set<UUID> desiredInventoryAttributeUUIDs = new HashSet<>();
 
         for (Map.Entry<UUID, CachedPlayerData> cacheEntry : playerCache.entrySet()) {
             UUID playerUUID = cacheEntry.getKey();
@@ -86,21 +87,69 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 continue;
             }
 
-            if (cachedData == null) {
+            if (cachedData == null || cachedData.activeItems == null) {
                 continue;
             }
 
-            Set<PotionEffectType> lastApplied = managedEffects.getOrDefault(playerUUID, Collections.emptySet());
-            effectManager.removeObsoletePotionEffects(player, lastApplied, cachedData.desiredPotionEffects.keySet(), debugTick);
-            effectManager.applyOrRefreshPotionEffects(player, cachedData.desiredPotionEffects, debugTick);
+            desiredPotionEffects.clear();
+            desiredInventoryAttributeUUIDs.clear();
 
-            managedEffects.put(playerUUID, cachedData.desiredPotionEffects.keySet());
+            for (Map.Entry<BuffedItem, String> entry : cachedData.activeItems) {
+                BuffedItem item = entry.getKey();
+                String slot = entry.getValue();
+
+                if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
+                    if (debugTick) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Fast Path] Player " + player.getName() + " lacks permission for " + item.getId() + ". Skipping effects.");
+                    }
+                    continue;
+                }
+
+                if (item.getEffects().containsKey(slot)) {
+                    BuffedItemEffect itemEffects = item.getEffects().get(slot);
+
+                    itemEffects.getPotionEffects().forEach((type, level) ->
+                            desiredPotionEffects.merge(type, level, Integer::max));
+
+                    if (slot.equals("INVENTORY")) {
+                        for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
+                            desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
+
+                            if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
+                                effectManager.applySingleAttribute(player, parsedAttr, slot);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Set<PotionEffectType> lastAppliedPotions = managedPotions.getOrDefault(playerUUID, Collections.emptySet());
+            effectManager.removeObsoletePotionEffects(player, lastAppliedPotions, desiredPotionEffects.keySet(), debugTick);
+            effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
+            managedPotions.put(playerUUID, desiredPotionEffects.keySet());
+
+            Map<Attribute, List<AttributeModifier>> trackedModifiersMap = attributeManager.getActiveModifiers(playerUUID);
+            List<ModifierToRemove> modifiersToRemove = new ArrayList<>();
+
+            for (Map.Entry<Attribute, List<AttributeModifier>> trackedEntry : trackedModifiersMap.entrySet()) {
+                Attribute trackedAttribute = trackedEntry.getKey();
+                for (AttributeModifier trackedModifier : trackedEntry.getValue()) {
+                    if (!desiredInventoryAttributeUUIDs.contains(trackedModifier.getUniqueId())) {
+                        modifiersToRemove.add(new ModifierToRemove(trackedAttribute, trackedModifier.getUniqueId()));
+                    }
+                }
+            }
+
+            for (ModifierToRemove toRemove : modifiersToRemove) {
+                effectManager.removeAttributeModifier(player, toRemove.attribute, toRemove.uuid);
+            }
+
         }
 
         if (!offlinePlayers.isEmpty()) {
             for (UUID offlineUUID : offlinePlayers) {
                 playerCache.remove(offlineUUID);
-                managedEffects.remove(offlineUUID);
+                managedPotions.remove(offlineUUID);
             }
             if (debugTick) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Cleaned up " + offlinePlayers.size() + " offline player(s) from cache");
@@ -112,94 +161,17 @@ public class EffectApplicatorTask extends BukkitRunnable {
         UUID playerUUID = player.getUniqueId();
 
         if (debugTick) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task-FullScan] Performing manual scan (Potions + INVENTORY Attr.) for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task-Slow Path] Scanning inventory and updating cache for " + player.getName());
         }
 
         List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player, debugTick);
-        Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
-        Map<UUID, ParsedAttribute> desiredModifiersByUUID = new HashMap<>();
-        Map<UUID, String[]> desiredModifierContext = new HashMap<>();
 
         if (debugTick && !activeItems.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Found " + activeItems.size() + " active item(s) for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Slow Path] Found " + activeItems.size() + " active item(s) for " + player.getName());
         }
 
-        for (Map.Entry<BuffedItem, String> entry : activeItems) {
-            BuffedItem item = entry.getKey();
-            String slot = entry.getValue();
+        playerCache.put(playerUUID, new CachedPlayerData(activeItems));
 
-            if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
-                continue;
-            }
-
-            if (item.getEffects().containsKey(slot)) {
-                BuffedItemEffect itemEffects = item.getEffects().get(slot);
-
-                itemEffects.getPotionEffects().forEach((type, level) ->
-                        desiredPotionEffects.merge(type, level, Integer::max));
-
-                if (slot.equals("INVENTORY")) {
-                    for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
-                        UUID modifierUUID = parsedAttr.getUuid();
-
-                        if (desiredModifiersByUUID.containsKey(modifierUUID)) {
-                            plugin.getLogger().warning("Duplicate modifier UUID detected during task run: " + modifierUUID + " for item " + item.getId() + ". This is unexpected.");
-                        }
-
-                        desiredModifiersByUUID.put(modifierUUID, parsedAttr);
-                        desiredModifierContext.put(modifierUUID, new String[]{item.getId(), slot});
-                    }
-                }
-            }
-        }
-
-        Map<Attribute, List<AttributeModifier>> trackedModifiersMap = attributeManager.getActiveModifiers(playerUUID);
-        List<ModifierToRemove> modifiersToRemove = new ArrayList<>();
-
-        for (Map.Entry<Attribute, List<AttributeModifier>> trackedEntry : trackedModifiersMap.entrySet()) {
-            Attribute trackedAttribute = trackedEntry.getKey();
-            for (AttributeModifier trackedModifier : trackedEntry.getValue()) {
-                if (!desiredModifiersByUUID.containsKey(trackedModifier.getUniqueId())) {
-                    modifiersToRemove.add(new ModifierToRemove(trackedAttribute, trackedModifier.getUniqueId()));
-                    if (debugTick) {
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Marking INVENTORY modifier for removal: " + trackedModifier.getUniqueId() + " on " + trackedAttribute.name());
-                    }
-                }
-            }
-        }
-
-        Map<String, List<String>> attributesToAddByItemSlot = new HashMap<>();
-
-        for (Map.Entry<UUID, ParsedAttribute> desiredEntry : desiredModifiersByUUID.entrySet()) {
-            UUID desiredUUID = desiredEntry.getKey();
-            ParsedAttribute desiredAttr = desiredEntry.getValue();
-
-            if (!attributeManager.hasModifier(playerUUID, desiredAttr.getAttribute(), desiredUUID)) {
-                String[] context = desiredModifierContext.get(desiredUUID);
-                String itemId = context[0];
-                String slot = context[1];
-                String key = itemId + "." + slot;
-
-                String attrString = desiredAttr.getAttribute().name() + ";" + desiredAttr.getOperation().name() + ";" + desiredAttr.getAmount();
-
-                attributesToAddByItemSlot.computeIfAbsent(key, k -> new ArrayList<>()).add(attrString);
-                if (debugTick) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Marking INVENTORY modifier for addition: " + desiredUUID + " (" + attrString + ") via " + key);
-                }
-            }
-        }
-
-        for (ModifierToRemove toRemove : modifiersToRemove) {
-            effectManager.removeAttributeModifier(player, toRemove.attribute, toRemove.uuid);
-        }
-        for (Map.Entry<String, List<String>> toAddEntry : attributesToAddByItemSlot.entrySet()) {
-            String[] itemSlotKey = toAddEntry.getKey().split("\\.");
-            String itemId = itemSlotKey[0];
-            String slot = itemSlotKey[1];
-            List<String> attrsToAdd = toAddEntry.getValue();
-            effectManager.applyAttributeEffects(player, itemId, slot, attrsToAdd);
-        }
-        playerCache.put(playerUUID, new CachedPlayerData(desiredPotionEffects, activeItems));
     }
 
     private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player, boolean debugTick) {
@@ -247,23 +219,15 @@ public class EffectApplicatorTask extends BukkitRunnable {
     public void playerQuit(Player player) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Task] Removing player data: " + player.getName());
         UUID uuid = player.getUniqueId();
-        managedEffects.remove(uuid);
+        managedPotions.remove(uuid);
         playerCache.remove(uuid);
         playersToUpdate.remove(uuid);
     }
 
-    /**
-     * Marks the player for a FULL SCAN in the next tick.
-     * This method replaces 'invalidateCache'.
-     */
     public void markPlayerForUpdate(UUID playerUUID) {
         playersToUpdate.add(playerUUID);
     }
 
-    /**
-     * Ensures all players holding or wearing a specific item ID
-     * are updated in the next tick.
-     */
     public void invalidateCacheForHolding(String itemId) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Invalidating cache for players holding: " + itemId);
         int markedCount = 0;
@@ -287,26 +251,17 @@ public class EffectApplicatorTask extends BukkitRunnable {
     }
 
     public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {
-        return managedEffects.getOrDefault(playerUUID, Collections.emptySet());
+        return managedPotions.getOrDefault(playerUUID, Collections.emptySet());
     }
 
-    /**
-     * Cache class - Holds the player's current state
-     */
     private static class CachedPlayerData {
-        final Map<PotionEffectType, Integer> desiredPotionEffects;
         final List<Map.Entry<BuffedItem, String>> activeItems;
 
-        CachedPlayerData(Map<PotionEffectType, Integer> desiredPotionEffects,
-                         List<Map.Entry<BuffedItem, String>> activeItems) {
-            this.desiredPotionEffects = new HashMap<>(desiredPotionEffects);
+        CachedPlayerData(List<Map.Entry<BuffedItem, String>> activeItems) {
             this.activeItems = new ArrayList<>(activeItems);
         }
     }
 
-    /**
-     * Class that holds modifier removal information
-     */
     private static class ModifierToRemove {
         final Attribute attribute;
         final UUID uuid;

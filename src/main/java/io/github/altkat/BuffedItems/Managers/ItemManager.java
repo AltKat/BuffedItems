@@ -229,7 +229,7 @@ public class ItemManager {
                         AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                         double amount = Double.parseDouble(parts[2]);
 
-                        UUID modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attribute.name()).getBytes());
+                        UUID modifierUUID = EffectManager.getUuidForItem(itemId, slot.toUpperCase(), attribute);
 
                         parsedAttributes.add(new ParsedAttribute(attribute, operation, amount, modifierUUID));
                         managedAttributeUUIDs.add(modifierUUID);
