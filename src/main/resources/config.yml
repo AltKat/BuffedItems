@@ -64,7 +64,6 @@
 #   - custom-model-data: 12345              # Direct
 #   - custom-model-data: itemsadder:sword_1 # ItemsAdder
 #   - custom-model-data: nexo:custom_item   # Nexo
-#   - custom-model-data: oraxen:fire_bow    # Oraxen
 #
 # flags: (Optional) This section controls item behaviors and appearances.
 #   Set any flag to 'true' or 'false' to override its default value.
