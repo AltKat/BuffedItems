@@ -4,7 +4,7 @@ main: io.github.altkat.BuffedItems.BuffedItems
 api-version: '1.21'
 softdepend: [Nexo, ItemsAdder, PlaceholderAPI, Oraxen]
 authors: [StreetMelodeez(AltKat)]
-description: Create custom items with permanent potion effects and attributes.
+description: 'Create custom items with permanent potion effects and attributes. Fully configurable via /bi menu with advanced editor UI.'
 commands:
   buffeditems:
     description: Main command for the BuffedItems plugin.

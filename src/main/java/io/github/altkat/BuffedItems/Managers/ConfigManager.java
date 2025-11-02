@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class ConfigManager {
 
     private static BuffedItems plugin;
+    private static final Object CONFIG_LOCK = new Object();
     public static final String NO_PERMISSION = "NONE";
     private static int debugLevel = 0;
     private static boolean showPotionIcons = true;
@@ -125,29 +126,31 @@ public class ConfigManager {
     }
 
     public static void reloadConfig() {
-        long startTime = System.currentTimeMillis();
+        synchronized (CONFIG_LOCK) {
+            long startTime = System.currentTimeMillis();
 
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
 
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
-            plugin.getLogger().warning("config.yml not found! Creating default config...");
-            try {
-                plugin.saveDefaultConfig();
-            } catch (Exception e) {
-                plugin.getLogger().severe("Failed to create default config: " + e.getMessage());
-                return;
+            File configFile = new File(plugin.getDataFolder(), "config.yml");
+            if (!configFile.exists()) {
+                plugin.getLogger().warning("config.yml not found! Creating default config...");
+                try {
+                    plugin.saveDefaultConfig();
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Failed to create default config: " + e.getMessage());
+                    return;
+                }
             }
+
+            plugin.reloadConfig();
+            plugin.getItemManager().loadItems(false);
+            loadGlobalSettings();
+            plugin.reloadConfigSettings();
+            invalidateAllPlayerCaches();
+
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
         }
-
-        plugin.reloadConfig();
-        plugin.getItemManager().loadItems(false);
-        loadGlobalSettings();
-        plugin.reloadConfigSettings();
-        invalidateAllPlayerCaches();
-
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
     }
 
     public static void loadGlobalSettings() {
@@ -186,36 +189,40 @@ public class ConfigManager {
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
 
-        String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
+            String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
 
-        if ("permission".equals(path) && value == null) {
-            plugin.getConfig().set(fullPath, NO_PERMISSION);
-        } else {
-            plugin.getConfig().set(fullPath, value);
+            if ("permission".equals(path) && value == null) {
+                plugin.getConfig().set(fullPath, NO_PERMISSION);
+            } else {
+                plugin.getConfig().set(fullPath, value);
+            }
+            plugin.getItemManager().reloadSingleItem(itemId);
+            plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
         }
-        plugin.getItemManager().reloadSingleItem(itemId);
-        plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
     }
 
     public static boolean createNewItem(String itemId) {
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new item: " + itemId);
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new item: " + itemId);
 
-        FileConfiguration config = plugin.getConfig();
-        if (config.contains("items." + itemId)) {
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] Item already exists: " + itemId);
-            return false;
+            FileConfiguration config = plugin.getConfig();
+            if (config.contains("items." + itemId)) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Item already exists: " + itemId);
+                return false;
+            }
+
+            config.set("items." + itemId + ".display_name", "&f" + itemId);
+            config.set("items." + itemId + ".material", "STONE");
+            config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
+
+            plugin.getItemManager().reloadSingleItem(itemId);
+
+            logInfo("&aCreated new item: &e" + itemId);
+            return true;
         }
-
-        config.set("items." + itemId + ".display_name", "&f" + itemId);
-        config.set("items." + itemId + ".material", "STONE");
-        config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
-
-        plugin.getItemManager().reloadSingleItem(itemId);
-
-        logInfo("&aCreated new item: &e" + itemId);
-        return true;
     }
 
     private static void invalidateAllPlayerCaches() {

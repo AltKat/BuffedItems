@@ -160,34 +160,26 @@ public class ItemBuilder {
     }
 
     private void applyCustomModelDataNMS(int cmdValue) throws Exception {
-        Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit.inventory.CraftItemStack");
+        try {
+            Class<?> itemMetaClass = ItemMeta.class;
+            java.lang.reflect.Method setCustomModelData =
+                    itemMetaClass.getMethod("setCustomModelData", int.class);
 
-        Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
-                .invoke(null, itemStack);
-
-        if (nmsStack == null) {
-            throw new IllegalStateException("NMS ItemStack is null");
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                setCustomModelData.invoke(meta, cmdValue);
+                itemStack.setItemMeta(meta);
+            }
+        } catch (NoSuchMethodException e) {
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                meta.setCustomModelData(cmdValue);
+                itemStack.setItemMeta(meta);
+            }
         }
 
-        Class<?> dataComponentTypeClass = Class.forName("net.minecraft.core.component.DataComponentType");
-        Class<?> dataComponentsClass = Class.forName("net.minecraft.core.component.DataComponents");
-
-        Object customModelDataComponent = dataComponentsClass.getField("CUSTOM_MODEL_DATA").get(null);
-
-        Class<?> customModelDataClass = Class.forName("net.minecraft.world.item.component.CustomModelData");
-        Object customModelDataValue = customModelDataClass.getConstructor(int.class).newInstance(cmdValue);
-
-        nmsStack.getClass()
-                .getMethod("b", dataComponentTypeClass, Object.class).invoke(nmsStack, customModelDataComponent, customModelDataValue);
-
-        ItemStack resultStack = (ItemStack) craftItemStackClass
-                .getMethod("asBukkitCopy", nmsStack.getClass())
-                .invoke(null, nmsStack);
-
-        itemStack.setItemMeta(resultStack.getItemMeta());
-
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                () -> "[ItemBuilder] Applied CMD via NMS: " + cmdValue);
+                () -> "[ItemBuilder] Applied CMD: " + cmdValue);
     }
 
     private EquipmentSlot getEquipmentSlot(String slot) {

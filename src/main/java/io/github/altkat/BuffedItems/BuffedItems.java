@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class BuffedItems extends JavaPlugin {
 
@@ -29,7 +30,7 @@ public final class BuffedItems extends JavaPlugin {
     private EffectManager effectManager;
     private ActiveAttributeManager activeAttributeManager;
     private EffectApplicatorTask effectApplicatorTask;
-    private static final HashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new HashMap<>();
+    private static final ConcurrentHashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new ConcurrentHashMap<>();
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
     private BukkitTask autoSaveTask;
     private long autoSaveIntervalTicks = 6000L;
@@ -85,7 +86,7 @@ public final class BuffedItems extends JavaPlugin {
         final int SPIGOT_RESOURCE_ID = 129550;
         new UpdateChecker(this, SPIGOT_RESOURCE_ID).getVersion(newVersion -> {
             if (UpdateChecker.isNewerVersion(this.getDescription().getVersion(), newVersion)) {
-                ConfigManager.logInfo("§eA new update is available! Version: &a" + newVersion);
+                ConfigManager.logInfo("&eA new update is available! Version: &a" + newVersion);
                 ConfigManager.logInfo("&eDownload it from: &ahttps://www.spigotmc.org/resources/buffeditems.129550/");
             } else {
                 ConfigManager.logInfo("&aYou are using the latest version. (&e" + this.getDescription().getVersion() + "&a)");
@@ -102,7 +103,7 @@ public final class BuffedItems extends JavaPlugin {
             }
         }.runTaskLater(this, 20L);
 
-        ConfigManager.logInfo("§aBuffedItems has been enabled!");
+        ConfigManager.logInfo("&aBuffedItems has been enabled!");
     }
 
     @Override
@@ -139,7 +140,7 @@ public final class BuffedItems extends JavaPlugin {
         playerMenuUtilityMap.clear();
 
         ConfigManager.logInfo("&aCleanup complete: &e" + successCount + "/" + playerCount + "&a players cleaned" + (failCount > 0 ? "&c (" + failCount + " failed)" : ""));
-        ConfigManager.logInfo("§cBuffedItems has been disabled!");
+        ConfigManager.logInfo("&cBuffedItems has been disabled!");
     }
 
     private void initializeManagers() {
@@ -166,7 +167,7 @@ public final class BuffedItems extends JavaPlugin {
 
     private void startEffectTask() {
         effectApplicatorTask = new EffectApplicatorTask(this);
-        effectApplicatorTask.runTaskTimer(this, 0L, 20L);
+        effectApplicatorTask.runTaskTimer(this, 0L, 60L);
     }
 
     private void startAutoSaveTask() {

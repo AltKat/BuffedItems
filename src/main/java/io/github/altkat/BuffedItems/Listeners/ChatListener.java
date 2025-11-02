@@ -21,7 +21,7 @@ public class ChatListener implements Listener {
 
     private final BuffedItems plugin;
 
-    private static final Pattern PERMISSION_NODE_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
+    private static final Pattern PERMISSION_NODE_PATTERN = Pattern.compile("^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$", Pattern.CASE_INSENSITIVE);
 
     public ChatListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -343,6 +343,12 @@ public class ChatListener implements Listener {
                         p.sendMessage(ConfigManager.fromSection("§aPermission has been removed."));
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Removed permission for " + itemId);
                     } else {
+                        if (input.contains("..") || input.startsWith(".") || input.endsWith(".")) {
+                            p.sendMessage(ConfigManager.fromSection("§cInvalid permission node!"));
+                            p.sendMessage(ConfigManager.fromSection("§cDo not use: double dots (..), leading/trailing dots"));
+                            return;
+                        }
+
                         Matcher matcher = PERMISSION_NODE_PATTERN.matcher(input);
                         if (matcher.matches()) {
                             ConfigManager.setItemValue(itemId, "permission", input);

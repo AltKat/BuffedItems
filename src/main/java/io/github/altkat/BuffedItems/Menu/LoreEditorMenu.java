@@ -104,9 +104,24 @@ public class LoreEditorMenu extends PaginatedMenu {
                 if (index >= lore.size()) break;
 
                 String line = lore.get(index);
+
                 String displayName = line.isEmpty() ? "§7(Empty Line)" : "§e" + line;
-                inventory.setItem(i, makeItem(Material.BOOK, displayName,
-                        "§aLeft-Click to Edit", "§cRight-Click to Delete", "§8(Line " + (index + 1) + ")"));
+                String formattedPreview = ConfigManager.toSection(ConfigManager.fromLegacy(line));
+                List<String> itemLore = new ArrayList<>();
+                itemLore.add("§7Preview (Formatted):");
+
+                if (line.isEmpty()) {
+                    itemLore.add("§8(This is a blank line)");
+                } else {
+                    itemLore.add(formattedPreview);
+                }
+
+                itemLore.add(" ");
+                itemLore.add("§aLeft-Click to Edit");
+                itemLore.add("§cRight-Click to Delete");
+                itemLore.add("§8(Line " + (index + 1) + ")");
+
+                inventory.setItem(i, makeItem(Material.BOOK, displayName, itemLore.toArray(new String[0])));
             }
         }
     }

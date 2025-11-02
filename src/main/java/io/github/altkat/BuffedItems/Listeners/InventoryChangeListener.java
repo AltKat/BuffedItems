@@ -55,7 +55,7 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
             if (isBuffedItem(e.getCurrentItem()) || isBuffedItem(e.getCursor())) {
@@ -64,7 +64,7 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent e) {
         if (e.getWhoClicked() instanceof Player) {
             if (isBuffedItem(e.getOldCursor())) {
@@ -81,7 +81,7 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemPickup(EntityPickupItemEvent e) {
         if (e.getEntity() instanceof Player) {
             if (isBuffedItem(e.getItem().getItemStack())) {
@@ -90,14 +90,14 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemDrop(PlayerDropItemEvent e) {
         if (isBuffedItem(e.getItemDrop().getItemStack())) {
             scheduleInventoryCheckWithDebounce(e.getPlayer());
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemHeld(PlayerItemHeldEvent e) {
         PlayerInventory inv = e.getPlayer().getInventory();
         ItemStack oldItem = inv.getItem(e.getPreviousSlot());
@@ -108,14 +108,14 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSwapHands(PlayerSwapHandItemsEvent e) {
         if (isBuffedItem(e.getMainHandItem()) || isBuffedItem(e.getOffHandItem())) {
             scheduleInventoryCheckWithDebounce(e.getPlayer());
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemBreak(PlayerItemBreakEvent e) {
         if (isBuffedItem(e.getBrokenItem())) {
             scheduleInventoryCheckWithDebounce(e.getPlayer());
