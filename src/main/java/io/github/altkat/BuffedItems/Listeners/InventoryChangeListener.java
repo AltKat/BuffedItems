@@ -26,7 +26,7 @@ public class InventoryChangeListener implements Listener {
     private final NamespacedKey nbtKey;
 
     private final Map<UUID, Long> lastCheck = new ConcurrentHashMap<>();
-    private static final long DEBOUNCE_MS = 200;
+    private static final long DEBOUNCE_MS = 100;
 
     public InventoryChangeListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -122,21 +122,23 @@ public class InventoryChangeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onArmorChange(PlayerArmorChangeEvent e) {
         Player player = e.getPlayer();
         ItemStack oldItem = e.getOldItem();
         ItemStack newItem = e.getNewItem();
 
-        if ((oldItem == null || oldItem.getType().isAir()) && (newItem == null || newItem.getType().isAir())) {
+        if ((oldItem == null || oldItem.getType().isAir()) &&
+                (newItem == null || newItem.getType().isAir())) {
             return;
         }
 
+        UUID playerUUID = player.getUniqueId();
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () ->
-                "[ArmorChangeListener] Armor change detected for " + player.getName() +
-                        " in slot " + e.getSlotType().name() + ". Scheduling IMMEDIATE update.");
+                "[ArmorChange] Armor change detected for " + player.getName() +
+                        " in slot " + e.getSlotType().name() + ". Marking IMMEDIATE update.");
 
-        plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+        plugin.getEffectApplicatorTask().markPlayerForUpdate(playerUUID);
     }
 
     public void clearPlayerData(UUID uuid) {

@@ -37,7 +37,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private int tickCount = 0;
 
     private int staleCacheCheckTicks = 0;
-    private static final int STALE_CHECK_INTERVAL = 600;
+    private static final int STALE_CHECK_INTERVAL = 200;
 
     public EffectApplicatorTask(BuffedItems plugin) {
         this.plugin = plugin;
@@ -136,9 +136,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
             }
 
             Set<PotionEffectType> lastAppliedPotions = managedPotions.getOrDefault(playerUUID, Collections.emptySet());
-            effectManager.removeObsoletePotionEffects(player, lastAppliedPotions, desiredPotionEffects.keySet(), debugTick);
-            effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
-            managedPotions.put(playerUUID, desiredPotionEffects.keySet());
+            if (!lastAppliedPotions.equals(desiredPotionEffects.keySet())) {
+                effectManager.removeObsoletePotionEffects(player, lastAppliedPotions, desiredPotionEffects.keySet(), debugTick);
+                effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
+                managedPotions.put(playerUUID, new HashSet<>(desiredPotionEffects.keySet()));
+            }
 
             Map<Attribute, List<AttributeModifier>> trackedModifiersMap = attributeManager.getActiveModifiers(playerUUID);
             List<ModifierToRemove> modifiersToRemove = new ArrayList<>();
@@ -154,6 +156,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
             for (ModifierToRemove toRemove : modifiersToRemove) {
                 effectManager.removeAttributeModifier(player, toRemove.attribute, toRemove.uuid);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                        "[Task-Fast Path] REMOVED attribute modifier: " + toRemove.uuid + " for " + player.getName());
             }
 
         }

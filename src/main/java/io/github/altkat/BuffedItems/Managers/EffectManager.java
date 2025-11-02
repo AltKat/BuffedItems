@@ -54,20 +54,33 @@ public class EffectManager {
         }
     }
 
-    public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects, Set<PotionEffectType> desiredEffects, boolean debugTick) {
+    public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects,
+                                            Set<PotionEffectType> desiredEffects, boolean debugTick) {
         Set<PotionEffectType> effectsToRemove = new HashSet<>(lastAppliedEffects);
         effectsToRemove.removeAll(desiredEffects);
 
         for (PotionEffectType type : effectsToRemove) {
             PotionEffect currentEffect = player.getPotionEffect(type);
-            if (currentEffect != null && currentEffect.getDuration() <= EFFECT_DURATION_TICKS) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
-                player.removePotionEffect(type);
-            } else if (currentEffect != null && debugTick) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Not removing effect " + type.getName() + " from " + player.getName() + " as its duration ("+currentEffect.getDuration()+") suggests it's not managed by BuffedItems.");
+
+            if (currentEffect != null) {
+                boolean isManagedByBuffedItems = currentEffect.getDuration() <= EFFECT_DURATION_TICKS;
+
+                if (isManagedByBuffedItems) {
+                    player.removePotionEffect(type);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[Potion] REMOVED obsolete effect from " + player.getName() + ": " + type.getName() +
+                                    " (duration was: " + currentEffect.getDuration() + ")");
+                } else {
+                    if (debugTick) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                                "[Potion] NOT removing effect " + type.getName() + " from " + player.getName() +
+                                        " (duration: " + currentEffect.getDuration() + " suggests external source)");
+                    }
+                }
             }
         }
     }
+
 
 
     public void applySingleAttribute(Player player, ParsedAttribute parsedAttr, String slot) {
@@ -172,20 +185,22 @@ public class EffectManager {
             if (modifierToRemove != null) {
                 try {
                     instance.removeModifier(modifierToRemove);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Attempted removal of modifier " + modifierUUID + " from " + attribute.name() + " instance for player " + player.getName());
-                } catch (Exception e){
-                    plugin.getLogger().warning("Error removing modifier " + modifierUUID + " for attribute " + attribute.name() + " from player instance " + player.getName() + ": " + e.getMessage());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[Attribute] REMOVED modifier " + modifierUUID + " from " + attribute.name() +
+                                    " for player " + player.getName());
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error removing modifier " + modifierUUID + " for attribute " +
+                            attribute.name() + " from player " + player.getName() + ": " + e.getMessage());
                 }
-            } else {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " for " + attribute.name() + " not found on player instance " + player.getName() + " during specific removal attempt.");
             }
-        } else {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Player " + player.getName() + " missing attribute " + attribute.name() + " during specific modifier removal attempt.");
         }
 
-        boolean removedFromTracking = plugin.getActiveAttributeManager().removeModifier(player.getUniqueId(), attribute, modifierUUID);
-        if(removedFromTracking) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Removed modifier " + modifierUUID + " from tracking for attribute " + attribute.name() + " for player " + player.getName());
+        boolean removedFromTracking = plugin.getActiveAttributeManager().removeModifier(
+                player.getUniqueId(), attribute, modifierUUID);
+        if (removedFromTracking) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                    "[Attribute] Removed modifier " + modifierUUID + " from tracking for attribute " +
+                            attribute.name() + " for player " + player.getName());
         }
     }
 

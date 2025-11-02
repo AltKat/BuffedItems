@@ -167,7 +167,7 @@ public final class BuffedItems extends JavaPlugin {
 
     private void startEffectTask() {
         effectApplicatorTask = new EffectApplicatorTask(this);
-        effectApplicatorTask.runTaskTimer(this, 0L, 60L);
+        effectApplicatorTask.runTaskTimer(this, 0L, 20L);
     }
 
     private void startAutoSaveTask() {
