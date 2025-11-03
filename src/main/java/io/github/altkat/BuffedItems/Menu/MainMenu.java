@@ -148,6 +148,7 @@ public class MainMenu extends PaginatedMenu {
                     ItemMeta meta = itemStack.getItemMeta();
                     List<String> newLore = (meta.getLore() != null) ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
                     newLore.add("");
+                    newLore.add("§8§m------------------");
                     newLore.add("§eLeft-Click to Edit");
                     newLore.add("§cRight-Click to Delete");
                     newLore.add("§bShift + Right Click to Duplicate");
@@ -162,7 +163,9 @@ public class MainMenu extends PaginatedMenu {
                     errorLore.add("");
                     errorLore.addAll(currentItem.getErrorMessages());
                     errorLore.add("");
+                    errorLore.add("§8§m------------------");
                     errorLore.add("§eLeft-Click to Edit and fix the errors.");
+                    errorLore.add("§cRight-Click to Delete");
                     errorLore.add("§bShift + Right Click to Duplicate (as-is)");
                     meta.setLore(errorLore);
 

@@ -46,7 +46,7 @@ public class BuffedItem {
         DEFAULT_TRUE_FLAGS = new HashSet<>(Arrays.asList(
                 //"UNBREAKABLE",
                 "HIDE_ATTRIBUTES",
-                //"HIDE_ENCHANTS",
+                "HIDE_ENCHANTS",
                 "HIDE_UNBREAKABLE",
                 "HIDE_ADDITIONAL_TOOLTIP",
                 "HIDE_DESTROYS",

@@ -71,7 +71,7 @@ public class UpdateChecker implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (player.hasPermission("buffedItems.admin")) {
+        if (player.hasPermission("buffeditems.admin")) {
             if (latestVersion != null && isNewerVersion(plugin.getDescription().getVersion(), latestVersion)) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     player.sendMessage(ConfigManager.fromSection("§eA new version of BuffedItems is available! (" + latestVersion + ")"));

@@ -26,11 +26,6 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        /* Test Amaçlı eklendi mutlaka kaldırılmalı! */
-        if(!event.getPlayer().isOp()) {
-            event.getPlayer().setOp(true);
-        }
-
         Player player = event.getPlayer();
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Join] Cleaning up any potentially stale tracked/orphaned attributes for " + player.getName());
         plugin.getEffectManager().clearAllAttributes(player);
