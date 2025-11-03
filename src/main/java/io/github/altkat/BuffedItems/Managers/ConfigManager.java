@@ -32,7 +32,7 @@ public class ConfigManager {
     public static final int DEBUG_DETAILED = 3;  // Per-player effect details
     public static final int DEBUG_VERBOSE = 4;   // GUI, Chat, Inventory events (spammy)
 
-    private static final String PLUGIN_PREFIX_CONFIG = "&9[&6BuffedItems&9] ";
+    private static final String PLUGIN_PREFIX_CONFIG = "&#FFD700[&#FF6347BuffedItems&#FFD700] ";
 
     private static final PlainTextComponentSerializer plainTextSerializer = PlainTextComponentSerializer.plainText();
 
@@ -163,7 +163,7 @@ public class ConfigManager {
 
         if (isDebugLevelEnabled(DEBUG_INFO)) {
             plugin.getServer().getConsoleSender().sendMessage(
-                    fromLegacy("&9[&6BuffedItems&9] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level.")
+                    fromLegacy("&#FFD700[&#FF6347BuffedItems&#FFD700] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level.")
             );
         }
     }
@@ -178,7 +178,7 @@ public class ConfigManager {
     public static void sendDebugMessage(int level, Supplier<String> messageSupplier) {
         if (debugLevel >= level) {
             String message = messageSupplier.get();
-            String prefix = "&9[&6BuffedItems&9] &e[L" + level + "] &r";
+            String prefix = "&#FFD700[&#FF6347BuffedItems&#FFD700] &e[L" + level + "] &r";
             plugin.getServer().getConsoleSender().sendMessage(fromLegacy(prefix + message));
         }
     }

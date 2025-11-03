@@ -2,7 +2,7 @@ package io.github.altkat.BuffedItems;
 
 import io.github.altkat.BuffedItems.Commands.Commands;
 import io.github.altkat.BuffedItems.Commands.TabCompleterHandler;
-import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
+import io.github.altkat.BuffedItems.Handlers.ModrinthUpdateChecker;
 import io.github.altkat.BuffedItems.Listeners.*;
 import io.github.altkat.BuffedItems.Managers.*;
 import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
@@ -83,13 +83,13 @@ public final class BuffedItems extends JavaPlugin {
         startEffectTask();
         startAutoSaveTask();
 
-        final int SPIGOT_RESOURCE_ID = 129550;
-        new UpdateChecker(this, SPIGOT_RESOURCE_ID).getVersion(newVersion -> {
-            if (UpdateChecker.isNewerVersion(this.getDescription().getVersion(), newVersion)) {
+        final String MODRINTH_PROJECT_ID = "buffeditems";
+        new ModrinthUpdateChecker(this, MODRINTH_PROJECT_ID).getLatestVersion(newVersion -> {
+            if (ModrinthUpdateChecker.isNewerVersion(this.getServer().getVersion(), newVersion)) {
                 ConfigManager.logInfo("&eA new update is available! Version: &a" + newVersion);
-                ConfigManager.logInfo("&eDownload it from: &ahttps://www.spigotmc.org/resources/buffeditems.129550/");
+                ConfigManager.logInfo("&eDownload it from: &ahttps://modrinth.com/plugins/buffedditems");
             } else {
-                ConfigManager.logInfo("&aYou are using the latest version. (&e" + this.getDescription().getVersion() + "&a)");
+                ConfigManager.logInfo("&aYou are using the latest version. (&e" + this.getServer().getVersion() + "&a)");
             }
         });
 
