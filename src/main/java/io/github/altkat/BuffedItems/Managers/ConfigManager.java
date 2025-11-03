@@ -1,7 +1,11 @@
 package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -10,11 +14,14 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ConfigManager {
 
     private static BuffedItems plugin;
+    private static final Object CONFIG_LOCK = new Object();
     public static final String NO_PERMISSION = "NONE";
     private static int debugLevel = 0;
     private static boolean showPotionIcons = true;
@@ -25,7 +32,75 @@ public class ConfigManager {
     public static final int DEBUG_DETAILED = 3;  // Per-player effect details
     public static final int DEBUG_VERBOSE = 4;   // GUI, Chat, Inventory events (spammy)
 
-    private static final String PLUGIN_PREFIX = "§9[§6BuffedItems§9] ";
+    private static final String PLUGIN_PREFIX_CONFIG = "&9[&6BuffedItems&9] ";
+
+    private static final PlainTextComponentSerializer plainTextSerializer = PlainTextComponentSerializer.plainText();
+
+    private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.builder()
+            .character('&')
+            .hexColors()
+            .build();
+
+    private static final LegacyComponentSerializer sectionSerializer = LegacyComponentSerializer.builder()
+            .character('§')
+            .hexColors()
+            .build();
+
+    public static Component fromLegacy(String text) {
+        if (text == null || text.isEmpty()) {
+            return Component.empty();
+        }
+
+        Component component = ampersandSerializer.deserialize(text);
+
+        if (component.style().decoration(TextDecoration.ITALIC) == TextDecoration.State.NOT_SET) {
+            return component.style(style -> style.decoration(TextDecoration.ITALIC, false));
+        }
+        return component;
+    }
+
+    public static List<Component> loreFromLegacy(List<String> textLines) {
+        if (textLines == null || textLines.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return textLines.stream()
+                .map(ConfigManager::fromLegacy)
+                .collect(Collectors.toList());
+    }
+
+    public static Component fromSection(String text) {
+        if (text == null || text.isEmpty()) {
+            return Component.empty();
+        }
+
+        Component component = sectionSerializer.deserialize(text);
+
+        if (component.style().decoration(TextDecoration.ITALIC) == TextDecoration.State.NOT_SET) {
+            return component.style(style -> style.decoration(TextDecoration.ITALIC, false));
+        }
+        return component;
+    }
+
+    public static String toSection(Component component) {
+        if (component == null) {
+            return "";
+        }
+        return sectionSerializer.serialize(component);
+    }
+
+    public static String toPlainText(Component component) {
+        if (component == null) {
+            return "";
+        }
+        return plainTextSerializer.serialize(component);
+    }
+
+    public static String stripLegacy(String legacyText) {
+        if (legacyText == null || legacyText.isEmpty()) {
+            return "";
+        }
+        return plainTextSerializer.serialize(fromSection(legacyText));
+    }
 
     public static void setup(BuffedItems pluginInstance) {
         plugin = pluginInstance;
@@ -51,29 +126,31 @@ public class ConfigManager {
     }
 
     public static void reloadConfig() {
-        long startTime = System.currentTimeMillis();
+        synchronized (CONFIG_LOCK) {
+            long startTime = System.currentTimeMillis();
 
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
 
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
-            plugin.getLogger().warning("config.yml not found! Creating default config...");
-            try {
-                plugin.saveDefaultConfig();
-            } catch (Exception e) {
-                plugin.getLogger().severe("Failed to create default config: " + e.getMessage());
-                return;
+            File configFile = new File(plugin.getDataFolder(), "config.yml");
+            if (!configFile.exists()) {
+                plugin.getLogger().warning("config.yml not found! Creating default config...");
+                try {
+                    plugin.saveDefaultConfig();
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Failed to create default config: " + e.getMessage());
+                    return;
+                }
             }
+
+            plugin.reloadConfig();
+            plugin.getItemManager().loadItems(false);
+            loadGlobalSettings();
+            plugin.reloadConfigSettings();
+            invalidateAllPlayerCaches();
+
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
         }
-
-        plugin.reloadConfig();
-        plugin.getItemManager().loadItems(false);
-        loadGlobalSettings();
-        plugin.reloadConfigSettings();
-        invalidateAllPlayerCaches();
-
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
     }
 
     public static void loadGlobalSettings() {
@@ -85,8 +162,9 @@ public class ConfigManager {
         showPotionIcons = plugin.getConfig().getBoolean("show-potion-icons", true);
 
         if (isDebugLevelEnabled(DEBUG_INFO)) {
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                    "&9[&6BuffedItems&9] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level."));
+            plugin.getServer().getConsoleSender().sendMessage(
+                    fromLegacy("&9[&6BuffedItems&9] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level.")
+            );
         }
     }
 
@@ -101,48 +179,78 @@ public class ConfigManager {
         if (debugLevel >= level) {
             String message = messageSupplier.get();
             String prefix = "&9[&6BuffedItems&9] &e[L" + level + "] &r";
-            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                    prefix + message));
+            plugin.getServer().getConsoleSender().sendMessage(fromLegacy(prefix + message));
         }
     }
 
     public static void logInfo(String message) {
         if (plugin == null) return;
-        String formattedMessage = PLUGIN_PREFIX + ChatColor.translateAlternateColorCodes('&', message);
-        plugin.getServer().getConsoleSender().sendMessage(formattedMessage);
+        plugin.getServer().getConsoleSender().sendMessage(fromLegacy(PLUGIN_PREFIX_CONFIG + message));
     }
 
     public static void setItemValue(String itemId, String path, Object value) {
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
 
-        String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
+            String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
 
-        if ("permission".equals(path) && value == null) {
-            plugin.getConfig().set(fullPath, NO_PERMISSION);
-        } else {
-            plugin.getConfig().set(fullPath, value);
+            if ("permission".equals(path) && value == null) {
+                plugin.getConfig().set(fullPath, NO_PERMISSION);
+            } else {
+                plugin.getConfig().set(fullPath, value);
+            }
+            plugin.getItemManager().reloadSingleItem(itemId);
+            plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
         }
-        plugin.getItemManager().reloadSingleItem(itemId);
-        plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
     }
 
     public static boolean createNewItem(String itemId) {
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new item: " + itemId);
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new item: " + itemId);
 
-        FileConfiguration config = plugin.getConfig();
-        if (config.contains("items." + itemId)) {
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] Item already exists: " + itemId);
-            return false;
+            FileConfiguration config = plugin.getConfig();
+            if (config.contains("items." + itemId)) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Item already exists: " + itemId);
+                return false;
+            }
+
+            config.set("items." + itemId + ".display_name", "&f" + itemId);
+            config.set("items." + itemId + ".material", "STONE");
+            config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
+
+            plugin.getItemManager().reloadSingleItem(itemId);
+
+            logInfo("&aCreated new item: &e" + itemId);
+            return true;
         }
+    }
 
-        config.set("items." + itemId + ".display_name", "&f" + itemId);
-        config.set("items." + itemId + ".material", "STONE");
-        config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
+    public static String duplicateItem(String sourceItemId, String newItemId) {
+        synchronized (CONFIG_LOCK) {
+            FileConfiguration config = plugin.getConfig();
+            ConfigurationSection sourceSection = config.getConfigurationSection("items." + sourceItemId);
 
-        plugin.getItemManager().reloadSingleItem(itemId);
+            if (sourceSection == null) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicate failed: Source item '" + sourceItemId + "' not found.");
+                return null;
+            }
 
-        ConfigManager.logInfo("&aCreated new item: &e" + itemId);
-        return true;
+            if (config.getConfigurationSection("items." + newItemId) != null) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicate failed: Target ID '" + newItemId + "' already exists.");
+                return null;
+            }
+
+            String originalDisplayName = sourceSection.getString("display_name", "&f" + sourceItemId);
+            Map<String, Object> sourceData = sourceSection.getValues(true);
+
+            config.createSection("items." + newItemId, sourceData);
+            config.set("items." + newItemId + ".display_name", originalDisplayName + " &7(Copy)");
+
+            plugin.getItemManager().reloadSingleItem(newItemId);
+
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicated item '" + sourceItemId + "' to '" + newItemId + "'");
+            return newItemId;
+        }
     }
 
     private static void invalidateAllPlayerCaches() {
@@ -160,10 +268,10 @@ public class ConfigManager {
         sendDebugMessage(DEBUG_TASK, () -> "[Config] Cache invalidation complete. Changes will apply on next tick.");
     }
 
-    public static String getPrefixedMessage(String path) {
-        String prefix = plugin.getConfig().getString("messages.prefix", "&9[&6BuffedItems&9] ");
+    public static Component getPrefixedMessageAsComponent(String path) {
+        String prefix = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
         String msg = plugin.getConfig().getString("messages." + path, "&cMissing message: messages." + path);
-        return ChatColor.translateAlternateColorCodes('&', prefix + msg);
+        return fromLegacy(prefix + msg);
     }
 
     public static boolean isDebugLevelEnabled(int level) {

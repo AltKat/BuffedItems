@@ -1,7 +1,8 @@
 package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import org.bukkit.ChatColor;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -58,7 +59,8 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             ItemMeta meta = e.getCurrentItem().getItemMeta();
             if (meta == null || meta.getLore() == null || meta.getLore().isEmpty()) return;
 
-            String rawEnchantName = ChatColor.stripColor(meta.getLore().get(0));
+            Component loreLine = meta.lore().get(0);
+            String rawEnchantName = ConfigManager.toPlainText(loreLine);
 
             if (!rawEnchantName.startsWith("ID: ")) return;
 
@@ -66,7 +68,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             Enchantment selectedEnchant = Enchantment.getByKey(NamespacedKey.minecraft(enchantKey.replace("minecraft:", "")));
 
             if (selectedEnchant == null) {
-                p.sendMessage("§cError: Could not identify selected enchantment '" + enchantKey + "'.");
+                p.sendMessage(ConfigManager.fromSection("§cError: Could not identify selected enchantment '" + enchantKey + "'."));
                 return;
             }
 
@@ -76,7 +78,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
                     .anyMatch(s -> s.toUpperCase().startsWith(selectedEnchant.getName() + ";"));
 
             if (alreadyExists) {
-                p.sendMessage("§cThis item already has the enchantment: " + selectedEnchant.getName());
+                p.sendMessage(ConfigManager.fromSection("§cThis item already has the enchantment: " + selectedEnchant.getName()));
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 return;
             }
@@ -85,7 +87,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("enchantments.add." + selectedEnchant.getName());
             p.closeInventory();
-            p.sendMessage("§aPlease type the Level for '" + selectedEnchant.getName() + "' in chat (e.g., 1, 5, 10).");
+            p.sendMessage(ConfigManager.fromSection("§aPlease type the Level for '" + selectedEnchant.getName() + "' in chat (e.g., 1, 5, 10)."));
             return;
         }
 

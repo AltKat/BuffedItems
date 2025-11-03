@@ -28,12 +28,16 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private final ActiveAttributeManager attributeManager;
     private final EffectManager effectManager;
 
-    private final Map<UUID, Set<PotionEffectType>> managedEffects = new ConcurrentHashMap<>();
-    private final Map<UUID, CachedPlayerData> playerCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<PotionEffectType>> managedPotions = new ConcurrentHashMap<>();
 
     private final Set<UUID> playersToUpdate = ConcurrentHashMap.newKeySet();
 
+    private final Map<UUID, CachedPlayerData> playerCache = new ConcurrentHashMap<>();
+
     private int tickCount = 0;
+
+    private int staleCacheCheckTicks = 0;
+    private static final int STALE_CHECK_INTERVAL = 200;
 
     public EffectApplicatorTask(BuffedItems plugin) {
         this.plugin = plugin;
@@ -44,77 +48,50 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        /*
-         * This task runs every second (20 ticks) and applies/refreshes effects for players
-         * holding or wearing BuffedItems. It uses a hybrid approach for performance:
-         *
-         * 1. Full Scan (Attributes ONLY):
-         * - Processes players in the 'playersToUpdate' set.
-         * - This set contains players whose inventories have recently changed
-         * (detected by InventoryChangeListener) or who just joined/reloaded.
-         * - Runs the 'processPlayer' method for these players to update attributes
-         * and calculate the desired potion state, storing it in the cache.
-         * - Clears the 'playersToUpdate' set after processing.
-         *
-         * 2. Potion Apply/Refresh (Potions ONLY):
-         * - Iterates through ALL players currently in the 'playerCache'.
-         * (The cache only holds players who are known to have/had BuffedItems).
-         * - For ALL these cached players (including those just scanned in step 1),
-         * it calls 'removeObsoletePotionEffects' and 'applyOrRefreshPotionEffects'
-         * using the latest desired state from the cache. This ensures effects
-         * are applied/refreshed correctly and don't expire.
-         *
-         * Optimization: Early Return
-         * - If both 'playersToUpdate' and 'playerCache' are empty (meaning no one
-         * needs an update and no one is using BuffedItems), the task exits immediately.
-         *
-         * Optimization: Offline Player Cleanup
-         * - During the Potion Apply/Refresh loop, if a player in the cache is found to be
-         * offline (e.g., due to a crash or improper disconnect), they are added
-         * to a temporary list and removed from the cache at the end of the tick
-         * to prevent the cache from growing indefinitely.
-         */
         tickCount++;
         boolean debugTick = (tickCount % 20 == 0);
 
-        // --- HYBRID TASK LOGIC ---
+        staleCacheCheckTicks++;
+        if (staleCacheCheckTicks >= STALE_CHECK_INTERVAL) {
+            staleCacheCheckTicks = 0;
+            if (debugTick) {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running periodic stale cache validation...");
+            }
+            validateCacheForStaleness(debugTick);
+        }
 
-        // 1. FULL SCAN PLAYERS (INVENTORY CHANGED - Attributes Only + Cache Update)
         Set<UUID> playersToScanFully;
         synchronized (playersToUpdate) {
             playersToScanFully = new HashSet<>(playersToUpdate);
             playersToUpdate.clear();
         }
 
-        // Early Return Optimization
-        if (playersToScanFully.isEmpty() && playerCache.isEmpty()) {
-            return;
-        }
-
         if (debugTick && !playersToScanFully.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running FULL scan (Attributes Only) for " + playersToScanFully.size() + " modified players...");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running 'Slow Path' (Full Scan) for " + playersToScanFully.size() + " modified players...");
         }
 
         for (UUID playerUUID : playersToScanFully) {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null || !player.isOnline()) {
+                playerCache.remove(playerUUID);
                 continue;
             }
-            // This method updates Attributes and caches desired potions.
             processPlayer(player, debugTick);
         }
 
-        // 2. POTION APPLY/REFRESH (ALL CACHED PLAYERS - Potions Only)
 
         if (debugTick && !playerCache.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running POTION APPLY/REFRESH for " + playerCache.size() + " cached players...");
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running 'Fast Path' (Cache Check) for " + playerCache.size() + " cached players...");
         }
 
         List<UUID> offlinePlayers = new ArrayList<>();
 
+        Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
+        Set<UUID> desiredInventoryAttributeUUIDs = new HashSet<>();
+
         for (Map.Entry<UUID, CachedPlayerData> cacheEntry : playerCache.entrySet()) {
             UUID playerUUID = cacheEntry.getKey();
-            CachedPlayerData cachedData = cacheEntry.getValue(); // Get data early
+            CachedPlayerData cachedData = cacheEntry.getValue();
 
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null || !player.isOnline()) {
@@ -122,29 +99,73 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 continue;
             }
 
-            // Skip if player has no desired effects according to cache
-            // Do this check AFTER offline check
-            if (cachedData == null) {
-                // Should not happen if processPlayer ran, but good defensive check
+            if (cachedData == null || cachedData.activeItems == null) {
                 continue;
             }
 
-            // Remove obsolete effects based on the difference between last tick and current desired state
-            Set<PotionEffectType> lastApplied = managedEffects.getOrDefault(playerUUID, Collections.emptySet());
-            effectManager.removeObsoletePotionEffects(player, lastApplied, cachedData.desiredPotionEffects.keySet(), debugTick);
+            desiredPotionEffects.clear();
+            desiredInventoryAttributeUUIDs.clear();
 
-            // Apply/Refresh potions based on the latest cached desired state
-            effectManager.applyOrRefreshPotionEffects(player, cachedData.desiredPotionEffects, debugTick);
+            for (Map.Entry<BuffedItem, String> entry : cachedData.activeItems) {
+                BuffedItem item = entry.getKey();
+                String slot = entry.getValue();
 
-            // Update the managed effects list for the *next* tick's removal check
-            managedEffects.put(playerUUID, cachedData.desiredPotionEffects.keySet());
+                if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
+                    if (debugTick) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Fast Path] Player " + player.getName() + " lacks permission for " + item.getId() + ". Skipping effects.");
+                    }
+                    continue;
+                }
+
+                if (item.getEffects().containsKey(slot)) {
+                    BuffedItemEffect itemEffects = item.getEffects().get(slot);
+
+                    itemEffects.getPotionEffects().forEach((type, level) ->
+                            desiredPotionEffects.merge(type, level, Integer::max));
+
+                    if (slot.equals("INVENTORY")) {
+                        for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
+                            desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
+
+                            if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
+                                effectManager.applySingleAttribute(player, parsedAttr, slot);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Set<PotionEffectType> lastAppliedPotions = managedPotions.getOrDefault(playerUUID, Collections.emptySet());
+            if (!lastAppliedPotions.equals(desiredPotionEffects.keySet())) {
+                effectManager.removeObsoletePotionEffects(player, lastAppliedPotions, desiredPotionEffects.keySet(), debugTick);
+                effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
+                managedPotions.put(playerUUID, new HashSet<>(desiredPotionEffects.keySet()));
+            }
+
+            Map<Attribute, List<AttributeModifier>> trackedModifiersMap = attributeManager.getActiveModifiers(playerUUID);
+            List<ModifierToRemove> modifiersToRemove = new ArrayList<>();
+
+            for (Map.Entry<Attribute, List<AttributeModifier>> trackedEntry : trackedModifiersMap.entrySet()) {
+                Attribute trackedAttribute = trackedEntry.getKey();
+                for (AttributeModifier trackedModifier : trackedEntry.getValue()) {
+                    if (!desiredInventoryAttributeUUIDs.contains(trackedModifier.getUniqueId())) {
+                        modifiersToRemove.add(new ModifierToRemove(trackedAttribute, trackedModifier.getUniqueId()));
+                    }
+                }
+            }
+
+            for (ModifierToRemove toRemove : modifiersToRemove) {
+                effectManager.removeAttributeModifier(player, toRemove.attribute, toRemove.uuid);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                        "[Task-Fast Path] REMOVED attribute modifier: " + toRemove.uuid + " for " + player.getName());
+            }
+
         }
 
-        // Offline Player Cleanup
         if (!offlinePlayers.isEmpty()) {
             for (UUID offlineUUID : offlinePlayers) {
                 playerCache.remove(offlineUUID);
-                managedEffects.remove(offlineUUID); // Also remove from managed effects
+                managedPotions.remove(offlineUUID);
             }
             if (debugTick) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Cleaned up " + offlinePlayers.size() + " offline player(s) from cache");
@@ -152,115 +173,21 @@ public class EffectApplicatorTask extends BukkitRunnable {
         }
     }
 
-    /**
-     * Performs a FULL SCAN (Attributes ONLY) for the player and updates the cache
-     * with the desired potion effects.
-     * Called only when an inventory change occurs.
-     */
     private void processPlayer(Player player, boolean debugTick) {
         UUID playerUUID = player.getUniqueId();
 
         if (debugTick) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task-FullScan] Performing attribute scan for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task-Slow Path] Scanning inventory and updating cache for " + player.getName());
         }
 
         List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player, debugTick);
-        Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>(); // Calculate desired potions
-        Map<UUID, ParsedAttribute> desiredModifiersByUUID = new HashMap<>();
-        Map<UUID, String[]> desiredModifierContext = new HashMap<>();
 
         if (debugTick && !activeItems.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Found " + activeItems.size() + " active item(s) for " + player.getName());
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Slow Path] Found " + activeItems.size() + " active item(s) for " + player.getName());
         }
 
-        // Calculate desired state (Attributes AND Potions) based on current inventory
-        for (Map.Entry<BuffedItem, String> entry : activeItems) {
-            BuffedItem item = entry.getKey();
-            String slot = entry.getValue();
+        playerCache.put(playerUUID, new CachedPlayerData(activeItems));
 
-            if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
-                continue;
-            }
-
-            if (item.getEffects().containsKey(slot)) {
-                BuffedItemEffect itemEffects = item.getEffects().get(slot);
-
-                // Store desired potions
-                itemEffects.getPotionEffects().forEach((type, level) ->
-                        desiredPotionEffects.merge(type, level, Integer::max));
-
-                // Store desired attributes
-                for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
-                    UUID modifierUUID = parsedAttr.getUuid();
-
-                    if (desiredModifiersByUUID.containsKey(modifierUUID)) {
-                        plugin.getLogger().warning("Duplicate modifier UUID detected during task run: " + modifierUUID + " for item " + item.getId() + ". This is unexpected.");
-                    }
-
-                    desiredModifiersByUUID.put(modifierUUID, parsedAttr);
-                    desiredModifierContext.put(modifierUUID, new String[]{item.getId(), slot});
-                }
-            }
-        }
-
-        // --- ATTRIBUTE APPLICATION LOGIC ---
-        Map<Attribute, List<AttributeModifier>> trackedModifiersMap = attributeManager.getActiveModifiers(playerUUID);
-        List<ModifierToRemove> modifiersToRemove = new ArrayList<>();
-
-        for (Map.Entry<Attribute, List<AttributeModifier>> trackedEntry : trackedModifiersMap.entrySet()) {
-            Attribute trackedAttribute = trackedEntry.getKey();
-            for (AttributeModifier trackedModifier : trackedEntry.getValue()) {
-                if (!desiredModifiersByUUID.containsKey(trackedModifier.getUniqueId())) {
-                    modifiersToRemove.add(new ModifierToRemove(trackedAttribute, trackedModifier.getUniqueId()));
-                    if (debugTick) {
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Marking modifier for removal: " + trackedModifier.getUniqueId() + " on " + trackedAttribute.name());
-                    }
-                }
-            }
-        }
-
-        Map<String, List<String>> attributesToAddByItemSlot = new HashMap<>();
-
-        for (Map.Entry<UUID, ParsedAttribute> desiredEntry : desiredModifiersByUUID.entrySet()) {
-            UUID desiredUUID = desiredEntry.getKey();
-            ParsedAttribute desiredAttr = desiredEntry.getValue();
-
-            if (!attributeManager.hasModifier(playerUUID, desiredAttr.getAttribute(), desiredUUID)) {
-                String[] context = desiredModifierContext.get(desiredUUID);
-                String itemId = context[0];
-                String slot = context[1];
-                String key = itemId + "." + slot;
-
-                String attrString = desiredAttr.getAttribute().name() + ";" + desiredAttr.getOperation().name() + ";" + desiredAttr.getAmount();
-
-                attributesToAddByItemSlot.computeIfAbsent(key, k -> new ArrayList<>()).add(attrString);
-                if (debugTick) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-FullScan] Marking modifier for addition: " + desiredUUID + " (" + attrString + ") via " + key);
-                }
-            }
-        }
-
-        for (ModifierToRemove toRemove : modifiersToRemove) {
-            effectManager.removeAttributeModifier(player, toRemove.attribute, toRemove.uuid);
-        }
-        for (Map.Entry<String, List<String>> toAddEntry : attributesToAddByItemSlot.entrySet()) {
-            String[] itemSlotKey = toAddEntry.getKey().split("\\.");
-            String itemId = itemSlotKey[0];
-            String slot = itemSlotKey[1];
-            List<String> attrsToAdd = toAddEntry.getValue();
-            effectManager.applyAttributeEffects(player, itemId, slot, attrsToAdd);
-        }
-        // --- END ATTRIBUTE APPLICATION LOGIC ---
-
-
-        // --- ALL POTION LOGIC REMOVED FROM processPlayer ---
-        // Includes removal of 'removeObsoletePotionEffects' and 'applyOrRefreshPotionEffects'
-        // Also removed updating 'managedEffects' here.
-        // --- END REMOVAL ---
-
-
-        // Update the cache with the newly calculated desired state (including potions)
-        playerCache.put(playerUUID, new CachedPlayerData(desiredPotionEffects, activeItems));
     }
 
     private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player, boolean debugTick) {
@@ -305,26 +232,57 @@ public class EffectApplicatorTask extends BukkitRunnable {
         }
     }
 
+    private void validateCacheForStaleness(boolean debugTick) {
+        for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
+            UUID playerUUID = entry.getKey();
+            Player player = Bukkit.getPlayer(playerUUID);
+
+            if (player == null || !player.isOnline()) continue;
+
+            List<Map.Entry<BuffedItem, String>> currentItems = findActiveItems(player, false);
+            CachedPlayerData cachedData = entry.getValue();
+
+            if (!isSameActiveItems(cachedData.activeItems, currentItems)) {
+                markPlayerForUpdate(playerUUID);
+                if (debugTick) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK,
+                            () -> "[Task-StaleCheck] Stale cache detected for " + player.getName() + ", marking for full update.");
+                }
+            }
+        }
+    }
+
+    private boolean isSameActiveItems(List<Map.Entry<BuffedItem, String>> cacheList,
+                                      List<Map.Entry<BuffedItem, String>> realList) {
+        if (cacheList.size() != realList.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < cacheList.size(); i++) {
+            Map.Entry<BuffedItem, String> cacheItem = cacheList.get(i);
+            Map.Entry<BuffedItem, String> realItem = realList.get(i);
+
+            if (!cacheItem.getKey().getId().equals(realItem.getKey().getId()) ||
+                    !cacheItem.getValue().equals(realItem.getValue())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void playerQuit(Player player) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Task] Removing player data: " + player.getName());
         UUID uuid = player.getUniqueId();
-        managedEffects.remove(uuid);
+        managedPotions.remove(uuid);
         playerCache.remove(uuid);
         playersToUpdate.remove(uuid);
+        attributeManager.clearPlayer(uuid);
     }
 
-    /**
-     * Marks the player for a FULL SCAN in the next tick.
-     * This method replaces 'invalidateCache'.
-     */
     public void markPlayerForUpdate(UUID playerUUID) {
         playersToUpdate.add(playerUUID);
     }
 
-    /**
-     * Ensures all players holding or wearing a specific item ID
-     * are updated in the next tick.
-     */
     public void invalidateCacheForHolding(String itemId) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Invalidating cache for players holding: " + itemId);
         int markedCount = 0;
@@ -334,11 +292,17 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
             if (data == null || data.activeItems == null) continue;
 
-            boolean isHolding = data.activeItems.stream()
-                    .anyMatch(itemEntry -> itemEntry.getKey().getId().equals(itemId));
+            boolean isHolding = false;
+            for (Map.Entry<BuffedItem, String> itemEntry : data.activeItems) {
+                if (itemEntry.getKey().getId().equals(itemId)) {
+                    isHolding = true;
+                    break;
+                }
+            }
 
             if (isHolding) {
                 markPlayerForUpdate(playerUUID);
+                markedCount++;
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Marked player " + playerUUID + " due to holding " + itemId);
             }
         }
@@ -347,26 +311,17 @@ public class EffectApplicatorTask extends BukkitRunnable {
     }
 
     public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {
-        return managedEffects.getOrDefault(playerUUID, Collections.emptySet());
+        return managedPotions.getOrDefault(playerUUID, Collections.emptySet());
     }
 
-    /**
-     * Cache class - Holds the player's current state
-     */
     private static class CachedPlayerData {
-        final Map<PotionEffectType, Integer> desiredPotionEffects;
         final List<Map.Entry<BuffedItem, String>> activeItems;
 
-        CachedPlayerData(Map<PotionEffectType, Integer> desiredPotionEffects,
-                         List<Map.Entry<BuffedItem, String>> activeItems) {
-            this.desiredPotionEffects = new HashMap<>(desiredPotionEffects);
+        CachedPlayerData(List<Map.Entry<BuffedItem, String>> activeItems) {
             this.activeItems = new ArrayList<>(activeItems);
         }
     }
 
-    /**
-     * Class that holds modifier removal information
-     */
     private static class ModifierToRemove {
         final Attribute attribute;
         final UUID uuid;

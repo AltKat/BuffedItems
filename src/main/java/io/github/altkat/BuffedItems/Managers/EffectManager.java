@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Managers;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.utils.ParsedAttribute;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
@@ -21,12 +22,11 @@ public class EffectManager {
         this.plugin = plugin;
     }
 
-    /**
-     * Applies or refreshes potion effects on a player based on the desired effects map.
-     * @param player The player to apply effects to.
-     * @param desiredEffects A map of PotionEffectType to the desired level (1-based).
-     * @param debugTick Only log "optimal" or "skipping" messages if true.
-     */
+    public static UUID getUuidForItem(String itemId, String slot, Attribute attribute) {
+        String uniqueKey = "buffeditems." + itemId + "." + slot + "." + attribute.name();
+        return UUID.nameUUIDFromBytes(uniqueKey.getBytes());
+    }
+
     public void applyOrRefreshPotionEffects(Player player, Map<PotionEffectType, Integer> desiredEffects, boolean debugTick) {
         final boolean showIcon = ConfigManager.shouldShowPotionIcons();
 
@@ -54,94 +54,80 @@ public class EffectManager {
         }
     }
 
-    /**
-     * Removes potion effects previously managed by this plugin that are no longer required.
-     * @param player The player to remove effects from.
-     * @param lastAppliedEffects The set of effect types applied in the previous tick.
-     * @param desiredEffects The set of effect types desired in the current tick.
-     * @param debugTick Only log "not removing" messages if true.
-     */
-    public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects, Set<PotionEffectType> desiredEffects, boolean debugTick) {
+    public void removeObsoletePotionEffects(Player player, Set<PotionEffectType> lastAppliedEffects,
+                                            Set<PotionEffectType> desiredEffects, boolean debugTick) {
         Set<PotionEffectType> effectsToRemove = new HashSet<>(lastAppliedEffects);
         effectsToRemove.removeAll(desiredEffects);
 
         for (PotionEffectType type : effectsToRemove) {
             PotionEffect currentEffect = player.getPotionEffect(type);
-            if (currentEffect != null && currentEffect.getDuration() <= EFFECT_DURATION_TICKS) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Removing obsolete effect from " + player.getName() + ": " + type.getName());
-                player.removePotionEffect(type);
-            } else if (currentEffect != null && debugTick) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Potion] Not removing effect " + type.getName() + " from " + player.getName() + " as its duration ("+currentEffect.getDuration()+") suggests it's not managed by BuffedItems.");
+
+            if (currentEffect != null) {
+                boolean isManagedByBuffedItems = currentEffect.getDuration() <= EFFECT_DURATION_TICKS;
+
+                if (isManagedByBuffedItems) {
+                    player.removePotionEffect(type);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[Potion] REMOVED obsolete effect from " + player.getName() + ": " + type.getName() +
+                                    " (duration was: " + currentEffect.getDuration() + ")");
+                } else {
+                    if (debugTick) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                                "[Potion] NOT removing effect " + type.getName() + " from " + player.getName() +
+                                        " (duration: " + currentEffect.getDuration() + " suggests external source)");
+                    }
+                }
             }
         }
     }
 
-    public void applyAttributeEffects(Player player, String itemId, String slot, List<String> attributes) {
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Processing " + attributes.size() + " attributes for " + player.getName() + " (item: " + itemId + ", slot: " + slot + ")");
+
+
+    public void applySingleAttribute(Player player, ParsedAttribute parsedAttr, String slot) {
+        UUID modifierUUID = parsedAttr.getUuid();
+        Attribute attribute = parsedAttr.getAttribute();
+
+        if (plugin.getActiveAttributeManager().hasModifier(player.getUniqueId(), attribute, modifierUUID)) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute-Fast Path] Modifier " + modifierUUID + " already tracked for " + player.getName() + " (skipping apply)");
+            return;
+        }
+
+        AttributeInstance instance = player.getAttribute(attribute);
+        if (instance == null) {
+            plugin.getLogger().warning("Player " + player.getName() + " does not have attribute '" + attribute.name() + "'");
+            return;
+        }
+
+        AttributeModifier existingMod = null;
+        for (AttributeModifier mod : instance.getModifiers()) {
+            if (mod.getUniqueId().equals(modifierUUID)) {
+                existingMod = mod;
+                break;
+            }
+        }
+        if (existingMod != null) {
+            plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, existingMod);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute-Fast Path] Modifier " + modifierUUID + " found on player but wasn't tracked. Re-tracking now.");
+            return;
+        }
+
         EquipmentSlot equipmentSlot = getEquipmentSlot(slot);
+        String modifierName = "buffeditems." + modifierUUID;
 
-        for (String attrString : attributes) {
-            Attribute attribute;
-            AttributeModifier.Operation operation;
-            double amount;
-            UUID modifierUUID;
+        AttributeModifier modifier = new AttributeModifier(
+                modifierUUID,
+                modifierName,
+                parsedAttr.getAmount(),
+                parsedAttr.getOperation(),
+                equipmentSlot
+        );
 
-            try {
-                String[] parts = attrString.split(";");
-                if (parts.length != 3) throw new IllegalArgumentException("Attribute string must have 3 parts separated by ';'. Found: " + attrString);
-                attribute = Attribute.valueOf(parts[0].toUpperCase());
-                operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
-                amount = Double.parseDouble(parts[2]);
-                modifierUUID = UUID.nameUUIDFromBytes(("buffeditems." + itemId + "." + slot + "." + attribute.name()).getBytes());
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Parsed: " + attribute.name() + " " + operation.name() + " " + amount + " UUID: " + modifierUUID);
-            } catch (Exception e) {
-                plugin.getLogger().warning("Invalid attribute format for item '" + itemId + "' in slot '" + slot + "': " + attrString + " | Error: " + e.getMessage());
-                continue;
-            }
-
-            AttributeInstance instance = player.getAttribute(attribute);
-            if (instance == null) {
-                plugin.getLogger().warning("Player " + player.getName() + " does not have attribute '" + attribute.name() + "' (item: " + itemId + ")");
-                continue;
-            }
-
-            if (plugin.getActiveAttributeManager().hasModifier(player.getUniqueId(), attribute, modifierUUID)) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " already tracked for " + player.getName() + " on " + attribute.name() + " (skipping apply)");
-                continue;
-            }
-
-            AttributeModifier existingMod = null;
-            for (AttributeModifier mod : instance.getModifiers()) {
-                if (mod.getUniqueId().equals(modifierUUID)) {
-                    existingMod = mod;
-                    break;
-                }
-            }
-            boolean alreadyApplied = (existingMod != null);
-
-            if (alreadyApplied) {
-                plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, existingMod);
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " found on player but wasn't tracked. Re-tracking now.");
-            } else {
-                String modifierName = "buffeditems." + itemId + "." + slot;
-                AttributeModifier modifier = new AttributeModifier(modifierUUID, modifierName, amount, operation, equipmentSlot);
-                try {
-                    instance.addModifier(modifier);
-                    plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, modifier);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Applied modifier " + modifierUUID + " to " + player.getName() + ": " + attribute.name() + " " + operation.name() + " " + amount);
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Attempted to add duplicate attribute modifier UUID: " + modifierUUID + " for " + attribute.name() + " on player " + player.getName() + ". " + e.getMessage());
-                } catch (Exception e) {
-                    plugin.getLogger().severe("CRITICAL: Failed to apply attribute modifier!");
-                    plugin.getLogger().severe("  Item: " + itemId + ", Slot: " + slot + ", Attribute String: " + attrString);
-                    plugin.getLogger().severe("  Player: " + player.getName());
-                    plugin.getLogger().severe("  Error: " + e.getMessage());
-                    plugin.getLogger().severe("Stack trace for modifier application failure:");
-                    for(StackTraceElement element : e.getStackTrace()) {
-                        plugin.getLogger().severe("    at " + element.toString());
-                    }
-                }
-            }
+        try {
+            instance.addModifier(modifier);
+            plugin.getActiveAttributeManager().addModifier(player.getUniqueId(), attribute, modifier);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute-Fast Path] Applied modifier " + modifierUUID + " to " + player.getName() + ": " + attribute.name());
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to apply single attribute modifier " + modifierUUID + ": " + e.getMessage());
         }
     }
 
@@ -199,20 +185,22 @@ public class EffectManager {
             if (modifierToRemove != null) {
                 try {
                     instance.removeModifier(modifierToRemove);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Attempted removal of modifier " + modifierUUID + " from " + attribute.name() + " instance for player " + player.getName());
-                } catch (Exception e){
-                    plugin.getLogger().warning("Error removing modifier " + modifierUUID + " for attribute " + attribute.name() + " from player instance " + player.getName() + ": " + e.getMessage());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[Attribute] REMOVED modifier " + modifierUUID + " from " + attribute.name() +
+                                    " for player " + player.getName());
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error removing modifier " + modifierUUID + " for attribute " +
+                            attribute.name() + " from player " + player.getName() + ": " + e.getMessage());
                 }
-            } else {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Modifier " + modifierUUID + " for " + attribute.name() + " not found on player instance " + player.getName() + " during specific removal attempt.");
             }
-        } else {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Player " + player.getName() + " missing attribute " + attribute.name() + " during specific modifier removal attempt.");
         }
 
-        boolean removedFromTracking = plugin.getActiveAttributeManager().removeModifier(player.getUniqueId(), attribute, modifierUUID);
-        if(removedFromTracking) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Attribute] Removed modifier " + modifierUUID + " from tracking for attribute " + attribute.name() + " for player " + player.getName());
+        boolean removedFromTracking = plugin.getActiveAttributeManager().removeModifier(
+                player.getUniqueId(), attribute, modifierUUID);
+        if (removedFromTracking) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                    "[Attribute] Removed modifier " + modifierUUID + " from tracking for attribute " +
+                            attribute.name() + " for player " + player.getName());
         }
     }
 

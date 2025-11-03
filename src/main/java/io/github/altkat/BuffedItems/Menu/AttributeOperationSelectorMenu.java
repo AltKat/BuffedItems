@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -43,7 +44,7 @@ public class AttributeOperationSelectorMenu extends Menu {
 
         playerMenuUtility.setChatInputPath("attributes.add." + attributeName + "." + operationName);
         p.closeInventory();
-        p.sendMessage("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat.");
+        p.sendMessage(ConfigManager.fromSection("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));
     }
 
     @Override

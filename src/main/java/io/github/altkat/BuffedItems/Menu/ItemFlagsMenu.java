@@ -24,7 +24,7 @@ public class ItemFlagsMenu extends Menu {
             new FlagInfo("HIDE_ATTRIBUTES", Material.BOOK, "Hide Attributes", "Hides default attribute modifier text (e.g., '+5 Attack Damage')."),
             new FlagInfo("HIDE_ENCHANTS", Material.ENCHANTING_TABLE, "Hide Enchants", "Hides the enchantment list text."),
             new FlagInfo("HIDE_UNBREAKABLE", Material.BEDROCK, "Hide Unbreakable", "Hides the 'Unbreakable' text."),
-            new FlagInfo("HIDE_POTION_EFFECTS", Material.POTION, "Hide Potion Effects", "Hides effect text on Potions, Arrows, Stew."),
+            new FlagInfo("HIDE_ADDITIONAL_TOOLTIP", Material.POTION, "Hide Additional Tooltip", "Hides additional tooltip text on Potions, Arrows, Stew."),
             new FlagInfo("HIDE_DESTROYS", Material.IRON_PICKAXE, "Hide Destroys", "Hides 'Can Destroy:' list (Adventure mode)."),
             new FlagInfo("HIDE_PLACED_ON", Material.STONE, "Hide Placed On", "Hides 'Can Be Placed On:' list (Adventure mode)."),
             new FlagInfo("PREVENT_ANVIL_USE", Material.CHAINMAIL_CHESTPLATE, "Prevent Anvil Use", "Prevents renaming, repairing, or combining in an anvil."),
@@ -93,7 +93,7 @@ public class ItemFlagsMenu extends Menu {
                 String configPath = "flags." + clickedFlagName.toUpperCase();
                 ConfigManager.setItemValue(itemId, configPath, newValue);
 
-                p.sendMessage("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled"));
+                p.sendMessage(ConfigManager.fromSection("§aFlag '" + clickedFlagName + "' set to " + (newValue ? "§aEnabled" : "§cDisabled")));
 
                 this.open();
             }
@@ -149,7 +149,7 @@ public class ItemFlagsMenu extends Menu {
 
             if (isEnabled) {
                 ItemMeta meta = itemStack.getItemMeta();
-                meta.addEnchant(Enchantment.LUCK, 1, false);
+                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 itemStack.setItemMeta(meta);
             }

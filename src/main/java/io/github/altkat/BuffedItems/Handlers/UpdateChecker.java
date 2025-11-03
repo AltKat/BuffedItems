@@ -1,8 +1,8 @@
 package io.github.altkat.BuffedItems.Handlers;
+
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -71,11 +71,11 @@ public class UpdateChecker implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (player.hasPermission("BuffedItems.admin")) {
+        if (player.hasPermission("buffedItems.admin")) {
             if (latestVersion != null && isNewerVersion(plugin.getDescription().getVersion(), latestVersion)) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    player.sendMessage(ChatColor.YELLOW + "A new version of BuffedItems is available! (" + latestVersion + ")");
-                    player.sendMessage(ChatColor.YELLOW + "Download it from: " + ChatColor.AQUA + "https://www.spigotmc.org/resources/buffeditems." + resourceId + "/");
+                    player.sendMessage(ConfigManager.fromSection("§eA new version of BuffedItems is available! (" + latestVersion + ")"));
+                    player.sendMessage(ConfigManager.fromSection("§eDownload it from: §b" + "https://www.spigotmc.org/resources/buffeditems." + resourceId + "/"));
                 }, 40L);
             }
         }

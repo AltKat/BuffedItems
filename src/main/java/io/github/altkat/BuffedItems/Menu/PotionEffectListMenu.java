@@ -60,7 +60,7 @@ public class PotionEffectListMenu extends Menu {
                 String removedInfo = effects.get(clickedSlot);
                 effects.remove(clickedSlot);
                 ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".potion_effects", effects);
-                p.sendMessage("§aEffect '" + removedInfo.split(";")[0] + "' has been removed from slot " + targetSlot + ".");
+                p.sendMessage(ConfigManager.fromSection("§aEffect '" + removedInfo.split(";")[0] + "' has been removed from slot " + targetSlot + "."));
                 this.open();
             }
             else if (e.isLeftClick() && clickedType == Material.POTION) {
@@ -69,7 +69,7 @@ public class PotionEffectListMenu extends Menu {
                 playerMenuUtility.setChatInputPath("potion_effects.edit");
                 String effectName = effects.get(clickedSlot).split(";")[0];
                 p.closeInventory();
-                p.sendMessage("§aPlease type the new level for '" + effectName + "' in chat.");
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the new level for '" + effectName + "' in chat."));
             }
         }
     }

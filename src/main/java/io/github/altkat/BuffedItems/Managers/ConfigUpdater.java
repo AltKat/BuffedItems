@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import io.github.altkat.BuffedItems.BuffedItems;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import io.github.altkat.BuffedItems.Managers.ConfigManager;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -40,7 +40,7 @@ public class ConfigUpdater {
         int keysAdded = 0;
 
         // Check all keys in the default config
-        for (String key : defaultConfig.getKeys(true)) {
+        for (String key : defaultConfig.getKeys(false)) {
 
             // !!! IMPORTANT !!!
             // If the key starts with 'items.', DO NOT TOUCH this section.

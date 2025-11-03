@@ -1,10 +1,12 @@
 package io.github.altkat.BuffedItems.utils;
 
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -13,7 +15,6 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ItemBuilder {
 
@@ -51,12 +52,9 @@ public class ItemBuilder {
             return itemStack;
         }
 
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', buffedItem.getDisplayName()));
-
-        List<String> coloredLore = buffedItem.getLore().stream()
-                .map(line -> ChatColor.translateAlternateColorCodes('&', line))
-                .collect(Collectors.toList());
-        meta.setLore(coloredLore);
+        meta.displayName(ConfigManager.fromLegacy(buffedItem.getDisplayName()));
+        List<Component> coloredLore = ConfigManager.loreFromLegacy(buffedItem.getLore());
+        meta.lore(coloredLore);
 
         if (buffedItem.getCustomModelData().isPresent()) {
             int cmdValue = buffedItem.getCustomModelData().get();
@@ -82,6 +80,33 @@ public class ItemBuilder {
             }
         }
 
+
+        for (Map.Entry<String, BuffedItemEffect> effectEntry : buffedItem.getEffects().entrySet()) {
+            String slotKey = effectEntry.getKey().toUpperCase();
+            BuffedItemEffect itemEffect = effectEntry.getValue();
+
+            EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
+
+            if (equipmentSlot != null) {
+                for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
+
+                    AttributeModifier modifier = new AttributeModifier(
+                            parsedAttr.getUuid(),
+                            "buffeditems." + buffedItem.getId() + "." + slotKey,
+                            parsedAttr.getAmount(),
+                            parsedAttr.getOperation(),
+                            equipmentSlot
+                    );
+
+                    meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[ItemBuilder] Natively applying attribute to " + buffedItem.getId() +
+                                    " for slot " + slotKey + ": " + parsedAttr.getAttribute().name());
+                }
+            }
+
+        }
+
         if (buffedItem.getFlag("UNBREAKABLE")) {
             meta.setUnbreakable(true);
         }
@@ -104,7 +129,7 @@ public class ItemBuilder {
 
         if (buffedItem.hasGlow()) {
             if (!hasRealEnchants || buffedItem.getFlag("HIDE_ENCHANTS")) {
-                meta.addEnchant(Enchantment.LUCK, 1, false);
+                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
             }
         }
 
@@ -123,8 +148,8 @@ public class ItemBuilder {
         if (buffedItem.getFlag("HIDE_PLACED_ON")) {
             meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
         }
-        if (buffedItem.getFlag("HIDE_POTION_EFFECTS")) {
-            meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+        if (buffedItem.getFlag("HIDE_ADDITIONAL_TOOLTIP")) {
+            meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         }
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
@@ -135,35 +160,38 @@ public class ItemBuilder {
     }
 
     private void applyCustomModelDataNMS(int cmdValue) throws Exception {
-        String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+        try {
+            Class<?> itemMetaClass = ItemMeta.class;
+            java.lang.reflect.Method setCustomModelData =
+                    itemMetaClass.getMethod("setCustomModelData", int.class);
 
-        Class<?> craftItemStackClass = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".inventory.CraftItemStack");
-
-        Object nmsStack = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class)
-                .invoke(null, itemStack);
-
-        if (nmsStack == null) {
-            throw new IllegalStateException("NMS ItemStack is null");
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                setCustomModelData.invoke(meta, cmdValue);
+                itemStack.setItemMeta(meta);
+            }
+        } catch (NoSuchMethodException e) {
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                meta.setCustomModelData(cmdValue);
+                itemStack.setItemMeta(meta);
+            }
         }
 
-        Class<?> dataComponentTypeClass = Class.forName("net.minecraft.core.component.DataComponentType");
-        Class<?> dataComponentsClass = Class.forName("net.minecraft.core.component.DataComponents");
-
-        Object customModelDataComponent = dataComponentsClass.getField("CUSTOM_MODEL_DATA").get(null);
-
-        Class<?> customModelDataClass = Class.forName("net.minecraft.world.item.component.CustomModelData");
-        Object customModelDataValue = customModelDataClass.getConstructor(int.class).newInstance(cmdValue);
-
-        nmsStack.getClass()
-                .getMethod("b", dataComponentTypeClass, Object.class).invoke(nmsStack, customModelDataComponent, customModelDataValue);
-
-        ItemStack resultStack = (ItemStack) craftItemStackClass
-                .getMethod("asBukkitCopy", nmsStack.getClass())
-                .invoke(null, nmsStack);
-
-        itemStack.setItemMeta(resultStack.getItemMeta());
-
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                () -> "[ItemBuilder] Applied CMD via NMS: " + cmdValue);
+                () -> "[ItemBuilder] Applied CMD: " + cmdValue);
+    }
+
+    private EquipmentSlot getEquipmentSlot(String slot) {
+        switch (slot.toUpperCase()) {
+            case "MAIN_HAND": return EquipmentSlot.HAND;
+            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
+            case "HELMET": return EquipmentSlot.HEAD;
+            case "CHESTPLATE": return EquipmentSlot.CHEST;
+            case "LEGGINGS": return EquipmentSlot.LEGS;
+            case "BOOTS": return EquipmentSlot.FEET;
+            case "INVENTORY":
+            default: return null;
+        }
     }
 }

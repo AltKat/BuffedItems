@@ -7,6 +7,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.potion.PotionEffectType;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class PlayerQuitListener implements Listener {
 
@@ -24,15 +28,22 @@ public class PlayerQuitListener implements Listener {
 
         plugin.getEffectManager().clearAllAttributes(player);
 
+        Set<PotionEffectType> effectsToClear = new HashSet<>(plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId()));
+        int effectCount = effectsToClear.size();
         plugin.getEffectApplicatorTask().playerQuit(player);
-
         plugin.getActiveAttributeManager().clearPlayer(player.getUniqueId());
         plugin.getDeathKeptItems().remove(player.getUniqueId());
         BuffedItems.removePlayerMenuUtility(player.getUniqueId());
+        plugin.getInventoryChangeListener().clearPlayerData(player.getUniqueId());
 
-        int effectCount = plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId()).size();
-        plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
-                .forEach(player::removePotionEffect);
+        try {
+            if (player.isOnline()) {
+                effectsToClear.forEach(player::removePotionEffect);
+            }
+        } catch (Exception e) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                    () -> "[Quit] Error while removing potion effects for " + player.getName() + " (player likely already offline): " + e.getMessage());
+        }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Quit] Cleanup complete for " + player.getName() + " (removed " + effectCount + " potion effects)");
     }

@@ -24,10 +24,10 @@ public class CustomModelDataResolver {
         nexoAvailable = Bukkit.getPluginManager().getPlugin("Nexo") != null;
 
         if (itemsAdderAvailable) {
-            ConfigManager.logInfo("&aItemsAdder detected - custom model data integration enabled (Version: " + serverVersion + ")");
+            ConfigManager.logInfo("&aItemsAdder detected - custom model data integration enabled");
         }
         if (nexoAvailable) {
-            ConfigManager.logInfo("&aNexo detected - custom model data integration enabled (Version: " + serverVersion + ")");
+            ConfigManager.logInfo("&aNexo detected - custom model data integration enabled");
         }
     }
 
@@ -78,8 +78,6 @@ public class CustomModelDataResolver {
                     return resolveItemsAdder(externalItemId, trimmed, itemId);
                 case "nexo":
                     return resolveNexo(externalItemId, trimmed, itemId);
-                case "oraxen":
-                    return resolveOraxen(externalItemId, trimmed, itemId);
                 default:
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                             () -> "[CMD] Unknown plugin prefix for item '" + itemId + "': " + pluginName);
@@ -157,12 +155,12 @@ public class CustomModelDataResolver {
             if (cmd != null) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                         () -> "[CMD] Resolved Nexo custom-model-data for '" + buffedItemId + "': " +
-                                externalItemId + " -> " + cmd + " (Version: " + serverVersion + ")");
+                                externalItemId + " -> " + cmd);
                 return new CustomModelData(cmd, rawValue, CustomModelData.Source.NEXO);
             }
 
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                    () -> "[CMD] Nexo item '" + externalItemId + "' has no custom model data (Version: " + serverVersion + ")");
+                    () -> "[CMD] Nexo item '" + externalItemId + "' has no custom model data");
             return null;
 
         } catch (Exception e) {
@@ -196,7 +194,6 @@ public class CustomModelDataResolver {
             }
 
             Class<?> itemMetaClass = meta.getClass();
-
             try {
                 Object cmdValue = itemMetaClass.getMethod("getCustomModelData").invoke(meta);
                 if (cmdValue instanceof Integer) {
@@ -218,11 +215,14 @@ public class CustomModelDataResolver {
                 Object components = nmsStack.getClass().getMethod("a").invoke(nmsStack);
 
                 if (components != null) {
+                    Class<?> dataComponentTypeClass = Class.forName("net.minecraft.core.component.DataComponentType");
+                    Class<?> dataComponentsClass = Class.forName("net.minecraft.core.component.DataComponents");
+
+                    Object customModelDataField = dataComponentsClass.getField("CUSTOM_MODEL_DATA").get(null);
+
                     Object cmdComponent = components.getClass()
-                            .getMethod("a", Class.forName("net.minecraft.core.component.DataComponentType"))
-                            .invoke(components,
-                                    Class.forName("net.minecraft.core.component.DataComponents")
-                                            .getField("CUSTOM_MODEL_DATA").get(null));
+                            .getMethod("a", dataComponentTypeClass)
+                            .invoke(components, customModelDataField);
 
                     if (cmdComponent != null) {
                         Integer value = (Integer) cmdComponent.getClass()
@@ -238,13 +238,6 @@ public class CustomModelDataResolver {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                     () -> "[CMD] Failed to extract CMD using reflection (1.21+): " + e.getMessage());
         }
-
-        return null;
-    }
-
-    private CustomModelData resolveOraxen(String externalItemId, String rawValue, String buffedItemId) {
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                () -> "[CMD] Oraxen integration not yet implemented for item: " + buffedItemId);
         return null;
     }
 
@@ -274,15 +267,13 @@ public class CustomModelDataResolver {
         public enum Source {
             DIRECT,
             ITEMSADDER,
-            NEXO,
-            ORAXEN
+            NEXO
         }
     }
 
     public boolean isItemsAdderAvailable() {
         return itemsAdderAvailable;
     }
-
     public boolean isNexoAvailable() {
         return nexoAvailable;
     }

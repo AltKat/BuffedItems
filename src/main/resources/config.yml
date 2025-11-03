@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------------------------
 # BuffedItems - Plugin Configuration v${project.version}
-# Author: StreetMelodeez
+# Author: AltKat(StreetMelodeez)
 # -------------------------------------------------------------------------------------------
 
 # ===================================================================
@@ -49,6 +49,7 @@
 #
 #   potion_effects: A list of potion effects to apply in this slot.
 #     - Format: 'EFFECT_NAME;LEVEL' (e.g., 'SPEED;2' for Speed II)
+#     - 1.17+ GÜNCELLEME: İsimler değişti (örn: JUMP -> JUMP_BOOST, FAST_DIGGING -> HASTE)
 #     - Effect List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/potion/PotionEffectType.html
 #
 #   attributes: A list of permanent attribute modifiers to apply in this slot.
@@ -60,9 +61,9 @@
 #       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
 #
 # custom-model-data: (Optional) Set a custom model data integer for resource packs.
-#   - Direct: 100001
-#   - ItemsAdder: itemsadder:fire_sword
-#   - Nexo: nexo:custom_helmet
+#   - custom-model-data: 12345              # Direct
+#   - custom-model-data: itemsadder:sword_1 # ItemsAdder
+#   - custom-model-data: nexo:custom_item   # Nexo
 #
 # flags: (Optional) This section controls item behaviors and appearances.
 #   Set any flag to 'true' or 'false' to override its default value.
@@ -71,7 +72,7 @@
 #     - HIDE_ATTRIBUTES: (Default: true) Hides the default attribute text.
 #     - HIDE_ENCHANTS: (Default: false) Hides enchantment text.
 #     - HIDE_UNBREAKABLE: (Default: true) Hides the 'Unbreakable' text.
-#     - HIDE_POTION_EFFECTS: (Default: true) Hides potion/arrow effect text.
+#     - HIDE_ADDITIONAL_TOOLTIP: (Default: true) Hides additional tooltip text like potion/arrow effect text.
 #     - HIDE_DESTROYS: (Default: true) Hides 'Can Destroy:' list (Adventure mode).
 #     - HIDE_PLACED_ON: (Default: true) Hides 'Can Be Placed On:' list (Adventure mode).
 #     - PREVENT_ANVIL_USE: (Default: false) Blocks use in anvils (rename, repair, enchant).
@@ -117,7 +118,7 @@ items:
     effects:
       OFF_HAND:
         potion_effects:
-          - JUMP;2
+          - JUMP_BOOST;2  # <-- GÜNCELLENDİ (JUMP -> JUMP_BOOST)
           - SLOW_FALLING;1
     flags:
       PREVENT_CRAFTING_USE: true
@@ -135,10 +136,10 @@ items:
     effects:
       MAIN_HAND:
         potion_effects:
-          - FAST_DIGGING;2
+          - HASTE;2  # <-- GÜNCELLENDİ (FAST_DIGGING -> HASTE)
     enchantments:
-      - DIG_SPEED;5
-      - DURABILITY;3
+      - EFFICIENCY;5  # <-- GÜNCELLENDİ (DIG_SPEED -> EFFICIENCY)
+      - UNBREAKING;3  # <-- GÜNCELLENDİ (DURABILITY -> UNBREAKING)
     flags:
       HIDE_ENCHANTS: false
   warriors_talisman:
@@ -177,7 +178,7 @@ items:
           - NIGHT_VISION;1
           - WATER_BREATHING;1
     enchantments:
-      - OXYGEN;3
+      - RESPIRATION;3  # <-- GÜNCELLENDİ (OXYGEN -> RESPIRATION)
   berserkers_greaves:
     display_name: '&4Berserker''s Greaves'
     lore:
@@ -196,7 +197,7 @@ items:
           - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
           - GENERIC_ARMOR;ADD_NUMBER;-1.0
     enchantments:
-      - PROTECTION_FALL;4
+      - FEATHER_FALLING;4  # <-- GÜNCELLENDİ (PROTECTION_FALL -> FEATHER_FALLING)
     flags:
       HIDE_ATTRIBUTES: false
   swiftness_boots:
@@ -235,9 +236,9 @@ items:
     material: NETHERITE_SWORD
     glow: true
     enchantments:
-      - DAMAGE_ALL;7
+      - SHARPNESS;7       # <-- GÜNCELLENDİ (DAMAGE_ALL -> SHARPNESS)
       - FIRE_ASPECT;2
-      - LOOT_BONUS_MOBS;3
+      - LOOTING;3         # <-- GÜNCELLENDİ (LOOT_BONUS_MOBS -> LOOTING)
       - SWEEPING_EDGE;3
     flags:
       UNBREAKABLE: true
@@ -271,10 +272,10 @@ items:
     effects:
       MAIN_HAND:
         potion_effects:
-          - INCREASE_DAMAGE;1
+          - STRENGTH;1  # <-- GÜNCELLENDİ (INCREASE_DAMAGE -> STRENGTH)
     enchantments:
-      - DAMAGE_ALL;5
-      - DURABILITY;3
+      - SHARPNESS;5   # <-- GÜNCELLENDİ (DAMAGE_ALL -> SHARPNESS)
+      - UNBREAKING;3  # <-- GÜNCELLENDİ (DURABILITY -> UNBREAKING)
     flags:
       PREVENT_DROP: true
       PREVENT_DEATH_DROP: true
@@ -295,8 +296,8 @@ items:
         potion_effects:
           - WATER_BREATHING;1
     enchantments:
-      - WATER_WORKER;1
-      - PROTECTION_ENVIRONMENTAL;4
+      - AQUA_AFFINITY;1 # <-- GÜNCELLENDİ (WATER_WORKER -> AQUA_AFFINITY)
+      - PROTECTION;4    # <-- GÜNCELLENDİ (PROTECTION_ENVIRONMENTAL -> PROTECTION)
     flags:
       HIDE_ENCHANTS: false
   orb_of_elements:
