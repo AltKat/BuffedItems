@@ -7,6 +7,7 @@ import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -46,51 +47,91 @@ public class ChatListener implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> {
 
                 if ("createnewitem".equals(path)) {
-                    String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Creating new item: " + newItemId);
-
-                    if (ConfigManager.createNewItem(newItemId)) {
-                        p.sendMessage(ConfigManager.fromSection("§aNew item '" + newItemId + "' created. Now editing..."));
-                        pmu.setItemToEditId(newItemId);
-                        new ItemEditorMenu(pmu, plugin).open();
-                    } else {
-                        p.sendMessage(ConfigManager.fromSection("§cError: An item with the ID '" + newItemId + "' already exists."));
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cItem creation cancelled."));
                         new MainMenu(pmu, plugin).open();
-                    }
-                } else if (path.startsWith("lore.")) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Updating lore for item: " + itemId);
-                    BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
-                    if (item == null) {
-                        p.sendMessage(ConfigManager.fromSection("§cError: Item '" + itemId + "' not found in memory."));
-                        new MainMenu(pmu, plugin).open();
-                        return;
-                    }
-                    List<String> currentLore = new ArrayList<>(item.getLore());
-
-                    if (path.equals("lore.add")) {
-                        currentLore.add(input);
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Added new lore line to " + itemId);
                     } else {
-                        try {
-                            int index = Integer.parseInt(path.substring(5));
-                            if (index >= 0 && index < currentLore.size()) {
-                                currentLore.set(index, input);
-                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Updated lore line " + index + " for " + itemId);
-                            }else {
-                                p.sendMessage(ConfigManager.fromSection("§cError: Invalid lore index."));
-                                new LoreEditorMenu(pmu, plugin).open();
-                                return;
-                            }
-                        } catch (NumberFormatException ex) {
-                            p.sendMessage(ConfigManager.fromSection("§cError: Could not parse lore index from path: " + path));
-                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Could not parse lore index from path: " + path);
-                            new LoreEditorMenu(pmu, plugin).open();
+                        String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Creating new item: " + newItemId);
+
+                        if (ConfigManager.createNewItem(newItemId)) {
+                            p.sendMessage(ConfigManager.fromSection("§aNew item '" + newItemId + "' created. Now editing..."));
+                            pmu.setItemToEditId(newItemId);
+                            new ItemEditorMenu(pmu, plugin).open();
+                        } else {
+                            p.sendMessage(ConfigManager.fromSection("§cError: An item with the ID '" + newItemId + "' already exists."));
+                            new MainMenu(pmu, plugin).open();
+                        }
+                    }
+                } else if ("duplicateitem".equals(path)) {
+                    String sourceItemId = pmu.getItemToEditId();
+
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cDuplicate item cancelled."));
+                        new MainMenu(pmu, plugin).open();
+                    } else {
+                        String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
+
+                        if (newItemId.equals(sourceItemId)) {
+                            p.sendMessage(ConfigManager.fromSection("§cError: New ID cannot be the same as the source ID."));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                            return;
+                        }
+
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Attempting to duplicate '" + sourceItemId + "' as '" + newItemId + "'");
+
+                        String createdId = ConfigManager.duplicateItem(sourceItemId, newItemId);
+
+                        if (createdId != null) {
+                            p.sendMessage(ConfigManager.fromSection("§aItem '§e" + sourceItemId + "§a' successfully duplicated as '§e" + createdId + "§a'."));
+                            new MainMenu(pmu, plugin).open();
+                        } else {
+                            p.sendMessage(ConfigManager.fromSection("§cError: An item with the ID '§e" + newItemId + "§c' already exists (or source item was invalid)."));
+                            p.sendMessage(ConfigManager.fromSection("§aPlease try a different ID."));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                             return;
                         }
                     }
-                    ConfigManager.setItemValue(itemId, "lore", currentLore);
-                    p.sendMessage(ConfigManager.fromSection("§aLore has been updated!"));
-                    new LoreEditorMenu(pmu, plugin).open();
+                } else if (path.startsWith("lore.")) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Updating lore for item: " + itemId);
+
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cLore editing cancelled."));
+                        new LoreEditorMenu(pmu, plugin).open();
+                    } else {
+                        BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
+                        if (item == null) {
+                            p.sendMessage(ConfigManager.fromSection("§cError: Item '" + itemId + "' not found in memory."));
+                            new MainMenu(pmu, plugin).open();
+                            return;
+                        }
+                        List<String> currentLore = new ArrayList<>(item.getLore());
+
+                        if (path.equals("lore.add")) {
+                            currentLore.add(input);
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Added new lore line to " + itemId);
+                        } else {
+                            try {
+                                int index = Integer.parseInt(path.substring(5));
+                                if (index >= 0 && index < currentLore.size()) {
+                                    currentLore.set(index, input);
+                                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Updated lore line " + index + " for " + itemId);
+                                } else {
+                                    p.sendMessage(ConfigManager.fromSection("§cError: Invalid lore index."));
+                                    new LoreEditorMenu(pmu, plugin).open();
+                                    return;
+                                }
+                            } catch (NumberFormatException ex) {
+                                p.sendMessage(ConfigManager.fromSection("§cError: Could not parse lore index from path: " + path));
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Could not parse lore index from path: " + path);
+                                new LoreEditorMenu(pmu, plugin).open();
+                                return;
+                            }
+                        }
+                        ConfigManager.setItemValue(itemId, "lore", currentLore);
+                        p.sendMessage(ConfigManager.fromSection("§aLore has been updated!"));
+                        new LoreEditorMenu(pmu, plugin).open();
+                    }
 
                 } else if ("attributes.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing attribute amount for item: " + itemId + ", slot: " + targetSlot);
@@ -336,16 +377,24 @@ public class ChatListener implements Listener {
                     new EnchantmentListMenu(pmu, plugin).open();
 
                 } else if ("permission".equals(path)) {
+
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting permission for item: " + itemId);
 
-                    if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cPermission setting cancelled."));
+                        new ItemEditorMenu(pmu, plugin).open();
+
+                    } else if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
                         ConfigManager.setItemValue(itemId, "permission", null);
                         p.sendMessage(ConfigManager.fromSection("§aPermission has been removed."));
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Removed permission for " + itemId);
+                        new ItemEditorMenu(pmu, plugin).open();
+
                     } else {
                         if (input.contains("..") || input.startsWith(".") || input.endsWith(".")) {
                             p.sendMessage(ConfigManager.fromSection("§cInvalid permission node!"));
                             p.sendMessage(ConfigManager.fromSection("§cDo not use: double dots (..), leading/trailing dots"));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                             return;
                         }
 
@@ -354,35 +403,65 @@ public class ChatListener implements Listener {
                             ConfigManager.setItemValue(itemId, "permission", input);
                             p.sendMessage(ConfigManager.fromSection("§aPermission has been set!"));
                             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Set permission for " + itemId + " to: " + input);
+                            new ItemEditorMenu(pmu, plugin).open();
                         } else {
                             p.sendMessage(ConfigManager.fromSection("§cInvalid permission node! Permissions can only contain letters, numbers, dots (.), hyphens (-), and underscores (_)."));
                             p.sendMessage(ConfigManager.fromSection("§cYour input was: §e" + input));
-                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid permission node from " + p.getName() + ": " + input);
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                            return;
                         }
                     }
-                    new ItemEditorMenu(pmu, plugin).open();
+                } else if ("material.manual".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting material manually for item: " + itemId);
+
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cMaterial selection cancelled."));
+                        new MaterialSelectorMenu(pmu, plugin).open();
+                    } else {
+                        String materialName = input.toUpperCase().replaceAll("\\s+", "_");
+                        Material selectedMaterial = Material.matchMaterial(materialName);
+
+                        if (selectedMaterial != null && selectedMaterial.isItem()) {
+                            ConfigManager.setItemValue(itemId, "material", selectedMaterial.name());
+                            p.sendMessage(ConfigManager.fromSection("§aMaterial has been updated to " + selectedMaterial.name()));
+                            new ItemEditorMenu(pmu, plugin).open();
+                        } else {
+                            p.sendMessage(ConfigManager.fromSection("§cError: Invalid material name: '" + input + "'"));
+                            p.sendMessage(ConfigManager.fromSection("§cMaterial not found or is not an item. Please try again."));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                            return;
+                        }
+                    }
 
                 } else if ("custom_model_data".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
                             () -> "[Chat] Setting custom-model-data for item: " + itemId);
 
-                    if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCustom Model Data setting cancelled."));
+                        new ItemEditorMenu(pmu, plugin).open();
+
+                    } else if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
                         ConfigManager.setItemValue(itemId, "custom-model-data", null);
                         p.sendMessage(ConfigManager.fromSection("§aCustom Model Data has been removed."));
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                                 () -> "[Chat] Removed custom-model-data for " + itemId);
+                        new ItemEditorMenu(pmu, plugin).open();
+
                     } else {
                         try {
                             int directValue = Integer.parseInt(input);
                             if (directValue < 0) {
                                 p.sendMessage(ConfigManager.fromSection("§cCustom Model Data must be positive!"));
-                                new ItemEditorMenu(pmu, plugin).open();
+                                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                                 return;
                             }
                             ConfigManager.setItemValue(itemId, "custom-model-data", directValue);
                             p.sendMessage(ConfigManager.fromSection("§aCustom Model Data set to: §e" + directValue));
                             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                                     () -> "[Chat] Set direct custom-model-data for " + itemId + ": " + directValue);
+                            new ItemEditorMenu(pmu, plugin).open();
+
                         } catch (NumberFormatException ex) {
                             if (input.contains(":")) {
                                 ConfigManager.setItemValue(itemId, "custom-model-data", input);
@@ -390,32 +469,43 @@ public class ChatListener implements Listener {
                                 p.sendMessage(ConfigManager.fromSection("§7It will be resolved on next reload/save."));
                                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                                         () -> "[Chat] Set external custom-model-data for " + itemId + ": " + input);
+                                new ItemEditorMenu(pmu, plugin).open();
                             } else {
                                 p.sendMessage(ConfigManager.fromSection("§cInvalid format! Use:"));
                                 p.sendMessage(ConfigManager.fromSection("§e100001 §7(direct integer)"));
                                 p.sendMessage(ConfigManager.fromSection("§eitemsadder:item_id"));
                                 p.sendMessage(ConfigManager.fromSection("§enexo:item_id"));
+                                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                                         () -> "[Chat] Invalid custom-model-data format from " + p.getName() + ": " + input);
+                                return;
                             }
                         }
                     }
-                    new ItemEditorMenu(pmu, plugin).open();
-                }
-                else {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting generic value: " + path + " = " + input + " for " + itemId);
-                    if ("display_name".equals(path) || "material".equals(path)) {
-                        ConfigManager.setItemValue(itemId, path, input);
-                        p.sendMessage(ConfigManager.fromSection("§aValue for '" + path + "' has been updated!"));
+                } else if ("display_name".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting display_name for item: " + itemId);
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cDisplay name change cancelled."));
                     } else {
-                        p.sendMessage(ConfigManager.fromSection("§cError: Unknown or unsupported direct chat edit path: " + path));
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Attempted to set unknown path via chat: " + path + " for item " + itemId);
-                        plugin.getLogger().warning("[Chat] Attempted to set unknown path via chat: " + path);
-                        new MainMenu(pmu, plugin).open();
-                        return;
+                        ConfigManager.setItemValue(itemId, "display_name", input);
+                        p.sendMessage(ConfigManager.fromSection("§aDisplay name has been updated!"));
                     }
                     new ItemEditorMenu(pmu, plugin).open();
+
+                } else if ("material".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting generic value: " + path + " = " + input + " for " + itemId);
+                    ConfigManager.setItemValue(itemId, path, input);
+                    p.sendMessage(ConfigManager.fromSection("§aValue for '" + path + "' has been updated!"));
+                    new ItemEditorMenu(pmu, plugin).open();
+
+                } else {
+                    p.sendMessage(ConfigManager.fromSection("§cError: Unknown or unsupported direct chat edit path: " + path));
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Chat] Attempted to set unknown path via chat: " + path + " for item " + itemId);
+                    plugin.getLogger().warning("[Chat] Attempted to set unknown path via chat: " + path);
+                    new MainMenu(pmu, plugin).open();
+                    return;
                 }
+
                 pmu.setWaitingForChatInput(false);
                 pmu.setChatInputPath(null);
             });

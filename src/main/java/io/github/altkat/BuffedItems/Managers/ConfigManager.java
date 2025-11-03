@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -13,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -37,13 +39,11 @@ public class ConfigManager {
     private static final LegacyComponentSerializer ampersandSerializer = LegacyComponentSerializer.builder()
             .character('&')
             .hexColors()
-            .useUnusualXRepeatedCharacterHexFormat()
             .build();
 
     private static final LegacyComponentSerializer sectionSerializer = LegacyComponentSerializer.builder()
             .character('§')
             .hexColors()
-            .useUnusualXRepeatedCharacterHexFormat()
             .build();
 
     public static Component fromLegacy(String text) {
@@ -222,6 +222,34 @@ public class ConfigManager {
 
             logInfo("&aCreated new item: &e" + itemId);
             return true;
+        }
+    }
+
+    public static String duplicateItem(String sourceItemId, String newItemId) {
+        synchronized (CONFIG_LOCK) {
+            FileConfiguration config = plugin.getConfig();
+            ConfigurationSection sourceSection = config.getConfigurationSection("items." + sourceItemId);
+
+            if (sourceSection == null) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicate failed: Source item '" + sourceItemId + "' not found.");
+                return null;
+            }
+
+            if (config.getConfigurationSection("items." + newItemId) != null) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicate failed: Target ID '" + newItemId + "' already exists.");
+                return null;
+            }
+
+            String originalDisplayName = sourceSection.getString("display_name", "&f" + sourceItemId);
+            Map<String, Object> sourceData = sourceSection.getValues(true);
+
+            config.createSection("items." + newItemId, sourceData);
+            config.set("items." + newItemId + ".display_name", originalDisplayName + " &7(Copy)");
+
+            plugin.getItemManager().reloadSingleItem(newItemId);
+
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicated item '" + sourceItemId + "' to '" + newItemId + "'");
+            return newItemId;
         }
     }
 

@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -54,7 +55,17 @@ public class MainMenu extends PaginatedMenu {
 
             if (e.isLeftClick()) {
                 new ItemEditorMenu(playerMenuUtility, plugin).open();
-            } else if (e.isRightClick()) {
+            }
+            else if (e.getClick() == ClickType.SHIFT_RIGHT) {
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setChatInputPath("duplicateitem");
+                p.closeInventory();
+                p.sendMessage(ConfigManager.fromSection("§aDuplicating '§e" + itemId + "§a'."));
+                p.sendMessage(ConfigManager.fromSection("§aPlease type the NEW unique ID for the copy in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(e.g., 'new_fire_sword'). (Type 'cancel' to exit)"));
+
+            }
+            else if (e.isRightClick()) {
                 new ConfirmationMenu(playerMenuUtility, plugin, itemId).open();
             }
             return;
@@ -71,6 +82,7 @@ public class MainMenu extends PaginatedMenu {
                 playerMenuUtility.setChatInputPath("createnewitem");
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSection( "§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword')."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case EMERALD:
                 if (e.getSlot() == 52) {
@@ -138,6 +150,7 @@ public class MainMenu extends PaginatedMenu {
                     newLore.add("");
                     newLore.add("§eLeft-Click to Edit");
                     newLore.add("§cRight-Click to Delete");
+                    newLore.add("§bShift + Right Click to Duplicate");
                     meta.setLore(newLore);
                     itemStack.setItemMeta(meta);
                 } else {
@@ -150,6 +163,7 @@ public class MainMenu extends PaginatedMenu {
                     errorLore.addAll(currentItem.getErrorMessages());
                     errorLore.add("");
                     errorLore.add("§eLeft-Click to Edit and fix the errors.");
+                    errorLore.add("§bShift + Right Click to Duplicate (as-is)");
                     meta.setLore(errorLore);
 
                     NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");

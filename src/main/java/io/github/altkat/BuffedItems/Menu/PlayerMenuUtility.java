@@ -13,6 +13,7 @@ public class PlayerMenuUtility {
     private boolean waitingForChatInput = false;
     private String chatInputPath;
     private String attributeToEdit;
+    private boolean showPreviewDetails = false;
 
 
     public PlayerMenuUtility(Player owner) {
@@ -69,5 +70,13 @@ public class PlayerMenuUtility {
 
     public void setEditIndex(int editIndex) {
         this.editIndex = editIndex;
+    }
+
+    public boolean isShowPreviewDetails() {
+        return showPreviewDetails;
+    }
+
+    public void toggleShowPreviewDetails() {
+        this.showPreviewDetails = !this.showPreviewDetails;
     }
 }

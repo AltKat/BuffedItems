@@ -37,7 +37,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
-
+        Player p = (Player) e.getWhoClicked();
         int clickedSlot = e.getSlot();
         Material clickedType = e.getCurrentItem().getType();
 
@@ -46,7 +46,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
 
             ConfigManager.setItemValue(itemId, "material", clickedType.name());
 
-            Player p = (Player) e.getWhoClicked();
+
             p.sendMessage(ConfigManager.fromSection("§aMaterial has been updated to " + clickedType.name()));
 
             new ItemEditorMenu(playerMenuUtility, plugin).open();
@@ -60,6 +60,14 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         if (clickedType == Material.BARRIER && clickedSlot == 49) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
         }
+
+        if (clickedType == Material.ANVIL && clickedSlot == 48) {
+            playerMenuUtility.setWaitingForChatInput(true);
+            playerMenuUtility.setChatInputPath("material.manual");
+            p.closeInventory();
+            p.sendMessage(ConfigManager.fromSection("§aPlease type the Material name in chat (e.g., 'STONE', 'diamond_pickaxe')."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+        }
     }
 
     @Override
@@ -67,6 +75,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         inventory.setItem(45, makeItem(Material.ARROW, "§aPrevious Page"));
         inventory.setItem(53, makeItem(Material.ARROW, "§aNext Page"));
         inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Editor"));
+        inventory.setItem(48, makeItem(Material.ANVIL, "§bEnter Manually", "§7Click to type the material name in chat."));
 
         for (int i = 0; i < maxItemsPerPage; i++) {
             index = maxItemsPerPage * page + i;
