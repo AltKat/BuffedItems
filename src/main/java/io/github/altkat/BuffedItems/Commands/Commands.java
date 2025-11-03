@@ -85,7 +85,7 @@ public class Commands implements CommandExecutor {
     }
 
     private void sendHelpMessage(CommandSender sender) {
-        sender.sendMessage(ConfigManager.fromSection("§e--- BuffedItems Help ---"));
+        sender.sendMessage(ConfigManager.fromSection("§#FFD700--- §#FF6347BuffedItems Help §#FFD700---"));
         if (sender.hasPermission("buffeditems.command.give")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi give <player> <item_id> [amount]"));
         }
@@ -239,7 +239,7 @@ public class Commands implements CommandExecutor {
     private boolean handleListCommand(CommandSender sender) {
         Map<String, BuffedItem> items = plugin.getItemManager().getLoadedItems();
 
-        sender.sendMessage(ConfigManager.fromSection("§e--- Available Buffed Items ---"));
+        sender.sendMessage(ConfigManager.fromSection("§#FFD700--- §#FF6347Available Buffed Items §#FFD700---"));
 
         int validCount = 0;
         int errorCount = 0;

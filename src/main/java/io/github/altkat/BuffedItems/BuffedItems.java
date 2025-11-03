@@ -2,7 +2,7 @@ package io.github.altkat.BuffedItems;
 
 import io.github.altkat.BuffedItems.Commands.Commands;
 import io.github.altkat.BuffedItems.Commands.TabCompleterHandler;
-import io.github.altkat.BuffedItems.Handlers.ModrinthUpdateChecker;
+import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
 import io.github.altkat.BuffedItems.Listeners.*;
 import io.github.altkat.BuffedItems.Managers.*;
 import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
@@ -37,6 +37,7 @@ public final class BuffedItems extends JavaPlugin {
     private Metrics metrics;
     private boolean placeholderApiEnabled = false;
     private InventoryChangeListener inventoryChangeListener;
+    private UpdateChecker updateChecker;
 
     @Override
     public void onEnable() {
@@ -83,15 +84,11 @@ public final class BuffedItems extends JavaPlugin {
         startEffectTask();
         startAutoSaveTask();
 
-        final String MODRINTH_PROJECT_ID = "buffeditems";
-        new ModrinthUpdateChecker(this, MODRINTH_PROJECT_ID).getLatestVersion(newVersion -> {
-            if (ModrinthUpdateChecker.isNewerVersion(this.getServer().getVersion(), newVersion)) {
-                ConfigManager.logInfo("&eA new update is available! Version: &a" + newVersion);
-                ConfigManager.logInfo("&eDownload it from: &ahttps://modrinth.com/plugins/buffedditems");
-            } else {
-                ConfigManager.logInfo("&aYou are using the latest version. (&e" + this.getServer().getVersion() + "&a)");
-            }
-        });
+        final String GITHUB_REPO = "altkat/BuffedItems";
+        final String MODRINTH_SLUG = "buffeditems";
+
+        updateChecker = new UpdateChecker(this, GITHUB_REPO,MODRINTH_SLUG);
+        updateChecker.checkAsync();
 
         new BukkitRunnable() {
             @Override
@@ -219,15 +216,15 @@ public final class BuffedItems extends JavaPlugin {
         long validItems = items.values().stream().filter(BuffedItem::isValid).count();
         long invalidItems = items.size() - validItems;
 
-        String separator = "&a==================================================";
+        String separator = "&#FF6347==================================================";
         ConfigManager.logInfo(separator);
-        ConfigManager.logInfo("&6BuffedItems v" + getDescription().getVersion() + " - Startup Summary");
-        ConfigManager.logInfo("&a  Total Items: " + items.size());
-        ConfigManager.logInfo("&a  Valid Items: " + validItems);
+        ConfigManager.logInfo("&#FCD05CBuffedItems v" + getDescription().getVersion() + " - Startup Summary");
+        ConfigManager.logInfo("&#5FE2C5  Total Items: " + items.size());
+        ConfigManager.logInfo("&#5FE2C5  Valid Items: " + validItems);
 
         if (invalidItems > 0) {
-            ConfigManager.logInfo("&c  Items with Errors: " + invalidItems);
-            ConfigManager.logInfo("&e  Run '/bi list' or '/bi menu' to view details.");
+            ConfigManager.logInfo("&#E25F5F  Items with Errors: " + invalidItems);
+            ConfigManager.logInfo("&#F5CD66  Run '/bi list' or '/bi menu' to view details.");
         }
 
         int currentDebugLevel = ConfigManager.getDebugLevel();
@@ -245,8 +242,8 @@ public final class BuffedItems extends JavaPlugin {
             debugLevelInfo = currentDebugLevel + " (VERBOSE)";
         }
 
-        ConfigManager.logInfo("&a  Debug Level: " + debugLevelInfo);
-        ConfigManager.logInfo("&a  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
+        ConfigManager.logInfo("&#5FE2C5  Debug Level: " + debugLevelInfo);
+        ConfigManager.logInfo("&#5FE2C5  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
         ConfigManager.logInfo(separator);
     }
 
