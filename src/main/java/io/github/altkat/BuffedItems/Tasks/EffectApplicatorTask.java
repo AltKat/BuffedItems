@@ -136,10 +136,20 @@ public class EffectApplicatorTask extends BukkitRunnable {
             }
 
             Set<PotionEffectType> lastAppliedPotions = managedPotions.getOrDefault(playerUUID, Collections.emptySet());
-            if (!lastAppliedPotions.equals(desiredPotionEffects.keySet())) {
-                effectManager.removeObsoletePotionEffects(player, lastAppliedPotions, desiredPotionEffects.keySet(), debugTick);
+            Set<PotionEffectType> desiredPotionTypes = desiredPotionEffects.keySet();
+
+            if (!lastAppliedPotions.equals(desiredPotionTypes)) {
+
+                effectManager.removeObsoletePotionEffects(player, lastAppliedPotions, desiredPotionTypes, debugTick);
+
+                if (!desiredPotionEffects.isEmpty()) {
+                    effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
+                }
+
+                managedPotions.put(playerUUID, new HashSet<>(desiredPotionTypes));
+            } else if (!desiredPotionEffects.isEmpty()) {
+
                 effectManager.applyOrRefreshPotionEffects(player, desiredPotionEffects, debugTick);
-                managedPotions.put(playerUUID, new HashSet<>(desiredPotionEffects.keySet()));
             }
 
             Map<Attribute, List<AttributeModifier>> trackedModifiersMap = attributeManager.getActiveModifiers(playerUUID);
