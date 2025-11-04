@@ -1,6 +1,7 @@
 # -------------------------------------------------------------------------------------------
-# BuffedItems - Plugin Configuration v1.0
-# Author: AltKat(StreetMelodeez)
+# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Discord: streetmelodeez
+# Website: https://altkat.github.io
 # -------------------------------------------------------------------------------------------
 
 # ===================================================================
@@ -177,7 +178,7 @@ items:
       - '&#1E90FFThis ethereal helmet grants sight'
       - '&#1E90FFbeyond mortal comprehension.'
       - ''
-      - '&#87CEFAP assive Effects (Helmet):'
+      - '&#87CEFAPassive Effects (Helmet):'
       - '&#87CEFD• Night Vision I (Permanent)'
       - '&#87CEFD• Water Breathing I (Permanent)'
       - '&#87CEFD• +2 Intelligence (Bonus Luck)'
@@ -230,8 +231,8 @@ items:
   swiftness_boots:
     display_name: '&#FFD700B&#FFE500o&#FFF700o&#E5FF00t&#CDFF00s &#B5FF00o&#9DFF00f &#85FF00S&#6DFF00w&#55FF00i&#3DFF00f&#25FF00t&#0DFF00n&#00FF15e&#00FF2Ds&#00FF45s'
     lore:
-      - '&#87CEFD Feel the wind beneath your feet.'
-      - '&#87CEFD A sprinter''s dream.'
+      - '&#87CEFDFeel the wind beneath your feet.'
+      - '&#87CEFDA sprinter''s dream.'
       - ''
       - '&#00FF00Passive Effects:'
       - '&#00FF00• Speed III (Always Active)'
