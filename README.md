@@ -20,7 +20,7 @@
   </a>
 </p>
 
-### **BuffedItems** lets you create unique, custom items with persistent potion effects, attributes, and special properties, all from a comprehensive **in-game GUI editor**.
+**BuffedItems** lets you create unique, custom items with persistent potion effects, attributes, and special properties, all from a comprehensive **in-game GUI editor**.
 
 
 ***
@@ -61,7 +61,7 @@
   <img src="https://altkat.github.io/buffeditems/images.jpg" alt="BuffedItems Images Section Banner"/>
 </p>
 
-### **Click any image to view full size or visit the [Gallery](https://modrinth.com/plugin/buffeditems/gallery) section.**
+**Click any image to view full size or visit the [Gallery](https://modrinth.com/plugin/buffeditems/gallery) section.**
 
 | | | |
 |:---:|:---:|:---:|
