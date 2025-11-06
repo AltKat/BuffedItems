@@ -133,7 +133,8 @@ This plugin requires the **Paper API** and uses Paper-exclusive events (like `As
 
 * **Java 17** or newer
 * **Minecraft 1.21** or newer
-* One of the following server software:
+* Paper based server software:
     * **Paper** (Target platform)
     * **Pufferfish** (Paper fork)
     * **Purpur** (Paper fork)
+    * and others.
