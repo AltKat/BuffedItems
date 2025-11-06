@@ -34,7 +34,6 @@ public class UpdateChecker implements Listener {
     private String latestVersion;
     private String latestDownloadUrl;
     private final String GITHUB_REPO_URL;
-    private final String MODRINTH_PROJECT_URL;
 
     private static final long CONSOLE_LOG_DELAY_TICKS = 30L;
     private static final int CONNECT_TIMEOUT_MS = 3000;
@@ -47,13 +46,11 @@ public class UpdateChecker implements Listener {
     /**
      * @param plugin The main plugin instance
      * @param githubRepo The GitHub repository path (e.g., "altkat/BuffedItems")
-     * @param modrinthProjectSlug The Modrinth project slug (e.g., "buffeditems")
      */
-    public UpdateChecker(BuffedItems plugin, String githubRepo, String modrinthProjectSlug) {
+    public UpdateChecker(BuffedItems plugin, String githubRepo) {
         this.plugin = plugin;
         this.githubRepo = githubRepo;
         this.GITHUB_REPO_URL = "https://github.com/" + githubRepo + "/releases/latest";
-        this.MODRINTH_PROJECT_URL = "https://modrinth.com/plugin/" + modrinthProjectSlug;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -115,7 +112,6 @@ public class UpdateChecker implements Listener {
                             public void run() {
                                 ConfigManager.logInfo("&eA new update is available! Version: &a" + latestVersion);
                                 ConfigManager.logInfo("&eDownload from GitHub: &a" + GITHUB_REPO_URL);
-                                ConfigManager.logInfo("&eDownload from Modrinth: &a" + MODRINTH_PROJECT_URL);
                             }
                         }.runTaskLater(plugin, CONSOLE_LOG_DELAY_TICKS);
 
@@ -162,8 +158,6 @@ public class UpdateChecker implements Listener {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
 
                     player.sendMessage(ConfigManager.fromLegacy("&#FF6347[BuffedItems] &eA new version is available on GitHub: &a" + latestVersion));
-
-                    Component openModrinth = ConfigManager.fromLegacy("&aClick to open the Modrinth page.");
                     Component openGitHub = ConfigManager.fromLegacy("&aClick to open the GitHub releases page.");
 
                     Component downloadFrom = Component.text("Download from: ", NamedTextColor.YELLOW);
@@ -171,18 +165,11 @@ public class UpdateChecker implements Listener {
                     Component closeBracket = Component.text("]", NamedTextColor.GRAY, TextDecoration.BOLD);
                     Component space = Component.text(" ");
 
-                    Component modrinthLink = Component.text("Modrinth Page", NamedTextColor.AQUA, TextDecoration.UNDERLINED)
-                            .clickEvent(ClickEvent.openUrl(MODRINTH_PROJECT_URL))
-                            .hoverEvent(HoverEvent.showText(openModrinth));
-
                     Component githubLink = Component.text("GitHub Page", NamedTextColor.GREEN, TextDecoration.UNDERLINED)
                             .clickEvent(ClickEvent.openUrl(GITHUB_REPO_URL))
                             .hoverEvent(HoverEvent.showText(openGitHub));
 
                     Component fullMessage = downloadFrom
-                            .append(openBracket)
-                            .append(modrinthLink)
-                            .append(closeBracket)
                             .append(space)
                             .append(openBracket)
                             .append(githubLink)

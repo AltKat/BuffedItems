@@ -85,9 +85,8 @@ public final class BuffedItems extends JavaPlugin {
         startAutoSaveTask();
 
         final String GITHUB_REPO = "altkat/BuffedItems";
-        final String MODRINTH_SLUG = "buffeditems";
 
-        updateChecker = new UpdateChecker(this, GITHUB_REPO,MODRINTH_SLUG);
+        updateChecker = new UpdateChecker(this, GITHUB_REPO);
         updateChecker.checkAsync();
 
         new BukkitRunnable() {
