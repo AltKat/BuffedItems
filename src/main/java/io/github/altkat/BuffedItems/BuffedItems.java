@@ -41,6 +41,9 @@ public final class BuffedItems extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
+        isCompatible();
+
         metrics = new Metrics(this, 27592);
 
         metrics.addCustomChart(new SingleLineChart("total_items", () -> itemManager != null ? itemManager.getLoadedItems().size() : 0));
@@ -267,5 +270,19 @@ public final class BuffedItems extends JavaPlugin {
     }
     public InventoryChangeListener getInventoryChangeListener(){
         return inventoryChangeListener;
+    }
+    private void isCompatible() {
+        try {
+            Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");
+        }
+        catch (ClassNotFoundException e) {
+            getLogger().severe("==============================================================");
+            getLogger().severe("! ! ! SEVERE WARNING ! ! !");
+            getLogger().severe(" ");
+            getLogger().severe("This plugin (BuffedItems) requires the Paper API to function properly.");
+            getLogger().severe("It provides no guarantee to work on Spigot and will cause errors.");
+            getLogger().severe("Please consider using a Paper-based server (Paper, Purpur, Pufferfish, etc.).");
+            getLogger().severe("==============================================================");;
+        }
     }
 }
