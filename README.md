@@ -12,7 +12,7 @@
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
   <a href="https://bstats.org/plugin/bukkit/BuffedItems/27592">
-    <img src="https://img.shields.io/bstats/players/27592?label=bStats&style=for-the-badge" alt="bStats Players" />
+    <img src="https://img.shields.io/bstats/servers/27592?label=bStats&style=for-the-badge" alt="bStats Servers" />
   </a>
   <br>
   <a href="https://discordapp.com/users/247441109888925697">
