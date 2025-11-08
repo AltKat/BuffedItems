@@ -92,7 +92,6 @@
 2.  **Configure**: Use the GUI to set the item's name, material, and add effects. For example, add `STRENGTH 1` and `GENERIC_MAX_HEALTH +4.0` to the `INVENTORY` slot.
 3.  **Give**: Give the item to a player using `/bi give <player> warriors_talisman`.
 4.  **Apply**: The plugin's core task detects that the player has the item in their inventory and automatically applies the `STRENGTH 1` and `+2 Hearts` effects. If the player drops the item, the effects are instantly removed.
-5. **Save**: Changes are held in memory. Use `/bi save` or wait for the auto-save to write them to `config.yml`.
 
 ***
 
@@ -102,7 +101,10 @@
 
 * **PAPI Placeholders**: PlaceholderAPI placeholders (e.g., `%player_name%`) are only parsed when the item is given using the `/bi give` command. They will **not** update dynamically while the item is already in a player's inventory.
 * **Custom Armor Textures**: This plugin only sets the `CustomModelData` tag. It does **not** manage resource packs or custom armor models. Wearable items (helmets, armor) using ItemsAdder/Nexo IDs will show the custom texture in the inventory, but will render as the **default material** (e.g., Diamond Helmet) when equipped on the player.
-* **Configuration**: **Do Not Edit `config.yml` Manually!** Always use the `/bi menu`. Changes made in the menu are saved to memory and only written to the file on `/bi save` or auto-save. Using `/bi reload` will **overwrite** your unsaved menu changes with the contents of the file.
+* **Configuration Files**:
+  * `config.yml`: Contains general plugin settings (messages, debug level, etc.).
+  * `items.yml`: Stores all your custom items.
+  * **Editing**: We recommend using the in-game GUI (/bi menu) as it handles everything for you instantly. However, you CAN edit these files manually if you prefer! Just run /bi reload afterwards to apply your manual changes.
 ***
 
 <p align="center">
@@ -115,8 +117,7 @@ The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 | :--- | :--- | :--- |
 | `/bi menu` | `buffeditems.command.menu` | Opens the main GUI editor to create, edit, and delete items. |
 | `/bi give <player> <item_id> [amount]` | `buffeditems.command.give` | Gives a player the specified custom item. |
-| `/bi save` | `buffeditems.command.reload` | Manually saves all changes made in the GUI to the `config.yml`. |
-| `/bi reload` | `buffeditems.command.reload` | Reloads the `config.yml` from disk, discarding any unsaved changes from the GUI. |
+| `/bi reload` | `buffeditems.command.reload` |  Safely reloads both `config.yml` and `items.yml` from disk. |
 | `/bi list` | `buffeditems.command.list` | Lists all created items and shows if any have configuration errors. |
 
 **Admin Permission:**
