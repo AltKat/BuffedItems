@@ -34,6 +34,7 @@ public class UpdateChecker implements Listener {
     private String latestVersion;
     private String latestDownloadUrl;
     private final String GITHUB_REPO_URL;
+    private static final String SPIGOT_URL = "https://www.spigotmc.org/resources/129550/";
 
     private static final long CONSOLE_LOG_DELAY_TICKS = 30L;
     private static final int CONNECT_TIMEOUT_MS = 3000;
@@ -112,6 +113,7 @@ public class UpdateChecker implements Listener {
                             public void run() {
                                 ConfigManager.logInfo("&eA new update is available! Version: &a" + latestVersion);
                                 ConfigManager.logInfo("&eDownload from GitHub: &a" + GITHUB_REPO_URL);
+                                ConfigManager.logInfo("&eDownload from Spigot: &6" + SPIGOT_URL);
                             }
                         }.runTaskLater(plugin, CONSOLE_LOG_DELAY_TICKS);
 
@@ -163,17 +165,20 @@ public class UpdateChecker implements Listener {
                     Component downloadFrom = Component.text("Download from: ", NamedTextColor.YELLOW);
                     Component openBracket = Component.text("[", NamedTextColor.GRAY, TextDecoration.BOLD);
                     Component closeBracket = Component.text("]", NamedTextColor.GRAY, TextDecoration.BOLD);
-                    Component space = Component.text(" ");
+                    Component separator = Component.text(" | ", NamedTextColor.GRAY);
 
                     Component githubLink = Component.text("GitHub Page", NamedTextColor.GREEN, TextDecoration.UNDERLINED)
                             .clickEvent(ClickEvent.openUrl(GITHUB_REPO_URL))
                             .hoverEvent(HoverEvent.showText(openGitHub));
 
+                    Component spigotLink = Component.text("Spigot", NamedTextColor.GOLD, TextDecoration.UNDERLINED)
+                            .clickEvent(ClickEvent.openUrl(SPIGOT_URL))
+                            .hoverEvent(HoverEvent.showText(ConfigManager.fromLegacy("&6Click to open SpigotMC page.")));
+
                     Component fullMessage = downloadFrom
-                            .append(space)
-                            .append(openBracket)
-                            .append(githubLink)
-                            .append(closeBracket);
+                            .append(openBracket).append(githubLink).append(closeBracket)
+                            .append(separator)
+                            .append(openBracket).append(spigotLink).append(closeBracket);
 
                     player.sendMessage(fullMessage);
 
