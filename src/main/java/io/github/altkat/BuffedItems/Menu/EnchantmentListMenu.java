@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import io.github.altkat.BuffedItems.Managers.ItemsConfig;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -54,7 +55,7 @@ public class EnchantmentListMenu extends Menu {
 
         if (clickedSlot < 45 && clickedType == Material.ENCHANTED_BOOK || clickedType == Material.BARRIER) {
             String configPath = "items." + itemId + ".enchantments";
-            List<String> enchantmentsConfig = plugin.getConfig().getStringList(configPath);
+            List<String> enchantmentsConfig = ItemsConfig.get().getStringList(configPath);
 
             if (clickedSlot >= enchantmentsConfig.size()) {
                 return;
@@ -94,7 +95,7 @@ public class EnchantmentListMenu extends Menu {
         addBackButton(new ItemEditorMenu(playerMenuUtility, plugin));
 
         String configPath = "items." + playerMenuUtility.getItemToEditId() + ".enchantments";
-        List<String> enchantmentsConfig = plugin.getConfig().getStringList(configPath);
+        List<String> enchantmentsConfig = ItemsConfig.get().getStringList(configPath);
 
         if (!enchantmentsConfig.isEmpty()) {
             for (int i = 0; i < enchantmentsConfig.size(); i++) {

@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.Commands;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import io.github.altkat.BuffedItems.Managers.ItemsConfig;
 import io.github.altkat.BuffedItems.Menu.MainMenu;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.github.altkat.BuffedItems.utils.ItemBuilder;
@@ -24,8 +25,6 @@ public class Commands implements CommandExecutor {
 
     private final BuffedItems plugin;
     private final Component noPermissionMessage = ConfigManager.fromSection("§cYou do not have permission to use this command.");
-    private final Map<String, Long> reloadConfirmations = new HashMap<>();
-    private static final long CONFIRM_TIMEOUT_MS = 5000;
 
     public Commands(BuffedItems plugin) {
         this.plugin = plugin;
@@ -47,12 +46,6 @@ public class Commands implements CommandExecutor {
                     return true;
                 }
                 return handleGiveCommand(sender, args);
-            case "save":
-                if (!sender.hasPermission("buffeditems.command.reload")) {
-                    sender.sendMessage(noPermissionMessage);
-                    return true;
-                }
-                return handleSaveCommand(sender);
             case "reload":
                 if (!sender.hasPermission("buffeditems.command.reload")) {
                     sender.sendMessage(noPermissionMessage);
@@ -90,8 +83,7 @@ public class Commands implements CommandExecutor {
             sender.sendMessage(ConfigManager.fromSection("§6/bi give <player> <item_id> [amount]"));
         }
         if (sender.hasPermission("buffeditems.command.reload")) {
-            sender.sendMessage(ConfigManager.fromSection("§6/bi save (Saves menu changes to config.yml)"));
-            sender.sendMessage(ConfigManager.fromSection("§6/bi reload (Loads config.yml, discards unsaved in-game made changes)"));
+            sender.sendMessage(ConfigManager.fromSection("§6/bi reload (Reloads config.yml and items.yml from disk)"));
         }
         if (sender.hasPermission("buffeditems.command.list")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi list"));
@@ -197,42 +189,11 @@ public class Commands implements CommandExecutor {
     }
 
     private boolean handleReloadCommand(CommandSender sender) {
-        String senderName = sender.getName();
-        long currentTime = System.currentTimeMillis();
-        Long expiryTime = reloadConfirmations.get(senderName);
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Reload triggered by " + sender.getName());
 
-        if (expiryTime != null && currentTime < expiryTime) {
-            reloadConfirmations.remove(senderName);
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Reload confirmed by " + senderName + ". Reloading from disk.");
-            ConfigManager.reloadConfig();
-            sender.sendMessage(ConfigManager.fromSection("§aBuffedItems configuration has been reloaded from config.yml."));
-            sender.sendMessage(ConfigManager.fromSection("§aUnsaved changes made via GUI (if any) have been discarded."));
+        ConfigManager.reloadConfig();
 
-        } else {
-            reloadConfirmations.put(senderName, currentTime + CONFIRM_TIMEOUT_MS);
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Confirmation requested by " + senderName + ".");
-            sender.sendMessage(ConfigManager.fromSection("§e==================[ §cWARNING §e]=================="));
-            sender.sendMessage(ConfigManager.fromSection("§cYou are about to reload from 'config.yml'."));
-            sender.sendMessage(ConfigManager.fromSection("§cAny changes made via §6/bi menu§c that were"));
-            sender.sendMessage(ConfigManager.fromSection("§cNOT saved with §6/bi save§c WILL BE LOST."));
-            sender.sendMessage(ConfigManager.fromSection("§eType §6/bi reload§e again within 5 seconds to confirm."));
-            sender.sendMessage(ConfigManager.fromSection("§e==============================================="));
-        }
-        return true;
-    }
-
-    private boolean handleSaveCommand(CommandSender sender) {
-        try {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Saving pending changes to disk triggered by " + sender.getName() + "...");
-            ConfigManager.backupConfig();
-            plugin.saveConfig();
-            plugin.restartAutoSaveTask();
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Save] Save complete.");
-            sender.sendMessage(ConfigManager.fromSection("§aBuffedItems configuration has been saved to config.yml."));
-        } catch (Exception e) {
-            sender.sendMessage(ConfigManager.fromSection("§cError: Could not save config.yml. Check console."));
-            plugin.getLogger().severe("[Save] Failed to save config: " + e.getMessage());
-        }
+        sender.sendMessage(ConfigManager.fromSection("§aBuffedItems configuration (and items.yml) has been reloaded."));
         return true;
     }
 

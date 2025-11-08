@@ -33,9 +33,9 @@ public class ItemManager {
         buffedItems.clear();
         managedAttributeUUIDs.clear();
 
-        ConfigurationSection itemsSection = plugin.getConfig().getConfigurationSection("items");
+        ConfigurationSection itemsSection = ItemsConfig.get().getConfigurationSection("items");
         if (itemsSection == null) {
-            plugin.getLogger().warning("No 'items' section found in config.yml.");
+            if (!silent) ConfigManager.logInfo("&eNo items found in items.yml yet.");
             return;
         }
 
@@ -89,7 +89,7 @@ public class ItemManager {
     }
 
     public void reloadSingleItem(String itemId) {
-        ConfigurationSection itemSection = plugin.getConfig().getConfigurationSection("items." + itemId);
+        ConfigurationSection itemSection = ItemsConfig.get().getConfigurationSection("items." + itemId);
 
         BuffedItem oldItem = buffedItems.get(itemId);
         if (oldItem != null) {

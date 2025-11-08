@@ -30,7 +30,6 @@ public class TabCompleterHandler implements TabCompleter {
                 subcommands.add("give");
             }
             if (sender.hasPermission("buffeditems.command.reload")) {
-                subcommands.add("save");
                 subcommands.add("reload");
             }
             if (sender.hasPermission("buffeditems.command.list")) {

@@ -71,52 +71,6 @@ public class ItemEditorMenu extends Menu {
             case BARRIER:
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
-            case CHEST_MINECART:
-                BuffedItem itemToClone = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
-                if (itemToClone != null) {
-                    ItemStack clone = new ItemBuilder(itemToClone, plugin).build();
-                    ItemMeta meta = clone.getItemMeta();
-
-                    if (meta != null) {
-                        Component finalDisplayName = meta.displayName() != null ? meta.displayName() : Component.empty();
-                        List<Component> finalLore = meta.lore() != null ? new ArrayList<>(meta.lore()) : new ArrayList<>();
-
-                        if (plugin.isPlaceholderApiEnabled()) {
-                            String legacyName = ConfigManager.toSection(finalDisplayName);
-                            String parsedName = PlaceholderAPI.setPlaceholders(p, legacyName);
-                            finalDisplayName = ConfigManager.fromSection(parsedName);
-
-                            finalLore = finalLore.stream()
-                                    .map(ConfigManager::toSection)
-                                    .map(line -> PlaceholderAPI.setPlaceholders(p, line))
-                                    .map(ConfigManager::fromSection)
-                                    .collect(Collectors.toList());
-                        }
-
-                        Component suffix = ConfigManager.fromSection(" §7(TEST COPY)");
-                        finalDisplayName = finalDisplayName.append(suffix);
-
-                        finalLore.add(Component.empty());
-                        finalLore.add(ConfigManager.fromSection("§eRemember: This is a test copy."));
-                        finalLore.add(ConfigManager.fromSection("§eIt may not reflect saved changes yet."));
-
-                        meta.displayName(finalDisplayName);
-                        meta.lore(finalLore);
-                        clone.setItemMeta(meta);
-                    }
-
-                    p.getInventory().addItem(clone);
-                    p.sendMessage(ConfigManager.fromSection("§bTest copy of '" + itemToClone.getId() + "' has been added to your inventory."));
-
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Menu] Marked " + p.getName() + " for update after receiving item via Test Copy button.");
-                    }, 1L);
-
-                } else {
-                    p.sendMessage(ConfigManager.fromSection("§cCould not generate test copy. Item not found in memory."));
-                }
-                break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("display_name");
@@ -260,8 +214,6 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(22, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
         inventory.setItem(23, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
         inventory.setItem(24, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
-
-        inventory.setItem(31, makeItem(Material.CHEST_MINECART, "§bGet Test Copy", "§7Gives you a copy of this item", "§7with all current changes."));
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
     }

@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import io.github.altkat.BuffedItems.Managers.ItemsConfig;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -48,7 +49,7 @@ public class AttributeListMenu extends Menu {
 
         if (clickedSlot < 45) {
             String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
-            List<String> attributes = plugin.getConfig().getStringList(configPath);
+            List<String> attributes = ItemsConfig.get().getStringList(configPath);
 
             if (clickedSlot >= attributes.size()) return;
 
@@ -75,7 +76,7 @@ public class AttributeListMenu extends Menu {
         addBackButton(new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE));
 
         String configPath = "items." + playerMenuUtility.getItemToEditId() + ".effects." + playerMenuUtility.getTargetSlot() + ".attributes";
-        List<String> attributesConfig = plugin.getConfig().getStringList(configPath);
+        List<String> attributesConfig = ItemsConfig.get().getStringList(configPath);
 
         if (!attributesConfig.isEmpty()) {
             for (int i = 0; i < attributesConfig.size(); i++) {

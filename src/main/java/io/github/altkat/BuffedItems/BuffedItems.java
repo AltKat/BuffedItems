@@ -32,8 +32,6 @@ public final class BuffedItems extends JavaPlugin {
     private EffectApplicatorTask effectApplicatorTask;
     private static final ConcurrentHashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new ConcurrentHashMap<>();
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
-    private BukkitTask autoSaveTask;
-    private long autoSaveIntervalTicks = 6000L;
     private Metrics metrics;
     private boolean placeholderApiEnabled = false;
     private InventoryChangeListener inventoryChangeListener;
@@ -62,17 +60,20 @@ public final class BuffedItems extends JavaPlugin {
                     .count();
         }));
 
-        saveDefaultConfig();
-        getConfig().options().copyHeader(true);
         ConfigManager.setup(this);
+        ItemsConfig.setup(this);
+
+        initializeManagers();
 
         try {
-            ConfigUpdater.update(this);
+            ConfigUpdater.update(this, "config.yml");
+            ConfigUpdater.update(this, "items.yml");
         } catch (Exception e) {
-            getLogger().severe("CRITICAL: Failed to update or load config.yml. Plugin may not function correctly.");
+            getLogger().severe("WARNING: Failed to run file updater tasks.");
             e.printStackTrace();
         }
-        reloadConfig();
+
+        ConfigManager.reloadConfig(true);
 
         PluginManager pm = getServer().getPluginManager();
         if (pm.getPlugin("PlaceholderAPI") != null) {
@@ -82,10 +83,8 @@ public final class BuffedItems extends JavaPlugin {
             placeholderApiEnabled = false;
         }
 
-        initializeManagers();
         registerListenersAndCommands();
         startEffectTask();
-        startAutoSaveTask();
 
         final String GITHUB_REPO = "altkat/BuffedItems";
 
@@ -128,13 +127,8 @@ public final class BuffedItems extends JavaPlugin {
             }
         }
 
-        if (autoSaveTask != null) {
-            autoSaveTask.cancel();
-        }
-
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Saving final config...");
         ConfigManager.backupConfig();
-        saveConfig();
 
         playerMenuUtilityMap.clear();
 
@@ -144,7 +138,6 @@ public final class BuffedItems extends JavaPlugin {
 
     private void initializeManagers() {
         ConfigManager.loadGlobalSettings();
-        updateAutoSaveIntervalVariable();
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
@@ -167,36 +160,6 @@ public final class BuffedItems extends JavaPlugin {
     private void startEffectTask() {
         effectApplicatorTask = new EffectApplicatorTask(this);
         effectApplicatorTask.runTaskTimer(this, 0L, 20L);
-    }
-
-    private void startAutoSaveTask() {
-        this.autoSaveTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[AutoSave] Saving configuration to disk...");
-                ConfigManager.backupConfig();
-                saveConfig();
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[AutoSave] Configuration saved.");
-            }
-        }.runTaskTimerAsynchronously(this, this.autoSaveIntervalTicks, this.autoSaveIntervalTicks);
-    }
-
-    private void updateAutoSaveIntervalVariable() {
-        this.autoSaveIntervalTicks = getConfig().getLong("auto-save-interval-minutes", 5) * 20 * 60;
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Config] Auto-save interval set to " + (this.autoSaveIntervalTicks / 20 / 60) + " minutes (" + this.autoSaveIntervalTicks + " ticks).");
-    }
-
-    public void reloadConfigSettings() {
-        updateAutoSaveIntervalVariable();
-        restartAutoSaveTask();
-    }
-
-    public void restartAutoSaveTask() {
-        if (autoSaveTask != null) {
-            autoSaveTask.cancel();
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[AutoSave] Auto-save timer reset by manual save or reload command.");
-        }
-        startAutoSaveTask();
     }
 
     public static PlayerMenuUtility getPlayerMenuUtility(Player p) {
@@ -245,7 +208,6 @@ public final class BuffedItems extends JavaPlugin {
         }
 
         ConfigManager.logInfo("&#5FE2C5  Debug Level: " + debugLevelInfo);
-        ConfigManager.logInfo("&#5FE2C5  Auto-save: Every " + (autoSaveIntervalTicks / 20 / 60) + " minutes");
         ConfigManager.logInfo(separator);
     }
 
@@ -255,9 +217,6 @@ public final class BuffedItems extends JavaPlugin {
     public EffectApplicatorTask getEffectApplicatorTask() { return effectApplicatorTask; }
     public Map<UUID, List<ItemStack>> getDeathKeptItems() {
         return deathKeptItems;
-    }
-    public long getAutoSaveIntervalTicks() {
-        return this.autoSaveIntervalTicks;
     }
     public static void removePlayerMenuUtility(UUID uuid) {
         if(playerMenuUtilityMap.containsKey(uuid)) {
