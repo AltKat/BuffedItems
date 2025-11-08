@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import io.github.altkat.BuffedItems.Managers.ItemsConfig;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -50,7 +51,7 @@ public class PotionEffectListMenu extends Menu {
 
         if (clickedSlot < 45) {
             String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
-            List<String> effects = plugin.getConfig().getStringList(configPath);
+            List<String> effects = ItemsConfig.get().getStringList(configPath);
 
             if (clickedSlot >= effects.size()) {
                 return;
@@ -80,7 +81,7 @@ public class PotionEffectListMenu extends Menu {
         addBackButton(new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.POTION_EFFECT));
 
         String configPath = "items." + playerMenuUtility.getItemToEditId() + ".effects." + playerMenuUtility.getTargetSlot() + ".potion_effects";
-        List<String> potionEffectsConfig = plugin.getConfig().getStringList(configPath);
+        List<String> potionEffectsConfig = ItemsConfig.get().getStringList(configPath);
 
         if (!potionEffectsConfig.isEmpty()) {
             for (int i = 0; i < potionEffectsConfig.size(); i++) {

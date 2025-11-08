@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import io.github.altkat.BuffedItems.Managers.ItemsConfig;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -73,7 +74,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             }
 
             String configPath = "items." + itemId + ".enchantments";
-            List<String> currentEnchants = plugin.getConfig().getStringList(configPath);
+            List<String> currentEnchants = ItemsConfig.get().getStringList(configPath);
             boolean alreadyExists = currentEnchants.stream()
                     .anyMatch(s -> s.toUpperCase().startsWith(selectedEnchant.getName() + ";"));
 

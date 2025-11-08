@@ -1,0 +1,390 @@
+# -------------------------------------------------------------------------------------------
+# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Discord: streetmelodeez
+# Website: https://altkat.github.io
+# -------------------------------------------------------------------------------------------
+
+# ===================================================================
+#                       BUFFED ITEMS - ITEMS.YML
+# ===================================================================
+#
+# This file contains all the custom items created by the plugin.
+# We RECOMMEND using the in-game editor (/bi menu) to make changes.
+#
+# If you edit this file manually, use /bi reload to apply changes.
+# ===================================================================
+
+# Welcome to the items configuration file for BuffedItems!
+# Here you can create unique items with permanent effects and attributes.
+# For full control, use the in-game editor: /bi menu
+#
+# --- DETAILED GUIDE ---
+#
+# display_name: The in-game name of the item. Supports color codes with '&' and HEX colors with '&#RRGGBB'.
+#               Example: '&#FF0000Red &#00FF00Green &#0000FFBlue'
+#
+# lore: The item's description. Each line under this key is a new line in the lore.
+#
+# material: Must be a valid Spigot Material name from this list:
+#           https://hub.spigotmc.org/javadoc/spigot/org/bukkit/Material.html
+#
+# glow: (Optional) Set to 'true' to give the item an enchantment glow. Defaults to false.
+#
+# permission: (Optional) If you set a permission node, only players with this permission
+#             can benefit from the item's effects.
+#             IMPORTANT: To remove a permission via the in-game editor, set its value
+#             to 'none'. This will be saved here as 'NONE' and means no permission is required.
+#
+# effects: This section holds all the magic. Effects can be applied to different slots.
+#   Valid Slots: MAIN_HAND, OFF_HAND, INVENTORY, HELMET, CHESTPLATE, LEGGINGS, BOOTS
+#
+#   potion_effects: A list of potion effects to apply in this slot.
+#     - Format: 'EFFECT_NAME;LEVEL' (e.g., 'SPEED;2' for Speed II)
+#     - Effect List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/potion/PotionEffectType.html
+#
+#   attributes: A list of permanent attribute modifiers to apply in this slot.
+#     - Format: 'ATTRIBUTE_NAME;OPERATION;AMOUNT'
+#     - Attribute List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/attribute/Attribute.html
+#     - OPERATIONS:
+#       - ADD_NUMBER: Adds a flat value (e.g., GENERIC_MAX_HEALTH;ADD_NUMBER;2.0 adds 1 heart).
+#       - ADD_SCALAR: Adds a percentage of the base value (less common).
+#       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
+#
+# custom-model-data: (Optional) Set a custom model data integer for resource packs.
+#   - custom-model-data: 12345              (Direct)
+#   - custom-model-data: itemsadder:sword_1 (ItemsAdder)
+#   - custom-model-data: nexo:custom_item   (Nexo)
+#
+# flags: (Optional) This section controls item behaviors and appearances.
+#   Set any flag to 'true' or 'false' to override its default value.
+#   Available Flags (with their NEW default values):
+#     - UNBREAKABLE: (Default: false) Prevents durability loss.
+#     - HIDE_ATTRIBUTES: (Default: true) Hides the default attribute text.
+#     - HIDE_ENCHANTS: (Default: true) Hides enchantment text.
+#     - HIDE_UNBREAKABLE: (Default: true) Hides the 'Unbreakable' text.
+#     - HIDE_ADDITIONAL_TOOLTIP: (Default: true) Hides additional tooltip text like potion/arrow effect text.
+#     - HIDE_DESTROYS: (Default: true) Hides 'Can Destroy:' list (Adventure mode).
+#     - HIDE_PLACED_ON: (Default: true) Hides 'Can Be Placed On:' list (Adventure mode).
+#     - PREVENT_ANVIL_USE: (Default: false) Blocks use in anvils (rename, repair, enchant).
+#     - PREVENT_ENCHANT_TABLE: (Default: false) Blocks use in enchanting tables.
+#     - PREVENT_SMITHING_USE: (Default: false) Blocks use in smithing tables.
+#     - PREVENT_CRAFTING_USE: (Default: true) Blocks use as a crafting ingredient.
+#     - PREVENT_DROP: (Default: false) Blocks dropping the item (Q key/inventory drag).
+#     - PREVENT_CONSUME: (Default: false) Blocks eating or drinking the item.
+#     - PREVENT_PLACEMENT: (Default: true) Blocks placing the item (blocks, boats, armor stands).
+#     - PREVENT_DEATH_DROP: (Default: false) Keeps the item on death.
+#     - PREVENT_INTERACT: (Default: false) Prevents using the item (right-click actions like Flint&Steel, Hoe).
+#   Note: Flags marked with (Default: true) will be active even if not specified in the config.
+#         You only need to add them if you want to explicitly set them to 'false'.
+# -------------------------------------------------------------------------------------------
+
+items:
+  bunny_charm:
+    display_name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
+    lore:
+      - '&#E8D5FFA pulsating charm that channels'
+      - '&#D5C2FFthe energy of swift creatures.'
+      - ''
+      - '&#98FB98Passive Effects (Off Hand):'
+      - '&#C0FFC0• Jump Boost II'
+      - '&#C0FFC0• Slow Falling I'
+      - '&#C0FFC0• +10% Knockback Resistance'
+    material: RABBIT_FOOT
+    glow: true
+    effects:
+      OFF_HAND:
+        potion_effects:
+          - JUMP_BOOST;2
+          - SLOW_FALLING;1
+        attributes:
+          - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.1
+    flags:
+      PREVENT_CRAFTING_USE: true
+
+  miners_dream:
+    display_name: '&#CC513DM&#C65B3Ci&#BF663An&#B97039e&#B37A37r&#AC8536''&#A68F34s &#99A431D&#93AE30r&#8DB82Ee&#86C32Da&#80CD2Bm'
+    lore:
+      - '&#DAA520This legendary pickaxe hums with'
+      - '&#DAA520the very essence of the earth.'
+      - ''
+      - '&#00FF00Active Effects (Main Hand):'
+      - '&#7FFF7F• Haste III (Super Mining Speed)'
+      - '&#7FFF7F• +2 Attack Speed'
+      - '&#7FFF7F• Unbreakable'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#DAA520Efficiency V, Unbreaking III'
+    material: DIAMOND_PICKAXE
+    glow: true
+    effects:
+      MAIN_HAND:
+        potion_effects:
+          - HASTE;3
+        attributes:
+          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.2
+    enchantments:
+      - EFFICIENCY;5
+      - UNBREAKING;3
+    flags:
+      UNBREAKABLE: true
+
+  warriors_talisman:
+    display_name: '&#FF0000&oW&#FF0A00&oa&#FF1400&or&#FF1E00&or&#FF2800&oi&#FF3300&oo&#FF3D00&or&#FF4700&o''&#FF5100&os &#FF6500&oT&#FF6F00&oa&#FF7900&ol&#FF8400&oi&#FF8E00&os&#FF9800&om&#FFA200&oa&#FFAC00&on'
+    lore:
+      - '&#8B0000Forged in dragon''s fire, this talisman'
+      - '&#8B0000bolsters the wearer''s life force.'
+      - ''
+      - '&#FFB6C1Passive Effects (Inventory):'
+      - '&#FFB6C1• +4 Max Health (2 Hearts)'
+      - '&#FFB6C1• +1.0 Armor Toughness'
+      - '&#FFB6C1• Permanent Strength I'
+      - '&#FFB6C1• Regeneration II (Slow Heal)'
+      - ''
+      - '&#FFA500Permission: buffeditems.item.warrior'
+    material: NETHERITE_INGOT
+    glow: true
+    permission: buffeditems.item.warrior
+    effects:
+      INVENTORY:
+        potion_effects:
+          - STRENGTH;1
+          - REGENERATION;2
+        attributes:
+          - GENERIC_MAX_HEALTH;ADD_NUMBER;4.0
+          - GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0
+
+  helmet_of_wisdom:
+    display_name: '&#2E88F9H&#348CF2e&#3A90ECl&#4093E5m&#4697DEe&#4C9BD7t &#58A3CAo&#5EA7C3f &#6AAEB6W&#70B2AFi&#70B2AFs&#70B2AFd&#70B2AFo&#70B2AFm'
+    lore:
+      - '&#1E90FFThis ethereal helmet grants sight'
+      - '&#1E90FFbeyond mortal comprehension.'
+      - ''
+      - '&#87CEFAPassive Effects (Helmet):'
+      - '&#87CEFD• Night Vision I (Permanent)'
+      - '&#87CEFD• Water Breathing I (Permanent)'
+      - '&#87CEFD• +2 Intelligence (Bonus Luck)'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#4169E1Respiration III, Aqua Affinity I'
+    material: DIAMOND_HELMET
+    glow: true
+    effects:
+      HELMET:
+        potion_effects:
+          - NIGHT_VISION;1
+          - WATER_BREATHING;1
+        attributes:
+          - GENERIC_LUCK;ADD_NUMBER;2.0
+    enchantments:
+      - RESPIRATION;3
+      - AQUA_AFFINITY;1
+    flags:
+
+  berserkers_greaves:
+    display_name: '&cBerserker Greaves'
+    lore:
+      - '&#FF0000Boots stained with the fury'
+      - '&#FF0000of countless battles.'
+      - ''
+      - '&#FFB6C1Passive Effects (Boots):'
+      - '&#FFB6C1• +20% Movement Speed'
+      - '&#FFB6C1• -1.0 Armor (Tradeoff)'
+      - '&#FFB6C1• Fire Resistance I'
+      - '&#FFB6C1• Speed II when worn'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#FF6347Feather Falling IV, Protection III'
+    material: NETHERITE_BOOTS
+    glow: true
+    effects:
+      BOOTS:
+        potion_effects:
+          - FIRE_RESISTANCE;1
+          - SPEED;2
+        attributes:
+          - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.2
+          - GENERIC_ARMOR;ADD_NUMBER;-1.0
+    enchantments:
+      - FEATHER_FALLING;4
+      - PROTECTION;3
+    flags:
+
+  swiftness_boots:
+    display_name: '&#FFD700B&#FFE500o&#FFF700o&#E5FF00t&#CDFF00s &#B5FF00o&#9DFF00f &#85FF00S&#6DFF00w&#55FF00i&#3DFF00f&#25FF00t&#0DFF00n&#00FF15e&#00FF2Ds&#00FF45s'
+    lore:
+      - '&#87CEFDFeel the wind beneath your feet.'
+      - '&#87CEFDA sprinter''s dream.'
+      - ''
+      - '&#00FF00Passive Effects:'
+      - '&#00FF00• Speed III (Always Active)'
+      - '&#00FF00• +15% Movement Speed'
+      - '&#00FF00• Jump Boost I'
+    material: IRON_BOOTS
+    glow: true
+    effects:
+      BOOTS:
+        potion_effects:
+          - SPEED;3
+          - JUMP_BOOST;1
+        attributes:
+          - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
+    flags:
+
+  guardian_chestplate:
+    display_name: '&#FFD700G&#FFDE00u&#FFF900a&#FFFF00r&#F0FF00d&#E1FF00i&#D2FF00a&#C3FF00n&#B4FF00s &#A5FF00C&#96FF00h&#87FF00e&#78FF00s&#69FF00t&#5AFF00p&#4BFF00l&#3CFF00a&#2DFF00t&#1EFF00e'
+    lore:
+      - '&#FFD700Imbued with protective energies'
+      - '&#FFD700that shield the wearer from harm.'
+      - ''
+      - '&#98FB98Passive Effects:'
+      - '&#98FB98• +5 Armor (2.5 Armor Points)'
+      - '&#98FB98• +0.3 Knockback Resistance'
+      - '&#98FB98• Resistance I (Damage Reduction)'
+      - ''
+      - '&#FFA500Permission: buffeditems.item.guardian'
+    material: DIAMOND_CHESTPLATE
+    permission: buffeditems.item.guardian
+    effects:
+      CHESTPLATE:
+        potion_effects:
+          - RESISTANCE;1
+        attributes:
+          - GENERIC_ARMOR;ADD_NUMBER;5.0
+          - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.3
+    flags:
+
+  legendary_sword:
+    display_name: '&#FD9A00L&#FCA100e&#FBA800g&#FAB000e&#F9B700n&#F8BE00d&#F7C500a&#F6CD00r&#F5D400y &#F3E200S&#F2E900w&#F1F100o&#F0F800r&#EFFF00d'
+    lore:
+      - '&#8B0000A blade whispered about in legends.'
+      - '&#8B0000Few dare to wield its power.'
+      - ''
+      - '&#FFB6C1Passive Effects:'
+      - '&#FFB6C1• +3 Attack Damage (via Sharpness VII)'
+      - '&#FFB6C1• Fire Aspect II (Burn Enemies)'
+      - '&#FFB6C1• Sweeping Edge III'
+      - '&#FFB6C1• Looting III (More Drops)'
+      - '&#FFB6C1• Unbreakable'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#FF6347Sharpness VII, Fire Aspect II, Looting III, Sweeping Edge III'
+    material: NETHERITE_SWORD
+    glow: true
+    enchantments:
+      - SHARPNESS;7
+      - FIRE_ASPECT;2
+      - LOOTING;3
+      - SWEEPING_EDGE;3
+    flags:
+      UNBREAKABLE: true
+
+  amulet_of_vitality:
+    display_name: '&#E39BFAA&#E395EDm&#E28EE1u&#E288D4l&#E282C7e&#E17BBBt &#E16FA1o&#E06895f &#E05C7BV&#DF556Fi&#DF4F62t&#DF4955a&#DE4249l&#DE3C3Ci&#DE3C3Ct&#DE3C3Cy'
+    lore:
+      - '&#FFB6C1A pulsating gem that enhances'
+      - '&#FFB6C1the wearer''s life force.'
+      - ''
+      - '&#00FF00Passive Effects (Inventory):'
+      - '&#00FF00• +2 Max Health (1 Heart)'
+      - '&#00FF00• Regeneration II (Heal Over Time)'
+      - '&#00FF00• Health Boost I (Extra Hearts)'
+    material: HEART_OF_THE_SEA
+    glow: true
+    effects:
+      INVENTORY:
+        potion_effects:
+          - REGENERATION;2
+          - HEALTH_BOOST;1
+        attributes:
+          - GENERIC_MAX_HEALTH;ADD_NUMBER;2.0
+    flags:
+
+  axe_of_the_berserker:
+    display_name: '&cAxe of The Berserker'
+    lore:
+      - '&#FF0000Unleash your fury with this'
+      - '&#FF0000instrument of chaos.'
+      - ''
+      - '&#FFB6C1Active Effects (Main Hand):'
+      - '&#FFB6C1• Strength II (Increased Damage)'
+      - '&#FFB6C1• +1.5 Attack Speed'
+      - '&#FFB6C1• Haste I (Faster Swings)'
+      - '&#FFB6C1• Resistance I (Partial Immunity)'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#FF6347Sharpness V, Unbreaking III'
+      - ''
+      - '&#FF0000Flags:'
+      - '&#FF0000Cannot be dropped or lost on death!'
+    material: NETHERITE_AXE
+    glow: true
+    effects:
+      MAIN_HAND:
+        potion_effects:
+          - STRENGTH;2
+          - HASTE;1
+          - RESISTANCE;1
+        attributes:
+          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.15
+    enchantments:
+      - SHARPNESS;5
+      - UNBREAKING;3
+    flags:
+      PREVENT_DEATH_DROP: true
+
+  helmet_of_the_deep:
+    display_name: '&#41BCA2H&#47BBA4e&#4DBAA7l&#54B8A9m&#5AB7ACe&#60B6AEt &#6CB3B3o&#72B2B5f &#7FB0BAt&#85AEBDh&#8BADBFe &#8BADBFD&#8BADBFe&#8BADBFe&#8BADBFp'
+    lore:
+      - '&#1E90FFBreathe easy beneath the waves.'
+      - '&#1E90FFA treasure from the abyss.'
+      - ''
+      - '&#87CEFDPassive Effects (Helmet):'
+      - '&#87CEFD• Water Breathing I (Permanent)'
+      - '&#87CEFD• Night Vision I'
+      - '&#87CEFD• +3 Armor'
+      - '&#87CEFD• Aqua Affinity I'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#00BFFF Aqua Affinity I, Protection IV, Respiration III'
+    material: TURTLE_HELMET
+    glow: true
+    effects:
+      HELMET:
+        potion_effects:
+          - WATER_BREATHING;1
+          - NIGHT_VISION;1
+        attributes:
+          - GENERIC_ARMOR;ADD_NUMBER;3.0
+    enchantments:
+      - AQUA_AFFINITY;1
+      - PROTECTION;4
+      - RESPIRATION;3
+    flags:
+
+  orb_of_elements:
+    display_name: '&#EC8C8CO&#F6A98Cr&#FFC58Bb &#FFEC98o&#FFFF9Ef &#9AFF9AE&#99E7C8l&#97CFF5e&#9BBDF8m&#9FACFCe&#A39AFFn&#C99DFFt&#EEA0FFs'
+    lore:
+      - '&#FF1493Harness the power of fire and frost.'
+      - '&#FF1493Balance between two extremes.'
+      - ''
+      - '&#FFB6C1Passive Effects (Off Hand):'
+      - '&#FFB6C1• Fire Resistance I (No Fire Damage)'
+      - '&#FFB6C1• +0.2 Attack Speed (Faster Swings)'
+      - '&#FFB6C1• Swiftness I (Movement Boost)'
+      - '&#FFB6C1• Mending (Self-Repairs)'
+      - ''
+      - '&#FFD700Enchantments:'
+      - '&#FF69B4Mending I'
+    material: MAGMA_CREAM
+    glow: true
+    effects:
+      OFF_HAND:
+        potion_effects:
+          - FIRE_RESISTANCE;1
+        attributes:
+          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.2
+    enchantments:
+      - MENDING;1
+    flags:
+      PREVENT_CRAFTING_USE: false
+      PREVENT_ANVIL_USE: true

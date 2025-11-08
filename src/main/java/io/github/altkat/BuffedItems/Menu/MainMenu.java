@@ -53,7 +53,20 @@ public class MainMenu extends PaginatedMenu {
             String itemId = clickedItem.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
             playerMenuUtility.setItemToEditId(itemId);
 
-            if (e.isLeftClick()) {
+            if (e.getClick() == ClickType.SHIFT_LEFT) {
+                BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
+                if (item != null) {
+                    ItemStack stack = new io.github.altkat.BuffedItems.utils.ItemBuilder(item, plugin).build();
+
+                    p.getInventory().addItem(stack);
+
+                    p.sendMessage(ConfigManager.fromSection("§aItem received: §f" + itemId));
+                    p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+
+                    plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
+                }
+            }
+            else if (e.isLeftClick()) {
                 new ItemEditorMenu(playerMenuUtility, plugin).open();
             }
             else if (e.getClick() == ClickType.SHIFT_RIGHT) {
@@ -84,21 +97,6 @@ public class MainMenu extends PaginatedMenu {
                 p.sendMessage(ConfigManager.fromSection( "§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword')."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
-            case EMERALD:
-                if (e.getSlot() == 52) {
-                    try {
-                        ConfigManager.backupConfig();
-                        plugin.saveConfig();
-                        plugin.restartAutoSaveTask();
-                        p.sendMessage( ConfigManager.fromSection("§aBuffedItems configuration has been saved successfully!"));
-                        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
-                    } catch (Exception ex) {
-                        p.sendMessage( ConfigManager.fromSection("§cAn error occurred while saving the config. Check the console."));
-                        p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-                        plugin.getLogger().severe("Failed to manually save config: " + ex.getMessage());
-                    }
-                }
-                break;
         }
     }
 
@@ -116,12 +114,6 @@ public class MainMenu extends PaginatedMenu {
 
         addMenuControls();
         inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
-        long autoSaveMinutes = plugin.getAutoSaveIntervalTicks() / 20 / 60;
-
-        inventory.setItem(52, makeItem(Material.EMERALD, "§aManual Save",
-                "§7The plugin auto-saves every " + autoSaveMinutes + " minutes.",
-                "§7Click here to save changes to config.yml",
-                "§7immediately and reset the auto-save timer."));
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
 
@@ -150,6 +142,7 @@ public class MainMenu extends PaginatedMenu {
                     newLore.add("");
                     newLore.add("§8§m------------------");
                     newLore.add("§eLeft-Click to Edit");
+                    newLore.add("§aShift + Left-Click to Get");
                     newLore.add("§cRight-Click to Delete");
                     newLore.add("§bShift + Right Click to Duplicate");
                     meta.setLore(newLore);
@@ -165,6 +158,7 @@ public class MainMenu extends PaginatedMenu {
                     errorLore.add("");
                     errorLore.add("§8§m------------------");
                     errorLore.add("§eLeft-Click to Edit and fix the errors.");
+                    errorLore.add("§aShift + Left-Click to Get (as-is)");
                     errorLore.add("§cRight-Click to Delete");
                     errorLore.add("§bShift + Right Click to Duplicate (as-is)");
                     meta.setLore(errorLore);

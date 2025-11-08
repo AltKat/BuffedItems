@@ -107,49 +107,60 @@ public class ConfigManager {
     }
 
     public static void backupConfig() {
-        sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating config.yml backup to config.yml.backup...");
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
-        File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
-
-        if (!configFile.exists()) {
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] config.yml does not exist, skipping backup.");
-            return;
+        File backupDir = new File(plugin.getDataFolder(), "backups");
+        if (!backupDir.exists()) {
+            backupDir.mkdirs();
         }
 
-        try {
-            Files.copy(configFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] Backup created successfully.");
-        } catch (IOException e) {
-            plugin.getLogger().warning("Could not create config backup: " + e.getMessage());
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] Backup creation FAILED. Error: " + e.getMessage());
+        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        File configBackup = new File(backupDir, "config.yml.backup");
+
+        if (configFile.exists()) {
+            try {
+                Files.copy(configFile.toPath(), configBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                sendDebugMessage(DEBUG_INFO, () -> "[Backup] config.yml backed up to backups/ folder.");
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not create config.yml backup: " + e.getMessage());
+            }
+        }
+
+        File itemsFile = new File(plugin.getDataFolder(), "items.yml");
+        File itemsBackup = new File(backupDir, "items.yml.backup");
+
+        if (itemsFile.exists()) {
+            try {
+                Files.copy(itemsFile.toPath(), itemsBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                sendDebugMessage(DEBUG_INFO, () -> "[Backup] items.yml backed up to backups/ folder.");
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not create items.yml backup: " + e.getMessage());
+            }
         }
     }
 
     public static void reloadConfig() {
+        reloadConfig(false);
+    }
+
+    public static void reloadConfig(boolean silent) {
         synchronized (CONFIG_LOCK) {
             long startTime = System.currentTimeMillis();
 
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
-
-            File configFile = new File(plugin.getDataFolder(), "config.yml");
-            if (!configFile.exists()) {
-                plugin.getLogger().warning("config.yml not found! Creating default config...");
-                try {
-                    plugin.saveDefaultConfig();
-                } catch (Exception e) {
-                    plugin.getLogger().severe("Failed to create default config: " + e.getMessage());
-                    return;
-                }
+            if (!silent) {
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Reloading configuration...");
             }
 
             plugin.reloadConfig();
-            plugin.getItemManager().loadItems(false);
+            ItemsConfig.reload();
+
+            plugin.getItemManager().loadItems(silent);
+
             loadGlobalSettings();
-            plugin.reloadConfigSettings();
             invalidateAllPlayerCaches();
 
-            long elapsedTime = System.currentTimeMillis() - startTime;
-            sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
+            if (!silent) {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                sendDebugMessage(DEBUG_INFO, () -> "[Config] Reload complete in " + elapsedTime + "ms");
+            }
         }
     }
 
@@ -195,10 +206,13 @@ public class ConfigManager {
             String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
 
             if ("permission".equals(path) && value == null) {
-                plugin.getConfig().set(fullPath, NO_PERMISSION);
+                ItemsConfig.get().set(fullPath, NO_PERMISSION);
             } else {
-                plugin.getConfig().set(fullPath, value);
+                ItemsConfig.get().set(fullPath, value);
             }
+
+            ItemsConfig.save();
+
             plugin.getItemManager().reloadSingleItem(itemId);
             plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
         }
@@ -208,7 +222,7 @@ public class ConfigManager {
         synchronized (CONFIG_LOCK) {
             sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new item: " + itemId);
 
-            FileConfiguration config = plugin.getConfig();
+            FileConfiguration config = ItemsConfig.get();
             if (config.contains("items." + itemId)) {
                 sendDebugMessage(DEBUG_INFO, () -> "[Config] Item already exists: " + itemId);
                 return false;
@@ -217,6 +231,8 @@ public class ConfigManager {
             config.set("items." + itemId + ".display_name", "&f" + itemId);
             config.set("items." + itemId + ".material", "STONE");
             config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
+
+            ItemsConfig.save();
 
             plugin.getItemManager().reloadSingleItem(itemId);
 
@@ -227,7 +243,7 @@ public class ConfigManager {
 
     public static String duplicateItem(String sourceItemId, String newItemId) {
         synchronized (CONFIG_LOCK) {
-            FileConfiguration config = plugin.getConfig();
+            FileConfiguration config = ItemsConfig.get();
             ConfigurationSection sourceSection = config.getConfigurationSection("items." + sourceItemId);
 
             if (sourceSection == null) {
@@ -245,6 +261,8 @@ public class ConfigManager {
 
             config.createSection("items." + newItemId, sourceData);
             config.set("items." + newItemId + ".display_name", originalDisplayName + " &7(Copy)");
+
+            ItemsConfig.save();
 
             plugin.getItemManager().reloadSingleItem(newItemId);
 

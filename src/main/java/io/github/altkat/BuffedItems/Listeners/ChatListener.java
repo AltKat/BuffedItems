@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.Listeners;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
+import io.github.altkat.BuffedItems.Managers.ItemsConfig;
 import io.github.altkat.BuffedItems.Menu.*;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -136,7 +137,7 @@ public class ChatListener implements Listener {
                 } else if ("attributes.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing attribute amount for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
-                    List<String> attributes = plugin.getConfig().getStringList(configPath);
+                    List<String> attributes = ItemsConfig.get().getStringList(configPath);
                     int index = pmu.getEditIndex();
 
                     if (index != -1 && index < attributes.size()) {
@@ -169,7 +170,7 @@ public class ChatListener implements Listener {
                 } else if (path.startsWith("attributes.add.")) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new attribute for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
-                    List<String> attributes = plugin.getConfig().getStringList(configPath);
+                    List<String> attributes = ItemsConfig.get().getStringList(configPath);
                     try {
                         String[] parts = path.substring(15).split("\\.");
                         String attributeName = parts[0];
@@ -207,7 +208,7 @@ public class ChatListener implements Listener {
                 } else if ("potion_effects.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing potion effect level for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
-                    List<String> effects = plugin.getConfig().getStringList(configPath);
+                    List<String> effects = ItemsConfig.get().getStringList(configPath);
                     int index = pmu.getEditIndex();
 
                     if (index != -1 && index < effects.size()) {
@@ -246,7 +247,7 @@ public class ChatListener implements Listener {
                 } else if (path.startsWith("potion_effects.add.")) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new potion effect for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
-                    List<String> effects = new ArrayList<>(plugin.getConfig().getStringList(configPath));
+                    List<String> effects = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
                     try {
                         String effectName = path.substring(19);
                         if (org.bukkit.potion.PotionEffectType.getByName(effectName.toUpperCase()) == null) {
@@ -289,7 +290,7 @@ public class ChatListener implements Listener {
                 }else if ("enchantments.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing enchantment level for item: " + itemId);
                     String configPath = "items." + itemId + ".enchantments";
-                    List<String> enchantments = new ArrayList<>(plugin.getConfig().getStringList(configPath));
+                    List<String> enchantments = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
                     int index = pmu.getEditIndex();
 
                     if (index != -1 && index < enchantments.size()) {
@@ -335,7 +336,7 @@ public class ChatListener implements Listener {
                 } else if (path.startsWith("enchantments.add.")) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new enchantment for item: " + itemId);
                     String configPath = "items." + itemId + ".enchantments";
-                    List<String> enchantments = new ArrayList<>(plugin.getConfig().getStringList(configPath));
+                    List<String> enchantments = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
                     try {
                         String enchantName = path.substring(17);
                         if (Enchantment.getByName(enchantName.toUpperCase()) == null) {
