@@ -122,6 +122,10 @@ public class ItemEditorMenu extends Menu {
                 p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+            case CLOCK:
+                p.sendMessage(ConfigManager.fromSection("§6[BuffedItems] §eThis feature is currently under development. Stay tuned for upcoming updates!"));
+                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                break;
         }
     }
 
@@ -214,6 +218,13 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(22, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
         inventory.setItem(23, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
         inventory.setItem(24, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
+        inventory.setItem(31, makeItem(Material.CLOCK, "§6Active Item Settings §7(Coming Soon)",
+                "§7Preview of the next planned update:",
+                "§7• §fRight-click activation mode",
+                "§7• §fCustom cooldowns & durations",
+                "§7• §fVisual indicators",
+                "",
+                "§eComing soon!"));
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
     }

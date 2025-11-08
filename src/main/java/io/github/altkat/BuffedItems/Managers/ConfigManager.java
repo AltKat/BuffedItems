@@ -292,6 +292,21 @@ public class ConfigManager {
         return fromLegacy(prefix + msg);
     }
 
+    public static void setDebugLevel(int level) {
+        if (level < DEBUG_OFF) level = DEBUG_OFF;
+        if (level > DEBUG_VERBOSE) level = DEBUG_OFF;
+
+        plugin.getConfig().set("debug-level", level);
+        plugin.saveConfig();
+        loadGlobalSettings();
+    }
+
+    public static void setShowPotionIcons(boolean show) {
+        plugin.getConfig().set("show-potion-icons", show);
+        plugin.saveConfig();
+        loadGlobalSettings();
+    }
+
     public static boolean isDebugLevelEnabled(int level) {
         return debugLevel >= level;
     }

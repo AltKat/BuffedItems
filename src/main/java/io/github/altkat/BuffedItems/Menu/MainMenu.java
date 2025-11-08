@@ -97,6 +97,10 @@ public class MainMenu extends PaginatedMenu {
                 p.sendMessage(ConfigManager.fromSection( "§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword')."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+            case COMPARATOR:
+                new GeneralSettingsMenu(playerMenuUtility, plugin).open();
+                break;
+
         }
     }
 
@@ -114,13 +118,14 @@ public class MainMenu extends PaginatedMenu {
 
         addMenuControls();
         inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
-
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
-
-        inventory.setItem(45, filler);
+        inventory.setItem(45, makeItem(Material.COMPARATOR, "§6General Settings",
+                "§7Configure global plugin settings.",
+                "§7(Debug level, Potion icons, etc.)"));
         inventory.setItem(46, filler);
         inventory.setItem(47, filler);
         inventory.setItem(51, filler);
+        inventory.setItem(52, filler);
 
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
 
