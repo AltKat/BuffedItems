@@ -26,6 +26,15 @@ public class ConfigManager {
     private static int debugLevel = 0;
     private static boolean showPotionIcons = true;
 
+    private static boolean visualChat;
+    private static boolean visualTitle;
+    private static boolean visualActionBar;
+    private static boolean visualBossBar;
+    private static String bossBarColor;
+    private static String bossBarStyle;
+    private static String globalSuccessSound;
+    private static String globalCooldownSound;
+
     public static final int DEBUG_OFF = 0;
     public static final int DEBUG_INFO = 1;      // Basic plugin status
     public static final int DEBUG_TASK = 2;      // Core task loops, major events
@@ -177,6 +186,16 @@ public class ConfigManager {
                     fromLegacy("&#FFD700[&#FF6347BuffedItems&#FFD700] &e[Debug Level " + debugLevel + "] Enabled - Detailed logs will be shown according to level.")
             );
         }
+
+        visualChat = plugin.getConfig().getBoolean("active-items.visuals.chat", true);
+        visualTitle = plugin.getConfig().getBoolean("active-items.visuals.title", true);
+        visualActionBar = plugin.getConfig().getBoolean("active-items.visuals.action-bar", true);
+        visualBossBar = plugin.getConfig().getBoolean("active-items.visuals.boss-bar", true);
+
+        bossBarColor = plugin.getConfig().getString("active-items.boss-bar-settings.color", "RED");
+        bossBarStyle = plugin.getConfig().getString("active-items.boss-bar-settings.style", "SOLID");
+        globalSuccessSound = plugin.getConfig().getString("active-items.sounds.success", "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0");
+        globalCooldownSound = plugin.getConfig().getString("active-items.sounds.cooldown", "ENTITY_VILLAGER_NO;1.0;1.0");
     }
 
     /**
@@ -318,4 +337,13 @@ public class ConfigManager {
     public static boolean shouldShowPotionIcons() {
         return showPotionIcons;
     }
+
+    public static boolean isVisualChatEnabled() { return visualChat; }
+    public static boolean isVisualTitleEnabled() { return visualTitle; }
+    public static boolean isVisualActionBarEnabled() { return visualActionBar; }
+    public static boolean isVisualBossBarEnabled() { return visualBossBar; }
+    public static String getBossBarColor() { return bossBarColor; }
+    public static String getBossBarStyle() { return bossBarStyle; }
+    public static String getGlobalSuccessSound() { return globalSuccessSound; }
+    public static String getGlobalCooldownSound() { return globalCooldownSound; }
 }

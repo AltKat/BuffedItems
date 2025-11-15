@@ -51,7 +51,11 @@ public class AttributeSelectorMenu extends PaginatedMenu {
         }
 
         if (clickedType == Material.BARRIER && clickedSlot == 49) {
-            new AttributeListMenu(playerMenuUtility, plugin).open();
+            if ("ACTIVE".equals(playerMenuUtility.getTargetSlot())) {
+                new ActiveAttributeListMenu(playerMenuUtility, plugin).open();
+            } else {
+                new AttributeListMenu(playerMenuUtility, plugin).open();
+            }
         }
     }
 

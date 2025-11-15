@@ -37,7 +37,7 @@ public class SlotSelectionMenu extends Menu {
         if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ItemEditorMenu(playerMenuUtility, plugin).open();
+            new PassiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
@@ -61,7 +61,7 @@ public class SlotSelectionMenu extends Menu {
         inventory.setItem(15, makeItem(Material.DIAMOND_BOOTS, "§aBoots", "§7Effects active when worn as boots."));
         inventory.setItem(16, makeItem(Material.CHEST, "§aInventory", "§7Effects active anywhere in the inventory."));
 
-        addBackButton(new ItemEditorMenu(playerMenuUtility, plugin));
+        addBackButton(new PassiveItemSettingsMenu(playerMenuUtility, plugin));
         setFillerGlass();
     }
 }

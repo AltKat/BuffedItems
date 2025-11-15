@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
 import io.github.altkat.BuffedItems.Listeners.*;
 import io.github.altkat.BuffedItems.Managers.*;
 import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.Tasks.CooldownVisualsTask;
 import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
 import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bstats.bukkit.Metrics;
@@ -36,6 +37,8 @@ public final class BuffedItems extends JavaPlugin {
     private boolean placeholderApiEnabled = false;
     private InventoryChangeListener inventoryChangeListener;
     private UpdateChecker updateChecker;
+    private CooldownManager cooldownManager;
+    private CooldownVisualsTask cooldownVisualsTask;
 
     @Override
     public void onEnable() {
@@ -61,6 +64,7 @@ public final class BuffedItems extends JavaPlugin {
         }));
 
         ConfigManager.setup(this);
+        saveDefaultConfig();
         ItemsConfig.setup(this);
 
         initializeManagers();
@@ -132,6 +136,10 @@ public final class BuffedItems extends JavaPlugin {
 
         playerMenuUtilityMap.clear();
 
+        if (cooldownVisualsTask != null) {
+            cooldownVisualsTask.cleanup();
+        }
+
         ConfigManager.logInfo("&aCleanup complete: &e" + successCount + "/" + playerCount + "&a players cleaned" + (failCount > 0 ? "&c (" + failCount + " failed)" : ""));
         ConfigManager.logInfo("&cBuffedItems has been disabled!");
     }
@@ -141,6 +149,7 @@ public final class BuffedItems extends JavaPlugin {
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
+        cooldownManager = new CooldownManager();
     }
 
     private void registerListenersAndCommands() {
@@ -153,6 +162,7 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemProtectionListener(this), this);
+        getServer().getPluginManager().registerEvents(new ItemInteractListener(this), this);
         inventoryChangeListener = new InventoryChangeListener(this);
         getServer().getPluginManager().registerEvents(inventoryChangeListener, this);
     }
@@ -160,6 +170,9 @@ public final class BuffedItems extends JavaPlugin {
     private void startEffectTask() {
         effectApplicatorTask = new EffectApplicatorTask(this);
         effectApplicatorTask.runTaskTimer(this, 0L, 20L);
+
+        cooldownVisualsTask = new CooldownVisualsTask(this);
+        cooldownVisualsTask.runTaskTimer(this, 0L, 2L);
     }
 
     public static PlayerMenuUtility getPlayerMenuUtility(Player p) {
@@ -229,6 +242,9 @@ public final class BuffedItems extends JavaPlugin {
     }
     public InventoryChangeListener getInventoryChangeListener(){
         return inventoryChangeListener;
+    }
+    public CooldownManager getCooldownManager() {
+        return cooldownManager;
     }
     private void isCompatible() {
         try {

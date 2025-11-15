@@ -133,6 +133,32 @@ public class ChatListener implements Listener {
                         p.sendMessage(ConfigManager.fromSection("§aLore has been updated!"));
                         new LoreEditorMenu(pmu, plugin).open();
                     }
+                } else if ("active.attributes.edit".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing active attribute for item: " + itemId);
+                    String configPath = "items." + itemId + ".active_effects.attributes";
+                    List<String> attributes = ItemsConfig.get().getStringList(configPath);
+                    int index = pmu.getEditIndex();
+
+                    if (index != -1 && index < attributes.size()) {
+                        try {
+                            double newAmount = Double.parseDouble(input);
+                            String[] parts = attributes.get(index).split(";");
+                            if (parts.length == 3) {
+                                String newAttributeString = parts[0] + ";" + parts[1] + ";" + newAmount;
+                                attributes.set(index, newAttributeString);
+                                ConfigManager.setItemValue(itemId, "active_effects.attributes", attributes);
+                                p.sendMessage(ConfigManager.fromSection("§aActive attribute updated!"));
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Updated active attribute: " + newAttributeString);
+                            } else {
+                                p.sendMessage(ConfigManager.fromSection("§cError: Corrupted attribute data found."));
+                            }
+                        } catch (NumberFormatException ex) {
+                            p.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a number (e.g., 2.0)."));
+                        }
+                    } else {
+                        p.sendMessage(ConfigManager.fromSection("§cError: Invalid attribute index."));
+                    }
+                    new ActiveAttributeListMenu(pmu, plugin).open();
 
                 } else if ("attributes.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing attribute amount for item: " + itemId + ", slot: " + targetSlot);
@@ -167,10 +193,16 @@ public class ChatListener implements Listener {
                     }
                     pmu.setEditIndex(-1);
                     new AttributeListMenu(pmu, plugin).open();
+
                 } else if (path.startsWith("attributes.add.")) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new attribute for item: " + itemId + ", slot: " + targetSlot);
-                    String configPath = "items." + itemId + ".effects." + targetSlot + ".attributes";
-                    List<String> attributes = ItemsConfig.get().getStringList(configPath);
+
+                    String relativePath = "ACTIVE".equals(targetSlot)
+                            ? "active_effects.attributes"
+                            : "effects." + targetSlot + ".attributes";
+                    String fullPath = "items." + itemId + "." + relativePath;
+
+                    List<String> attributes = ItemsConfig.get().getStringList(fullPath);
                     try {
                         String[] parts = path.substring(15).split("\\.");
                         String attributeName = parts[0];
@@ -184,15 +216,13 @@ public class ChatListener implements Listener {
                         if (exists) {
                             p.sendMessage(ConfigManager.fromSection("§cError: This attribute already exists on the item in this slot."));
                             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Attribute " + attributeName + " already exists for " + itemId + " in slot " + targetSlot);
-                            new AttributeListMenu(pmu, plugin).open();
-                            return;
+                        } else {
+                            String newAttributeString = attributeName + ";" + operationName + ";" + amount;
+                            attributes.add(newAttributeString);
+                            ConfigManager.setItemValue(itemId, relativePath, attributes);
+                            p.sendMessage(ConfigManager.fromSection("§aAttribute has been added!"));
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added attribute: " + newAttributeString + " for " + itemId);
                         }
-
-                        String newAttributeString = attributeName + ";" + operationName + ";" + amount;
-                        attributes.add(newAttributeString);
-                        ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".attributes", attributes);
-                        p.sendMessage(ConfigManager.fromSection("§aAttribute has been added!"));
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added attribute: " + newAttributeString + " for " + itemId);
                     } catch (NumberFormatException ex) {
                         p.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a number (e.g., 2.0, -1.5)."));
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
@@ -204,7 +234,43 @@ public class ChatListener implements Listener {
                         p.sendMessage(ConfigManager.fromSection("§cAn unexpected error occurred. The original list was not modified."));
                         plugin.getLogger().warning("[Chat] Failed to add attribute: " + ex.getMessage());
                     }
-                    new AttributeListMenu(pmu, plugin).open();
+
+                    if ("ACTIVE".equals(targetSlot)) {
+                        new ActiveAttributeListMenu(pmu, plugin).open();
+                    } else {
+                        new AttributeListMenu(pmu, plugin).open();
+                    }
+
+                } else if ("active.potion_effects.edit".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing active potion effect for item: " + itemId);
+                    String configPath = "items." + itemId + ".active_effects.potion_effects";
+                    List<String> effects = ItemsConfig.get().getStringList(configPath);
+                    int index = pmu.getEditIndex();
+
+                    if (index != -1 && index < effects.size()) {
+                        try {
+                            int newLevel = Integer.parseInt(input);
+                            if (newLevel <= 0) {
+                                p.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a positive whole number."));
+                                new ActivePotionEffectListMenu(pmu, plugin).open();
+                                return;
+                            }
+                            String[] parts = effects.get(index).split(";");
+                            if (parts.length == 2) {
+                                String newEffectString = parts[0] + ";" + newLevel;
+                                effects.set(index, newEffectString);
+                                ConfigManager.setItemValue(itemId, "active_effects.potion_effects", effects);
+                                p.sendMessage(ConfigManager.fromSection("§aActive potion effect updated!"));
+                                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Updated active effect: " + newEffectString);
+                            }
+                        } catch (Exception ex) {
+                            p.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a whole number."));
+                        }
+                    } else {
+                        p.sendMessage(ConfigManager.fromSection("§cError: Invalid edit index for potion effect."));
+                    }
+                    new ActivePotionEffectListMenu(pmu, plugin).open();
+
                 } else if ("potion_effects.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing potion effect level for item: " + itemId + ", slot: " + targetSlot);
                     String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
@@ -244,10 +310,16 @@ public class ChatListener implements Listener {
                     }
                     pmu.setEditIndex(-1);
                     new PotionEffectListMenu(pmu, plugin).open();
+
                 } else if (path.startsWith("potion_effects.add.")) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Adding new potion effect for item: " + itemId + ", slot: " + targetSlot);
-                    String configPath = "items." + itemId + ".effects." + targetSlot + ".potion_effects";
-                    List<String> effects = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
+
+                    String relativePath = "ACTIVE".equals(targetSlot)
+                            ? "active_effects.potion_effects"
+                            : "effects." + targetSlot + ".potion_effects";
+                    String fullPath = "items." + itemId + "." + relativePath;
+
+                    List<String> effects = new ArrayList<>(ItemsConfig.get().getStringList(fullPath));
                     try {
                         String effectName = path.substring(19);
                         if (org.bukkit.potion.PotionEffectType.getByName(effectName.toUpperCase()) == null) {
@@ -257,7 +329,8 @@ public class ChatListener implements Listener {
                         int level = Integer.parseInt(input);
                         if (level <= 0) {
                             p.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a positive whole number (e.g., 1, 2, 5)."));
-                            new PotionEffectListMenu(pmu, plugin).open();
+                            if ("ACTIVE".equals(targetSlot)) new ActivePotionEffectListMenu(pmu, plugin).open();
+                            else new PotionEffectListMenu(pmu, plugin).open();
                             return;
                         }
 
@@ -265,15 +338,13 @@ public class ChatListener implements Listener {
                         if (exists) {
                             p.sendMessage(ConfigManager.fromSection("§cError: This potion effect already exists on the item in this slot."));
                             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Effect " + effectName + " already exists for " + itemId + " in slot " + targetSlot);
-                            new PotionEffectListMenu(pmu, plugin).open();
-                            return;
+                        } else {
+                            String newEffectString = effectName + ";" + level;
+                            effects.add(newEffectString);
+                            ConfigManager.setItemValue(itemId, relativePath, effects);
+                            p.sendMessage(ConfigManager.fromSection("§aEffect has been added!"));
+                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added effect: " + newEffectString + " for " + itemId);
                         }
-
-                        String newEffectString = effectName + ";" + level;
-                        effects.add(newEffectString);
-                        ConfigManager.setItemValue(itemId, "effects." + targetSlot + ".potion_effects", effects);
-                        p.sendMessage(ConfigManager.fromSection("§aEffect has been added!"));
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Added effect: " + newEffectString + " for " + itemId);
                     } catch (NumberFormatException ex) {
                         p.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a whole number (e.g., 1, 2, 5)."));
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Chat] Invalid number format from user " + p.getName() + ": " + input);
@@ -285,7 +356,12 @@ public class ChatListener implements Listener {
                         p.sendMessage(ConfigManager.fromSection("§cAn unexpected error occurred. The original list was not modified."));
                         plugin.getLogger().warning("[Chat] Failed to add effect: " + ex.getMessage());
                     }
-                    new PotionEffectListMenu(pmu, plugin).open();
+
+                    if ("ACTIVE".equals(targetSlot)) {
+                        new ActivePotionEffectListMenu(pmu, plugin).open();
+                    } else {
+                        new PotionEffectListMenu(pmu, plugin).open();
+                    }
 
                 }else if ("enchantments.edit".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Editing enchantment level for item: " + itemId);
@@ -483,6 +559,143 @@ public class ChatListener implements Listener {
                             }
                         }
                     }
+                }else if ("active.cooldown".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting cooldown for item: " + itemId);
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCancelled."));
+                    } else {
+                        try {
+                            int val = Integer.parseInt(input);
+                            if (val < 0) throw new NumberFormatException();
+
+                            ConfigManager.setItemValue(itemId, "cooldown", val);
+                            p.sendMessage(ConfigManager.fromSection("§aCooldown updated to: §e" + val + "s"));
+                        } catch (NumberFormatException error) {
+                            p.sendMessage(ConfigManager.fromSection("§cInvalid number! Please enter a positive integer (e.g. 10)."));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                            return;
+                        }
+                    }
+                    new ActiveItemSettingsMenu(pmu, plugin).open();
+
+                } else if ("active.duration".equals(path)) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting duration for item: " + itemId);
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCancelled."));
+                    } else {
+                        try {
+                            int val = Integer.parseInt(input);
+                            if (val < 0) throw new NumberFormatException();
+
+                            ConfigManager.setItemValue(itemId, "effect_duration", val);
+                            p.sendMessage(ConfigManager.fromSection("§aEffect Duration updated to: §e" + val + "s"));
+                        } catch (NumberFormatException error) {
+                            p.sendMessage(ConfigManager.fromSection("§cInvalid number! Please enter a positive integer (e.g. 5)."));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                            return;
+                        }
+                    }
+                    new ActiveItemSettingsMenu(pmu, plugin).open();
+
+                }else if ("active.commands.add".equals(path)) {
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCancelled."));
+                    } else {
+                        List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".commands"));
+                        commands.add(input);
+                        ConfigManager.setItemValue(itemId, "commands", commands);
+                        p.sendMessage(ConfigManager.fromSection("§aCommand added!"));
+                    }
+                    new CommandListMenu(pmu, plugin).open();
+
+                } else if (path.startsWith("active.commands.edit.")) {
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCancelled."));
+                    } else {
+                        try {
+                            int index = Integer.parseInt(path.substring(21));
+                            List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".commands"));
+
+                            if (index >= 0 && index < commands.size()) {
+                                commands.set(index, input);
+                                ConfigManager.setItemValue(itemId, "commands", commands);
+                                p.sendMessage(ConfigManager.fromSection("§aCommand updated!"));
+                            } else {
+                                p.sendMessage(ConfigManager.fromSection("§cError: Command index out of bounds."));
+                            }
+                        } catch (Exception error) {
+                            p.sendMessage(ConfigManager.fromSection("§cError processing edit."));
+                        }
+                    }
+                    new CommandListMenu(pmu, plugin).open();
+
+                }else if (path.startsWith("active.msg.")) {
+                    String configPath = path.replace("active.msg.", "visuals.messages.").replace("actionbar", "action-bar").replace("bossbar", "boss-bar");
+
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCancelled."));
+                    } else if (input.equalsIgnoreCase("default")) {
+                        ConfigManager.setItemValue(itemId, configPath, null);
+
+                        if(path.endsWith("title")) ConfigManager.setItemValue(itemId, "visuals.messages.subtitle", null);
+                        p.sendMessage(ConfigManager.fromSection("§aReset to default."));
+                    } else {
+                        if (path.endsWith("title")) {
+
+                            if (input.contains("|")) {
+                                String[] parts = input.split("\\|", 2);
+                                ConfigManager.setItemValue(itemId, configPath, parts[0].trim());
+                                ConfigManager.setItemValue(itemId, "visuals.messages.subtitle", parts[1].trim());
+                                p.sendMessage(ConfigManager.fromSection("§aTitle and Subtitle updated!"));
+                            } else {
+                                ConfigManager.setItemValue(itemId, configPath, input);
+                                p.sendMessage(ConfigManager.fromSection("§aTitle updated (Subtitle unchanged)."));
+                            }
+                        } else {
+                            ConfigManager.setItemValue(itemId, configPath, input);
+                            p.sendMessage(ConfigManager.fromSection("§aMessage updated!"));
+                        }
+                    }
+                    new ActiveItemSettingsMenu(pmu, plugin).open();
+
+                }else if (path.startsWith("active.sounds.")) {
+                    String type = path.substring(14);
+
+                    if (input.equalsIgnoreCase("cancel")) {
+                        p.sendMessage(ConfigManager.fromSection("§cCancelled."));
+                    } else {
+
+                        boolean valid = true;
+                        if (input.contains(";")) {
+                            String[] parts = input.split(";");
+                            try {
+                                if (parts.length > 1) Float.parseFloat(parts[1]);
+                                if (parts.length > 2) Float.parseFloat(parts[2]);
+                            } catch (NumberFormatException error) {
+                                valid = false;
+                            }
+                        }
+
+                        if (valid) {
+                            ConfigManager.setItemValue(itemId, "sounds." + type, input);
+                            p.sendMessage(ConfigManager.fromSection("§aSound updated!"));
+
+                            try {
+                                String soundName = input.split(";")[0];
+                                try {
+                                    org.bukkit.Sound s = org.bukkit.Sound.valueOf(soundName.toUpperCase());
+                                    p.playSound(p.getLocation(), s, 1f, 1f);
+                                } catch (IllegalArgumentException ignored) {}
+                            } catch (Exception ignored) {}
+
+                        } else {
+                            p.sendMessage(ConfigManager.fromSection("§cInvalid format! Use: NAME;VOLUME;PITCH"));
+                            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                            return;
+                        }
+                    }
+                    new SoundSettingsMenu(pmu, plugin, type).open();
+
                 } else if ("display_name".equals(path)) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Chat] Setting display_name for item: " + itemId);
                     if (input.equalsIgnoreCase("cancel")) {

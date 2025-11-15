@@ -17,6 +17,25 @@ public class BuffedItem {
     private final Integer customModelData;
     private final String customModelDataRaw;
 
+    private final boolean activeMode;
+    private final int cooldown;
+    private final int activeDuration;
+    private final List<String> activeCommands;
+    private final boolean visualChat;
+    private final boolean visualTitle;
+    private final boolean visualActionBar;
+    private final boolean visualBossBar;
+    private final String bossBarColor;
+    private final String bossBarStyle;
+    private final BuffedItemEffect activeEffects;
+    private final String customChatMsg;
+    private final String customTitleMsg;
+    private final String customSubtitleMsg;
+    private final String customActionBarMsg;
+    private final String customBossBarMsg;
+    private final String customSuccessSound;
+    private final String customCooldownSound;
+
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
 
@@ -25,7 +44,12 @@ public class BuffedItem {
     public BuffedItem(String id, String displayName, List<String> lore, Material material,
                       boolean glow, Map<String, BuffedItemEffect> effects, String permission,
                       Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments,
-                      Integer customModelData, String customModelDataRaw) {
+                      Integer customModelData, String customModelDataRaw, boolean activeMode,
+                      int cooldown, int activeDuration, List<String> activeCommands, boolean visualChat,
+                      boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
+                      String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
+                      String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
+                      String customCooldownSound) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -37,6 +61,24 @@ public class BuffedItem {
         this.enchantments = (enchantments != null) ? enchantments : new HashMap<>();
         this.customModelData = customModelData;
         this.customModelDataRaw = customModelDataRaw;
+        this.activeMode = activeMode;
+        this.cooldown = cooldown;
+        this.activeDuration = activeDuration;
+        this.activeCommands = (activeCommands != null) ? activeCommands : new ArrayList<>();
+        this.visualChat = visualChat;
+        this.visualTitle = visualTitle;
+        this.visualActionBar = visualActionBar;
+        this.visualBossBar = visualBossBar;
+        this.bossBarColor = bossBarColor;
+        this.bossBarStyle = bossBarStyle;
+        this.activeEffects = activeEffects;
+        this.customChatMsg = customChatMsg;
+        this.customTitleMsg = customTitleMsg;
+        this.customSubtitleMsg = customSubtitleMsg;
+        this.customActionBarMsg = customActionBarMsg;
+        this.customBossBarMsg = customBossBarMsg;
+        this.customSuccessSound = customSuccessSound;
+        this.customCooldownSound = customCooldownSound;
     }
 
 
@@ -132,4 +174,37 @@ public class BuffedItem {
     public Optional<String> getCustomModelDataRaw() {
         return Optional.ofNullable(customModelDataRaw);
     }
+
+    public boolean isActiveMode() {
+        return activeMode;
+    }
+
+    public int getCooldown() {
+        return cooldown;
+    }
+
+    public int getActiveDuration() {
+        return activeDuration;
+    }
+
+    public List<String> getActiveCommands() {
+        return activeCommands;
+    }
+
+    public boolean isVisualChat() { return visualChat; }
+    public boolean isVisualTitle() { return visualTitle; }
+    public boolean isVisualActionBar() { return visualActionBar; }
+    public boolean isVisualBossBar() { return visualBossBar; }
+    public String getBossBarColor() { return bossBarColor; }
+    public String getBossBarStyle() { return bossBarStyle; }
+    public BuffedItemEffect getActiveEffects() {
+        return activeEffects;
+    }
+    public String getCustomChatMsg() { return customChatMsg; }
+    public String getCustomTitleMsg() { return customTitleMsg; }
+    public String getCustomSubtitleMsg() { return customSubtitleMsg; }
+    public String getCustomActionBarMsg() { return customActionBarMsg; }
+    public String getCustomBossBarMsg() { return customBossBarMsg; }
+    public String getCustomSuccessSound() { return customSuccessSound; }
+    public String getCustomCooldownSound() { return customCooldownSound; }
 }

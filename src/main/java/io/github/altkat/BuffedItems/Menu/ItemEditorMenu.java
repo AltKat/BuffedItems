@@ -99,12 +99,6 @@ public class ItemEditorMenu extends Menu {
             case GRASS_BLOCK:
                 new MaterialSelectorMenu(playerMenuUtility, plugin).open();
                 break;
-            case POTION:
-                new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.POTION_EFFECT).open();
-                break;
-            case IRON_SWORD:
-                new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.ATTRIBUTE).open();
-                break;
             case REDSTONE_TORCH:
                 new ItemFlagsMenu(playerMenuUtility, plugin).open();
                 break;
@@ -122,9 +116,12 @@ public class ItemEditorMenu extends Menu {
                 p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+            case CHEST_MINECART:
+                new PassiveItemSettingsMenu(playerMenuUtility, plugin).open();
+                break;
+
             case CLOCK:
-                p.sendMessage(ConfigManager.fromSection("§6[BuffedItems] §eThis feature is currently under development. Stay tuned for upcoming updates!"));
-                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
                 break;
         }
     }
@@ -191,9 +188,9 @@ public class ItemEditorMenu extends Menu {
 
         String currentName = item.getDisplayName().replace('&', '§');
 
-        inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
-        inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
-        inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
+        inventory.setItem(10, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
+        inventory.setItem(11, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
+        inventory.setItem(12, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
         inventory.setItem(14, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
 
         String cmdDisplay;
@@ -213,18 +210,25 @@ public class ItemEditorMenu extends Menu {
                 "§7Used for custom resource pack models.",
                 "§7Supports: Direct, ItemsAdder, Nexo"));
 
-        inventory.setItem(20, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
-        inventory.setItem(21, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
-        inventory.setItem(22, makeItem(Material.POTION, "§aEdit Potion Effects", "§7Click to manage potion effects."));
-        inventory.setItem(23, makeItem(Material.IRON_SWORD, "§aEdit Attributes", "§7Click to manage attributes."));
-        inventory.setItem(24, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
-        inventory.setItem(31, makeItem(Material.CLOCK, "§6Active Item Settings §7(Coming Soon)",
-                "§7Preview of the next planned update:",
-                "§7• §fRight-click activation mode",
-                "§7• §fCustom cooldowns & durations",
-                "§7• §fVisual indicators",
+        inventory.setItem(16, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
+        inventory.setItem(28, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
+        inventory.setItem(29, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
+        inventory.setItem(32, makeItem(Material.CHEST_MINECART, "§b§lPassive Effects",
+                "§7Effects that apply when holding",
+                "§7or wearing the item.",
                 "",
-                "§eComing soon!"));
+                "§f• Potion Effects",
+                "§f• Attribute Modifiers",
+                "§eClick to Manage"));
+
+        inventory.setItem(34, makeItem(Material.CLOCK, "§6§lActive Abilities",
+                "§7Features triggered by",
+                "§7right-clicking the item.",
+                "",
+                "§f• Cooldowns & Visuals",
+                "§f• Commands & Sounds",
+                "§f• Temporary Effects",
+                "§eClick to Manage"));
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
     }

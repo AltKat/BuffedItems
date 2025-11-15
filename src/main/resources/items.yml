@@ -77,8 +77,88 @@
 #   Note: Flags marked with (Default: true) will be active even if not specified in the config.
 #         You only need to add them if you want to explicitly set them to 'false'.
 # -------------------------------------------------------------------------------------------
+#
+# --- NEW ACTIVE ITEM FEATURES GUIDE ---
+# active_mode: (true/false) Enables right-click functionality.
+# cooldown: (integer) Cooldown in seconds between uses.
+# effect_duration: (integer) Duration in seconds for active effects.
+#
+# commands: A list of commands to run when right-clicked.
+#   - '[console] command' -> Runs as console (silent).
+#   - 'command'           -> Runs as player.
+#   - Placeholders: %player%, %player_name%, %player_x%, %player_y%, %player_z%
+#
+# active_effects: Apply potions/attributes on right-click (requires effect_duration).
+#   potion_effects: List of 'EFFECT;LEVEL'
+#   attributes: List of 'ATTRIBUTE;OPERATION;AMOUNT'
+#
+# visuals: Override global visual settings for this item.
+#   chat, title, action-bar, boss-bar: true/false
+#   boss-bar-color: RED, BLUE, etc.
+#   boss-bar-style: SOLID, SEGMENTED_6, etc.
+#   messages: Override default messages (chat, title, subtitle, action-bar, boss-bar).
+#
+# sounds: Override global sound settings.
+#   success: 'SOUND_NAME;VOL;PITCH'
+#   cooldown: 'SOUND_NAME;VOL;PITCH'
+# ===================================================================
 
 items:
+  mjolnir:
+    display_name: '&#F4D03F&lMjölnir'
+    material: MACE
+    lore:
+      - '&7The weapon of a god.'
+      - ''
+      - '&bPassive:'
+      - '&7- Slow Falling (Feather-light)'
+      - ''
+      - '&eActive (Right-Click):'
+      - '&6&lTHUNDERCLAP!'
+      - '&7- Strikes lightning around you.'
+      - '&7- Grants Godmode for 5s.'
+      - '&7- Instantly recharges attack speed.'
+      - ''
+      - '&cCooldown: 25s'
+    glow: true
+    active_mode: true
+    cooldown: 25
+    effect_duration: 5
+    commands:
+      - '[console] execute at %player% run summon lightning_bolt ~ ~ ~'
+      - '[console] particle electric_spark %player_x% %player_y% %player_z% 1 1 1 0.1 100'
+      - '[console] particle flash %player_x% %player_y% %player_z% 0 0 0 0 1'
+    active_effects:
+      potion_effects:
+        - DAMAGE_RESISTANCE;5
+        - INCREASE_DAMAGE;2
+      attributes:
+        - GENERIC_ATTACK_SPEED;ADD_NUMBER;100.0
+    visuals:
+      chat: true
+      title: true
+      action-bar: true
+      boss-bar: true
+      boss-bar-color: "YELLOW"
+      boss-bar-style: "SEGMENTED_6"
+      messages:
+        cooldown-chat: "&6⚡ Mjölnir is recharging... &eWait {time}s"
+        cooldown-title: "&e⚡ NOT READY ⚡"
+        cooldown-subtitle: "&7Power returns in &6{time}s"
+        cooldown-action-bar: "&eMjölnir Energy: &6{time}s"
+        cooldown-boss-bar: "&e&lTHOR'S POWER: &f{time}s"
+    sounds:
+      success: "ITEM_TRIDENT_THUNDER;2.0;0.8"
+      cooldown: "BLOCK_ANVIL_LAND;0.5;2.0"
+    effects:
+      MAIN_HAND:
+        potion_effects:
+          - SLOW_FALLING;1
+    flags:
+      UNBREAKABLE: true
+      PREVENT_ENCHANT_TABLE: true
+
+  # --- STANDARD PASSIVE ITEMS ---
   bunny_charm:
     display_name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
     lore:

@@ -297,6 +297,61 @@ public class ItemManager {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
             }
         }
+
+        boolean activeMode = itemSection.getBoolean("active_mode", false);
+        int cooldown = itemSection.getInt("cooldown", 0);
+        int activeDuration = itemSection.getInt("effect_duration", 0);
+        List<String> activeCommands = itemSection.getStringList("commands");
+        boolean vChat = itemSection.getBoolean("visuals.chat", true);
+        boolean vTitle = itemSection.getBoolean("visuals.title", true);
+        boolean vActionBar = itemSection.getBoolean("visuals.action-bar", true);
+        boolean vBossBar = itemSection.getBoolean("visuals.boss-bar", true);
+        String bbColor = itemSection.getString("visuals.boss-bar-color", "RED");
+        String bbStyle = itemSection.getString("visuals.boss-bar-style", "SOLID");
+
+        if (activeMode) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is loaded as ACTIVE item (CD: " + cooldown + "s)");
+        }
+
+        BuffedItemEffect activeEffectsObj = null;
+        if (itemSection.contains("active_effects")) {
+            ConfigurationSection activeSection = itemSection.getConfigurationSection("active_effects");
+            if (activeSection != null) {
+                Map<PotionEffectType, Integer> activePotions = new HashMap<>();
+                for (String effectString : activeSection.getStringList("potion_effects")) {
+                    try {
+                        String[] parts = effectString.split(";");
+                        PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
+                        int level = Integer.parseInt(parts[1]);
+                        if (type != null) activePotions.put(type, level);
+                    } catch (Exception ignored) {}
+                }
+
+                List<ParsedAttribute> activeAttributes = new ArrayList<>();
+                for (String attrString : activeSection.getStringList("attributes")) {
+                    try {
+                        String[] parts = attrString.split(";");
+                        Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
+                        AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
+                        double amount = Double.parseDouble(parts[2]);
+                        activeAttributes.add(new ParsedAttribute(attribute, operation, amount, UUID.randomUUID()));
+                    } catch (Exception ignored) {}
+                }
+                activeEffectsObj = new BuffedItemEffect(activePotions, activeAttributes);
+            }
+        }
+        if (activeEffectsObj == null) {
+            activeEffectsObj = new BuffedItemEffect(new HashMap<>(), new ArrayList<>());
+        }
+
+        String msgChat = itemSection.getString("visuals.messages.chat");
+        String msgTitle = itemSection.getString("visuals.messages.title");
+        String msgSubtitle = itemSection.getString("visuals.messages.subtitle");
+        String msgActionBar = itemSection.getString("visuals.messages.action-bar");
+        String msgBossBar = itemSection.getString("visuals.messages.boss-bar");
+        String soundSuccess = itemSection.getString("sounds.success");
+        String soundCooldown = itemSection.getString("sounds.cooldown");
+
         BuffedItem finalBuffedItem = new BuffedItem(
                 itemId,
                 displayName,
@@ -308,7 +363,25 @@ public class ItemManager {
                 flags,
                 enchantments,
                 customModelData,
-                customModelDataRaw
+                customModelDataRaw,
+                activeMode,
+                cooldown,
+                activeDuration,
+                activeCommands,
+                vChat,
+                vTitle,
+                vActionBar,
+                vBossBar,
+                bbColor,
+                bbStyle,
+                activeEffectsObj,
+                msgChat,
+                msgTitle,
+                msgSubtitle,
+                msgActionBar,
+                msgBossBar,
+                soundSuccess,
+                soundCooldown
         );
 
         for (String errorMsg : errorMessages) {

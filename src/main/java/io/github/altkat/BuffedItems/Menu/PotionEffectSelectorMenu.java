@@ -56,7 +56,11 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
         }
 
         if (clickedType == Material.BARRIER && clickedSlot == 49) {
-            new PotionEffectListMenu(playerMenuUtility, plugin).open();
+            if ("ACTIVE".equals(playerMenuUtility.getTargetSlot())) {
+                new ActivePotionEffectListMenu(playerMenuUtility, plugin).open();
+            } else {
+                new PotionEffectListMenu(playerMenuUtility, plugin).open();
+            }
         }
     }
 
