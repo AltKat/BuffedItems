@@ -1,14 +1,21 @@
 package io.github.altkat.BuffedItems;
 
-import io.github.altkat.BuffedItems.Commands.Commands;
-import io.github.altkat.BuffedItems.Commands.TabCompleterHandler;
-import io.github.altkat.BuffedItems.Handlers.UpdateChecker;
-import io.github.altkat.BuffedItems.Listeners.*;
-import io.github.altkat.BuffedItems.Managers.*;
-import io.github.altkat.BuffedItems.Menu.PlayerMenuUtility;
-import io.github.altkat.BuffedItems.Tasks.CooldownVisualsTask;
-import io.github.altkat.BuffedItems.Tasks.EffectApplicatorTask;
-import io.github.altkat.BuffedItems.utils.BuffedItem;
+import io.github.altkat.BuffedItems.command.BuffedItemCommand;
+import io.github.altkat.BuffedItems.command.TabCompleteHandler;
+import io.github.altkat.BuffedItems.handler.UpdateHandler;
+import io.github.altkat.BuffedItems.listener.*;
+import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
+import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.ConfigUpdater;
+import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
+import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
+import io.github.altkat.BuffedItems.manager.effect.EffectManager;
+import io.github.altkat.BuffedItems.manager.item.ItemManager;
+import io.github.altkat.BuffedItems.menu.MenuListener;
+import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.task.CooldownVisualsTask;
+import io.github.altkat.BuffedItems.task.EffectApplicatorTask;
+import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
@@ -17,7 +24,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +41,8 @@ public final class BuffedItems extends JavaPlugin {
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
     private Metrics metrics;
     private boolean placeholderApiEnabled = false;
-    private InventoryChangeListener inventoryChangeListener;
-    private UpdateChecker updateChecker;
+    private InventoryListener inventoryListener;
+    private UpdateHandler updateHandler;
     private CooldownManager cooldownManager;
     private CooldownVisualsTask cooldownVisualsTask;
 
@@ -92,8 +98,8 @@ public final class BuffedItems extends JavaPlugin {
 
         final String GITHUB_REPO = "altkat/BuffedItems";
 
-        updateChecker = new UpdateChecker(this, GITHUB_REPO);
-        updateChecker.checkAsync();
+        updateHandler = new UpdateHandler(this, GITHUB_REPO);
+        updateHandler.checkAsync();
 
         new BukkitRunnable() {
             @Override
@@ -153,8 +159,8 @@ public final class BuffedItems extends JavaPlugin {
     }
 
     private void registerListenersAndCommands() {
-        getCommand("buffeditems").setExecutor(new Commands(this));
-        getCommand("buffeditems").setTabCompleter(new TabCompleterHandler(this));
+        getCommand("buffeditems").setExecutor(new BuffedItemCommand(this));
+        getCommand("buffeditems").setTabCompleter(new TabCompleteHandler(this));
 
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
@@ -163,8 +169,8 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemProtectionListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemInteractListener(this), this);
-        inventoryChangeListener = new InventoryChangeListener(this);
-        getServer().getPluginManager().registerEvents(inventoryChangeListener, this);
+        inventoryListener = new InventoryListener(this);
+        getServer().getPluginManager().registerEvents(inventoryListener, this);
     }
 
     private void startEffectTask() {
@@ -240,8 +246,8 @@ public final class BuffedItems extends JavaPlugin {
     public boolean isPlaceholderApiEnabled() {
         return placeholderApiEnabled;
     }
-    public InventoryChangeListener getInventoryChangeListener(){
-        return inventoryChangeListener;
+    public InventoryListener getInventoryChangeListener(){
+        return inventoryListener;
     }
     public CooldownManager getCooldownManager() {
         return cooldownManager;
