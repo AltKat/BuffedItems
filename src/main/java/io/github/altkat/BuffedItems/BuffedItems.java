@@ -61,6 +61,7 @@ public final class BuffedItems extends JavaPlugin {
         }));
 
         ConfigManager.setup(this);
+        saveDefaultConfig();
         ItemsConfig.setup(this);
 
         initializeManagers();
