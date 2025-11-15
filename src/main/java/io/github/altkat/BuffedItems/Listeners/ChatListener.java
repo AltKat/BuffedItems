@@ -656,7 +656,7 @@ public class ChatListener implements Listener {
                             p.sendMessage(ConfigManager.fromSection("§aMessage updated!"));
                         }
                     }
-                    new ActiveItemSettingsMenu(pmu, plugin).open();
+                    new ActiveItemVisualsMenu(pmu, plugin).open();
 
                 }else if (path.startsWith("active.sounds.")) {
                     String type = path.substring(14);

@@ -2,7 +2,6 @@ package io.github.altkat.BuffedItems.Menu;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.Managers.ConfigManager;
-import io.github.altkat.BuffedItems.utils.BuffedItem;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -38,7 +37,7 @@ public class SoundSettingsMenu extends Menu {
         if (e.getCurrentItem() == null) return;
 
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
@@ -57,16 +56,16 @@ public class SoundSettingsMenu extends Menu {
         if (e.getCurrentItem().getType() == Material.REDSTONE_BLOCK) {
             ConfigManager.setItemValue(itemId, "sounds." + soundType, "NONE");
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-            new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getCurrentItem().getType() == Material.GOAT_HORN || e.getCurrentItem().getType() == Material.NOTE_BLOCK) {
+        if (e.getSlot() >= 10 && e.getSlot() <= 34) {
             ItemStack clicked = e.getCurrentItem();
-            if (!clicked.hasItemMeta() || !clicked.getItemMeta().hasLore()) return;
+            if (!clicked.hasItemMeta() || !clicked.getItemMeta().hasDisplayName()) return;
 
-            String soundData = null;
             String name = clicked.getItemMeta().getDisplayName();
+            String soundData = null;
 
             if (name.contains("Level Up")) soundData = "ENTITY_PLAYER_LEVELUP;1.0;1.0";
             else if (name.contains("Exp Orb")) soundData = "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0";
@@ -80,13 +79,15 @@ public class SoundSettingsMenu extends Menu {
             else if (name.contains("Beacon")) soundData = "BLOCK_BEACON_ACTIVATE;1.0;1.0";
 
             if (soundData != null) {
-                ConfigManager.setItemValue(itemId, "sounds." + soundType, soundData);
-
-                try {
-                    p.playSound(p.getLocation(), org.bukkit.Sound.valueOf(soundData.split(";")[0]), 1f, 1f);
-                } catch (Exception ignored) {}
-
-                new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+                if (e.isLeftClick()) {
+                    ConfigManager.setItemValue(itemId, "sounds." + soundType, soundData);
+                    p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+                    new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+                } else if (e.isRightClick()) {
+                    try {
+                        p.playSound(p.getLocation(), org.bukkit.Sound.valueOf(soundData.split(";")[0]), 1f, 1f);
+                    } catch (Exception ignored) {}
+                }
             }
         }
     }
@@ -111,24 +112,25 @@ public class SoundSettingsMenu extends Menu {
 
         inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
 
-        inventory.setItem(10, makeSoundItem("Level Up", "ENTITY_PLAYER_LEVELUP", "Classic RPG level up sound."));
-        inventory.setItem(11, makeSoundItem("Exp Orb", "ENTITY_EXPERIENCE_ORB_PICKUP", "Subtle 'ding' sound."));
-        inventory.setItem(12, makeSoundItem("Pling (High)", "BLOCK_NOTE_BLOCK_PLING", "High pitched note block."));
-        inventory.setItem(13, makeSoundItem("Totem", "ITEM_TOTEM_USE", "Loud totem activation."));
-        inventory.setItem(14, makeSoundItem("Beacon", "BLOCK_BEACON_ACTIVATE", "Powered up sound."));
+        inventory.setItem(10, makeSoundItem(Material.EXPERIENCE_BOTTLE, "Level Up", "ENTITY_PLAYER_LEVELUP", "Classic RPG level up sound."));
+        inventory.setItem(11, makeSoundItem(Material.GOLD_NUGGET, "Exp Orb", "ENTITY_EXPERIENCE_ORB_PICKUP", "Subtle 'ding' sound."));
+        inventory.setItem(12, makeSoundItem(Material.NOTE_BLOCK, "Pling (High)", "BLOCK_NOTE_BLOCK_PLING", "High pitched note block."));
+        inventory.setItem(13, makeSoundItem(Material.TOTEM_OF_UNDYING, "Totem", "ITEM_TOTEM_USE", "Loud totem activation."));
+        inventory.setItem(14, makeSoundItem(Material.BEACON, "Beacon", "BLOCK_BEACON_ACTIVATE", "Powered up sound."));
 
-        inventory.setItem(19, makeSoundItem("Villager No", "ENTITY_VILLAGER_NO", "Classic 'Hrmm' error sound."));
-        inventory.setItem(20, makeSoundItem("Anvil Land", "BLOCK_ANVIL_LAND", "Heavy metallic clang."));
-        inventory.setItem(21, makeSoundItem("Explosion", "ENTITY_GENERIC_EXPLODE", "Boom!"));
-        inventory.setItem(22, makeSoundItem("Item Break", "ENTITY_ITEM_BREAK", "Crunchy snapping sound."));
-        inventory.setItem(23, makeSoundItem("Click", "UI_BUTTON_CLICK", "Simple UI click."));
+        inventory.setItem(19, makeSoundItem(Material.EMERALD, "Villager No", "ENTITY_VILLAGER_NO", "Classic 'Hrmm' error sound."));
+        inventory.setItem(20, makeSoundItem(Material.ANVIL, "Anvil Land", "BLOCK_ANVIL_LAND", "Heavy metallic clang."));
+        inventory.setItem(21, makeSoundItem(Material.TNT, "Explosion", "ENTITY_GENERIC_EXPLODE", "Boom!"));
+        inventory.setItem(22, makeSoundItem(Material.FLINT, "Item Break", "ENTITY_ITEM_BREAK", "Crunchy snapping sound."));
+        inventory.setItem(23, makeSoundItem(Material.STONE_BUTTON, "Click", "UI_BUTTON_CLICK", "Simple UI click."));
     }
 
-    private ItemStack makeSoundItem(String displayName, String soundName, String desc) {
-        return makeItem(Material.GOAT_HORN, "§e" + displayName,
+    private ItemStack makeSoundItem(Material mat, String displayName, String soundName, String desc) {
+        return makeItem(mat, "§e" + displayName,
                 "§7ID: " + soundName,
                 "§7" + desc,
                 "",
-                "§aClick to Select & Preview");
+                "§aLeft-Click to Set",
+                "§bRight-Click to Preview");
     }
 }

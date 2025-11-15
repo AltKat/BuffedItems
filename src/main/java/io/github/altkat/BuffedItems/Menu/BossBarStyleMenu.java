@@ -31,7 +31,7 @@ public class BossBarStyleMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+            new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
@@ -40,7 +40,7 @@ public class BossBarStyleMenu extends Menu {
             try {
                 BarStyle style = BarStyle.valueOf(styleName);
                 ConfigManager.setItemValue(itemId, "visuals.boss-bar-style", style.name());
-                new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+                new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
             } catch (IllegalArgumentException ignored) {}
         }
     }
