@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.*;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
@@ -23,6 +24,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Handles right-click interactions with active items
@@ -125,45 +127,156 @@ public class ItemInteractListener implements Listener {
         playConfiguredSound(player, buffedItem.getCustomCooldownSound(), ConfigManager.getGlobalCooldownSound());
     }
 
+
     /**
-     * Executes commands associated with the active item
+     * Main entry point: Iterates through the command list and sends each line to the processor.
      */
     private void executeCommands(Player player, List<String> commands) {
-        if (commands == null || commands.isEmpty()) {
+        if (commands == null || commands.isEmpty()) return;
+
+        long cumulativeDelay = 0;
+
+        for (String cmdLine : commands) {
+            cumulativeDelay = processCommand(player, cmdLine, cumulativeDelay, false);
+        }
+    }
+
+    /**
+     * Smart Command Processor (Recursive)
+     * @param delayOffset The accumulated delay to wait before executing this command.
+     * @param inheritedConsole Console permission inherited from the parent command if chained.
+     * @return The [delay] amount found in this command (to be added to the main loop).
+     */
+    private long processCommand(Player player, String commandLine, long delayOffset, boolean inheritedConsole) {
+        String cmdToProcess = commandLine.trim();
+        long localDelay = 0;
+        double localChance = 100.0;
+        boolean isConsole = inheritedConsole;
+
+        boolean findingPrefixes = true;
+        while (findingPrefixes) {
+            findingPrefixes = false;
+            String lowerCmd = cmdToProcess.toLowerCase();
+
+            if (lowerCmd.startsWith("[delay:")) {
+                try {
+                    int closeIndex = cmdToProcess.indexOf("]");
+                    if (closeIndex != -1) {
+                        localDelay += Long.parseLong(cmdToProcess.substring(7, closeIndex));
+                        cmdToProcess = cmdToProcess.substring(closeIndex + 1).trim();
+                        findingPrefixes = true;
+                    }
+                } catch (Exception ignored) {}
+            }
+            else if (lowerCmd.startsWith("[chance:")) {
+                try {
+                    int closeIndex = cmdToProcess.indexOf("]");
+                    if (closeIndex != -1) {
+                        localChance = Double.parseDouble(cmdToProcess.substring(8, closeIndex));
+                        cmdToProcess = cmdToProcess.substring(closeIndex + 1).trim();
+                        findingPrefixes = true;
+                    }
+                } catch (Exception ignored) {}
+            }
+            else if (lowerCmd.startsWith("[console]")) {
+                isConsole = true;
+                cmdToProcess = cmdToProcess.substring(9).trim();
+                findingPrefixes = true;
+            }
+        }
+
+        if (cmdToProcess.isEmpty()) return localDelay;
+
+        final String finalCmd = cmdToProcess;
+        final double finalChance = localChance;
+        final boolean finalIsConsole = isConsole;
+        final long totalWaitTime = delayOffset + localDelay;
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!player.isOnline()) return;
+
+            if (finalChance < 100.0) {
+                if (ThreadLocalRandom.current().nextDouble(100.0) > finalChance) return;
+            }
+
+            if (finalCmd.contains(";;")) {
+                String[] subCommands = finalCmd.split(";;");
+
+                long chainDelay = 0;
+                for (String sub : subCommands) {
+                    chainDelay = processCommand(player, sub, chainDelay, false);
+                }
+                return;
+            }
+
+            executeSingleCommand(player, finalCmd, finalIsConsole);
+
+        }, totalWaitTime);
+
+        return localDelay;
+    }
+
+    /**
+     * Helper method that executes the final command (Placeholder + Dispatch).
+     */
+    private void executeSingleCommand(Player player, String cmd, boolean asConsole) {
+        Location loc = player.getLocation();
+        String parsedCmd = cmd
+                .replace("%player%", player.getName())
+                .replace("%player_name%", player.getName())
+                .replace("%player_x%", String.format(Locale.US, "%.2f", loc.getX()))
+                .replace("%player_y%", String.format(Locale.US, "%.2f", loc.getY()))
+                .replace("%player_z%", String.format(Locale.US, "%.2f", loc.getZ()))
+                .replace("%player_yaw%", String.format(Locale.US, "%.2f", loc.getYaw()))
+                .replace("%player_pitch%", String.format(Locale.US, "%.2f", loc.getPitch()));
+
+        if (plugin.isPlaceholderApiEnabled()) {
+            parsedCmd = PlaceholderAPI.setPlaceholders(player, parsedCmd);
+        }
+
+        String lowerCmd = parsedCmd.toLowerCase().trim();
+
+        if (lowerCmd.startsWith("[message] ") || lowerCmd.startsWith("[msg] ")) {
+            String msgContent = parsedCmd.substring(parsedCmd.indexOf("] ") + 2);
+            player.sendMessage(ConfigManager.fromLegacy(msgContent));
             return;
         }
 
-        Location loc = player.getLocation();
-        World world = loc.getWorld();
-
-        String x = String.format(Locale.US, "%.2f", loc.getX());
-        String y = String.format(Locale.US, "%.2f", loc.getY());
-        String z = String.format(Locale.US, "%.2f", loc.getZ());
-
-        Boolean originalRule = world.getGameRuleValue(GameRule.SEND_COMMAND_FEEDBACK);
-        if (originalRule == null) {
-            originalRule = true;
+        if (lowerCmd.startsWith("[actionbar] ") || lowerCmd.startsWith("[ab] ")) {
+            String msgContent = parsedCmd.substring(parsedCmd.indexOf("] ") + 2);
+            player.sendActionBar(ConfigManager.fromLegacy(msgContent));
+            return;
         }
 
+        if (lowerCmd.startsWith("[title] ")) {
+            String fullContent = parsedCmd.substring(8);
+            String titleText = fullContent;
+            String subtitleText = "";
+
+            if (fullContent.contains("|")) {
+                String[] parts = fullContent.split("\\|", 2);
+                titleText = parts[0].trim();
+                subtitleText = parts[1].trim();
+            }
+
+            player.showTitle(net.kyori.adventure.title.Title.title(
+                    ConfigManager.fromLegacy(titleText),
+                    ConfigManager.fromLegacy(subtitleText)
+            ));
+            return;
+        }
+
+        Boolean rule = player.getWorld().getGameRuleValue(GameRule.SEND_COMMAND_FEEDBACK);
+        player.getWorld().setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false);
+
         try {
-            world.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false);
-
-            for (String cmd : commands) {
-                String parsedCmd = cmd.replace("%player%", player.getName())
-                        .replace("%player_name%", player.getName())
-                        .replace("%player_x%", x)
-                        .replace("%player_y%", y)
-                        .replace("%player_z%", z);
-
-                if (parsedCmd.toLowerCase().startsWith("[console] ")) {
-                    String finalCmd = parsedCmd.substring(10);
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
-                } else {
-                    player.performCommand(parsedCmd);
-                }
+            if (asConsole) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCmd);
+            } else {
+                player.performCommand(parsedCmd);
             }
         } finally {
-            world.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, originalRule);
+            if (rule != null) player.getWorld().setGameRule(GameRule.SEND_COMMAND_FEEDBACK, rule);
         }
     }
 
@@ -172,14 +285,12 @@ public class ItemInteractListener implements Listener {
         BuffedItemEffect effects = item.getActiveEffects();
         if (effects == null) return;
 
-        int durationTicks = item.getActiveDuration() > 0 ? item.getActiveDuration() * 20 : 100; // 5 seconds default
+        int durationTicks = item.getActiveDuration() > 0 ? item.getActiveDuration() * 20 : 100;
 
-        // Apply potion effects
         for (java.util.Map.Entry<PotionEffectType, Integer> entry : effects.getPotionEffects().entrySet()) {
             player.addPotionEffect(new PotionEffect(entry.getKey(), durationTicks, entry.getValue() - 1));
         }
 
-        // Apply attribute modifiers with DETERMINISTIC UUID
         for (ParsedAttribute attr : effects.getParsedAttributes()) {
             AttributeInstance instance = player.getAttribute(attr.getAttribute());
             if (instance != null) {
@@ -196,7 +307,6 @@ public class ItemInteractListener implements Listener {
 
                 instance.addModifier(modifier);
 
-                // Schedule removal after duration
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     if (player.isOnline()) {
                         AttributeInstance currentInstance = player.getAttribute(attr.getAttribute());

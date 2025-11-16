@@ -84,9 +84,34 @@
 # effect_duration: (integer) Duration in seconds for active effects.
 #
 # commands: A list of commands to run when right-clicked.
-#   - '[console] command' -> Runs as console (silent).
-#   - 'command'           -> Runs as player.
-#   - Placeholders: %player%, %player_name%, %player_x%, %player_y%, %player_z%
+#   You can chain prefixes to create complex mechanics.
+#   PREFIX ORDER: Flexible! You can mix [delay], [chance], and [console].
+#
+#   LOGIC PREFIXES:
+#   - [delay:ticks]     -> Waits X ticks (20 ticks = 1 second) before running this part.
+#                          Delays are cumulative (added to previous delays).
+#   - [chance:percent]  -> Runs the command with X% success chance (0-100).
+#   - [console]         -> Runs the command as Console (Admin). Without this, it runs as Player.
+#
+#   MESSAGE ACTIONS (No command needed):
+#   - [message] text      -> Sends a clean message to player (colored, no prefix).
+#   - [actionbar] text    -> Sends text above the hotbar.
+#   - [title] Main|Sub    -> Sends a big title. Split subtitle with '|'.
+#
+#   CHAINING:
+#   - Use ';;' to execute multiple commands/actions sequentially.
+#   - Logic (Chance/Delay) applies to the specific chain link it is in.
+#
+#   EXAMPLES:
+#   - 'help' (Immediate player command, help command will be executed as player.)
+#   - '[console] kill %player%' (Immediate console command, kills player)
+#   - '[chance:50] [console] give %player% diamond 1 ;; [message] &aYou won!' (Console command with 50% success chance, if first part success then second block will be executed, will send to the player You Won message.)
+#   - '[delay:40] [chance:25] [console] kill %player%' (Wait 2s, then 25% chance to kill player)
+#   - '[chance:50][title] &cBOSS!|&7Spawning... ;; [delay:60] [console] summon wither %player_x% %player_y% %player_z%' (Sends a title with 50% success chance if succeeds after 3 seconds delay it will summon a wither at the player's location)
+#
+#   PLACEHOLDERS:
+#   - Built-in: %player%, %player_x%, %player_y%, %player_z%, %player_yaw%, %player_pitch%
+#   - PlaceholderAPI: Fully supported! (e.g., %vault_eco_balance% >= 1000)
 #
 # active_effects: Apply potions/attributes on right-click (requires effect_duration).
 #   potion_effects: List of 'EFFECT;LEVEL'
@@ -115,9 +140,9 @@ items:
       - ''
       - '&eActive (Right-Click):'
       - '&6&lTHUNDERCLAP!'
-      - '&7- Strikes lightning around you.'
-      - '&7- Grants Godmode for 5s.'
-      - '&7- Instantly recharges attack speed.'
+      - '&7- 1s Charge time.'
+      - '&7- Strikes lightning.'
+      - '&7- &b50% Chance&7 for Chain Lightning.'
       - ''
       - '&cCooldown: 25s'
     glow: true
@@ -125,15 +150,16 @@ items:
     cooldown: 25
     effect_duration: 5
     commands:
-      - '[console] execute at %player% run summon lightning_bolt ~ ~ ~'
-      - '[console] particle electric_spark %player_x% %player_y% %player_z% 1 1 1 0.1 100'
-      - '[console] particle flash %player_x% %player_y% %player_z% 0 0 0 0 1'
+      - '[console] playsound item.trident.thunder master %player% ~ ~ ~ 2 0.5 ;; [title] &6&lMJÖLNIR!|&eChanneling power... ;; [delay:20] [console] execute at %player% run summon lightning_bolt ~ ~ ~ ;; [actionbar] &e⚡ SMITE! ;; [delay:10] [chance:50] [console] summon lightning_bolt ^ ^ ^5 ;; [message] &e⚡ &lCHAIN LIGHTNING! &7(Lucky Strike)'
+      - '[delay:5] [console] particle electric_spark %player_x% %player_y% %player_z% 1 1 1 0.1 50'
+
     active_effects:
       potion_effects:
         - DAMAGE_RESISTANCE;5
         - INCREASE_DAMAGE;2
       attributes:
         - GENERIC_ATTACK_SPEED;ADD_NUMBER;100.0
+
     visuals:
       chat: true
       title: true
@@ -147,13 +173,16 @@ items:
         cooldown-subtitle: "&7Power returns in &6{time}s"
         cooldown-action-bar: "&eMjölnir Energy: &6{time}s"
         cooldown-boss-bar: "&e&lTHOR'S POWER: &f{time}s"
+
     sounds:
-      success: "ITEM_TRIDENT_THUNDER;2.0;0.8"
+      success: "BLOCK_BEACON_POWER_SELECT;1.0;0.5" # Tıklama anında çıkan mekanik ses
       cooldown: "BLOCK_ANVIL_LAND;0.5;2.0"
+
     effects:
       MAIN_HAND:
         potion_effects:
           - SLOW_FALLING;1
+
     flags:
       UNBREAKABLE: true
       PREVENT_ENCHANT_TABLE: true
