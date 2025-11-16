@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.menu.active;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.menu.utility.SoundSettingsMenu;
@@ -58,8 +59,11 @@ public class ActiveItemSoundsMenu extends Menu {
         setFillerGlass();
 
         String currSuccess = item.getCustomSuccessSound();
-        if (currSuccess == null) currSuccess = "§8(Default Config)";
-        else currSuccess = "§a" + currSuccess;
+        if (currSuccess == null) {
+            currSuccess = "§a" + ConfigManager.getGlobalSuccessSound() + " §8(Default)";
+        } else {
+            currSuccess = "§a" + currSuccess;
+        }
 
         inventory.setItem(11, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
                 "§7Sound played on successful use.",
@@ -68,8 +72,11 @@ public class ActiveItemSoundsMenu extends Menu {
                 "§eClick to Change"));
 
         String currCool = item.getCustomCooldownSound();
-        if (currCool == null) currCool = "§8(Default Config)";
-        else currCool = "§c" + currCool;
+        if (currCool == null) {
+            currCool = "§c" + ConfigManager.getGlobalCooldownSound() + " §8(Default)";
+        } else {
+            currCool = "§c" + currCool;
+        }
 
         inventory.setItem(15, makeItem(Material.ANVIL, "§cCooldown Sound",
                 "§7Sound played when on cooldown.",
