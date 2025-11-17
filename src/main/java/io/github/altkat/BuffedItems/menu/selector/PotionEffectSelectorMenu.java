@@ -47,8 +47,12 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
             Player p = (Player) e.getWhoClicked();
             String effectName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
 
+            String targetSlot = playerMenuUtility.getTargetSlot();
+            String prefix = (targetSlot != null && targetSlot.equals("ACTIVE")) ? "active." : "";
+
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("potion_effects.add." + effectName);
+            playerMenuUtility.setChatInputPath(prefix + "potion_effects.add." + effectName);
+
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSection("§aPlease type the Potion Level (e.g., 1, 2, 5) in chat."));
             return;
