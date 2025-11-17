@@ -26,6 +26,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -168,6 +169,13 @@ public class ChatListener implements Listener {
             handleEditEnchantment(player, pmu, input, itemId);
         } else if (path.startsWith("enchantments.add.")) {
             handleAddEnchantment(player, pmu, input, path, itemId);
+        } else if (path.startsWith("active.costs.add.")) {
+            String type = path.substring(17);
+            handleAddCost(player, pmu, input, type, itemId);
+        } else if (path.equals("active.costs.edit.amount")) {
+            handleEditCostAmount(player, pmu, input, itemId);
+        } else if (path.equals("active.costs.edit.message")) {
+            handleEditCostMessage(player, pmu, input, itemId);
         } else {
             player.sendMessage(ConfigManager.fromSection("§cError: Unknown input path: " + path));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
@@ -840,5 +848,128 @@ public class ChatListener implements Listener {
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    private void handleAddCost(Player player, PlayerMenuUtility pmu, String input, String type, String itemId) {
+        Map<String, Object> newCost = new java.util.HashMap<>();
+        newCost.put("type", type);
+
+        try {
+            if (type.equals("ITEM")) {
+                String[] parts = input.split(";");
+                if (parts.length != 2) throw new IllegalArgumentException("Invalid format");
+
+                int amount = Integer.parseInt(parts[0]);
+                String material = parts[1].toUpperCase();
+
+                if (Material.matchMaterial(material) == null) {
+                    player.sendMessage(ConfigManager.fromSection("§cInvalid material: " + material));
+                    new io.github.altkat.BuffedItems.menu.selector.CostTypeSelectorMenu(pmu, plugin).open();
+                    return;
+                }
+
+                newCost.put("amount", amount);
+                newCost.put("material", material);
+            } else {
+                double amount = Double.parseDouble(input);
+                if (amount <= 0) throw new NumberFormatException();
+
+                if (amount == (int) amount) {
+                    newCost.put("amount", (int) amount);
+                } else {
+                    newCost.put("amount", amount);
+                }
+            }
+
+            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+            costs.add(newCost);
+            ConfigManager.setItemValue(itemId, "costs", costs);
+
+            player.sendMessage(ConfigManager.fromSection("§aCost added successfully!"));
+            new io.github.altkat.BuffedItems.menu.active.CostListMenu(pmu, plugin).open();
+
+        } catch (Exception e) {
+            player.sendMessage(ConfigManager.fromSection("§cInvalid input."));
+            if (type.equals("ITEM")) player.sendMessage(ConfigManager.fromSection("§7Use format: AMOUNT;MATERIAL"));
+            else player.sendMessage(ConfigManager.fromSection("§7Please enter a valid positive number."));
+
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("active.costs.add." + type);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleEditCostAmount(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        int index = pmu.getEditIndex();
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+
+        if (index < 0 || index >= costList.size()) {
+            player.sendMessage(ConfigManager.fromSection("§cError: Cost index out of bounds."));
+            new io.github.altkat.BuffedItems.menu.active.CostListMenu(pmu, plugin).open();
+            return;
+        }
+
+        List<Map<String, Object>> editableList = new ArrayList<>();
+        for (Map<?, ?> map : costList) {
+            editableList.add((java.util.Map<String, Object>) map);
+        }
+
+        Map<String, Object> targetCost = editableList.get(index);
+        String type = (String) targetCost.get("type");
+
+        try {
+            if ("ITEM".equals(type) || "LEVEL".equals(type) || "HUNGER".equals(type)) {
+                int val = Integer.parseInt(input);
+                if (val <= 0) throw new NumberFormatException();
+                targetCost.put("amount", val);
+            } else {
+                double val = Double.parseDouble(input);
+                if (val <= 0) throw new NumberFormatException();
+
+                if (val == (int) val) targetCost.put("amount", (int) val);
+                else targetCost.put("amount", val);
+            }
+
+            ConfigManager.setItemValue(itemId, "costs", editableList);
+            player.sendMessage(ConfigManager.fromSection("§aCost amount updated!"));
+
+        } catch (NumberFormatException e) {
+            player.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a positive number."));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("active.costs.edit.amount");
+            return;
+        }
+
+        new io.github.altkat.BuffedItems.menu.active.CostListMenu(pmu, plugin).open();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleEditCostMessage(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        int index = pmu.getEditIndex();
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+
+        if (index < 0 || index >= costList.size()) {
+            player.sendMessage(ConfigManager.fromSection("§cError: Cost index out of bounds."));
+            new io.github.altkat.BuffedItems.menu.active.CostListMenu(pmu, plugin).open();
+            return;
+        }
+
+        List<Map<String, Object>> editableList = new ArrayList<>();
+        for (Map<?, ?> map : costList) {
+            editableList.add((java.util.Map<String, Object>) map);
+        }
+
+        Map<String, Object> targetCost = editableList.get(index);
+
+        if ("default".equalsIgnoreCase(input) || "reset".equalsIgnoreCase(input)) {
+            targetCost.remove("message");
+            player.sendMessage(ConfigManager.fromSection("§aMessage reset to default config value."));
+        } else {
+            targetCost.put("message", input);
+            player.sendMessage(ConfigManager.fromSection("§aFailure message updated!"));
+        }
+
+        ConfigManager.setItemValue(itemId, "costs", editableList);
+        new io.github.altkat.BuffedItems.menu.active.CostListMenu(pmu, plugin).open();
     }
 }

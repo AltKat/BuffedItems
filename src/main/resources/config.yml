@@ -67,3 +67,18 @@ active-items:
   sounds:
     success: "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0"
     cooldown: "ENTITY_VILLAGER_NO;1.0;1.0"
+
+  # ===================================================================
+  #                       COST SYSTEM MESSAGES
+  # ===================================================================
+  # These messages are used if a specific item doesn't have a custom 'message' defined in its cost section.
+  # Placeholders: {amount}, {material} (for items)
+  costs:
+    messages:
+      money: "&cNot enough money! Cost: &e{amount}"
+      experience: "&cNot enough XP! Cost: &e{amount}"
+      level: "&cNot enough Levels! Cost: &e{amount}"
+      hunger: "&cYou are too hungry! Cost: &e{amount}"
+      health: "&cNot enough Health! Cost: &e{amount}"
+      item: "&cMissing Item: &e{amount}x {material}"
+      default: "&cYou cannot afford this cost."

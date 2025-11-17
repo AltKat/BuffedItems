@@ -9,6 +9,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigUpdater;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
+import io.github.altkat.BuffedItems.manager.cost.CostManager;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.manager.item.ItemManager;
 import io.github.altkat.BuffedItems.menu.MenuListener;
@@ -45,6 +46,7 @@ public final class BuffedItems extends JavaPlugin {
     private UpdateHandler updateHandler;
     private CooldownManager cooldownManager;
     private CooldownVisualsTask cooldownVisualsTask;
+    private CostManager costManager;
 
     @Override
     public void onEnable() {
@@ -152,6 +154,7 @@ public final class BuffedItems extends JavaPlugin {
 
     private void initializeManagers() {
         ConfigManager.loadGlobalSettings();
+        costManager = new CostManager(this);
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
@@ -251,6 +254,9 @@ public final class BuffedItems extends JavaPlugin {
     }
     public CooldownManager getCooldownManager() {
         return cooldownManager;
+    }
+    public CostManager getCostManager() {
+        return costManager;
     }
     private void isCompatible() {
         try {

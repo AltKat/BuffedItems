@@ -99,6 +99,10 @@ public class ActiveItemSettingsMenu extends Menu {
             case PAINTING:
                 new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
                 break;
+
+            case EMERALD:
+                new CostListMenu(playerMenuUtility, plugin).open();
+                break;
         }
     }
 
@@ -143,6 +147,12 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Cooldown Sound",
                 "",
                 "§eClick to Edit"));
+
+        inventory.setItem(28, makeItem(Material.EMERALD, "§aUsage Costs",
+                "§7Configure requirements to use this item.",
+                "§f• Money, XP, Items, Health...",
+                "",
+                "§eClick to Manage"));
 
         inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
     }

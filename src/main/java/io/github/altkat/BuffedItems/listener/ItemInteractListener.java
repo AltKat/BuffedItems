@@ -2,6 +2,7 @@ package io.github.altkat.BuffedItems.listener;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
@@ -21,6 +22,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -78,6 +80,31 @@ public class ItemInteractListener implements Listener {
             handleCooldownMessage(player, buffedItem);
             event.setCancelled(true);
             return;
+        }
+
+        List<ICost> costs = buffedItem.getCosts();
+        if (costs != null && !costs.isEmpty()) {
+            List<String> missingRequirements = new ArrayList<>();
+
+            for (ICost cost : costs) {
+                if (!cost.hasEnough(player)) {
+                    missingRequirements.add(cost.getFailureMessage());
+                }
+            }
+
+            if (!missingRequirements.isEmpty()) {
+                for (String msg : missingRequirements) {
+                    player.sendMessage(ConfigManager.fromLegacy(msg));
+                }
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        if (costs != null && !costs.isEmpty()) {
+            for (ICost cost : costs) {
+                cost.deduct(player);
+            }
         }
 
         // Set cooldown

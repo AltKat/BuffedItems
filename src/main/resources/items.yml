@@ -150,9 +150,8 @@ items:
     cooldown: 25
     effect_duration: 5
     commands:
-      - '[console] playsound item.trident.thunder master %player% ~ ~ ~ 2 0.5 ;; [title] &6&lMJÖLNIR!|&eChanneling power... ;; [delay:20] [console] execute at %player% run summon lightning_bolt ~ ~ ~ ;; [actionbar] &e⚡ SMITE! ;; [delay:10] [chance:50] [console] summon lightning_bolt ^ ^ ^5 ;; [message] &e⚡ &lCHAIN LIGHTNING! &7(Lucky Strike)'
+      - '[console] playsound item.trident.thunder master %player% ~ ~ ~ 2 0.5 ;; [title] &6&lMJÖLNIR!|&eChanneling power... ;; [delay:20] [console] execute at %player% run summon lightning_bolt ~ ~ ~ ;; [actionbar] &e⚡ SMITE! ;; [delay:40] [chance:50] [console] execute at %player% anchored eyes run summon lightning_bolt ^ ^ ^5 ;; [message] &e⚡ &lCHAIN LIGHTNING! &7(Lucky Strike)'
       - '[delay:5] [console] particle electric_spark %player_x% %player_y% %player_z% 1 1 1 0.1 50'
-
     active_effects:
       potion_effects:
         - DAMAGE_RESISTANCE;5

@@ -346,4 +346,12 @@ public class ConfigManager {
     public static String getBossBarStyle() { return bossBarStyle; }
     public static String getGlobalSuccessSound() { return globalSuccessSound; }
     public static String getGlobalCooldownSound() { return globalCooldownSound; }
+    public static String getDefaultCostMessage(String type) {
+        String path = "active-items.costs.messages." + type.toLowerCase();
+
+        if (plugin.getConfig().contains(path)) {
+            return plugin.getConfig().getString(path);
+        }
+        return plugin.getConfig().getString("active-items.costs.messages.default", "&cCost not met.");
+    }
 }

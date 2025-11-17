@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.utility.item;
 
+import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 
@@ -35,6 +36,7 @@ public class BuffedItem {
     private final String customBossBarMsg;
     private final String customSuccessSound;
     private final String customCooldownSound;
+    private final List<ICost> costs;
 
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
@@ -49,7 +51,7 @@ public class BuffedItem {
                       boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
-                      String customCooldownSound) {
+                      String customCooldownSound, List<ICost> costs) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -79,6 +81,7 @@ public class BuffedItem {
         this.customBossBarMsg = customBossBarMsg;
         this.customSuccessSound = customSuccessSound;
         this.customCooldownSound = customCooldownSound;
+        this.costs = (costs != null) ? costs : new ArrayList<>();
     }
 
 
@@ -207,4 +210,8 @@ public class BuffedItem {
     public String getCustomBossBarMsg() { return customBossBarMsg; }
     public String getCustomSuccessSound() { return customSuccessSound; }
     public String getCustomCooldownSound() { return customCooldownSound; }
+
+    public List<ICost> getCosts() {
+        return costs;
+    }
 }

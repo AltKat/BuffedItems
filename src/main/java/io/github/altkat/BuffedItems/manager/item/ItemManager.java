@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.handler.CustomModelDataHandler;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
+import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
@@ -355,6 +356,14 @@ public class ItemManager {
         String soundSuccess = itemSection.getString("sounds.success");
         String soundCooldown = itemSection.getString("sounds.cooldown");
 
+        List<ICost> costs = new ArrayList<>();
+        if (itemSection.contains("costs")) {
+            List<Map<?, ?>> costList = itemSection.getMapList("costs");
+            costs = plugin.getCostManager().parseCosts(costList);
+            List<ICost> finalCosts = costs;
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + finalCosts.size() + " costs for item: " + itemId);
+        }
+
         BuffedItem finalBuffedItem = new BuffedItem(
                 itemId,
                 displayName,
@@ -384,7 +393,8 @@ public class ItemManager {
                 msgActionBar,
                 msgBossBar,
                 soundSuccess,
-                soundCooldown
+                soundCooldown,
+                costs
         );
 
         for (String errorMsg : errorMessages) {
