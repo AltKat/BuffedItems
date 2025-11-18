@@ -349,7 +349,7 @@ public class ChatListener implements Listener {
                 if (input.contains(":")) {
                     ConfigManager.setItemValue(itemId, "custom-model-data", input);
                     player.sendMessage(ConfigManager.fromSection("§aCustom Model Data set to: §e" + input));
-                    player.sendMessage(ConfigManager.fromSection("§7It will be resolved on next reload/save."));
+                    player.sendMessage(ConfigManager.fromSection("§7It may be resolved on next reload."));
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                             () -> "[Chat] Set external custom-model-data for " + itemId + ": " + input);
                     closeChatInput(pmu);
@@ -901,7 +901,45 @@ public class ChatListener implements Listener {
         newCost.put("type", type);
 
         try {
-            if (type.equals("ITEM")) {
+            if (type.equals("BUFFED_ITEM")) {
+                String[] parts = input.split(";");
+                if (parts.length != 2) throw new IllegalArgumentException("Invalid format");
+
+                int amount = Integer.parseInt(parts[0]);
+                String buffedItemId = parts[1];
+
+                if (plugin.getItemManager().getBuffedItem(buffedItemId) == null) {
+                    player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + buffedItemId + "' is not loaded yet."));
+                }
+
+                newCost.put("amount", amount);
+                newCost.put("item_id", buffedItemId);
+            }
+            else if (type.equals("COINSENGINE")) {
+                double amount;
+                String currencyId = "coins";
+
+                if (input.contains(";")) {
+                    String[] parts = input.split(";");
+                    if (parts.length != 2) throw new IllegalArgumentException("Invalid format");
+                    amount = Double.parseDouble(parts[0]);
+                    currencyId = parts[1];
+                } else {
+                    amount = Double.parseDouble(input);
+                }
+
+                if (amount <= 0) throw new NumberFormatException();
+
+                if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
+                    if (su.nightexpress.coinsengine.api.CoinsEngineAPI.getCurrency(currencyId) == null) {
+                        player.sendMessage(ConfigManager.fromSection("§eWarning: Currency ID '" + currencyId + "' not found in CoinsEngine."));
+                    }
+                }
+
+                newCost.put("amount", amount);
+                newCost.put("currency_id", currencyId);
+            }
+            else if (type.equals("ITEM")) {
                 String[] parts = input.split(";");
                 if (parts.length != 2) throw new IllegalArgumentException("Invalid format");
 
@@ -967,7 +1005,7 @@ public class ChatListener implements Listener {
         String type = (String) targetCost.get("type");
 
         try {
-            if ("ITEM".equals(type) || "LEVEL".equals(type) || "HUNGER".equals(type)) {
+            if ("ITEM".equals(type) || "LEVEL".equals(type) || "HUNGER".equals(type) || "BUFFED_ITEM".equals(type)) {
                 int val = Integer.parseInt(input);
                 if (val <= 0) throw new NumberFormatException();
                 targetCost.put("amount", val);

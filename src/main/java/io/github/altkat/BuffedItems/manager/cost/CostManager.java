@@ -53,6 +53,12 @@ public class CostManager {
         registerFactory("HUNGER", HungerCost::new);
         registerFactory("HEALTH", HealthCost::new);
         registerFactory("ITEM", ItemCost::new);
+        registerFactory("BUFFED_ITEM", data -> new BuffedItemCost(data, plugin));
+
+        if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
+            ConfigManager.logInfo("&aCoinsEngine detected! Enabling custom currency costs.");
+            registerFactory("COINSENGINE", CoinsEngineCost::new);
+        }
 
         if (econ != null) {
             registerFactory("MONEY", data -> new MoneyCost(data, econ));

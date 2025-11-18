@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.CostTypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -88,8 +89,22 @@ public class CostListMenu extends Menu {
                 playerMenuUtility.setChatInputPath("active.costs.edit.message");
                 p.closeInventory();
 
+                Map<?, ?> costData = costList.get(e.getSlot());
+                String type = (String) costData.get("type");
+                String placeholders = "{amount}";
+
+                if ("ITEM".equals(type)) {
+                    placeholders = "{amount}, {material}";
+                }
+                else if ("BUFFED_ITEM".equals(type)) {
+                    placeholders = "{amount}, {item_name}";
+                }
+                else if ("COINSENGINE".equals(type)) {
+                    placeholders = "{amount}, {currency_name}";
+                }
+
                 p.sendMessage(ConfigManager.fromSection("§aEditing Failure Message."));
-                p.sendMessage(ConfigManager.fromSection("§7Placeholders: {amount}, {material}"));
+                p.sendMessage(ConfigManager.fromSection("§7Placeholders: " + placeholders));
                 p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset to config default."));
                 p.sendMessage(ConfigManager.fromSection("§aEnter new message in chat."));
             }
@@ -114,7 +129,6 @@ public class CostListMenu extends Menu {
             boolean isDefault = false;
 
             if (msg == null) {
-                // Özel mesaj yoksa, ConfigManager'dan o türün varsayılan mesajını çek
                 msg = ConfigManager.getDefaultCostMessage(type);
                 isDefault = true;
             }
@@ -127,6 +141,25 @@ public class CostListMenu extends Menu {
             if (costData.containsKey("material")) {
                 lore.add("§7Item: §b" + costData.get("material"));
             }
+
+            if (costData.containsKey("item_id")) {
+                String refId = (String) costData.get("item_id");
+                BuffedItem bItem = plugin.getItemManager().getBuffedItem(refId);
+
+                String displayName;
+                if (bItem != null) {
+                    displayName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                } else {
+                    displayName = "§c" + refId + " (No BuffedItem found with this id!)";
+                }
+
+                lore.add("§7Item: §r" + displayName);
+            }
+
+            if (costData.containsKey("currency_id")) {
+                lore.add("§7Currency: §e" + costData.get("currency_id"));
+            }
+
             lore.add("");
             lore.add("§7Message:");
             String formattedMsg = ConfigManager.toSection(ConfigManager.fromLegacy(msg));
@@ -155,6 +188,8 @@ public class CostListMenu extends Menu {
             case "HUNGER": return Material.COOKED_BEEF;
             case "HEALTH": return Material.RED_DYE;
             case "ITEM": return Material.CHEST;
+            case "BUFFED_ITEM": return Material.NETHER_STAR;
+            case "COINSENGINE": return Material.SUNFLOWER;
             default: return Material.PAPER;
         }
     }

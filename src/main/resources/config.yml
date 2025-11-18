@@ -81,4 +81,5 @@ active-items:
       hunger: "&cYou are too hungry! Cost: &e{amount}"
       health: "&cNot enough Health! Cost: &e{amount}"
       item: "&cMissing Item: &e{amount}x {material}"
+      buffed_item: "&cMissing Item: &e{amount}x {item_name}"
       default: "&cYou cannot afford this cost."

@@ -74,6 +74,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>nightexpress-releases</id>
+            <url>https://repo.nightexpressdev.com/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -99,6 +103,12 @@
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
             <version>1.7</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>su.nightexpress.coinsengine</groupId>
+            <artifactId>CoinsEngine</artifactId>
+            <version>2.6.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

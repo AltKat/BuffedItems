@@ -105,7 +105,7 @@ public class CommandListMenu extends PaginatedMenu {
         inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Settings"));
         inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd New Command", "§7Click to add a command via chat."));
 
-        inventory.setItem(45, makeItem(Material.BOOK, "§eCommand Info & Help",
+        inventory.setItem(4, makeItem(Material.BOOK, "§eCommand Info & Help",
                 "§7Commands run when the item is right-clicked.",
                 "",
                 "§6Actions & Messages:",

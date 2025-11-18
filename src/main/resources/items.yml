@@ -117,6 +117,38 @@
 #   potion_effects: List of 'EFFECT;LEVEL'
 #   attributes: List of 'ATTRIBUTE;OPERATION;AMOUNT'
 #
+# costs: A list of requirements to use the active item.
+#   You can add multiple costs to a single item.
+#
+#   AVAILABLE COST TYPES:
+#   - MONEY: Requires Vault currency.
+#       - amount: (double)
+#   - EXPERIENCE: Requires XP points.
+#       - amount: (int)
+#   - LEVEL: Requires XP levels.
+#       - amount: (int)
+#   - HUNGER: Requires food level (20 = full bar).
+#       - amount: (int)
+#   - HEALTH: Requires health points (2 = 1 heart).
+#       - amount: (double)
+#   - ITEM: Requires a vanilla item.
+#       - amount: (int)
+#       - material: ITEM_NAME (e.g. DIAMOND)
+#   - BUFFED_ITEM: Requires another custom BuffedItem.
+#       - amount: (int)
+#       - item_id: custom_item_id (e.g. warriors_talisman)
+#   - COINSENGINE: Requires a CoinsEngine currency.
+#       - amount: (double)
+#       - currency_id: currency_name (Optional, default: 'coins')
+#
+#   EXAMPLE:
+#     costs:
+#       - type: MONEY
+#         amount: 100.0
+#       - type: BUFFED_ITEM
+#         amount: 1
+#         item_id: "magic_stone"
+#
 # visuals: Override global visual settings for this item.
 #   chat, title, action-bar, boss-bar: true/false
 #   boss-bar-color: RED, BLUE, etc.

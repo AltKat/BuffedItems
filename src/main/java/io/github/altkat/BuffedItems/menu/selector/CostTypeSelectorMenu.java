@@ -48,7 +48,17 @@ public class CostTypeSelectorMenu extends Menu {
         if (type.equals("ITEM")) {
             p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;MATERIAL"));
             p.sendMessage(ConfigManager.fromSection("§7Example: 1;DIAMOND"));
-        } else {
+        }
+        else if (type.equals("BUFFED_ITEM")) {
+            p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;BUFFED_ITEM_ID"));
+            p.sendMessage(ConfigManager.fromSection("§7Example: 1;warriors_talisman"));
+        }
+        else if (type.equals("COINSENGINE")) {
+            p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID"));
+            p.sendMessage(ConfigManager.fromSection("§7Example: 100;coins"));
+            p.sendMessage(ConfigManager.fromSection("§7(If you use default currency 'coins', you can just type the amount)"));
+        }
+        else {
             p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
         }
     }
@@ -62,6 +72,10 @@ public class CostTypeSelectorMenu extends Menu {
         inventory.setItem(13, makeItem(Material.COOKED_BEEF, "§aHUNGER", "§7Food Level"));
         inventory.setItem(14, makeItem(Material.RED_DYE, "§aHEALTH", "§7Health Points (Hearts)"));
         inventory.setItem(15, makeItem(Material.CHEST, "§aITEM", "§7Physical Items"));
+        inventory.setItem(16, makeItem(Material.NETHER_STAR, "§aBUFFED_ITEM", "§7Custom Buffed Items"));
+        if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
+            inventory.setItem(17, makeItem(Material.SUNFLOWER, "§aCOINSENGINE", "§7CoinsEngine Currency"));
+        }
 
         inventory.setItem(22, makeItem(Material.BARRIER, "§cCancel"));
     }
