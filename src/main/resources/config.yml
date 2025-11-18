@@ -82,4 +82,5 @@ active-items:
       health: "&cNot enough Health! Cost: &e{amount}"
       item: "&cMissing Item: &e{amount}x {material}"
       buffed_item: "&cMissing Item: &e{amount}x {item_name}"
+      coinsengine: "&cNot enough Money! Cost: &e{amount} {currency_name}"
       default: "&cYou cannot afford this cost."
