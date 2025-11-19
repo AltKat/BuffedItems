@@ -34,6 +34,7 @@ public class ConfigManager {
     private static String bossBarStyle;
     private static String globalSuccessSound;
     private static String globalCooldownSound;
+    private static String globalCostFailSound;
 
     public static final int DEBUG_OFF = 0;
     public static final int DEBUG_INFO = 1;      // Basic plugin status
@@ -196,6 +197,7 @@ public class ConfigManager {
         bossBarStyle = plugin.getConfig().getString("active-items.boss-bar-settings.style", "SOLID");
         globalSuccessSound = plugin.getConfig().getString("active-items.sounds.success", "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0");
         globalCooldownSound = plugin.getConfig().getString("active-items.sounds.cooldown", "ENTITY_VILLAGER_NO;1.0;1.0");
+        globalCostFailSound = plugin.getConfig().getString("active-items.sounds.cost-fail", "BLOCK_NOTE_BLOCK_HARP;1.0;0.5");
     }
 
     /**
@@ -346,6 +348,8 @@ public class ConfigManager {
     public static String getBossBarStyle() { return bossBarStyle; }
     public static String getGlobalSuccessSound() { return globalSuccessSound; }
     public static String getGlobalCooldownSound() { return globalCooldownSound; }
+    public static String getGlobalCostFailSound() { return globalCostFailSound; }
+
     public static String getDefaultCostMessage(String type) {
         String path = "active-items.costs.messages." + type.toLowerCase();
 

@@ -96,6 +96,9 @@ public class ItemInteractListener implements Listener {
                 for (String msg : missingRequirements) {
                     player.sendMessage(ConfigManager.fromLegacy(msg));
                 }
+
+                playConfiguredSound(player, buffedItem.getCustomCostFailSound(), ConfigManager.getGlobalCostFailSound());
+
                 event.setCancelled(true);
                 return;
             }

@@ -46,6 +46,11 @@ public class ActiveItemSoundsMenu extends Menu {
         if (e.getSlot() == 11) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "success").open();
         }
+
+        else if (e.getSlot() == 13) {
+            new SoundSettingsMenu(playerMenuUtility, plugin, "cost-fail").open();
+        }
+
         else if (e.getSlot() == 15) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cooldown").open();
         }
@@ -70,6 +75,22 @@ public class ActiveItemSoundsMenu extends Menu {
                 "§7Current: " + currSuccess,
                 "",
                 "§eClick to Change"));
+
+
+        String currCostFail = item.getCustomCostFailSound();
+        if (currCostFail == null) {
+            currCostFail = "§6" + ConfigManager.getGlobalCostFailSound() + " §8(Default)";
+        } else {
+            currCostFail = "§6" + currCostFail;
+        }
+
+        inventory.setItem(13, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
+                "§7Sound played when a cost is not met.",
+                "§7Current: " + currCostFail,
+                "",
+                "§eClick to Change"));
+
+
 
         String currCool = item.getCustomCooldownSound();
         if (currCool == null) {

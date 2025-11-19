@@ -355,6 +355,7 @@ public class ItemManager {
         String msgBossBar = itemSection.getString("visuals.messages.cooldown-boss-bar");
         String soundSuccess = itemSection.getString("sounds.success");
         String soundCooldown = itemSection.getString("sounds.cooldown");
+        String soundCostFail = itemSection.getString("sounds.cost-fail");
 
         List<ICost> costs = new ArrayList<>();
         if (itemSection.contains("costs")) {
@@ -394,6 +395,7 @@ public class ItemManager {
                 msgBossBar,
                 soundSuccess,
                 soundCooldown,
+                soundCostFail,
                 costs
         );
 

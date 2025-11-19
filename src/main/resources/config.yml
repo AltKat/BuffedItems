@@ -67,6 +67,7 @@ active-items:
   sounds:
     success: "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0"
     cooldown: "ENTITY_VILLAGER_NO;1.0;1.0"
+    cost-fail: "BLOCK_NOTE_BLOCK_HARP;1.0;0.5"
 
   # ===================================================================
   #                       COST SYSTEM MESSAGES
