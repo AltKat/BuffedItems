@@ -119,14 +119,22 @@ public class CooldownVisualsTask extends BukkitRunnable {
                 BossBar bar = activeBossBars.get(uuid);
                 bar.removePlayer(player);
                 activeBossBars.remove(uuid);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                        () -> "[CooldownVisuals] Removed BossBar for player: " + player.getName());
             }
         }
     }
 
     public void cleanup() {
         for (BossBar bar : activeBossBars.values()) {
-            bar.removeAll();
+            try {
+                bar.removeAll();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Error removing BossBar during cleanup: " + e.getMessage());
+            }
         }
         activeBossBars.clear();
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                () -> "[CooldownVisuals] Cleaned up all BossBars during shutdown");
     }
 }
