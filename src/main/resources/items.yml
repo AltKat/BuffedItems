@@ -9,76 +9,199 @@
 # ===================================================================
 #
 # This file contains all the custom items created by the plugin.
-# We RECOMMEND using the in-game editor (/bi menu) to make changes.
+# We RECOMMEND using the in-game editor (/bi menu) to make changes easily.
 #
 # If you edit this file manually, use /bi reload to apply changes.
 # ===================================================================
 
-# Welcome to the items configuration file for BuffedItems!
-# Here you can create unique items with permanent effects and attributes.
-# For full control, use the in-game editor: /bi menu
+# --- CONFIGURATION GUIDE ---
 #
-# --- DETAILED GUIDE ---
+# display_name: The in-game name. Supports '&' for legacy colors and '&#RRGGBB' for HEX.
+# lore: List of description lines.
+# material: Valid Spigot Material name (e.g. DIAMOND_SWORD, STONE).
+# glow: (true/false) Adds enchantment glow.
+# permission: (Optional) Permission node required to use/benefit from the item.
+# custom-model-data: (Optional) Integer for resource packs (or 'itemsadder:id', 'nexo:id').
 #
-# display_name: The in-game name of the item. Supports color codes with '&' and HEX colors with '&#RRGGBB'.
-#               Example: '&#FF0000Red &#00FF00Green &#0000FFBlue'
+# flags: Control item flags and protections.
+#   - UNBREAKABLE, HIDE_ATTRIBUTES, HIDE_ENCHANTS, PREVENT_DROP, PREVENT_DEATH_DROP, etc.
 #
-# lore: The item's description. Each line under this key is a new line in the lore.
+# effects: Passive permanent effects applied when holding/wearing the item.
+#   - Slots: MAIN_HAND, OFF_HAND, HELMET, CHESTPLATE, LEGGINGS, BOOTS, INVENTORY
 #
-# material: Must be a valid Spigot Material name from this list:
-#           https://hub.spigotmc.org/javadoc/spigot/org/bukkit/Material.html
+# --- NEW ACTIVE ITEM FEATURES GUIDE ---
+# active-mode:
+#   enabled: (true/false) Enables the active ability system.
+#   cooldown: (integer) Cooldown in seconds between uses.
+#   duration: (integer) Duration in seconds for active effects.
 #
-# glow: (Optional) Set to 'true' to give the item an enchantment glow. Defaults to false.
+#   commands: A list of commands to run when right-clicked.
+#     You can chain prefixes to create complex mechanics.
+#     PREFIX ORDER: Flexible! You can mix [delay], [chance], and [console].
 #
-# permission: (Optional) If you set a permission node, only players with this permission
-#             can benefit from the item's effects.
-#             IMPORTANT: To remove a permission via the in-game editor, set its value
-#             to 'none'. This will be saved here as 'NONE' and means no permission is required.
+#     LOGIC PREFIXES:
+#     - [delay:ticks]     -> Waits X ticks (20 ticks = 1 second) before running this part.
+#                            Delays are cumulative (added to previous delays).
+#     - [chance:percent]  -> Runs the command with X% success chance (0-100).
+#     - [console]         -> Runs the command as Console (Admin). Without this, it runs as Player.
 #
-# effects: This section holds all the magic. Effects can be applied to different slots.
-#   Valid Slots: MAIN_HAND, OFF_HAND, INVENTORY, HELMET, CHESTPLATE, LEGGINGS, BOOTS
+#     MESSAGE ACTIONS (No command needed):
+#     - [message] text      -> Sends a clean message to player (colored, no prefix).
+#     - [actionbar] text    -> Sends text above the hotbar.
+#     - [title] Main|Sub    -> Sends a big title. Split subtitle with '|'.
 #
-#   potion_effects: A list of potion effects to apply in this slot.
-#     - Format: 'EFFECT_NAME;LEVEL' (e.g., 'SPEED;2' for Speed II)
-#     - Effect List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/potion/PotionEffectType.html
+#     CHAINING:
+#     - Use ';;' to execute multiple commands/actions sequentially.
+#     - Logic (Chance/Delay) applies to the specific chain link it is in.
 #
-#   attributes: A list of permanent attribute modifiers to apply in this slot.
-#     - Format: 'ATTRIBUTE_NAME;OPERATION;AMOUNT'
-#     - Attribute List: https://hub.spigotmc.org/javadoc/spigot/org/bukkit/attribute/Attribute.html
-#     - OPERATIONS:
-#       - ADD_NUMBER: Adds a flat value (e.g., GENERIC_MAX_HEALTH;ADD_NUMBER;2.0 adds 1 heart).
-#       - ADD_SCALAR: Adds a percentage of the base value (less common).
-#       - MULTIPLY_SCALAR_1: Multiplies the final value by (1 + amount) (e.g., GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.1 adds +10% speed).
+#     EXAMPLES:
+#     - 'help' (Immediate player command, help command will be executed as player.)
+#     - '[console] kill %player%' (Immediate console command, kills player)
+#     - '[chance:50] [console] give %player% diamond 1 ;; [message] &aYou won!' (Console command with 50% success chance, if first part success then second block will be executed, will send to the player You Won message.)
+#     - '[delay:40] [chance:25] [console] kill %player%' (Wait 2s, then 25% chance to kill player)
+#     - '[chance:50][title] &cBOSS!|&7Spawning... ;; [delay:60] [console] summon wither %player_x% %player_y% %player_z%' (Sends a title with 50% success chance if succeeds after 3 seconds delay it will summon a wither at the player's location)
 #
-# custom-model-data: (Optional) Set a custom model data integer for resource packs.
-#   - custom-model-data: 12345              (Direct)
-#   - custom-model-data: itemsadder:sword_1 (ItemsAdder)
-#   - custom-model-data: nexo:custom_item   (Nexo)
+#     PLACEHOLDERS:
+#     - Built-in: %player%, %player_x%, %player_y%, %player_z%, %player_yaw%, %player_pitch%
+#     - PlaceholderAPI: Fully supported! (e.g., %vault_eco_balance% >= 1000)
 #
-# flags: (Optional) This section controls item behaviors and appearances.
-#   Set any flag to 'true' or 'false' to override its default value.
-#   Available Flags (with their NEW default values):
-#     - UNBREAKABLE: (Default: false) Prevents durability loss.
-#     - HIDE_ATTRIBUTES: (Default: true) Hides the default attribute text.
-#     - HIDE_ENCHANTS: (Default: true) Hides enchantment text.
-#     - HIDE_UNBREAKABLE: (Default: true) Hides the 'Unbreakable' text.
-#     - HIDE_ADDITIONAL_TOOLTIP: (Default: true) Hides additional tooltip text like potion/arrow effect text.
-#     - HIDE_DESTROYS: (Default: true) Hides 'Can Destroy:' list (Adventure mode).
-#     - HIDE_PLACED_ON: (Default: true) Hides 'Can Be Placed On:' list (Adventure mode).
-#     - PREVENT_ANVIL_USE: (Default: false) Blocks use in anvils (rename, repair, enchant).
-#     - PREVENT_ENCHANT_TABLE: (Default: false) Blocks use in enchanting tables.
-#     - PREVENT_SMITHING_USE: (Default: false) Blocks use in smithing tables.
-#     - PREVENT_CRAFTING_USE: (Default: true) Blocks use as a crafting ingredient.
-#     - PREVENT_DROP: (Default: false) Blocks dropping the item (Q key/inventory drag).
-#     - PREVENT_CONSUME: (Default: false) Blocks eating or drinking the item.
-#     - PREVENT_PLACEMENT: (Default: true) Blocks placing the item (blocks, boats, armor stands).
-#     - PREVENT_DEATH_DROP: (Default: false) Keeps the item on death.
-#     - PREVENT_INTERACT: (Default: false) Prevents using the item (right-click actions like Flint&Steel, Hoe).
-#   Note: Flags marked with (Default: true) will be active even if not specified in the config.
-#         You only need to add them if you want to explicitly set them to 'false'.
-# -------------------------------------------------------------------------------------------
+#   effects: Apply potions/attributes on right-click (requires duration).
+#     potion_effects: List of 'EFFECT;LEVEL'
+#     attributes: List of 'ATTRIBUTE;OPERATION;AMOUNT'
+#
+#   costs: A list of requirements to use the active item.
+#     You can add multiple costs to a single item.
+#
+#     AVAILABLE COST TYPES:
+#     - MONEY: Requires Vault currency.
+#         - amount: (double)
+#     - EXPERIENCE: Requires XP points.
+#         - amount: (int)
+#     - LEVEL: Requires XP levels.
+#         - amount: (int)
+#     - HUNGER: Requires food level (20 = full bar).
+#         - amount: (int)
+#     - HEALTH: Requires health points (2 = 1 heart).
+#         - amount: (double)
+#     - ITEM: Requires a vanilla item.
+#         - amount: (int)
+#         - material: ITEM_NAME (e.g. DIAMOND)
+#     - BUFFED_ITEM: Requires another custom BuffedItem.
+#         - amount: (int)
+#         - item_id: custom_item_id (e.g. warriors_talisman)
+#     - COINSENGINE: Requires a CoinsEngine currency.
+#         - amount: (double)
+#         - currency_id: currency_name (Optional, default: 'coins')
+#
+#     EXAMPLE:
+#       costs:
+#         - type: MONEY
+#           amount: 100.0
+#         - type: BUFFED_ITEM
+#           amount: 1
+#           item_id: "magic_stone"
+#
+#   visuals: Override global visual settings for this item.
+#     chat, title, action-bar, boss-bar: true/false
+#     boss-bar-color: RED, BLUE, etc.
+#     boss-bar-style: SOLID, SEGMENTED_6, etc.
+#     messages: Override default messages (chat, title, subtitle, action-bar, boss-bar).
+#
+#   sounds: Override global sound settings.
+#     success: 'SOUND_NAME;VOL;PITCH'
+#     cooldown: 'SOUND_NAME;VOL;PITCH'
+#     cost-fail: "SOUND_NAME;VOL;PITCH"
+# ===================================================================
 
 items:
+  mjolnir:
+    display_name: '&#F4D03F&lMjölnir'
+    material: MACE
+    lore:
+      - '&7The weapon of THOR.'
+      - ''
+      - '&bPassive:'
+      - '&7- Slow Falling (Feather-light)'
+      - ''
+      - '&eActive (Right-Click):'
+      - '&6&lSKY WRATH!'
+      - '&7- Ascend to the sky.'
+      - '&7- Channel lightning storms.'
+      - '&7- &bSuperhero Landing!'
+      - ''
+      - '&cCooldown: 30s'
+    glow: true
+    permission: NONE
+    custom-model-data: 0
+    active-mode:
+      enabled: true
+      cooldown: 30
+      duration: 10
+      costs:
+        - type: LEVEL
+          amount: 5
+          message: '&cNot enough power! You need &e5 XP Levels&c.'
+        - type: ITEM
+          material: DIAMOND
+          amount: 1
+          message: '&cMissing catalyst! (1x Diamond)'
+      commands:
+        - '[console] effect give %player% minecraft:levitation 1 30 true ;; [console] playsound entity.ender_dragon.flap master %player% ~ ~ ~ 2 0.5 ;; [title] &b&lSKY WRATH!|&7Ascending...'
+        - '[delay:20] [console] effect clear %player% minecraft:levitation ;; [console] effect give %player% minecraft:slow_falling 3 0 true ;; [console] execute at %player% run summon lightning_bolt ~5 ~-5 ~5 ;; [console] execute at %player% run summon lightning_bolt ~-5 ~-5 ~-5'
+        - '[delay:20] [console] execute at %player% run summon lightning_bolt ~5 ~-5 ~-5 ;; [console] execute at %player% run summon lightning_bolt ~-5 ~-5 ~5 ;; [console] playsound entity.lightning_bolt.thunder master %player% ~ ~ ~ 5 2'
+        - '[delay:20] [console] execute at %player% run particle explosion_emitter ~ ~-10 ~ 2 2 2 0.1 50 ;; [console] playsound entity.generic.explode master %player% ~ ~ ~ 5 0.5'
+        - '[delay:20] [console] effect clear %player% minecraft:slow_falling ;; [console] effect give %player% minecraft:resistance 5 4 true ;; [actionbar] &c&l⚠ IMPACT IMMINENT!'
+        - '[delay:15] [console] playsound entity.iron_golem.damage master %player% ~ ~ ~ 2 0.5 ;; [console] particle cloud %player_x% %player_y% %player_z% 1 0.1 1 0.1 20'
+      effects:
+        potion_effects:
+          - DAMAGE_RESISTANCE;5
+          - INCREASE_DAMAGE;2
+          - LUCK;1
+        attributes:
+          - GENERIC_ATTACK_SPEED;ADD_NUMBER;100.0
+      visuals:
+        chat: true
+        title: false
+        action-bar: true
+        boss-bar: true
+        boss-bar-color: BLUE
+        boss-bar-style: SEGMENTED_10
+        messages:
+          cooldown-chat: '&cYou are exhausted! Wait &e{time}s&c.'
+          cooldown-title: '&cTIRED'
+          cooldown-subtitle: '&7Wait &e{time}s'
+          cooldown-action-bar: '&bMjölnir Cooldown: &f{time}s'
+          cooldown-boss-bar: '&b&lSKY POWER RECHARGING: &f{time}s'
+      sounds:
+        success: ITEM_TRIDENT_THUNDER;1.0;0.8
+        cooldown: BLOCK_ENCHANTMENT_TABLE_USE;1.0;2.0
+        cost-fail: BLOCK_ANVIL_LAND;1.0;0.5
+    effects:
+      MAIN_HAND:
+        potion_effects:
+          - SLOW_FALLING;1
+        attributes:
+          - GENERIC_ATTACK_DAMAGE;ADD_NUMBER;5.0
+    flags:
+      UNBREAKABLE: true
+      HIDE_ATTRIBUTES: true
+      HIDE_ENCHANTS: true
+      HIDE_UNBREAKABLE: true
+      HIDE_DESTROYS: false
+      HIDE_PLACED_ON: false
+      HIDE_ADDITIONAL_TOOLTIP: false
+      PREVENT_ANVIL_USE: false
+      PREVENT_ENCHANT_TABLE: false
+      PREVENT_SMITHING_USE: false
+      PREVENT_CRAFTING_USE: false
+      PREVENT_DROP: false
+      PREVENT_CONSUME: false
+      PREVENT_PLACEMENT: false
+      PREVENT_DEATH_DROP: false
+      PREVENT_INTERACT: false
+    enchantments:
+      - FIRE_ASPECT;5
+
   bunny_charm:
     display_name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
     lore:

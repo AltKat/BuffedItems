@@ -32,3 +32,56 @@ messages:
   protection-prevent-smithing-use: "&#FF0000This special item cannot be used in a smithing table."
   protection-prevent-container-store: "&#FF0000You cannot store this special item in a container."
   protection-prevent-itemframe-store: "&#FF0000You cannot place this special item in an item frame."
+
+# ===================================================================
+#                   ACTIVE ITEMS - VISUAL SETTINGS
+# ===================================================================
+active-items:
+  # Select which visual indicators to enable for cooldowns globally.
+  # These can be overridden per-item with in game editor and items.yml.
+  visuals:
+    chat: true        # Send a chat message when clicked during cooldown.
+    title: true       # Show a big title on screen when clicked during cooldown.
+    action-bar: true  # Show a countdown on the action bar (above hotbar).
+    boss-bar: true    # Show a progress bar at the top of the screen.
+
+  # Default BossBar Configuration
+  boss-bar-settings:
+    color: "RED"      # Options: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+    style: "SOLID"    # Options: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+
+  # Cooldown Messages
+  # Placeholder: {time} = remaining seconds (e.g., 4.5)
+  messages:
+    cooldown-chat: "&cYou must wait &e{time}s &cbefore using this item again."
+    cooldown-title: "&cOn Cooldown!"
+    cooldown-subtitle: "&e{time}s &7remaining."
+    cooldown-action-bar: "&fCooldown: &e{time}s"
+    cooldown-boss-bar: "&c&lCooldown: &e{time}s"
+
+  # Sound Effects
+  # Format: SOUND_NAME;VOLUME;PITCH
+  # Volume: 1.0 is normal distance.
+  # Pitch: 0.5 to 2.0 (1.0 is normal speed).
+  # Set to 'NONE' to disable sound.
+  sounds:
+    success: "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0"
+    cooldown: "ENTITY_VILLAGER_NO;1.0;1.0"
+    cost-fail: "BLOCK_NOTE_BLOCK_HARP;1.0;0.5"
+
+  # ===================================================================
+  #                       COST SYSTEM MESSAGES
+  # ===================================================================
+  # These messages are used if a specific item doesn't have a custom 'message' defined in its cost section.
+  # Placeholders: {amount}, {material} (for items), {item_name} (for buffeditems), {currency_name} for coinsengine.
+  costs:
+    messages:
+      money: "&cNot enough money! Cost: &e{amount}"
+      experience: "&cNot enough XP! Cost: &e{amount}"
+      level: "&cNot enough Levels! Cost: &e{amount}"
+      hunger: "&cYou are too hungry! Cost: &e{amount}"
+      health: "&cNot enough Health! Cost: &e{amount}"
+      item: "&cMissing Item: &e{amount}x {material}"
+      buffed_item: "&cMissing Item: &e{amount}x {item_name}"
+      coinsengine: "&cNot enough Money! Cost: &e{amount} {currency_name}"
+      default: "&cYou cannot afford this cost."
