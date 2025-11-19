@@ -24,8 +24,11 @@ import java.util.stream.Collectors;
 public class EnchantmentSelectorMenu extends PaginatedMenu {
 
     private final BuffedItems plugin;
-    private final List<Enchantment> enchantments;
+    private List<Enchantment> enchantments;
+    private List<Enchantment> filteredEnchantments;
     private final String itemId;
+    private String searchQuery = "";
+    private boolean isSearchMode = false;
 
     public EnchantmentSelectorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
@@ -36,11 +39,16 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
                 .filter(e -> e != null)
                 .sorted(Comparator.comparing(e -> e.getKey().getKey()))
                 .collect(Collectors.toList());
+
+        this.filteredEnchantments = new ArrayList<>(enchantments);
         this.maxItemsPerPage = 45;
     }
 
     @Override
     public String getMenuName() {
+        if (isSearchMode && !searchQuery.isEmpty()) {
+            return "Search: " + searchQuery + " (Found: " + filteredEnchantments.size() + ")";
+        }
         return "Select Enchantment (Page " + (page + 1) + ")";
     }
 
@@ -57,6 +65,21 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
         int clickedSlot = e.getSlot();
         Material clickedType = e.getCurrentItem().getType();
 
+        if (clickedType == Material.COMPASS && clickedSlot == 51) {
+            playerMenuUtility.setWaitingForChatInput(true);
+            playerMenuUtility.setChatInputPath("enchantment_search");
+            p.closeInventory();
+            p.sendMessage(ConfigManager.fromSection("§aType the enchantment name to search (e.g., 'sharp', 'sharpness', 'quantum'):"));
+            p.sendMessage(ConfigManager.fromSection("§7Type 'clear' to clear search."));
+            return;
+        }
+
+        if (clickedType == Material.BARRIER && clickedSlot == 52) {
+            clearSearch();
+            this.open();
+            return;
+        }
+
         if (clickedSlot < this.maxItemsPerPage && clickedType == Material.ENCHANTED_BOOK) {
             ItemMeta meta = e.getCurrentItem().getItemMeta();
             if (meta == null || meta.getLore() == null || meta.getLore().isEmpty()) return;
@@ -67,11 +90,11 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             if (!rawEnchantName.startsWith("ID: ")) return;
 
             String enchantKey = rawEnchantName.substring(4);
+
             Enchantment selectedEnchant = EnchantmentFinder.findEnchantment(enchantKey, plugin);
 
             if (selectedEnchant == null) {
                 p.sendMessage(ConfigManager.fromSection("§cError: Could not identify selected enchantment '" + enchantKey + "'."));
-                p.sendMessage(ConfigManager.fromSection("§7Try using the format: namespace:enchant_name (e.g., veinminer:veinminer)"));
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                         () -> "[EnchantmentSelector] Failed to find enchantment: " + enchantKey);
                 return;
@@ -95,7 +118,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             return;
         }
 
-        if (handlePageChange(e, enchantments.size())) {
+        if (handlePageChange(e, filteredEnchantments.size())) {
             return;
         }
 
@@ -109,13 +132,26 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
     public void setMenuItems() {
         inventory.setItem(45, makeItem(Material.ARROW, "§aPrevious Page"));
         inventory.setItem(53, makeItem(Material.ARROW, "§aNext Page"));
+
+        inventory.setItem(51, makeItem(Material.COMPASS, "§bSearch Enchantments",
+                "§7Current: " + (searchQuery.isEmpty() ? "§cNone" : "§a" + searchQuery),
+                "§eClick to search"));
+
+        int clearSlot = isSearchMode && !searchQuery.isEmpty() ? 52 : -1;
+        if (clearSlot != -1) {
+            inventory.setItem(clearSlot, makeItem(Material.BARRIER, "§cClear Search",
+                    "§7Reset to show all enchantments"));
+        }
+
         inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Enchantment List"));
+
+        List<Enchantment> displayList = filteredEnchantments;
 
         for (int i = 0; i < maxItemsPerPage; i++) {
             index = maxItemsPerPage * page + i;
-            if (index >= enchantments.size()) break;
+            if (index >= displayList.size()) break;
 
-            Enchantment currentEnchant = enchantments.get(index);
+            Enchantment currentEnchant = displayList.get(index);
             if (currentEnchant == null) continue;
 
             List<String> lore = new ArrayList<>();
@@ -126,6 +162,36 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
                     lore.toArray(new String[0]));
             inventory.setItem(i, itemStack);
         }
+
         setFillerGlass();
+    }
+
+    public void searchEnchantments(String query) {
+        if (query == null || query.isEmpty() || query.equalsIgnoreCase("clear")) {
+            clearSearch();
+            return;
+        }
+
+        searchQuery = query.toLowerCase().trim();
+        isSearchMode = true;
+        page = 0;
+
+        filteredEnchantments = enchantments.stream()
+                .filter(e -> e != null && (
+                        e.getName().toLowerCase().contains(searchQuery) ||
+                                e.getKey().getKey().toLowerCase().contains(searchQuery)
+                ))
+                .collect(Collectors.toList());
+
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                () -> "[EnchantmentSearch] Search for '" + searchQuery + "' returned " +
+                        filteredEnchantments.size() + " results");
+    }
+
+    public void clearSearch() {
+        searchQuery = "";
+        isSearchMode = false;
+        page = 0;
+        filteredEnchantments = new ArrayList<>(enchantments);
     }
 }

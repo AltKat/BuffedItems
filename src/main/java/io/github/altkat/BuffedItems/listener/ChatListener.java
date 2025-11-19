@@ -9,6 +9,7 @@ import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.editor.LoreEditorMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
+import io.github.altkat.BuffedItems.menu.selector.EnchantmentSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -86,6 +87,11 @@ public class ChatListener implements Listener {
             return;
         }
 
+        if (path.equals("enchantment_search")) {
+            handleEnchantmentSearch(player, pmu, input);
+            return;
+        }
+
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
             creationInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("lore.")) {
@@ -142,6 +148,21 @@ public class ChatListener implements Listener {
                     EffectListMenu.EffectType.ATTRIBUTE, slot).open();
         } else if (path.startsWith("enchantments")) {
             new EnchantmentListMenu(pmu, plugin).open();
+        }
+    }
+
+    private void handleEnchantmentSearch(Player player, PlayerMenuUtility pmu, String input) {
+        closeChatInput(pmu);
+        EnchantmentSelectorMenu menu =
+                new EnchantmentSelectorMenu(pmu, plugin);
+
+        menu.searchEnchantments(input);
+        menu.open();
+
+        if (input.equalsIgnoreCase("clear")) {
+            player.sendMessage(ConfigManager.fromSection("§aSearch cleared. Showing all enchantments."));
+        } else {
+            player.sendMessage(ConfigManager.fromSection("§aSearching for: §e" + input));
         }
     }
 }
