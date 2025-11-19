@@ -6,6 +6,8 @@ import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -19,6 +21,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MainMenu extends PaginatedMenu {
 
@@ -59,6 +62,33 @@ public class MainMenu extends PaginatedMenu {
                 BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
                 if (item != null) {
                     ItemStack stack = new ItemBuilder(item, plugin).build();
+
+                    if (plugin.isPlaceholderApiEnabled()) {
+                        ItemMeta meta = stack.getItemMeta();
+                        if (meta != null) {
+                            if (meta.hasDisplayName()) {
+                                Component originalName = meta.displayName();
+                                if (originalName != null) {
+                                    String legacyNameWithSection = ConfigManager.toSection(originalName);
+                                    String parsedName = PlaceholderAPI.setPlaceholders(p, legacyNameWithSection);
+                                    meta.displayName(ConfigManager.fromSection(parsedName));
+                                }
+                            }
+
+                            if (meta.hasLore()) {
+                                List<Component> originalLore = meta.lore();
+                                if (originalLore != null) {
+                                    List<Component> parsedLore = originalLore.stream()
+                                            .map(ConfigManager::toSection)
+                                            .map(line -> PlaceholderAPI.setPlaceholders(p, line))
+                                            .map(ConfigManager::fromSection)
+                                            .collect(Collectors.toList());
+                                    meta.lore(parsedLore);
+                                }
+                            }
+                            stack.setItemMeta(meta);
+                        }
+                    }
 
                     p.getInventory().addItem(stack);
 
