@@ -68,7 +68,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
 
 
     private void handleAddCommand(Player player, PlayerMenuUtility pmu, String input, String itemId) {
-        List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".commands"));
+        List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active-mode.commands"));
         commands.add(input);
         ConfigManager.setItemValue(itemId, "commands", commands);
         player.sendMessage(ConfigManager.fromSection("§aCommand added!"));
@@ -79,7 +79,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
     private void handleEditCommand(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         try {
             int index = Integer.parseInt(path.substring(21));
-            List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".commands"));
+            List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active-mode.commands"));
 
             if (index >= 0 && index < commands.size()) {
                 commands.set(index, input);

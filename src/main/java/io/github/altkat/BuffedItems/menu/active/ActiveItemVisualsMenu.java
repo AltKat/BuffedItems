@@ -103,11 +103,28 @@ public class ActiveItemVisualsMenu extends Menu {
 
                 if (!path.isEmpty()) {
                     if (e.isRightClick()) {
-                        if (path.contains("title")) ConfigManager.setItemValue(itemId, "visuals.messages.subtitle", null);
+                        String configPath = null;
+                        String subtitlePath = null;
 
-                        String configPath = path.replace("active.msg.", "visuals.messages.")
-                                .replace("actionbar", "action-bar")
-                                .replace("bossbar", "boss-bar");
+                        switch (path) {
+                            case "active.msg.chat":
+                                configPath = "visuals.messages.cooldown-chat";
+                                break;
+                            case "active.msg.title":
+                                configPath = "visuals.messages.cooldown-title";
+                                subtitlePath = "visuals.messages.cooldown-subtitle";
+                                break;
+                            case "active.msg.actionbar":
+                                configPath = "visuals.messages.cooldown-action-bar";
+                                break;
+                            case "active.msg.bossbar":
+                                configPath = "visuals.messages.cooldown-boss-bar";
+                                break;
+                        }
+
+                        if (subtitlePath != null) {
+                            ConfigManager.setItemValue(itemId, subtitlePath, null);
+                        }
                         ConfigManager.setItemValue(itemId, configPath, null);
                         p.sendMessage(ConfigManager.fromSection("§aReset to default config message."));
                         this.open();

@@ -38,7 +38,7 @@ messages:
 # ===================================================================
 active-items:
   # Select which visual indicators to enable for cooldowns globally.
-  # These can be overridden per-item in items.yml.
+  # These can be overridden per-item with in game editor and items.yml.
   visuals:
     chat: true        # Send a chat message when clicked during cooldown.
     title: true       # Show a big title on screen when clicked during cooldown.
@@ -73,7 +73,7 @@ active-items:
   #                       COST SYSTEM MESSAGES
   # ===================================================================
   # These messages are used if a specific item doesn't have a custom 'message' defined in its cost section.
-  # Placeholders: {amount}, {material} (for items)
+  # Placeholders: {amount}, {material} (for items), {item_name} (for buffeditems), {currency_name} for coinsengine.
   costs:
     messages:
       money: "&cNot enough money! Cost: &e{amount}"

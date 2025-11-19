@@ -103,7 +103,7 @@ public class CostInputHandler implements ChatInputHandler {
                 }
             }
 
-            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
             costs.add(newCost);
             ConfigManager.setItemValue(itemId, "costs", costs);
 
@@ -127,7 +127,7 @@ public class CostInputHandler implements ChatInputHandler {
     @SuppressWarnings("unchecked")
     private void handleEditCostAmount(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         int index = pmu.getEditIndex();
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
 
         if (index < 0 || index >= costList.size()) {
             player.sendMessage(ConfigManager.fromSection("§cError: Cost index out of bounds."));
@@ -173,7 +173,7 @@ public class CostInputHandler implements ChatInputHandler {
     @SuppressWarnings("unchecked")
     private void handleEditCostMessage(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         int index = pmu.getEditIndex();
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
 
         if (index < 0 || index >= costList.size()) {
             player.sendMessage(ConfigManager.fromSection("§cError: Cost index out of bounds."));

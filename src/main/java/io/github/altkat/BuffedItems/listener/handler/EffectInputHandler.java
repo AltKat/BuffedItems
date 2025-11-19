@@ -27,18 +27,18 @@ public class EffectInputHandler implements ChatInputHandler {
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         if (path.startsWith("active.potion_effects.add.")) {
             handleAddGenericEffect(player, pmu, input, path, itemId,
-                    "items." + itemId + ".active_effects.potion_effects", EffectType.POTION_EFFECT,
+                    "items." + itemId + ".active-mode.effects.potion_effects", EffectType.POTION_EFFECT,
                     p -> p.substring(26), "ACTIVE", null);
         } else if (path.equals("active.potion_effects.edit")) {
             handleEditGenericEffect(player, pmu, input, itemId, EffectType.POTION_EFFECT,
-                    "items." + itemId + ".active_effects.potion_effects", "ACTIVE", null);
+                    "items." + itemId + ".active-mode.effects.potion_effects", "ACTIVE", null);
         } else if (path.startsWith("active.attributes.add.")) {
             handleAddGenericEffect(player, pmu, input, path, itemId,
-                    "items." + itemId + ".active_effects.attributes", EffectType.ATTRIBUTE,
+                    "items." + itemId + ".active-mode.effects.attributes", EffectType.ATTRIBUTE,
                     p -> p.substring(22), "ACTIVE", null);
         } else if (path.equals("active.attributes.edit")) {
             handleEditGenericEffect(player, pmu, input, itemId, EffectType.ATTRIBUTE,
-                    "items." + itemId + ".active_effects.attributes", "ACTIVE", null);
+                    "items." + itemId + ".active-mode.effects.attributes", "ACTIVE", null);
         } else if (path.startsWith("potion_effects.add.")) {
             String slot = pmu.getTargetSlot();
             handleAddGenericEffect(player, pmu, input, path, itemId,

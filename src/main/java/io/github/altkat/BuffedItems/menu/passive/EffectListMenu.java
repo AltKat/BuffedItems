@@ -19,7 +19,7 @@ import java.util.List;
  * Generic menu for displaying and managing effects (Potion, Attribute)
  * Replaces: PotionEffectListMenu, ActivePotionEffectListMenu,
  *           AttributeListMenu, ActiveAttributeListMenu
- *
+ * <p>
  * Usage:
  *   - Passive Potion Effects: new EffectListMenu(pmu, plugin, EffectType.POTION, "MAIN_HAND").open();
  *   - Active Potion Effects:  new EffectListMenu(pmu, plugin, EffectType.POTION, "ACTIVE").open();
@@ -215,9 +215,9 @@ public class EffectListMenu extends Menu {
     private String buildConfigPath(String itemId) {
         if (isActive) {
             if (effectType == EffectType.POTION_EFFECT) {
-                return "items." + itemId + ".active_effects.potion_effects";
+                return "items." + itemId + ".active-mode.effects.potion_effects";
             } else {
-                return "items." + itemId + ".active_effects.attributes";
+                return "items." + itemId + ".active-mode.effects.attributes";
             }
         } else {
             if (effectType == EffectType.POTION_EFFECT) {

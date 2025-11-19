@@ -303,27 +303,76 @@ public class ItemManager {
             }
         }
 
-        boolean activeMode = itemSection.getBoolean("active_mode", false);
-        int cooldown = itemSection.getInt("cooldown", 0);
-        int activeDuration = itemSection.getInt("effect_duration", 0);
-        List<String> activeCommands = itemSection.getStringList("commands");
-        boolean vChat = itemSection.getBoolean("visuals.chat", true);
-        boolean vTitle = itemSection.getBoolean("visuals.title", true);
-        boolean vActionBar = itemSection.getBoolean("visuals.action-bar", true);
-        boolean vBossBar = itemSection.getBoolean("visuals.boss-bar", true);
-        String bbColor = itemSection.getString("visuals.boss-bar-color", "RED");
-        String bbStyle = itemSection.getString("visuals.boss-bar-style", "SOLID");
+        ConfigurationSection activeModeSection = itemSection.getConfigurationSection("active-mode");
 
-        if (activeMode) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is loaded as ACTIVE item (CD: " + cooldown + "s)");
-        }
+        boolean activeMode = false;
+        int cooldown;
+        int activeDuration = 0;
+        List<String> activeCommands = new ArrayList<>();
 
+        boolean vChat = true;
+        boolean vTitle = true;
+        boolean vActionBar = true;
+        boolean vBossBar = true;
+        String bbColor = "RED";
+        String bbStyle = "SOLID";
+        String msgChat = null;
+        String msgTitle = null;
+        String msgSubtitle = null;
+        String msgActionBar = null;
+        String msgBossBar = null;
+
+        String soundSuccess = null;
+        String soundCooldown = null;
+        String soundCostFail = null;
+
+        List<ICost> costs = new ArrayList<>();
         BuffedItemEffect activeEffectsObj = null;
-        if (itemSection.contains("active_effects")) {
-            ConfigurationSection activeSection = itemSection.getConfigurationSection("active_effects");
-            if (activeSection != null) {
+
+        if (activeModeSection != null) {
+            activeMode = activeModeSection.getBoolean("enabled", false);
+            cooldown = activeModeSection.getInt("cooldown", 0);
+            activeDuration = activeModeSection.getInt("duration", 0);
+            activeCommands = activeModeSection.getStringList("commands");
+
+            if (activeMode) {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is loaded as ACTIVE item (CD: " + cooldown + "s)");
+            }
+
+            ConfigurationSection visualsSection = activeModeSection.getConfigurationSection("visuals");
+            if (visualsSection != null) {
+                vChat = visualsSection.getBoolean("chat", true);
+                vTitle = visualsSection.getBoolean("title", true);
+                vActionBar = visualsSection.getBoolean("action-bar", true);
+                vBossBar = visualsSection.getBoolean("boss-bar", true);
+                bbColor = visualsSection.getString("boss-bar-color", "RED");
+                bbStyle = visualsSection.getString("boss-bar-style", "SOLID");
+
+                msgChat = visualsSection.getString("messages.cooldown-chat");
+                msgTitle = visualsSection.getString("messages.cooldown-title");
+                msgSubtitle = visualsSection.getString("messages.cooldown-subtitle");
+                msgActionBar = visualsSection.getString("messages.cooldown-action-bar");
+                msgBossBar = visualsSection.getString("messages.cooldown-boss-bar");
+            }
+
+            ConfigurationSection soundsSection = activeModeSection.getConfigurationSection("sounds");
+            if (soundsSection != null) {
+                soundSuccess = soundsSection.getString("success");
+                soundCooldown = soundsSection.getString("cooldown");
+                soundCostFail = soundsSection.getString("cost-fail");
+            }
+
+            if (activeModeSection.contains("costs")) {
+                List<Map<?, ?>> costList = activeModeSection.getMapList("costs");
+                costs = plugin.getCostManager().parseCosts(costList);
+                List<ICost> finalCosts = costs;
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + finalCosts.size() + " costs for item: " + itemId);
+            }
+
+            ConfigurationSection activeEffectsSection = activeModeSection.getConfigurationSection("effects");
+            if (activeEffectsSection != null) {
                 Map<PotionEffectType, Integer> activePotions = new HashMap<>();
-                for (String effectString : activeSection.getStringList("potion_effects")) {
+                for (String effectString : activeEffectsSection.getStringList("potion_effects")) {
                     try {
                         String[] parts = effectString.split(";");
                         PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
@@ -333,7 +382,7 @@ public class ItemManager {
                 }
 
                 List<ParsedAttribute> activeAttributes = new ArrayList<>();
-                for (String attrString : activeSection.getStringList("attributes")) {
+                for (String attrString : activeEffectsSection.getStringList("attributes")) {
                     try {
                         String[] parts = attrString.split(";");
                         Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
@@ -344,26 +393,12 @@ public class ItemManager {
                 }
                 activeEffectsObj = new BuffedItemEffect(activePotions, activeAttributes);
             }
+        } else {
+            cooldown = 0;
         }
+
         if (activeEffectsObj == null) {
             activeEffectsObj = new BuffedItemEffect(new HashMap<>(), new ArrayList<>());
-        }
-
-        String msgChat = itemSection.getString("visuals.messages.cooldown-chat");
-        String msgTitle = itemSection.getString("visuals.messages.cooldown-title");
-        String msgSubtitle = itemSection.getString("visuals.messages.cooldown-subtitle");
-        String msgActionBar = itemSection.getString("visuals.messages.cooldown-action-bar");
-        String msgBossBar = itemSection.getString("visuals.messages.cooldown-boss-bar");
-        String soundSuccess = itemSection.getString("sounds.success");
-        String soundCooldown = itemSection.getString("sounds.cooldown");
-        String soundCostFail = itemSection.getString("sounds.cost-fail");
-
-        List<ICost> costs = new ArrayList<>();
-        if (itemSection.contains("costs")) {
-            List<Map<?, ?>> costList = itemSection.getMapList("costs");
-            costs = plugin.getCostManager().parseCosts(costList);
-            List<ICost> finalCosts = costs;
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + finalCosts.size() + " costs for item: " + itemId);
         }
 
         BuffedItem finalBuffedItem = new BuffedItem(

@@ -224,9 +224,38 @@ public class ConfigManager {
         synchronized (CONFIG_LOCK) {
             sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + path + " = " + value);
 
-            String fullPath = (path == null) ? "items." + itemId : "items." + itemId + "." + path;
+            String normalizedPath;
 
-            if ("permission".equals(path) && value == null) {
+            if (path != null) {
+                if (path.equals("active_mode")) {
+                    normalizedPath = "active-mode.enabled";
+                } else if (path.equals("cooldown")) {
+                    normalizedPath = "active-mode.cooldown";
+                } else if (path.equals("effect_duration")) {
+                    normalizedPath = "active-mode.duration";
+                } else if (path.equals("commands")) {
+                    normalizedPath = "active-mode.commands";
+                } else if (path.equals("costs")) {
+                    normalizedPath = "active-mode.costs";
+                } else if (path.startsWith("visuals")) {
+                    normalizedPath = "active-mode." + path;
+                } else if (path.startsWith("sounds")) {
+                    normalizedPath = "active-mode." + path;
+                } else if (path.startsWith("active_effects")) {
+                    // active_effects.potion_effects -> active-mode.effects.potion_effects
+                    normalizedPath = path.replace("active_effects", "active-mode.effects");
+                } else {
+                    normalizedPath = path;
+                }
+            } else {
+                normalizedPath = null;
+            }
+
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting value: items." + itemId + "." + normalizedPath + " = " + value);
+
+            String fullPath = (normalizedPath == null) ? "items." + itemId : "items." + itemId + "." + normalizedPath;
+
+            if ("permission".equals(normalizedPath) && value == null) {
                 ItemsConfig.get().set(fullPath, NO_PERMISSION);
             } else {
                 ItemsConfig.get().set(fullPath, value);

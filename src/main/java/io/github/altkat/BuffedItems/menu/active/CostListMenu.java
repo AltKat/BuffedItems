@@ -53,7 +53,7 @@ public class CostListMenu extends Menu {
         }
 
         if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.BLACK_STAINED_GLASS_PANE) {
-            List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+            List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
             if (e.getSlot() >= costList.size()) return;
 
             // 1. DELETE (Right Click)
@@ -117,7 +117,7 @@ public class CostListMenu extends Menu {
         inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
         inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd New Cost", "§7Add a requirement to use this item."));
 
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
         int index = 0;
 
         for (Map<?, ?> costData : costList) {
