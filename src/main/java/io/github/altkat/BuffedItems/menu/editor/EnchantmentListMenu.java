@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.selector.EnchantmentFinder;
 import io.github.altkat.BuffedItems.menu.selector.EnchantmentSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
@@ -112,12 +113,12 @@ public class EnchantmentListMenu extends Menu {
 
                 if (parts.length == 2) {
                     try {
-                        enchantment = Enchantment.getByName(parts[0].toUpperCase());
+                        enchantment = EnchantmentFinder.findEnchantment(parts[0], plugin);
                         level = Integer.parseInt(parts[1]);
                         if (enchantment != null && level > 0) {
                             isValid = true;
                         }
-                    } catch (IllegalArgumentException | NullPointerException |ArrayIndexOutOfBoundsException ignored) {
+                    } catch (IllegalArgumentException | NullPointerException ignored) {
                     }
                 }
 

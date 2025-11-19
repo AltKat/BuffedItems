@@ -8,7 +8,6 @@ import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -32,7 +31,6 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
         super(playerMenuUtility);
         this.plugin = plugin;
         this.itemId = playerMenuUtility.getItemToEditId();
-
 
         this.enchantments = Arrays.stream(Enchantment.values())
                 .filter(e -> e != null)
@@ -69,10 +67,13 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             if (!rawEnchantName.startsWith("ID: ")) return;
 
             String enchantKey = rawEnchantName.substring(4);
-            Enchantment selectedEnchant = Enchantment.getByKey(NamespacedKey.minecraft(enchantKey.replace("minecraft:", "")));
+            Enchantment selectedEnchant = EnchantmentFinder.findEnchantment(enchantKey, plugin);
 
             if (selectedEnchant == null) {
                 p.sendMessage(ConfigManager.fromSection("§cError: Could not identify selected enchantment '" + enchantKey + "'."));
+                p.sendMessage(ConfigManager.fromSection("§7Try using the format: namespace:enchant_name (e.g., veinminer:veinminer)"));
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                        () -> "[EnchantmentSelector] Failed to find enchantment: " + enchantKey);
                 return;
             }
 
@@ -86,7 +87,6 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 return;
             }
-
 
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("enchantments.add." + selectedEnchant.getName());

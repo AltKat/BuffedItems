@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
+import io.github.altkat.BuffedItems.menu.selector.EnchantmentFinder;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
@@ -267,7 +268,7 @@ public class ItemManager {
                 }
 
                 String enchName = parts[0].toUpperCase();
-                Enchantment enchantment = Enchantment.getByName(enchName);
+                Enchantment enchantment = EnchantmentFinder.findEnchantment(enchName, plugin);
 
                 if (enchantment == null) {
                     String errorMsg = "Invalid Enchantment name: '" + enchName + "'";

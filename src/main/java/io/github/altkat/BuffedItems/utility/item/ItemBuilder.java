@@ -120,6 +120,9 @@ public class ItemBuilder {
                 int level = entry.getValue();
                 try {
                     meta.addEnchant(enchantment, level, true);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                            "[ItemBuilder] Applied enchantment: " + enchantment.getKey().getKey() +
+                                    " Level: " + level + " to item " + buffedItem.getId());
                 } catch (IllegalArgumentException e) {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                             () -> "[ItemBuilder] Failed to apply enchantment " + enchantment.getKey().getKey() +
