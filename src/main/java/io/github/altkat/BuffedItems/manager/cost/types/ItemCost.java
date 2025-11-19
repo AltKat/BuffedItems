@@ -5,6 +5,8 @@ import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+
 import java.util.Map;
 
 public class ItemCost implements ICost {
@@ -23,13 +25,30 @@ public class ItemCost implements ICost {
     @Override
     public boolean hasEnough(Player player) {
         if (material == null) return false;
-        return player.getInventory().contains(material, amount);
+        int count = countVanillaItems(player);
+        return count >= amount;
     }
 
     @Override
     public void deduct(Player player) {
         if (material == null) return;
-        player.getInventory().removeItem(new ItemStack(material, amount));
+        int remainingToRemove = amount;
+        ItemStack[] contents = player.getInventory().getContents();
+
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (isVanillaItem(item)) {
+                if (item.getAmount() <= remainingToRemove) {
+                    remainingToRemove -= item.getAmount();
+                    player.getInventory().setItem(i, null);
+                } else {
+                    item.setAmount(item.getAmount() - remainingToRemove);
+                    remainingToRemove = 0;
+                }
+
+                if (remainingToRemove <= 0) break;
+            }
+        }
     }
 
     @Override
@@ -38,5 +57,29 @@ public class ItemCost implements ICost {
         return ConfigManager.stripLegacy(failureMessage)
                 .replace("{amount}", String.valueOf(amount))
                 .replace("{material}", matName);
+    }
+
+    private int countVanillaItems(Player player) {
+        int count = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (isVanillaItem(item)) {
+                count += item.getAmount();
+            }
+        }
+        return count;
+    }
+
+    private boolean isVanillaItem(ItemStack item) {
+        if (item == null || item.getType().isAir() || item.getType() != material) {
+            return false;
+        }
+
+        if (!item.hasItemMeta()) {
+            return true;
+        }
+
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+
+        return container.getKeys().isEmpty();
     }
 }
