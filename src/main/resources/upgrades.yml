@@ -23,7 +23,13 @@
 #   unique_recipe_id:  <-- Unique identifier for the recipe (not visible to players)
 #     display_name: "&aDisplay Name"  <-- Name shown in the Upgrade Menu
 #     success_rate: 100.0             <-- Chance of success (0.0 to 100.0)
-#     prevent_failure_loss: false     <-- If true, ingredients are NOT lost when upgrade fails.
+#
+#     # FAILURE ACTION (What happens if the upgrade fails?)
+#     # Options:
+#     # - LOSE_EVERYTHING: Input item and ingredients are lost. (Hardcore/Default)
+#     # - KEEP_BASE_ONLY: Ingredients are lost, but the input item is returned.
+#     # - KEEP_EVERYTHING: Nothing is lost. (Safe)
+#     failure_action: LOSE_EVERYTHING
 #
 #     # BASE ITEM (The item to be upgraded - Input Slot)
 #     # Just write the BuffedItem ID directly.
@@ -78,7 +84,9 @@ upgrades:
   example_upgrade:
     display_name: "&eBoots Evolution"
     success_rate: 80.0
-    prevent_failure_loss: false
+
+    # Ingredients lost on fail, but boots are kept.
+    failure_action: KEEP_BASE_ONLY
 
     # The item the player must place in the Upgrade Station
     base: "swiftness_boots"

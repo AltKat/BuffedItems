@@ -42,7 +42,14 @@ public class UpgradeManager {
             String resultItem = recipeSection.getString("result.item");
             int resultAmount = recipeSection.getInt("result.amount", 1);
             double chance = recipeSection.getDouble("success_rate", 100.0);
-            boolean keepOnFail = recipeSection.getBoolean("prevent_failure_loss", false);
+            String actionStr = recipeSection.getString("failure_action", "LOSE_EVERYTHING");
+            FailureAction failureAction;
+            try {
+                failureAction = FailureAction.valueOf(actionStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                failureAction = FailureAction.LOSE_EVERYTHING;
+                ConfigManager.logInfo("&eInvalid failure_action for upgrade '" + key + "'. Defaulting to LOSE_EVERYTHING.");
+            }
 
             if (resultItem == null || plugin.getItemManager().getBuffedItem(resultItem) == null) {
                 isValid = false;
@@ -89,7 +96,7 @@ public class UpgradeManager {
             List<Map<?, ?>> ingredientsMap = recipeSection.getMapList("ingredients");
             List<ICost> ingredients = plugin.getCostManager().parseCosts(ingredientsMap);
 
-            UpgradeRecipe recipe = new UpgradeRecipe(key, displayName, baseCost, ingredients, resultItem, resultAmount, chance, keepOnFail, isValid, errors);
+            UpgradeRecipe recipe = new UpgradeRecipe(key, displayName, baseCost, ingredients, resultItem, resultAmount, chance, failureAction, isValid, errors);
             recipes.put(key, recipe);
             count++;
         }

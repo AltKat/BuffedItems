@@ -14,12 +14,12 @@ public class UpgradeRecipe {
     private final String resultItemId;
     private final int resultAmount;
     private final double successRate;
-    private final boolean preventFailureLoss;
+    private final FailureAction failureAction;
 
     private final boolean valid;
     private final List<String> errorMessages;
 
-    public UpgradeRecipe(String id, String displayName, ICost baseCost, List<ICost> ingredients, String resultItemId, int resultAmount, double successRate, boolean preventFailureLoss, boolean valid, List<String> errorMessages) {
+    public UpgradeRecipe(String id, String displayName, ICost baseCost, List<ICost> ingredients, String resultItemId, int resultAmount, double successRate, FailureAction failureAction, boolean valid, List<String> errorMessages) {
         this.id = id;
         this.displayName = displayName;
         this.baseCost = baseCost;
@@ -27,7 +27,7 @@ public class UpgradeRecipe {
         this.resultItemId = resultItemId;
         this.resultAmount = resultAmount;
         this.successRate = successRate;
-        this.preventFailureLoss = preventFailureLoss;
+        this.failureAction = failureAction;
         this.valid = valid;
         this.errorMessages = (errorMessages != null) ? errorMessages : new ArrayList<>();
     }
@@ -39,7 +39,7 @@ public class UpgradeRecipe {
     public String getResultItemId() { return resultItemId; }
     public int getResultAmount() { return resultAmount; }
     public double getSuccessRate() { return successRate; }
-    public boolean isPreventFailureLoss() { return preventFailureLoss; }
+    public FailureAction getFailureAction() { return failureAction; }
 
     public boolean isValid() { return valid; }
     public List<String> getErrorMessages() { return errorMessages; }

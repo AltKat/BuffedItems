@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
 import io.github.altkat.BuffedItems.manager.cost.types.ItemCost;
+import io.github.altkat.BuffedItems.manager.upgrade.FailureAction;
 import io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -21,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class UpgradeMenu extends Menu {
@@ -226,24 +228,48 @@ public class UpgradeMenu extends Menu {
 
         boolean success = (Math.random() * 100) <= recipe.getSuccessRate();
 
-        if (success || !recipe.isPreventFailureLoss()) {
+        if (success) {
             inputItem.setAmount(inputItem.getAmount() - requiredBase);
             inventory.setItem(INPUT_SLOT, inputItem);
 
             for (ICost cost : recipe.getIngredients()) {
                 cost.deduct(p);
             }
-        }
 
-        if (success) {
             ItemStack result = inventory.getItem(OUTPUT_SLOT).clone();
-            p.getInventory().addItem(result);
+            java.util.HashMap<Integer, ItemStack> leftovers = p.getInventory().addItem(result);
+
+            if (!leftovers.isEmpty()) {
+                for (ItemStack item : leftovers.values()) {
+                    p.getWorld().dropItemNaturally(p.getLocation(), item);
+                }
+                p.sendMessage(ConfigManager.fromSection("§eInventory full! Item dropped on ground."));
+            }
+
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1, 1);
             p.sendMessage(ConfigManager.fromSection("§aUpgrade Successful!"));
             plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
+
         } else {
+            FailureAction action = recipe.getFailureAction();
+
+            if (action == FailureAction.LOSE_EVERYTHING) {
+                inputItem.setAmount(inputItem.getAmount() - requiredBase);
+                inventory.setItem(INPUT_SLOT, inputItem);
+                for (ICost cost : recipe.getIngredients()) cost.deduct(p);
+
+                p.sendMessage(ConfigManager.fromSection("§cUpgrade Failed! Item and ingredients lost."));
+            }
+            else if (action == FailureAction.KEEP_BASE_ONLY) {
+                for (ICost cost : recipe.getIngredients()) cost.deduct(p);
+
+                p.sendMessage(ConfigManager.fromSection("§eUpgrade Failed! Ingredients lost, but item kept."));
+            }
+            else if (action == FailureAction.KEEP_EVERYTHING) {
+                p.sendMessage(ConfigManager.fromSection("§bUpgrade Failed! Nothing was lost."));
+            }
+
             p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
-            p.sendMessage(ConfigManager.fromSection("§cUpgrade Failed!"));
         }
 
         updateMenuState();

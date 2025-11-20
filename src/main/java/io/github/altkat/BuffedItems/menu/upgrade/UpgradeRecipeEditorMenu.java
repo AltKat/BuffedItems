@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
+import io.github.altkat.BuffedItems.manager.upgrade.FailureAction;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -50,8 +51,22 @@ public class UpgradeRecipeEditorMenu extends Menu {
                 askInput(p, "upgrade.success_rate", "§aEnter Success Rate (0-100).");
                 break;
             case 12:
-                boolean currentVal = UpgradesConfig.get().getBoolean("upgrades." + recipeId + ".prevent_failure_loss", false);
-                ConfigManager.setUpgradeValue(recipeId, "prevent_failure_loss", !currentVal);
+                String path = "upgrades." + recipeId + ".failure_action";
+                String currentStr = UpgradesConfig.get().getString(path, "LOSE_EVERYTHING");
+
+                FailureAction currentAction;
+                try {
+                    currentAction = FailureAction.valueOf(currentStr);
+                } catch(Exception ex) { currentAction = FailureAction.LOSE_EVERYTHING; }
+
+                FailureAction nextAction;
+                switch (currentAction) {
+                    case LOSE_EVERYTHING: nextAction = FailureAction.KEEP_BASE_ONLY; break;
+                    case KEEP_BASE_ONLY: nextAction = FailureAction.KEEP_EVERYTHING; break;
+                    default: nextAction = FailureAction.LOSE_EVERYTHING; break;
+                }
+
+                ConfigManager.setUpgradeValue(recipeId, "failure_action", nextAction.name());
                 this.open();
                 break;
 
@@ -92,7 +107,6 @@ public class UpgradeRecipeEditorMenu extends Menu {
         String path = "upgrades." + recipeId;
         String displayName = UpgradesConfig.get().getString(path + ".display_name", "Unknown");
         double successRate = UpgradesConfig.get().getDouble(path + ".success_rate", 100);
-        boolean preventLoss = UpgradesConfig.get().getBoolean(path + ".prevent_failure_loss", false);
 
         String resultItemId = UpgradesConfig.get().getString(path + ".result.item", "None");
         int resultAmount = UpgradesConfig.get().getInt(path + ".result.amount", 1);
@@ -141,7 +155,42 @@ public class UpgradeRecipeEditorMenu extends Menu {
 
         inventory.setItem(10, makeItem(Material.NAME_TAG, "§eDisplay Name", "§7Current: §r" + ConfigManager.toSection(ConfigManager.fromLegacy(displayName)), "", "§aClick to Edit"));
         inventory.setItem(11, makeItem(Material.DIAMOND, "§bSuccess Rate", "§7Current: §e" + successRate + "%", "", "§aClick to Edit"));
-        inventory.setItem(12, makeItem(Material.SHIELD, "§6Prevent Failure Loss", "§7Current: " + (preventLoss ? "§aTRUE" : "§cFALSE"), "", "§aClick to Toggle"));
+
+        String failPath = "upgrades." + recipeId + ".failure_action";
+        String failStr = UpgradesConfig.get().getString(failPath, "LOSE_EVERYTHING");
+        FailureAction fAction;
+        try {
+            fAction = FailureAction.valueOf(failStr);
+        } catch(Exception e) {
+            fAction = FailureAction.LOSE_EVERYTHING;
+        }
+
+        Material iconMat;
+        String actionName;
+        String actionDesc;
+
+        if (fAction == FailureAction.KEEP_EVERYTHING) {
+            iconMat = Material.TOTEM_OF_UNDYING;
+            actionName = "§aKeep Everything";
+            actionDesc = "§7Nothing is lost on failure.";
+        } else if (fAction == FailureAction.KEEP_BASE_ONLY) {
+            iconMat = Material.IRON_CHESTPLATE;
+            actionName = "§eKeep Base Item";
+            actionDesc = "§7Ingredients lost, Item kept.";
+        } else {
+            iconMat = Material.SKELETON_SKULL;
+            actionName = "§cLose Everything";
+            actionDesc = "§7Item and ingredients lost.";
+        }
+
+        inventory.setItem(12, makeItem(iconMat,
+                "§6Failure Action",
+                "§7Current: " + actionName,
+                actionDesc,
+                "",
+                "§eClick to Cycle",
+                "§8(Lose All -> Keep Base -> Keep All)"));
+
 
         List<String> baseLore = new ArrayList<>();
         baseLore.add("§7Current: " + baseDisplayName);

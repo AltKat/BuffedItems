@@ -71,7 +71,7 @@ public class UpgradeInputHandler implements ChatInputHandler {
 
         ConfigManager.setUpgradeValue(newId, "display_name", "&eNew Upgrade");
         ConfigManager.setUpgradeValue(newId, "success_rate", 100.0);
-        ConfigManager.setUpgradeValue(newId, "prevent_failure_loss", false);
+        ConfigManager.setUpgradeValue(newId, "failure_action", "LOSE_EVERYTHING");
         ConfigManager.setUpgradeValue(newId, "base", defaultItemId);
         ConfigManager.setUpgradeValue(newId, "result.item", defaultItemId);
         ConfigManager.setUpgradeValue(newId, "result.amount", 1);
