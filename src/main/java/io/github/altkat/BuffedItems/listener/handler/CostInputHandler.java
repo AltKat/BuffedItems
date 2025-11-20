@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class CostInputHandler implements ChatInputHandler {
     }
 
     private void handleAddCost(Player player, PlayerMenuUtility pmu, String input, String type, String itemId) {
-        Map<String, Object> newCost = new java.util.HashMap<>();
+        Map<String, Object> newCost = new LinkedHashMap<>();
         newCost.put("type", type);
 
         try {
@@ -65,8 +66,8 @@ public class CostInputHandler implements ChatInputHandler {
                     }
                 }
 
-                newCost.put("amount", amount);
                 newCost.put("currency_id", currencyId);
+                newCost.put("amount", amount);
             }
             else if (type.equals("BUFFED_ITEM")) {
                 String[] parts = input.split(";");
@@ -79,8 +80,8 @@ public class CostInputHandler implements ChatInputHandler {
                     player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + buffedItemId + "' is not loaded yet."));
                 }
 
-                newCost.put("amount", amount);
                 newCost.put("item_id", buffedItemId);
+                newCost.put("amount", amount);
             }
             else if (type.equals("ITEM")) {
                 String[] parts = input.split(";");
@@ -96,8 +97,8 @@ public class CostInputHandler implements ChatInputHandler {
                     return;
                 }
 
-                newCost.put("amount", amount);
                 newCost.put("material", material);
+                newCost.put("amount", amount);
             } else {
                 double amount = Double.parseDouble(input);
                 if (amount <= 0) throw new NumberFormatException();

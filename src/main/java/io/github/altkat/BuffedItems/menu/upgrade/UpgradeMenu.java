@@ -173,23 +173,7 @@ public class UpgradeMenu extends Menu {
         boolean canAfford = true;
 
         ICost baseCost = recipe.getBaseCost();
-        int requiredBaseAmount = getCostAmount(baseCost);
-        int inputAmount = inputItem.getAmount();
-
-        if (inputAmount >= requiredBaseAmount) {
-            lore.add("§a✔ " + baseCost.getDisplayString() + " §8(Input Item)");
-        } else {
-            int inventoryAmount = getInventoryCount(p, baseCost);
-            int totalAmount = inputAmount + inventoryAmount;
-
-            if (totalAmount >= requiredBaseAmount) {
-                lore.add("§a✔ " + baseCost.getDisplayString() + " §8(Input + Inventory)");
-            } else {
-                canAfford = false;
-                int missing = requiredBaseAmount - totalAmount;
-                lore.add("§c✖ " + baseCost.getDisplayString() + " §8(Input: " + inputAmount + ", Inv: " + inventoryAmount + ", Need: " + missing + ")");
-            }
-        }
+        lore.add("§a✔ " + baseCost.getDisplayString() + " §8(Input Item)");
 
         for (ICost cost : recipe.getIngredients()) {
             boolean has = cost.hasEnough(p);
@@ -217,17 +201,14 @@ public class UpgradeMenu extends Menu {
         if (currentRecipeIndex >= matchingRecipes.size()) currentRecipeIndex = 0;
         UpgradeRecipe recipe = matchingRecipes.get(currentRecipeIndex);
 
-        List<String> missingRequirements = new ArrayList<>();
+        int requiredBase = 1;
 
-        ICost baseCost = recipe.getBaseCost();
-        int requiredBase = getCostAmount(baseCost);
-        int inInput = inputItem.getAmount();
-
-        int invCount = getInventoryCount(p, baseCost);
-        if (inInput + invCount < requiredBase) {
-            missingRequirements.add(baseCost.getFailureMessage());
+        if (inputItem.getAmount() < requiredBase) {
+            p.sendMessage(ConfigManager.fromSection("§cInput item amount error!"));
+            return;
         }
 
+        List<String> missingRequirements = new ArrayList<>();
         for (ICost cost : recipe.getIngredients()) {
             if (!cost.hasEnough(p)) {
                 missingRequirements.add(cost.getFailureMessage());
@@ -235,7 +216,7 @@ public class UpgradeMenu extends Menu {
         }
 
         if (!missingRequirements.isEmpty()) {
-            p.sendMessage(ConfigManager.fromLegacy("&c⚠ You do not meet the requirements:"));
+            p.sendMessage(ConfigManager.fromSection("§c⚠ You do not meet the requirements:"));
             for (String error : missingRequirements) {
                 p.sendMessage(ConfigManager.fromLegacy(" &7- " + error));
             }
@@ -246,12 +227,7 @@ public class UpgradeMenu extends Menu {
         boolean success = (Math.random() * 100) <= recipe.getSuccessRate();
 
         if (success || !recipe.isPreventFailureLoss()) {
-            if (inInput >= requiredBase) {
-                inputItem.setAmount(inInput - requiredBase);
-            } else {
-                inputItem.setAmount(0);
-                deductRemainderFromInventory(p, baseCost, requiredBase - inInput);
-            }
+            inputItem.setAmount(inputItem.getAmount() - requiredBase);
             inventory.setItem(INPUT_SLOT, inputItem);
 
             for (ICost cost : recipe.getIngredients()) {
@@ -271,34 +247,6 @@ public class UpgradeMenu extends Menu {
         }
 
         updateMenuState();
-    }
-
-    private int getInventoryCount(Player p, ICost cost) {
-        int count = 0;
-        ItemStack[] contents = p.getInventory().getContents();
-
-        if (cost instanceof ItemCost) {
-            Material mat = ((ItemCost) cost).getMaterial();
-            ItemStack prototype = new ItemStack(mat);
-
-            for (ItemStack item : contents) {
-                if (item != null && item.isSimilar(prototype)) {
-                    count += item.getAmount();
-                }
-            }
-        }
-        else if (cost instanceof BuffedItemCost) {
-            String reqId = ((BuffedItemCost) cost).getRequiredItemId();
-            for (ItemStack item : contents) {
-                if (item != null && item.hasItemMeta()) {
-                    String id = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
-                    if (reqId.equals(id)) {
-                        count += item.getAmount();
-                    }
-                }
-            }
-        }
-        return count;
     }
 
     private List<UpgradeRecipe> findAllRecipes(ItemStack item) {
@@ -330,43 +278,5 @@ public class UpgradeMenu extends Menu {
             return input.getType() == reqMat;
         }
         return false;
-    }
-
-    private int getCostAmount(ICost cost) {
-        if (cost instanceof BuffedItemCost) return ((BuffedItemCost) cost).getAmount();
-        if (cost instanceof ItemCost) return ((ItemCost) cost).getAmount();
-        return 1;
-    }
-
-    private void deductRemainderFromInventory(Player p, ICost cost, int amountToRemove) {
-        if (amountToRemove <= 0) return;
-
-        if (cost instanceof ItemCost) {
-            ItemStack toRemove = new ItemStack(((ItemCost) cost).getMaterial());
-            toRemove.setAmount(amountToRemove);
-            p.getInventory().removeItem(toRemove);
-        }
-        else if (cost instanceof BuffedItemCost) {
-            String reqId = ((BuffedItemCost) cost).getRequiredItemId();
-            int leftToRemove = amountToRemove;
-            ItemStack[] contents = p.getInventory().getContents();
-
-            for (int i = 0; i < contents.length; i++) {
-                ItemStack item = contents[i];
-                if (item != null && item.hasItemMeta()) {
-                    String id = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
-                    if (reqId.equals(id)) {
-                        if (item.getAmount() <= leftToRemove) {
-                            leftToRemove -= item.getAmount();
-                            p.getInventory().setItem(i, null);
-                        } else {
-                            item.setAmount(item.getAmount() - leftToRemove);
-                            leftToRemove = 0;
-                        }
-                        if (leftToRemove <= 0) break;
-                    }
-                }
-            }
-        }
     }
 }

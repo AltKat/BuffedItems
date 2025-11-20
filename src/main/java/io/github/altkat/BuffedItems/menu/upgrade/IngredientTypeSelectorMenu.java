@@ -56,7 +56,10 @@ public class IngredientTypeSelectorMenu extends Menu {
 
         if (type.equals("ITEM")) {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;MATERIAL (e.g. 1;DIAMOND)"));
-        } else {
+        }else if (type.equals("COINSENGINE")) {
+            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID (e.g. 100;gold)"));
+            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Or just AMOUNT for default 'coins')"));
+        }else {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§aEnter amount:"));
         }
     }

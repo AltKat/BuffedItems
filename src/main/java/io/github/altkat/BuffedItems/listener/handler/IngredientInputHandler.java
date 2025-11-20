@@ -9,10 +9,7 @@ import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class IngredientInputHandler implements ChatInputHandler {
 
@@ -90,18 +87,38 @@ public class IngredientInputHandler implements ChatInputHandler {
         for (Map<?, ?> map : currentList) editableList.add((Map<String, Object>) map);
 
         Map<String, Object> target = editableList.get(index);
-        String type = (String) target.get("type");
 
+        // --- YENİDEN SIRALAMA MANTIĞI (LinkedHashMap) ---
+        Map<String, Object> orderedMap = new java.util.LinkedHashMap<>();
+
+        // 1. Type her zaman en üstte
+        String type = (String) target.get("type");
+        orderedMap.put("type", type);
+
+        // 2. Diğer tüm özellikleri (amount hariç) ekle
+        // (item_id, material, currency_id vb.)
+        for (Map.Entry<String, Object> entry : target.entrySet()) {
+            String key = entry.getKey();
+            if (!key.equals("type") && !key.equals("amount")) {
+                orderedMap.put(key, entry.getValue());
+            }
+        }
+
+        // 3. Amount değerini parse edip EN SONA ekle
         try {
             if (isIntegerType(type)) {
                 int val = Integer.parseInt(input);
                 if (val <= 0) throw new NumberFormatException();
-                target.put("amount", val);
+                orderedMap.put("amount", val);
             } else {
                 double val = Double.parseDouble(input);
                 if (val <= 0) throw new NumberFormatException();
-                target.put("amount", (val % 1 == 0) ? (int) val : val);
+                // Eğer tam sayı ise (100.0 yerine 100) int olarak kaydet
+                orderedMap.put("amount", (val % 1 == 0) ? (int) val : val);
             }
+
+            // Listeyi güncelle
+            editableList.set(index, orderedMap);
 
             ConfigManager.setUpgradeValue(recipeId, "ingredients", editableList);
             player.sendMessage(ConfigManager.fromSection("§aAmount updated!"));
@@ -116,7 +133,7 @@ public class IngredientInputHandler implements ChatInputHandler {
     }
 
     private Map<String, Object> parseCostInput(Player player, String input, String type) {
-        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> data = new LinkedHashMap<>();
         data.put("type", type);
 
         try {
@@ -129,8 +146,8 @@ public class IngredientInputHandler implements ChatInputHandler {
                     player.sendMessage(ConfigManager.fromSection("§cInvalid material: " + material));
                     return null;
                 }
-                data.put("amount", amount);
                 data.put("material", material);
+                data.put("amount", amount);
             }
             else if (type.equals("BUFFED_ITEM")) {
                 String[] parts = input.split(";");
@@ -140,17 +157,17 @@ public class IngredientInputHandler implements ChatInputHandler {
                 if (plugin.getItemManager().getBuffedItem(itemId) == null) {
                     player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + itemId + "' not found (yet)."));
                 }
-                data.put("amount", amount);
                 data.put("item_id", itemId);
+                data.put("amount", amount);
             }
             else if (type.equals("COINSENGINE")) {
                 if (input.contains(";")) {
                     String[] parts = input.split(";");
-                    data.put("amount", Double.parseDouble(parts[0]));
                     data.put("currency_id", parts[1]);
+                    data.put("amount", Double.parseDouble(parts[0]));
                 } else {
-                    data.put("amount", Double.parseDouble(input));
                     data.put("currency_id", "coins");
+                    data.put("amount", Double.parseDouble(input));
                 }
             }
             else {
