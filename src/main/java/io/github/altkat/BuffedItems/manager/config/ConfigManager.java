@@ -145,6 +145,18 @@ public class ConfigManager {
                 plugin.getLogger().warning("Could not create items.yml backup: " + e.getMessage());
             }
         }
+
+        File upgradesFile = new File(plugin.getDataFolder(), "upgrades.yml");
+        File upgradesBackup = new File(backupDir, "upgrades.yml.backup");
+
+        if (upgradesFile.exists()) {
+            try {
+                Files.copy(upgradesFile.toPath(), upgradesBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                sendDebugMessage(DEBUG_INFO, () -> "[Backup] upgrades.yml backed up to backups/ folder.");
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not create upgrades.yml backup: " + e.getMessage());
+            }
+        }
     }
 
     public static void reloadConfig() {
