@@ -88,15 +88,11 @@ public class IngredientInputHandler implements ChatInputHandler {
 
         Map<String, Object> target = editableList.get(index);
 
-        // --- YENİDEN SIRALAMA MANTIĞI (LinkedHashMap) ---
         Map<String, Object> orderedMap = new java.util.LinkedHashMap<>();
 
-        // 1. Type her zaman en üstte
         String type = (String) target.get("type");
         orderedMap.put("type", type);
 
-        // 2. Diğer tüm özellikleri (amount hariç) ekle
-        // (item_id, material, currency_id vb.)
         for (Map.Entry<String, Object> entry : target.entrySet()) {
             String key = entry.getKey();
             if (!key.equals("type") && !key.equals("amount")) {
@@ -104,7 +100,6 @@ public class IngredientInputHandler implements ChatInputHandler {
             }
         }
 
-        // 3. Amount değerini parse edip EN SONA ekle
         try {
             if (isIntegerType(type)) {
                 int val = Integer.parseInt(input);
@@ -113,11 +108,9 @@ public class IngredientInputHandler implements ChatInputHandler {
             } else {
                 double val = Double.parseDouble(input);
                 if (val <= 0) throw new NumberFormatException();
-                // Eğer tam sayı ise (100.0 yerine 100) int olarak kaydet
                 orderedMap.put("amount", (val % 1 == 0) ? (int) val : val);
             }
 
-            // Listeyi güncelle
             editableList.set(index, orderedMap);
 
             ConfigManager.setUpgradeValue(recipeId, "ingredients", editableList);
