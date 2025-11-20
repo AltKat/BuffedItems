@@ -159,7 +159,7 @@ public class MainMenu extends PaginatedMenu {
                 "§7Configure global plugin settings.",
                 "§7(Debug level, Potion icons, etc.)"));
         inventory.setItem(46, filler);
-        inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes for /bi upgrade menu."));
+        inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes."));
         inventory.setItem(51, filler);
         inventory.setItem(52, filler);
 
