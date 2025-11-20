@@ -243,11 +243,11 @@ public class UpgradeMenu extends Menu {
                 for (ItemStack item : leftovers.values()) {
                     p.getWorld().dropItemNaturally(p.getLocation(), item);
                 }
-                p.sendMessage(ConfigManager.fromSection("§eInventory full! Item dropped on ground."));
+                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-inventory-full"));
             }
 
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1, 1);
-            p.sendMessage(ConfigManager.fromSection("§aUpgrade Successful!"));
+            p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-success"));
             plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
 
         } else {
@@ -258,15 +258,15 @@ public class UpgradeMenu extends Menu {
                 inventory.setItem(INPUT_SLOT, inputItem);
                 for (ICost cost : recipe.getIngredients()) cost.deduct(p);
 
-                p.sendMessage(ConfigManager.fromSection("§cUpgrade Failed! Item and ingredients lost."));
+                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-failure-lose-everything"));
             }
             else if (action == FailureAction.KEEP_BASE_ONLY) {
                 for (ICost cost : recipe.getIngredients()) cost.deduct(p);
 
-                p.sendMessage(ConfigManager.fromSection("§eUpgrade Failed! Ingredients lost, but item kept."));
+                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-failure-keep-base"));
             }
             else if (action == FailureAction.KEEP_EVERYTHING) {
-                p.sendMessage(ConfigManager.fromSection("§bUpgrade Failed! Nothing was lost."));
+                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-failure-keep-everything"));
             }
 
             p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);

@@ -32,6 +32,11 @@ messages:
   protection-prevent-smithing-use: "&#FF0000This special item cannot be used in a smithing table."
   protection-prevent-container-store: "&#FF0000You cannot store this special item in a container."
   protection-prevent-itemframe-store: "&#FF0000You cannot place this special item in an item frame."
+  upgrade-success: "&aUpgrade Successful!"
+  upgrade-failure-lose-everything: "&cUpgrade Failed! Item and ingredients lost."
+  upgrade-failure-keep-base: "&eUpgrade Failed! Ingredients lost, but item kept."
+  upgrade-failure-keep-everything: "&bUpgrade Failed! Nothing was lost."
+  upgrade-inventory-full: "&eInventory full! Item dropped on ground."
 
 # ===================================================================
 #                   ACTIVE ITEMS - VISUAL SETTINGS
