@@ -33,6 +33,7 @@ public class BossBarStyleMenu extends Menu {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
+        if (e.getCurrentItem().getType() == Material.BLACK_STAINED_GLASS_PANE) return;
         if (e.getCurrentItem().getType() == Material.BARRIER) {
             new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
             return;

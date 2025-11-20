@@ -36,7 +36,7 @@ public class SlotSelectionMenu extends Menu {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         Player p = (Player) e.getWhoClicked();
-        if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+        if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.BLACK_STAINED_GLASS_PANE) return;
 
         if (e.getCurrentItem().getType() == Material.BARRIER) {
             new PassiveItemSettingsMenu(playerMenuUtility, plugin).open();
