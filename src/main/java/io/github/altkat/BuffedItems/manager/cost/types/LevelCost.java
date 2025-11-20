@@ -16,6 +16,11 @@ public class LevelCost implements ICost {
     }
 
     @Override
+    public String getDisplayString() {
+        return amount + " XP Levels";
+    }
+
+    @Override
     public boolean hasEnough(Player player) {
         return player.getLevel() >= amount;
     }

@@ -23,6 +23,11 @@ public class CoinsEngineCost implements ICost {
     }
 
     @Override
+    public String getDisplayString() {
+        return amount + " " + currencyId;
+    }
+
+    @Override
     public boolean hasEnough(Player player) {
         Currency currency = CoinsEngineAPI.getCurrency(currencyId);
         if (currency == null) return false;

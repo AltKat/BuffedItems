@@ -21,7 +21,10 @@ public class ItemsConfig {
                 if (plugin.getResource("items.yml") != null) {
                     plugin.saveResource("items.yml", false);
                 } else {
-                    file.createNewFile();
+                    if (!file.createNewFile()) {
+                        plugin.getLogger().warning("Failed to create items.yml file!");
+                        return;
+                    }
                 }
                 ConfigManager.logInfo("&aCreated new items.yml file.");
             } catch (IOException e) {

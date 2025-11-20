@@ -16,6 +16,11 @@ public class HungerCost implements ICost {
     }
 
     @Override
+    public String getDisplayString() {
+        return amount + " Food Level";
+    }
+
+    @Override
     public boolean hasEnough(Player player) {
         return player.getFoodLevel() >= amount;
     }

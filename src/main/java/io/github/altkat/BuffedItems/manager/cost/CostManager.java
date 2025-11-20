@@ -68,31 +68,39 @@ public class CostManager {
     /**
      * Generates Cost objects from the config list.
      */
+    public ICost parseCost(Map<?, ?> rawMap) {
+        try {
+            Map<String, Object> data = new HashMap<>();
+            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                data.put(entry.getKey().toString(), entry.getValue());
+            }
+
+            String type = (String) data.get("type");
+            if (type == null) return null;
+
+            CostFactory factory = factories.get(type.toUpperCase());
+            if (factory != null) {
+                return factory.create(data);
+            } else {
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Unknown cost type: " + type);
+            }
+        } catch (Exception e) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Error parsing cost: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Generates Cost objects from the config list.
+     */
     public List<ICost> parseCosts(List<Map<?, ?>> configList) {
         List<ICost> costs = new ArrayList<>();
         if (configList == null) return costs;
 
         for (Map<?, ?> rawMap : configList) {
-            try {
-                Map<String, Object> data = new HashMap<>();
-                for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
-                    data.put(entry.getKey().toString(), entry.getValue());
-                }
-
-                String type = (String) data.get("type");
-                if (type == null) continue;
-
-                CostFactory factory = factories.get(type.toUpperCase());
-                if (factory != null) {
-                    ICost cost = factory.create(data);
-                    if (cost != null) {
-                        costs.add(cost);
-                    }
-                } else {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Unknown cost type: " + type);
-                }
-            } catch (Exception e) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Error parsing cost: " + e.getMessage());
+            ICost cost = parseCost(rawMap);
+            if (cost != null) {
+                costs.add(cost);
             }
         }
         return costs;

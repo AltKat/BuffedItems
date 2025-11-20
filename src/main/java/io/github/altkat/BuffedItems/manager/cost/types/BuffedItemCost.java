@@ -33,6 +33,27 @@ public class BuffedItemCost implements ICost {
         this.nbtKey = new NamespacedKey(plugin, "buffeditem_id");
     }
 
+    public int getAmount() {
+        return amount;
+    }
+
+    public String getRequiredItemId() {
+        return requiredItemId;
+    }
+
+    @Override
+    public String getDisplayString() {
+        BuffedItem item = plugin.getItemManager().getBuffedItem(requiredItemId);
+
+        String displayName;
+        if (item != null) {
+            displayName = ConfigManager.toSection(ConfigManager.fromLegacy(item.getDisplayName()));
+        } else {
+            displayName = requiredItemId;
+        }
+        return "§f" + amount + "x " + displayName;
+    }
+
     @Override
     public boolean hasEnough(Player player) {
         int count = 0;

@@ -22,6 +22,20 @@ public class ItemCost implements ICost {
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }
 
+    public int getAmount() {
+        return amount;
+    }
+
+    public Material getMaterial() {
+        return material;
+    }
+
+    @Override
+    public String getDisplayString() {
+        String name = (material != null) ? formatMaterialName(material) : "Unknown Item";
+        return "§f" + amount + "x " + name;
+    }
+
     @Override
     public boolean hasEnough(Player player) {
         if (material == null) return false;
@@ -81,5 +95,14 @@ public class ItemCost implements ICost {
         PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
 
         return container.getKeys().isEmpty();
+    }
+
+    private String formatMaterialName(Material material) {
+        String name = material.name().toLowerCase().replace("_", " ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : name.split(" ")) {
+            sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+        }
+        return sb.toString().trim();
     }
 }

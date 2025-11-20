@@ -38,6 +38,10 @@ public class TabCompleteHandler implements TabCompleter {
             if (sender.hasPermission("buffeditems.command.menu")) {
                 subcommands.add("menu");
             }
+            if (sender.hasPermission("buffeditems.command.upgrade")) {
+                subcommands.add("upgrade");
+            }
+
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {

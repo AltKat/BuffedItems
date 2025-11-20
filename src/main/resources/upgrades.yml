@@ -1,0 +1,91 @@
+# -------------------------------------------------------------------------------------------
+# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Discord: streetmelodeez
+# Website: https://altkat.github.io
+# -------------------------------------------------------------------------------------------
+
+# ===================================================================
+#                       BUFFED ITEMS - UPGRADES.YML
+# ===================================================================
+#
+# This file allows you to create upgrade recipes for your BuffedItems.
+# Players can use the Upgrade Station (/bi upgrade) to upgrade their items.
+#
+# We RECOMMEND using the in-game editor (/bi menu -> Configure Upgrades)
+# to make changes easily without editing this file manually.
+#
+# If you edit this file manually, use /bi reload to apply changes.
+# ===================================================================
+
+# --- CONFIGURATION GUIDE ---
+#
+# upgrades:
+#   unique_recipe_id:  <-- Unique identifier for the recipe (not visible to players)
+#     display_name: "&aDisplay Name"  <-- Name shown in the Upgrade Menu
+#     success_rate: 100.0             <-- Chance of success (0.0 to 100.0)
+#     prevent_failure_loss: false     <-- If true, ingredients are NOT lost when upgrade fails.
+#
+#     # BASE ITEM (The item to be upgraded - Input Slot)
+#     # MUST be a single BuffedItem (amount: 1).
+#     base:
+#       type: BUFFED_ITEM
+#       item_id: "your_base_item_id"
+#       amount: 1
+#
+#     # INGREDIENTS (Additional costs required from player's inventory)
+#     # You can add multiple ingredients.
+#     ingredients:
+#       - type: ITEM
+#         material: DIAMOND
+#         amount: 5
+#       - type: MONEY
+#         amount: 1000.0
+#       - type: EXPERIENCE
+#         amount: 500
+#       - type: BUFFED_ITEM
+#         item_id: "another_custom_item"
+#         amount: 1
+#
+#     # RESULT (The output item if upgrade succeeds)
+#     result:
+#       item: "your_result_item_id"  <-- ID of the BuffedItem to give
+#       amount: 1
+#
+# -------------------------------------------------------------------------------------------
+# AVAILABLE COST TYPES:
+# - MONEY (Vault)
+# - EXPERIENCE (Points)
+# - LEVEL (XP Levels)
+# - HUNGER (Food Level)
+# - HEALTH (Hearts)
+# - ITEM (Vanilla Items - Format: AMOUNT;MATERIAL)
+# - BUFFED_ITEM (Custom Items - Format: AMOUNT;ITEM_ID)
+# - COINSENGINE (Custom Currency)
+# -------------------------------------------------------------------------------------------
+
+upgrades:
+  # Example: Upgrading a 'bunny_charm' to a 'warriors_talisman'
+  # You can edit or remove this example.
+  example_upgrade:
+    display_name: "&eCharm Evolution"
+    success_rate: 80.0
+    prevent_failure_loss: false
+
+    # The item the player must place in the Upgrade Station
+    base:
+      type: BUFFED_ITEM
+      item_id: "bunny_charm"
+      amount: 1
+
+    # Extra items required in the player's inventory
+    ingredients:
+      - type: ITEM
+        material: DIAMOND
+        amount: 5
+      - type: EXPERIENCE
+        amount: 500
+
+    # The item the player receives upon success
+    result:
+      item: "warriors_talisman"
+      amount: 1

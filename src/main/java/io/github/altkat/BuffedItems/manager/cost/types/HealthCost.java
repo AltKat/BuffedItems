@@ -21,6 +21,11 @@ public class HealthCost implements ICost {
     }
 
     @Override
+    public String getDisplayString() {
+        return amount + " Health (Hearts)";
+    }
+
+    @Override
     public void deduct(Player player) {
         double newHealth = player.getHealth() - amount;
         if (newHealth < 0) newHealth = 0;

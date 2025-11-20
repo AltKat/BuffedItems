@@ -8,10 +8,12 @@ import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigUpdater;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
 import io.github.altkat.BuffedItems.manager.cost.CostManager;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.manager.item.ItemManager;
+import io.github.altkat.BuffedItems.manager.upgrade.UpgradeManager;
 import io.github.altkat.BuffedItems.menu.MenuListener;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.task.CooldownVisualsTask;
@@ -47,6 +49,7 @@ public final class BuffedItems extends JavaPlugin {
     private CooldownManager cooldownManager;
     private CooldownVisualsTask cooldownVisualsTask;
     private CostManager costManager;
+    private UpgradeManager upgradeManager;
 
     @Override
     public void onEnable() {
@@ -74,12 +77,13 @@ public final class BuffedItems extends JavaPlugin {
         ConfigManager.setup(this);
         saveDefaultConfig();
         ItemsConfig.setup(this);
-
+        UpgradesConfig.setup(this);
         initializeManagers();
 
         try {
             ConfigUpdater.update(this, "config.yml");
             ConfigUpdater.update(this, "items.yml");
+            ConfigUpdater.update(this, "upgrades.yml");
         } catch (Exception e) {
             getLogger().severe("WARNING: Failed to run file updater tasks.");
             e.printStackTrace();
@@ -108,6 +112,7 @@ public final class BuffedItems extends JavaPlugin {
             public void run() {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading task running...");
                 itemManager.loadItems(false);
+                upgradeManager.loadRecipes(false);
                 printStartupSummary();
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading complete.");
             }
@@ -159,6 +164,7 @@ public final class BuffedItems extends JavaPlugin {
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
         cooldownManager = new CooldownManager();
+        upgradeManager = new UpgradeManager(this);
     }
 
     private void registerListenersAndCommands() {
@@ -258,6 +264,7 @@ public final class BuffedItems extends JavaPlugin {
     public CostManager getCostManager() {
         return costManager;
     }
+    public UpgradeManager getUpgradeManager() { return upgradeManager; }
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");

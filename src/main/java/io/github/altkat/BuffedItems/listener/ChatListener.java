@@ -10,6 +10,9 @@ import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.editor.LoreEditorMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
 import io.github.altkat.BuffedItems.menu.selector.EnchantmentSelectorMenu;
+import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
+import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
+import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -19,10 +22,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-/**
- * Handles all chat-based input for the BuffedItems in-game editor.
- * Optimized with DRY principles to minimize code duplication.
- */
 public class ChatListener implements Listener {
 
     private final BuffedItems plugin;
@@ -32,6 +31,8 @@ public class ChatListener implements Listener {
     private final ActiveSettingsInputHandler activeSettingsInputHandler;
     private final EffectInputHandler effectInputHandler;
     private final CreationInputHandler creationInputHandler;
+    private final UpgradeInputHandler upgradeInputHandler;
+    private final IngredientInputHandler ingredientInputHandler;
 
     public ChatListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -41,6 +42,8 @@ public class ChatListener implements Listener {
         this.activeSettingsInputHandler = new ActiveSettingsInputHandler(plugin);
         this.effectInputHandler = new EffectInputHandler(plugin);
         this.creationInputHandler = new CreationInputHandler(plugin);
+        this.upgradeInputHandler = new UpgradeInputHandler(plugin);
+        this.ingredientInputHandler = new IngredientInputHandler(plugin);
     }
 
     @EventHandler
@@ -71,9 +74,6 @@ public class ChatListener implements Listener {
         pmu.setChatInputPath(null);
     }
 
-    /**
-     * Main chat input handler - routes all paths to appropriate methods
-     */
     private void handleChatInput(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         if (path == null) {
             closeChatInput(pmu);
@@ -92,17 +92,27 @@ public class ChatListener implements Listener {
             return;
         }
 
+        if (path.startsWith("upgrade.ingredients.") || path.startsWith("upgrade.base.")) {
+            ingredientInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+
+        if (path.startsWith("upgrade.") || path.equals("create_upgrade")) {
+            upgradeInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
             creationInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("lore.")) {
             loreInputHandler.handle(player, pmu, input, path, itemId);
-        }else if (path.equals("display_name") || path.equals("permission") || path.equals("material.manual") || path.equals("custom_model_data")) {
+        } else if (path.equals("display_name") || path.equals("permission") || path.equals("material.manual") || path.equals("custom_model_data")) {
             basicInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("active.cooldown") || path.startsWith("active.duration") ||
                 path.startsWith("active.commands.") || path.startsWith("active.msg.") ||
                 path.startsWith("active.sounds.")) {
             activeSettingsInputHandler.handle(player, pmu, input, path, itemId);
-        }else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")) {
+        } else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")) {
             effectInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("active.costs.")) {
             costInputHandler.handle(player, pmu, input, path, itemId);
@@ -114,10 +124,22 @@ public class ChatListener implements Listener {
         }
     }
 
-    /**
-     * Handles cancel action - returns to appropriate menu based on path type
-     */
     private void handleCancelAction(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("upgrade.")) {
+            if (path.startsWith("upgrade.ingredients.")) {
+                new IngredientListMenu(pmu, plugin).open();
+            } else if (path.startsWith("upgrade.base.")) {
+                new UpgradeRecipeEditorMenu(pmu, plugin).open();
+            } else {
+                new UpgradeRecipeEditorMenu(pmu, plugin).open();
+            }
+            return;
+        }
+        else if (path.equals("create_upgrade")) {
+            new UpgradeRecipeListMenu(pmu, plugin).open();
+            return;
+        }
+
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
             new MainMenu(pmu, plugin).open();
         } else if (path.startsWith("lore.")) {
@@ -153,9 +175,7 @@ public class ChatListener implements Listener {
 
     private void handleEnchantmentSearch(Player player, PlayerMenuUtility pmu, String input) {
         closeChatInput(pmu);
-        EnchantmentSelectorMenu menu =
-                new EnchantmentSelectorMenu(pmu, plugin);
-
+        EnchantmentSelectorMenu menu = new EnchantmentSelectorMenu(pmu, plugin);
         menu.searchEnchantments(input);
         menu.open();
 

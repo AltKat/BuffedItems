@@ -39,6 +39,12 @@ public class CostTypeSelectorMenu extends Menu {
         String type = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
         Player p = (Player) e.getWhoClicked();
 
+        if (type.equals("BUFFED_ITEM")) {
+            new BuffedItemSelectorMenu(playerMenuUtility, plugin,
+                    BuffedItemSelectorMenu.SelectionContext.COST).open();
+            return;
+        }
+
         playerMenuUtility.setWaitingForChatInput(true);
         playerMenuUtility.setChatInputPath("active.costs.add." + type);
 

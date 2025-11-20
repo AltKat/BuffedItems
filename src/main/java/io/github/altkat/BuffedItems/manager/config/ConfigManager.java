@@ -161,8 +161,10 @@ public class ConfigManager {
 
             plugin.reloadConfig();
             ItemsConfig.reload();
+            UpgradesConfig.reload();
 
             plugin.getItemManager().loadItems(silent);
+            plugin.getUpgradeManager().loadRecipes(silent);
 
             loadGlobalSettings();
             invalidateAllPlayerCaches();
@@ -318,6 +320,19 @@ public class ConfigManager {
 
             sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicated item '" + sourceItemId + "' to '" + newItemId + "'");
             return newItemId;
+        }
+    }
+
+    public static void setUpgradeValue(String upgradeId, String path, Object value) {
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting upgrade value: upgrades." + upgradeId + "." + path + " = " + value);
+
+            String fullPath = (path == null) ? "upgrades." + upgradeId : "upgrades." + upgradeId + "." + path;
+
+            UpgradesConfig.get().set(fullPath, value);
+            UpgradesConfig.save();
+            UpgradesConfig.reload();
+            plugin.getUpgradeManager().loadRecipes(true);
         }
     }
 

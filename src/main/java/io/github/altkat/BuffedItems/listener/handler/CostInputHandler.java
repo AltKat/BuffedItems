@@ -23,8 +23,14 @@ public class CostInputHandler implements ChatInputHandler {
 
     @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
+        if (path.equals("active.costs.add.BUFFED_ITEM_QUANTITY")) {
+            handleQuantityInput(player, pmu, input, itemId);
+            return;
+        }
+
         if (path.startsWith("active.costs.add.")) {
             String type = path.substring(17);
+            if (type.equals("BUFFED_ITEM_QUANTITY")) type = "BUFFED_ITEM";
             handleAddCost(player, pmu, input, type, itemId);
         } else if (path.equals("active.costs.edit.amount")) {
             handleEditCostAmount(player, pmu, input, itemId);
@@ -200,6 +206,23 @@ public class CostInputHandler implements ChatInputHandler {
         ConfigManager.setItemValue(itemId, "costs", editableList);
         closeChatInput(pmu);
         new CostListMenu(pmu, plugin).open();
+    }
+
+    private void handleQuantityInput(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        try {
+            int amount = Integer.parseInt(input);
+            if (amount <= 0) throw new NumberFormatException();
+
+            String selectedId = pmu.getTempId();
+            String simulatedInput = amount + ";" + selectedId;
+
+            handleAddCost(player, pmu, simulatedInput, "BUFFED_ITEM", itemId);
+
+        } catch (NumberFormatException e) {
+            player.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a valid number."));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
+        }
     }
 
     private void closeChatInput(PlayerMenuUtility pmu) {

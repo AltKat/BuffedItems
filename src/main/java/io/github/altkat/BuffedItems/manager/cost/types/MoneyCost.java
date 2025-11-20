@@ -19,6 +19,11 @@ public class MoneyCost implements ICost {
     }
 
     @Override
+    public String getDisplayString() {
+        return "$" + amount;
+    }
+
+    @Override
     public boolean hasEnough(Player player) {
         return economy.has(player, amount);
     }

@@ -69,6 +69,18 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(ConfigManager.fromSection("§cThis command can only be used by players."));
                 }
                 return true;
+            case "upgrade":
+                if (!sender.hasPermission("buffeditems.command.upgrade")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                if (sender instanceof Player) {
+                    Player p = (Player) sender;
+                    new io.github.altkat.BuffedItems.menu.upgrade.UpgradeMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
+                } else {
+                    sender.sendMessage(ConfigManager.fromSection("§cOnly players can use this command."));
+                }
+                return true;
             default:
                 sender.sendMessage(ConfigManager.fromSection("§cUnknown subcommand. Use /buffeditems for help."));
                 return true;

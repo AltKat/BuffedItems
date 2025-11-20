@@ -18,6 +18,11 @@ public class ExperienceCost implements ICost {
     }
 
     @Override
+    public String getDisplayString() {
+        return amount + " XP Points";
+    }
+
+    @Override
     public boolean hasEnough(Player player) {
         return getTotalExperience(player) >= amount;
     }

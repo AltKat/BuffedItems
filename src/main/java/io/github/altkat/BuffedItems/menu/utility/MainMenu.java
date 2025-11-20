@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
+import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -132,6 +133,9 @@ public class MainMenu extends PaginatedMenu {
             case COMPARATOR:
                 new GeneralSettingsMenu(playerMenuUtility, plugin).open();
                 break;
+            case SMITHING_TABLE:
+                new UpgradeRecipeListMenu(playerMenuUtility, plugin).open();
+                break;
 
         }
     }
@@ -155,7 +159,7 @@ public class MainMenu extends PaginatedMenu {
                 "§7Configure global plugin settings.",
                 "§7(Debug level, Potion icons, etc.)"));
         inventory.setItem(46, filler);
-        inventory.setItem(47, filler);
+        inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes.", "§7(No file editing required!)"));
         inventory.setItem(51, filler);
         inventory.setItem(52, filler);
 

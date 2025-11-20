@@ -14,6 +14,7 @@ public class PlayerMenuUtility {
     private String chatInputPath;
     private String attributeToEdit;
     private boolean showPreviewDetails = false;
+    private String tempId;
 
 
     public PlayerMenuUtility(Player owner) {
@@ -78,5 +79,13 @@ public class PlayerMenuUtility {
 
     public void toggleShowPreviewDetails() {
         this.showPreviewDetails = !this.showPreviewDetails;
+    }
+
+    public String getTempId() {
+        return tempId;
+    }
+
+    public void setTempId(String tempId) {
+        this.tempId = tempId;
     }
 }
