@@ -22,10 +22,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -317,8 +314,17 @@ public class ItemInteractListener implements Listener {
 
         int durationTicks = item.getActiveDuration() > 0 ? item.getActiveDuration() * 20 : 100;
 
-        for (java.util.Map.Entry<PotionEffectType, Integer> entry : effects.getPotionEffects().entrySet()) {
-            player.addPotionEffect(new PotionEffect(entry.getKey(), durationTicks, entry.getValue() - 1));
+        boolean showIcon = ConfigManager.shouldShowPotionIcons();
+
+        for (Map.Entry<PotionEffectType, Integer> entry : effects.getPotionEffects().entrySet()) {
+            player.addPotionEffect(new PotionEffect(
+                    entry.getKey(),
+                    durationTicks,
+                    entry.getValue() - 1,
+                    true,
+                    false,
+                    showIcon
+            ));
         }
 
         for (ParsedAttribute attr : effects.getParsedAttributes()) {
