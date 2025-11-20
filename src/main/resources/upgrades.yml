@@ -26,11 +26,9 @@
 #     prevent_failure_loss: false     <-- If true, ingredients are NOT lost when upgrade fails.
 #
 #     # BASE ITEM (The item to be upgraded - Input Slot)
-#     # MUST be a single BuffedItem (amount: 1).
-#     base:
-#       type: BUFFED_ITEM
-#       item_id: "your_base_item_id"
-#       amount: 1
+#     # Just write the BuffedItem ID directly.
+#     # (The system automatically requires exactly 1 of this item).
+#     base: "your_base_item_id"
 #
 #     # INGREDIENTS (Additional costs required from player's inventory)
 #     # You can add multiple ingredients.
@@ -40,11 +38,6 @@
 #         amount: 5
 #       - type: MONEY
 #         amount: 1000.0
-#       - type: EXPERIENCE
-#         amount: 500
-#       - type: BUFFED_ITEM
-#         item_id: "another_custom_item"
-#         amount: 1
 #
 #     # RESULT (The output item if upgrade succeeds)
 #     result:
@@ -52,30 +45,43 @@
 #       amount: 1
 #
 # -------------------------------------------------------------------------------------------
-# AVAILABLE COST TYPES:
-# - MONEY (Vault)
-# - EXPERIENCE (Points)
-# - LEVEL (XP Levels)
-# - HUNGER (Food Level)
-# - HEALTH (Hearts)
-# - ITEM (Vanilla Items - Format: AMOUNT;MATERIAL)
-# - BUFFED_ITEM (Custom Items - Format: AMOUNT;ITEM_ID)
-# - COINSENGINE (Custom Currency)
+# AVAILABLE COST TYPES & FORMATS (For 'ingredients'):
+#
+# - MONEY: Requires Vault currency.
+#     Format: AMOUNT (e.g., 1000.0)
+#
+# - EXPERIENCE: Requires total XP points.
+#     Format: AMOUNT (e.g., 500)
+#
+# - LEVEL: Requires XP levels.
+#     Format: AMOUNT (e.g., 5)
+#
+# - HUNGER: Requires food points (20 = full bar).
+#     Format: AMOUNT (e.g., 4)
+#
+# - HEALTH: Requires health points (2 = 1 heart).
+#     Format: AMOUNT (e.g., 10)
+#
+# - ITEM: Requires a vanilla Minecraft item.
+#     Format: AMOUNT;MATERIAL (e.g., 5;DIAMOND)
+#
+# - BUFFED_ITEM: Requires a custom BuffedItem defined in items.yml.
+#     Format: AMOUNT;ITEM_ID (e.g., 1;bunny_charm)
+#
+# - COINSENGINE: Requires a CoinsEngine custom currency.
+#     Format: AMOUNT;CURRENCY_ID (e.g., 100;coins)
 # -------------------------------------------------------------------------------------------
 
 upgrades:
-  # Example: Upgrading a 'bunny_charm' to a 'warriors_talisman'
+  # Example: Upgrading 'swiftness_boots' to 'berserkers_greaves'
   # You can edit or remove this example.
   example_upgrade:
-    display_name: "&eCharm Evolution"
+    display_name: "&eBoots Evolution"
     success_rate: 80.0
     prevent_failure_loss: false
 
     # The item the player must place in the Upgrade Station
-    base:
-      type: BUFFED_ITEM
-      item_id: "bunny_charm"
-      amount: 1
+    base: "swiftness_boots"
 
     # Extra items required in the player's inventory
     ingredients:
@@ -87,5 +93,5 @@ upgrades:
 
     # The item the player receives upon success
     result:
-      item: "warriors_talisman"
+      item: "berserkers_greaves"
       amount: 1

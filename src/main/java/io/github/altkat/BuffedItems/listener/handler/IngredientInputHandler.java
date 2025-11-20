@@ -47,13 +47,7 @@ public class IngredientInputHandler implements ChatInputHandler {
         if (plugin.getItemManager().getBuffedItem(itemId) == null) {
             player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + itemId + "' not found in loaded items."));
         }
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("type", "BUFFED_ITEM");
-        data.put("amount", 1);
-        data.put("item_id", itemId);
-
-        ConfigManager.setUpgradeValue(recipeId, "base", data);
+        ConfigManager.setUpgradeValue(recipeId, "base", itemId);
 
         player.sendMessage(ConfigManager.fromSection("§aBase item updated to: §e" + itemId));
         closeChat(pmu);

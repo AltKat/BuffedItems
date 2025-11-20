@@ -51,10 +51,15 @@ public class UpgradeManager {
 
             ICost baseCost = null;
             if (recipeSection.contains("base")) {
-                ConfigurationSection baseSection = recipeSection.getConfigurationSection("base");
-                if (baseSection != null) {
-                    Map<String, Object> baseData = baseSection.getValues(false);
-                    baseCost = plugin.getCostManager().parseCost(baseData);
+                if (recipeSection.isString("base")) {
+                    String itemId = recipeSection.getString("base");
+
+                    Map<String, Object> syntheticMap = new HashMap<>();
+                    syntheticMap.put("type", "BUFFED_ITEM");
+                    syntheticMap.put("amount", 1);
+                    syntheticMap.put("item_id", itemId);
+
+                    baseCost = plugin.getCostManager().parseCost(syntheticMap);
                 }
             }
 

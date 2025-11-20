@@ -4,7 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
-import io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe;
+import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -107,13 +107,24 @@ public class UpgradeRecipeEditorMenu extends Menu {
         String baseIdDisplay = "";
 
         if (UpgradesConfig.get().contains(path + ".base")) {
-            ICost baseCost = plugin.getCostManager().parseCost(UpgradesConfig.get().getConfigurationSection(path + ".base").getValues(false));
+            ICost baseCost = null;
+
+            if (UpgradesConfig.get().isString(path + ".base")) {
+                String bId = UpgradesConfig.get().getString(path + ".base");
+
+                java.util.Map<String, Object> syntheticMap = new java.util.HashMap<>();
+                syntheticMap.put("type", "BUFFED_ITEM");
+                syntheticMap.put("amount", 1);
+                syntheticMap.put("item_id", bId);
+
+                baseCost = plugin.getCostManager().parseCost(syntheticMap);
+            }
 
             if (baseCost != null) {
                 baseDisplayName = "§f" + baseCost.getDisplayString();
 
-                if (baseCost instanceof io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost) {
-                    String bId = ((io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost) baseCost).getRequiredItemId();
+                if (baseCost instanceof BuffedItemCost) {
+                    String bId = ((BuffedItemCost) baseCost).getRequiredItemId();
                     BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
 
                     if (bItem != null) {
