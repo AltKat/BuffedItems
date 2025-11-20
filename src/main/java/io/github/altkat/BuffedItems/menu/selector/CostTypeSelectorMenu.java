@@ -25,7 +25,7 @@ public class CostTypeSelectorMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 27;
+        return 36;
     }
 
     @Override
@@ -80,9 +80,9 @@ public class CostTypeSelectorMenu extends Menu {
         inventory.setItem(15, makeItem(Material.CHEST, "§aITEM", "§7Physical Items"));
         inventory.setItem(16, makeItem(Material.NETHER_STAR, "§aBUFFED_ITEM", "§7Custom Buffed Items"));
         if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
-            inventory.setItem(17, makeItem(Material.SUNFLOWER, "§aCOINSENGINE", "§7CoinsEngine Currency"));
+            inventory.setItem(19, makeItem(Material.SUNFLOWER, "§aCOINSENGINE", "§7CoinsEngine Currency"));
         }
 
-        inventory.setItem(22, makeItem(Material.BARRIER, "§cCancel"));
+        inventory.setItem(31, makeItem(Material.BARRIER, "§cCancel"));
     }
 }
