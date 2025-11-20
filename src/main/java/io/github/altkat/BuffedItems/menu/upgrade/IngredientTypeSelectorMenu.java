@@ -52,15 +52,18 @@ public class IngredientTypeSelectorMenu extends Menu {
         playerMenuUtility.setChatInputPath(chatPath + type);
 
         e.getWhoClicked().closeInventory();
-        e.getWhoClicked().sendMessage(ConfigManager.fromSection("§aSelected: " + type));
+        e.getWhoClicked().sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: " + type));
 
         if (type.equals("ITEM")) {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;MATERIAL (e.g. 1;DIAMOND)"));
+            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }else if (type.equals("COINSENGINE")) {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID (e.g. 100;gold)"));
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Or just AMOUNT for default 'coins')"));
+            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }else {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§aEnter amount:"));
+            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
     }
 

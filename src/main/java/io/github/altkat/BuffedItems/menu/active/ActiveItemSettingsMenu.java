@@ -64,7 +64,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("active.cooldown");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aEnter the Cooldown (in seconds) in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the Cooldown (in seconds) in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getCooldown() + "s)"));
                 break;
 
@@ -72,7 +72,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("active.duration");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aEnter the Effect Duration (in seconds) in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the Effect Duration (in seconds) in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getActiveDuration() + "s)"));
                 break;
 

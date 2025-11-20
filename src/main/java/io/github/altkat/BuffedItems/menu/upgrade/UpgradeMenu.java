@@ -206,7 +206,7 @@ public class UpgradeMenu extends Menu {
         int requiredBase = 1;
 
         if (inputItem.getAmount() < requiredBase) {
-            p.sendMessage(ConfigManager.fromSection("§cInput item amount error!"));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§cInput item amount error!"));
             return;
         }
 
@@ -218,7 +218,7 @@ public class UpgradeMenu extends Menu {
         }
 
         if (!missingRequirements.isEmpty()) {
-            p.sendMessage(ConfigManager.fromSection("§c⚠ You do not meet the requirements:"));
+            p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-requirements-not-met"));
             for (String error : missingRequirements) {
                 p.sendMessage(ConfigManager.fromLegacy(" &7- " + error));
             }

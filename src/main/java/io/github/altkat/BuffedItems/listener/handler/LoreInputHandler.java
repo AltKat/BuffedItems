@@ -23,7 +23,7 @@ public class LoreInputHandler implements ChatInputHandler {
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Item '" + itemId + "' not found in memory."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Item '" + itemId + "' not found in memory."));
             closeChatInput(pmu);
             new MainMenu(pmu, plugin).open();
             return;
@@ -43,13 +43,13 @@ public class LoreInputHandler implements ChatInputHandler {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
                             () -> "[Chat] Updated lore line " + index + " for " + itemId);
                 } else {
-                    player.sendMessage(ConfigManager.fromSection("§cError: Invalid lore index."));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid lore index."));
                     closeChatInput(pmu);
                     new LoreEditorMenu(pmu, plugin).open();
                     return;
                 }
             } catch (NumberFormatException ex) {
-                player.sendMessage(ConfigManager.fromSection("§cError: Could not parse lore index from path: " + path));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Could not parse lore index from path: " + path));
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                         () -> "[Chat] Could not parse lore index from path: " + path);
                 closeChatInput(pmu);
@@ -59,7 +59,7 @@ public class LoreInputHandler implements ChatInputHandler {
         }
 
         ConfigManager.setItemValue(itemId, "lore", currentLore);
-        player.sendMessage(ConfigManager.fromSection("§aLore has been updated!"));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aLore has been updated!"));
 
         closeChatInput(pmu);
         new LoreEditorMenu(pmu, plugin).open();

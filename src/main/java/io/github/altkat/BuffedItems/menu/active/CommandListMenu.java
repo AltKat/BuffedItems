@@ -56,7 +56,7 @@ public class CommandListMenu extends PaginatedMenu {
             playerMenuUtility.setChatInputPath("active.commands.add");
             p.closeInventory();
 
-            p.sendMessage(ConfigManager.fromSection("§aEnter the command in chat."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the command in chat."));
 
             p.sendMessage(ConfigManager.fromSection("§6Logic Prefixes (Any Order):"));
             p.sendMessage(ConfigManager.fromSection("§d• [delay:20] §7(Wait ticks)."));
@@ -87,12 +87,12 @@ public class CommandListMenu extends PaginatedMenu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("active.commands.edit." + commandIndex);
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aEnter the new command in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the new command in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7Current: §f" + commands.get(commandIndex)));
             } else if (e.isRightClick()) {
                 String removed = commands.remove(commandIndex);
                 ConfigManager.setItemValue(itemId, "commands", commands);
-                p.sendMessage(ConfigManager.fromSection("§cRemoved command."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cRemoved command."));
                 this.open();
             }
         }

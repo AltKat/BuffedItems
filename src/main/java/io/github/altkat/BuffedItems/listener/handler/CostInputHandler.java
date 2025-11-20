@@ -62,7 +62,7 @@ public class CostInputHandler implements ChatInputHandler {
 
                 if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
                     if (su.nightexpress.coinsengine.api.CoinsEngineAPI.getCurrency(currencyId) == null) {
-                        player.sendMessage(ConfigManager.fromSection("§eWarning: Currency ID '" + currencyId + "' not found in CoinsEngine."));
+                        player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Currency ID '" + currencyId + "' not found in CoinsEngine."));
                     }
                 }
 
@@ -77,7 +77,7 @@ public class CostInputHandler implements ChatInputHandler {
                 String buffedItemId = parts[1];
 
                 if (plugin.getItemManager().getBuffedItem(buffedItemId) == null) {
-                    player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + buffedItemId + "' is not loaded yet."));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Item ID '" + buffedItemId + "' is not loaded yet."));
                 }
 
                 newCost.put("item_id", buffedItemId);
@@ -91,7 +91,7 @@ public class CostInputHandler implements ChatInputHandler {
                 String material = parts[1].toUpperCase();
 
                 if (Material.matchMaterial(material) == null) {
-                    player.sendMessage(ConfigManager.fromSection("§cInvalid material: " + material));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid material: " + material));
                     closeChatInput(pmu);
                     new CostTypeSelectorMenu(pmu, plugin).open();
                     return;
@@ -114,12 +114,12 @@ public class CostInputHandler implements ChatInputHandler {
             costs.add(newCost);
             ConfigManager.setItemValue(itemId, "costs", costs);
 
-            player.sendMessage(ConfigManager.fromSection("§aCost added successfully!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCost added successfully!"));
             closeChatInput(pmu);
             new CostListMenu(pmu, plugin).open();
 
         } catch (Exception e) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid input."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid input."));
             if (type.equals("ITEM")) player.sendMessage(ConfigManager.fromSection("§7Use format: AMOUNT;MATERIAL"));
             else if (type.equals("BUFFED_ITEM")) player.sendMessage(ConfigManager.fromSection("§7Use format: AMOUNT;ITEM_ID"));
             else if (type.equals("COINSENGINE")) player.sendMessage(ConfigManager.fromSection("§7Use format: AMOUNT;CURRENCY_ID"));
@@ -137,7 +137,7 @@ public class CostInputHandler implements ChatInputHandler {
         List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
 
         if (index < 0 || index >= costList.size()) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Cost index out of bounds."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Cost index out of bounds."));
             closeChatInput(pmu);
             new CostListMenu(pmu, plugin).open();
             return;
@@ -165,13 +165,13 @@ public class CostInputHandler implements ChatInputHandler {
             }
 
             ConfigManager.setItemValue(itemId, "costs", editableList);
-            player.sendMessage(ConfigManager.fromSection("§aCost amount updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCost amount updated!"));
 
             closeChatInput(pmu);
             new CostListMenu(pmu, plugin).open();
 
         } catch (NumberFormatException e) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a positive number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a positive number."));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("active.costs.edit.amount");
         }
@@ -183,7 +183,7 @@ public class CostInputHandler implements ChatInputHandler {
         List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
 
         if (index < 0 || index >= costList.size()) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Cost index out of bounds."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Cost index out of bounds."));
             closeChatInput(pmu);
             new CostListMenu(pmu, plugin).open();
             return;
@@ -198,10 +198,10 @@ public class CostInputHandler implements ChatInputHandler {
 
         if ("default".equalsIgnoreCase(input) || "reset".equalsIgnoreCase(input)) {
             targetCost.remove("message");
-            player.sendMessage(ConfigManager.fromSection("§aMessage reset to default config value."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aMessage reset to default config value."));
         } else {
             targetCost.put("message", input);
-            player.sendMessage(ConfigManager.fromSection("§aFailure message updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aFailure message updated!"));
         }
 
         ConfigManager.setItemValue(itemId, "costs", editableList);
@@ -220,7 +220,7 @@ public class CostInputHandler implements ChatInputHandler {
             handleAddCost(player, pmu, simulatedInput, "BUFFED_ITEM", itemId);
 
         } catch (NumberFormatException e) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
         }

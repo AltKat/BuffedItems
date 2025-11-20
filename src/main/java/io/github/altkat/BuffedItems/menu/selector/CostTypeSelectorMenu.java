@@ -50,23 +50,27 @@ public class CostTypeSelectorMenu extends Menu {
         playerMenuUtility.setChatInputPath("active.costs.add." + type);
 
         p.closeInventory();
-        p.sendMessage(ConfigManager.fromSection("§aSelected Type: " + type));
+        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Type: " + type));
 
         if (type.equals("ITEM")) {
             p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;MATERIAL"));
             p.sendMessage(ConfigManager.fromSection("§7Example: 1;DIAMOND"));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
         else if (type.equals("BUFFED_ITEM")) {
             p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;BUFFED_ITEM_ID"));
             p.sendMessage(ConfigManager.fromSection("§7Example: 1;warriors_talisman"));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
         else if (type.equals("COINSENGINE")) {
             p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID"));
             p.sendMessage(ConfigManager.fromSection("§7Example: 100;coins"));
             p.sendMessage(ConfigManager.fromSection("§7(If you use default currency 'coins', you can just type the amount)"));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
         else {
             p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
     }
 

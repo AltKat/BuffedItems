@@ -49,7 +49,7 @@ public class AttributeOperationSelectorMenu extends Menu {
         playerMenuUtility.setChatInputPath(prefix + "attributes.add." + attributeName + "." + operationName);
 
         p.closeInventory();
-        p.sendMessage(ConfigManager.fromSection("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));
+        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));
     }
 
     @Override

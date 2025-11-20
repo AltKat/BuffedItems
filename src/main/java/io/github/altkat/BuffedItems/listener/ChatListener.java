@@ -81,7 +81,7 @@ public class ChatListener implements Listener {
         }
 
         if (input.equalsIgnoreCase("cancel")) {
-            player.sendMessage(ConfigManager.fromSection("§cOperation cancelled."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cOperation cancelled."));
             handleCancelAction(player, pmu, path);
             closeChatInput(pmu);
             return;
@@ -117,7 +117,7 @@ public class ChatListener implements Listener {
         } else if (path.startsWith("active.costs.")) {
             costInputHandler.handle(player, pmu, input, path, itemId);
         } else {
-            player.sendMessage(ConfigManager.fromSection("§cError: Unknown input path: " + path));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Unknown input path: " + path));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                     () -> "[Chat] Attempted to set unknown path via chat: " + path);
             closeChatInput(pmu);
@@ -180,9 +180,9 @@ public class ChatListener implements Listener {
         menu.open();
 
         if (input.equalsIgnoreCase("clear")) {
-            player.sendMessage(ConfigManager.fromSection("§aSearch cleared. Showing all enchantments."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSearch cleared. Showing all enchantments."));
         } else {
-            player.sendMessage(ConfigManager.fromSection("§aSearching for: §e" + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSearching for: §e" + input));
         }
     }
 }

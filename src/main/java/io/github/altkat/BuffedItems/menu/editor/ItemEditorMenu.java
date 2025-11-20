@@ -78,7 +78,7 @@ public class ItemEditorMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("display_name");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromLegacy("§aPlease type the new display name in chat. Use '&' for color codes. &7[ &#E12B5DH&#E12B5De&#E12B5Dx &#E12B5Dc&#E12B5Do&#DD3266l&#D83870o&#D43F79r&#D04583s &#C75295s&#C3599Fu&#BF5FA8p&#BB66B2p&#B66CBBo&#B273C4r&#AE79CEt&#AA80D7e&#A586E1d&#A18DEA! &7]"));
+                p.sendMessage(ConfigManager.fromLegacyWithPrefix("§aPlease type the new display name in chat. Use '&' for color codes. &7[ &#E12B5DH&#E12B5De&#E12B5Dx &#E12B5Dc&#E12B5Do&#DD3266l&#D83870o&#D43F79r&#D04583s &#C75295s&#C3599Fu&#BF5FA8p&#BB66B2p&#B66CBBo&#B273C4r&#AE79CEt&#AA80D7e&#A586E1d&#A18DEA! &7]"));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case BOOK:
@@ -88,7 +88,7 @@ public class ItemEditorMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("permission");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aPlease type the permission node in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the permission node in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'none' or 'remove' to clear the permission)"));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
@@ -112,7 +112,7 @@ public class ItemEditorMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("custom_model_data");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aEnter Custom Model Data:"));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Custom Model Data:"));
                 p.sendMessage(ConfigManager.fromSection("§7Direct integer: §e100001"));
                 p.sendMessage(ConfigManager.fromSection("§7ItemsAdder: §eitemsadder:fire_sword"));
                 p.sendMessage(ConfigManager.fromSection("§7Nexo: §enexo:custom_helmet"));
@@ -133,7 +133,7 @@ public class ItemEditorMenu extends Menu {
     public void setMenuItems() {
         BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
         if (item == null) {
-            playerMenuUtility.getOwner().sendMessage(ConfigManager.fromSection("§cError: Item could not be found. Returning to main menu."));
+            playerMenuUtility.getOwner().sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Item could not be found. Returning to main menu."));
             new MainMenu(playerMenuUtility, plugin).open();
             return;
         }

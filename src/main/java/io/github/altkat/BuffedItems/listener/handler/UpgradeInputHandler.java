@@ -25,30 +25,30 @@ public class UpgradeInputHandler implements ChatInputHandler {
             handleCreateUpgrade(player, pmu, input);
         } else if (path.equals("upgrade.display_name")) {
             ConfigManager.setUpgradeValue(itemId, "display_name", input);
-            player.sendMessage(ConfigManager.fromSection("§aDisplay Name updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDisplay Name updated!"));
             returnToEditor(pmu);
         } else if (path.equals("upgrade.success_rate")) {
             try {
                 double rate = Double.parseDouble(input);
                 if (rate < 0 || rate > 100) throw new NumberFormatException();
                 ConfigManager.setUpgradeValue(itemId, "success_rate", rate);
-                player.sendMessage(ConfigManager.fromSection("§aSuccess Rate updated to " + rate + "%"));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSuccess Rate updated to " + rate + "%"));
             } catch (NumberFormatException e) {
-                player.sendMessage(ConfigManager.fromSection("§cInvalid number! Enter a value between 0-100."));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number! Enter a value between 0-100."));
             }
             returnToEditor(pmu);
         } else if (path.equals("upgrade.result.item")) {
             ConfigManager.setUpgradeValue(itemId, "result.item", input);
-            player.sendMessage(ConfigManager.fromSection("§aResult Item ID updated to: " + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aResult Item ID updated to: " + input));
             returnToEditor(pmu);
         } else if (path.equals("upgrade.result.amount")) {
             try {
                 int amount = Integer.parseInt(input);
                 if (amount < 1) throw new NumberFormatException();
                 ConfigManager.setUpgradeValue(itemId, "result.amount", amount);
-                player.sendMessage(ConfigManager.fromSection("§aResult Amount updated to: " + amount));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aResult Amount updated to: " + amount));
             } catch (NumberFormatException e) {
-                player.sendMessage(ConfigManager.fromSection("§cInvalid number!"));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number!"));
             }
             returnToEditor(pmu);
         }
@@ -57,7 +57,7 @@ public class UpgradeInputHandler implements ChatInputHandler {
     private void handleCreateUpgrade(Player player, PlayerMenuUtility pmu, String input) {
         String newId = input.toLowerCase().replace(" ", "_");
         if (UpgradesConfig.get().contains("upgrades." + newId)) {
-            player.sendMessage(ConfigManager.fromSection("§cError: An upgrade with this ID already exists."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: An upgrade with this ID already exists."));
             new UpgradeRecipeListMenu(pmu, plugin).open();
             closeChat(pmu);
             return;
@@ -76,10 +76,10 @@ public class UpgradeInputHandler implements ChatInputHandler {
         ConfigManager.setUpgradeValue(newId, "result.item", defaultItemId);
         ConfigManager.setUpgradeValue(newId, "result.amount", 1);
 
-        player.sendMessage(ConfigManager.fromSection("§aUpgrade recipe '" + newId + "' created!"));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aUpgrade recipe '" + newId + "' created!"));
 
         if (defaultItemId.equals("select_item_id")) {
-            player.sendMessage(ConfigManager.fromSection("§eWarning: No BuffedItems found! Recipe is invalid until you create an item."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: No BuffedItems found! Recipe is invalid until you create an item."));
         }
 
         pmu.setItemToEditId(newId);

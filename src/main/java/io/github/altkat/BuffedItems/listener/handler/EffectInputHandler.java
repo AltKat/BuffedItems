@@ -122,7 +122,7 @@ public class EffectInputHandler implements ChatInputHandler {
             String configKey = configPath.substring(configPath.indexOf(".") + itemId.length() + 2);
             ConfigManager.setItemValue(itemId, configKey, effects);
 
-            player.sendMessage(ConfigManager.fromSection("§a" + capitalizeFirstLetter(effectType.getDisplayName()) + " has been added!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.getDisplayName()) + " has been added!"));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                     () -> "[EffectHandler] Added " + effectType.getDisplayName() + ": " + finalConfigString + " for " + itemId);
 
@@ -130,13 +130,13 @@ public class EffectInputHandler implements ChatInputHandler {
             openAppropriateMenu(player, pmu, effectType, context, slot);
 
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid number format. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format. Please enter a valid number."));
         } catch (IllegalStateException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cError: This " + effectType.getDisplayName() + " already exists on the item."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: This " + effectType.getDisplayName() + " already exists on the item."));
             closeChatInput(pmu);
             openAppropriateMenu(player, pmu, effectType, context, slot);
         } catch (IllegalArgumentException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Invalid " + effectType.getDisplayName() + " format: " + rawName));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid " + effectType.getDisplayName() + " format: " + rawName));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                     () -> "[EffectHandler] Failed to add " + effectType.getDisplayName() + ": " + rawName + " - " + ex.getMessage());
             closeChatInput(pmu);
@@ -158,7 +158,7 @@ public class EffectInputHandler implements ChatInputHandler {
         int index = pmu.getEditIndex();
 
         if (index == -1 || index >= effects.size()) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Invalid " + effectType.getDisplayName() + " index."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid " + effectType.getDisplayName() + " index."));
             closeChatInput(pmu);
             openAppropriateMenu(player, pmu, effectType, context, slot);
             return;
@@ -185,16 +185,16 @@ public class EffectInputHandler implements ChatInputHandler {
             String configKey = configPath.substring(configPath.indexOf(".") + itemId.length() + 2);
             ConfigManager.setItemValue(itemId, configKey, effects);
 
-            player.sendMessage(ConfigManager.fromSection("§a" + capitalizeFirstLetter(effectType.getDisplayName()) + " has been updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.getDisplayName()) + " has been updated!"));
 
             pmu.setEditIndex(-1);
             closeChatInput(pmu);
             openAppropriateMenu(player, pmu, effectType, context, slot);
 
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid number. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number. Please enter a valid number."));
         } catch (Exception ex) {
-            player.sendMessage(ConfigManager.fromSection("§cError updating " + effectType.getDisplayName() + ". Data might be corrupt."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError updating " + effectType.getDisplayName() + ". Data might be corrupt."));
             closeChatInput(pmu);
             openAppropriateMenu(player, pmu, effectType, context, slot);
         }
@@ -209,7 +209,7 @@ public class EffectInputHandler implements ChatInputHandler {
         int index = pmu.getEditIndex();
 
         if (index == -1 || index >= enchantments.size()) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Invalid enchantment index."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid enchantment index."));
             closeChatInput(pmu);
             new EnchantmentListMenu(pmu, plugin).open();
             return;
@@ -218,7 +218,7 @@ public class EffectInputHandler implements ChatInputHandler {
         try {
             int newLevel = Integer.parseInt(input);
             if (newLevel <= 0) {
-                player.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a positive whole number (e.g., 1, 5, 10)."));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a positive whole number (e.g., 1, 5, 10)."));
                 return;
             }
 
@@ -226,7 +226,7 @@ public class EffectInputHandler implements ChatInputHandler {
             if (parts.length == 2) {
                 String enchantName = parts[0];
                 if (Enchantment.getByName(enchantName.toUpperCase()) == null) {
-                    player.sendMessage(ConfigManager.fromSection("§cError: Corrupted enchantment name '" + enchantName + "' found in config."));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Corrupted enchantment name '" + enchantName + "' found in config."));
                     closeChatInput(pmu);
                     new EnchantmentListMenu(pmu, plugin).open();
                     return;
@@ -235,12 +235,12 @@ public class EffectInputHandler implements ChatInputHandler {
                 String newEnchantString = enchantName + ";" + newLevel;
                 enchantments.set(index, newEnchantString);
                 ConfigManager.setItemValue(itemId, "enchantments", enchantments);
-                player.sendMessage(ConfigManager.fromSection("§aEnchantment level has been updated!"));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnchantment level has been updated!"));
             } else {
-                player.sendMessage(ConfigManager.fromSection("§cError: Corrupted enchantment data found at index " + index));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Corrupted enchantment data found at index " + index));
             }
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a whole number (e.g., 1, 5, 10)."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a whole number (e.g., 1, 5, 10)."));
             return;
         }
 
@@ -261,12 +261,12 @@ public class EffectInputHandler implements ChatInputHandler {
 
             int level = Integer.parseInt(input);
             if (level <= 0) {
-                player.sendMessage(ConfigManager.fromSection("§cInvalid level. Please enter a positive whole number (e.g., 1, 5, 10)."));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a positive whole number (e.g., 1, 5, 10)."));
                 return;
             }
 
             if (enchantmentExists(enchantments, enchantName)) {
-                player.sendMessage(ConfigManager.fromSection("§cError: This enchantment already exists on the item."));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: This enchantment already exists on the item."));
                 closeChatInput(pmu);
                 new EnchantmentListMenu(pmu, plugin).open();
                 return;
@@ -275,13 +275,13 @@ public class EffectInputHandler implements ChatInputHandler {
             String newEnchantString = enchantName + ";" + level;
             enchantments.add(newEnchantString);
             ConfigManager.setItemValue(itemId, "enchantments", enchantments);
-            player.sendMessage(ConfigManager.fromSection("§aEnchantment has been added!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnchantment has been added!"));
 
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid number format: " + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format: " + input));
             return;
         } catch (IllegalArgumentException ex) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Invalid enchantment name: " + enchantName));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid enchantment name: " + enchantName));
             closeChatInput(pmu);
             new EnchantmentListMenu(pmu, plugin).open();
             return;

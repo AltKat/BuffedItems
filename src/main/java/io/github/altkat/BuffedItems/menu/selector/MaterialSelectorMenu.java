@@ -50,7 +50,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             ConfigManager.setItemValue(itemId, "material", clickedType.name());
 
 
-            p.sendMessage(ConfigManager.fromSection("§aMaterial has been updated to " + clickedType.name()));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aMaterial has been updated to " + clickedType.name()));
 
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;
@@ -68,7 +68,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("material.manual");
             p.closeInventory();
-            p.sendMessage(ConfigManager.fromSection("§aPlease type the Material name in chat (e.g., 'STONE', 'diamond_pickaxe')."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'STONE', 'diamond_pickaxe')."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
     }

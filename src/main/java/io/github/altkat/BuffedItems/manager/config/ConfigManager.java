@@ -357,6 +357,20 @@ public class ConfigManager {
         return fromLegacy(prefix + msg);
     }
 
+    public static Component fromSectionWithPrefix(String text) {
+        String prefixStr = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
+        Component prefixComp = fromLegacy(prefixStr);
+        Component textComp = fromSection(text);
+        return prefixComp.append(textComp);
+    }
+
+    public static Component fromLegacyWithPrefix(String text) {
+        String prefixStr = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
+        Component prefixComp = fromLegacy(prefixStr);
+        Component textComp = fromLegacy(text);
+        return prefixComp.append(textComp);
+    }
+
     public static void setDebugLevel(int level) {
         if (level < DEBUG_OFF) level = DEBUG_OFF;
         if (level > DEBUG_VERBOSE) level = DEBUG_OFF;

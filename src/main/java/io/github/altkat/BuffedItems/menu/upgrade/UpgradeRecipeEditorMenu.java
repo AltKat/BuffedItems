@@ -45,7 +45,7 @@ public class UpgradeRecipeEditorMenu extends Menu {
 
         switch (e.getSlot()) {
             case 10:
-                askInput(p, "upgrade.display_name", "§aEnter new Display Name (Color codes supported).");
+                askInput(p, "upgrade.display_name", "§aEnter new Display Name (Color codes and hex colors supported).");
                 break;
             case 11:
                 askInput(p, "upgrade.success_rate", "§aEnter Success Rate (0-100).");
@@ -96,7 +96,7 @@ public class UpgradeRecipeEditorMenu extends Menu {
         playerMenuUtility.setWaitingForChatInput(true);
         playerMenuUtility.setChatInputPath(path);
         p.closeInventory();
-        p.sendMessage(ConfigManager.fromSection(msg));
+        p.sendMessage(ConfigManager.fromSectionWithPrefix(msg));
         p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
     }
 

@@ -54,7 +54,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("create_upgrade");
             p.closeInventory();
-            p.sendMessage(ConfigManager.fromSection("§aEnter a unique ID for the new upgrade recipe (e.g. 'sword_upgrade')."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter a unique ID for the new upgrade recipe (e.g. 'sword_upgrade')."));
             return;
         }
 
@@ -74,7 +74,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
             } else if (e.getClick() == ClickType.RIGHT) {
                 ConfigManager.setUpgradeValue(recipe.getId(), null, null);
-                p.sendMessage(ConfigManager.fromSection("§cUpgrade recipe '" + recipe.getId() + "' deleted."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cUpgrade recipe '" + recipe.getId() + "' deleted."));
                 this.open();
             }
         }

@@ -66,7 +66,7 @@ public class BuffedItemCommand implements CommandExecutor {
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Opening main menu for " + p.getName());
                     new MainMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {
-                    sender.sendMessage(ConfigManager.fromSection("§cThis command can only be used by players."));
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThis command can only be used by players."));
                 }
                 return true;
             case "upgrade":
@@ -78,11 +78,11 @@ public class BuffedItemCommand implements CommandExecutor {
                     Player p = (Player) sender;
                     new io.github.altkat.BuffedItems.menu.upgrade.UpgradeMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {
-                    sender.sendMessage(ConfigManager.fromSection("§cOnly players can use this command."));
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cOnly players can use this command."));
                 }
                 return true;
             default:
-                sender.sendMessage(ConfigManager.fromSection("§cUnknown subcommand. Use /buffeditems for help."));
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown subcommand. Use /buffeditems for help."));
                 return true;
         }
     }
@@ -105,7 +105,7 @@ public class BuffedItemCommand implements CommandExecutor {
 
     private boolean handleGiveCommand(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ConfigManager.fromSection("§cUsage: /buffeditems give <player> <item_id> [amount]"));
+            sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUsage: /buffeditems give <player> <item_id> [amount]"));
             return true;
         }
 
@@ -113,7 +113,7 @@ public class BuffedItemCommand implements CommandExecutor {
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage(ConfigManager.fromSection("§cPlayer not found: " + args[1]));
+            sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cPlayer not found: " + args[1]));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Player not found: " + args[1]);
             return true;
         }
@@ -121,7 +121,7 @@ public class BuffedItemCommand implements CommandExecutor {
         String itemId = args[2];
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
         if (buffedItem == null) {
-            sender.sendMessage(ConfigManager.fromSection("§cItem not found in config: " + itemId));
+            sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cItem not found in config: " + itemId));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Item not found: " + itemId);
             return true;
         }
@@ -141,7 +141,7 @@ public class BuffedItemCommand implements CommandExecutor {
             try {
                 amount = Integer.parseInt(args[3]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(ConfigManager.fromSection("§cInvalid amount: " + args[3]));
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount: " + args[3]));
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Invalid amount: " + args[3]);
                 return true;
             }
@@ -179,7 +179,7 @@ public class BuffedItemCommand implements CommandExecutor {
 
         target.getInventory().addItem(itemStack);
 
-        sender.sendMessage(ConfigManager.fromLegacy("&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
+        sender.sendMessage(ConfigManager.fromLegacyWithPrefix("&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
 
         int finalAmount = amount;
         Component messageToReceiver = ConfigManager.getPrefixedMessageAsComponent("give-success-receiver")
@@ -203,7 +203,7 @@ public class BuffedItemCommand implements CommandExecutor {
 
         ConfigManager.reloadConfig();
 
-        sender.sendMessage(ConfigManager.fromSection("§aBuffedItems configuration (and items.yml) has been reloaded."));
+        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aConfiguration, items, and upgrades has been reloaded."));
         return true;
     }
 

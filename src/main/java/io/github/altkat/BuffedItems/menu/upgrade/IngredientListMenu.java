@@ -63,7 +63,7 @@ public class IngredientListMenu extends Menu {
                 playerMenuUtility.setEditIndex(e.getSlot());
                 playerMenuUtility.setChatInputPath("upgrade.ingredients.edit.amount");
                 e.getWhoClicked().closeInventory();
-                e.getWhoClicked().sendMessage(ConfigManager.fromSection("§aEnter new amount in chat."));
+                e.getWhoClicked().sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new amount in chat."));
             }
         }
     }

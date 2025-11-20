@@ -42,11 +42,11 @@ public class IngredientInputHandler implements ChatInputHandler {
         String itemId = input.trim();
 
         if (plugin.getItemManager().getBuffedItem(itemId) == null) {
-            player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + itemId + "' not found in loaded items."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Item ID '" + itemId + "' not found in loaded items."));
         }
         ConfigManager.setUpgradeValue(recipeId, "base", itemId);
 
-        player.sendMessage(ConfigManager.fromSection("§aBase item updated to: §e" + itemId));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase item updated to: §e" + itemId));
         closeChat(pmu);
         new UpgradeRecipeEditorMenu(pmu, plugin).open();
     }
@@ -67,7 +67,7 @@ public class IngredientInputHandler implements ChatInputHandler {
         newList.add(data);
         ConfigManager.setUpgradeValue(recipeId, "ingredients", newList);
 
-        player.sendMessage(ConfigManager.fromSection("§aIngredient added successfully!"));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aIngredient added successfully!"));
         closeChat(pmu);
         new IngredientListMenu(pmu, plugin).open();
     }
@@ -114,12 +114,13 @@ public class IngredientInputHandler implements ChatInputHandler {
             editableList.set(index, orderedMap);
 
             ConfigManager.setUpgradeValue(recipeId, "ingredients", editableList);
-            player.sendMessage(ConfigManager.fromSection("§aAmount updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aAmount updated!"));
             closeChat(pmu);
             new IngredientListMenu(pmu, plugin).open();
 
         } catch (NumberFormatException e) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid amount. Enter a positive number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Enter a positive number."));
+            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("upgrade.ingredients.edit.amount");
         }
@@ -136,7 +137,8 @@ public class IngredientInputHandler implements ChatInputHandler {
                 int amount = Integer.parseInt(parts[0]);
                 String material = parts[1].toUpperCase();
                 if (Material.matchMaterial(material) == null) {
-                    player.sendMessage(ConfigManager.fromSection("§cInvalid material: " + material));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid material: " + material));
+                    player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                     return null;
                 }
                 data.put("material", material);
@@ -148,7 +150,7 @@ public class IngredientInputHandler implements ChatInputHandler {
                 int amount = Integer.parseInt(parts[0]);
                 String itemId = parts[1];
                 if (plugin.getItemManager().getBuffedItem(itemId) == null) {
-                    player.sendMessage(ConfigManager.fromSection("§eWarning: Item ID '" + itemId + "' not found (yet)."));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Item ID '" + itemId + "' not found (yet)."));
                 }
                 data.put("item_id", itemId);
                 data.put("amount", amount);
@@ -173,10 +175,11 @@ public class IngredientInputHandler implements ChatInputHandler {
             }
             return data;
         } catch (Exception e) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid format."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid format."));
             if (type.equals("ITEM")) player.sendMessage(ConfigManager.fromSection("§7Format: AMOUNT;MATERIAL (e.g., 5;DIAMOND)"));
             else if (type.equals("BUFFED_ITEM")) player.sendMessage(ConfigManager.fromSection("§7Format: AMOUNT;ITEM_ID"));
             else player.sendMessage(ConfigManager.fromSection("§7Enter a valid number."));
+            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             return null;
         }
     }
@@ -192,7 +195,8 @@ public class IngredientInputHandler implements ChatInputHandler {
             handleAddIngredient(player, pmu, simulatedInput, "BUFFED_ITEM", recipeId);
 
         } catch (NumberFormatException e) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid amount. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("upgrade.ingredients.add.BUFFED_ITEM_QUANTITY");
         }

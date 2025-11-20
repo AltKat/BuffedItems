@@ -85,13 +85,13 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 data.put("item_id", itemId);
                 ConfigManager.setUpgradeValue(playerMenuUtility.getItemToEditId(), "base", data);
 
-                p.sendMessage(ConfigManager.fromSection("§aBase item updated to: §e" + itemId));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase item updated to: §e" + itemId));
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
                 break;
 
             case RESULT:
                 ConfigManager.setUpgradeValue(playerMenuUtility.getItemToEditId(), "result.item", itemId);
-                p.sendMessage(ConfigManager.fromSection("§aResult item updated to: §e" + itemId));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aResult item updated to: §e" + itemId));
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
                 break;
 
@@ -100,8 +100,9 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("upgrade.ingredients.add.BUFFED_ITEM_QUANTITY");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aSelected Item: §e" + itemId));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Item: §e" + itemId));
                 p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount (Quantity) in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
 
             case COST:
@@ -109,8 +110,9 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aSelected Item: §e" + itemId));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Item: §e" + itemId));
                 p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount (Quantity) in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
         }
     }
@@ -122,19 +124,25 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         switch (context) {
             case BASE:
                 playerMenuUtility.setChatInputPath("upgrade.base.set_id");
-                p.sendMessage(ConfigManager.fromSection("§aEnter Base Item ID manually."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Base Item ID manually."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case RESULT:
                 playerMenuUtility.setChatInputPath("upgrade.result.item");
-                p.sendMessage(ConfigManager.fromSection("§aEnter Result Item ID manually."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Result Item ID manually."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case INGREDIENT:
                 playerMenuUtility.setChatInputPath("upgrade.ingredients.add.BUFFED_ITEM");
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;ITEM_ID"));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case COST:
                 playerMenuUtility.setChatInputPath("active.costs.add.BUFFED_ITEM");
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;ITEM_ID"));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
         }
     }

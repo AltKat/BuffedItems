@@ -60,7 +60,7 @@ public class CostListMenu extends Menu {
             if (e.getClick() == ClickType.RIGHT) {
                 costList.remove(e.getSlot());
                 ConfigManager.setItemValue(itemId, "costs", costList);
-                p.sendMessage(ConfigManager.fromSection("§cCost removed."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cCost removed."));
                 this.open();
             }
             // 2. EDIT AMOUNT (Left Click)
@@ -73,7 +73,7 @@ public class CostListMenu extends Menu {
                 Map<?, ?> costData = costList.get(e.getSlot());
                 String type = (String) costData.get("type");
 
-                p.sendMessage(ConfigManager.fromSection("§aEditing Amount for: §e" + type));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Amount for: §e" + type));
                 if ("ITEM".equals(type)) {
                     p.sendMessage(ConfigManager.fromSection("§eCurrent: " + costData.get("amount")));
                     p.sendMessage(ConfigManager.fromSection("§aEnter new integer amount in chat."));
@@ -103,9 +103,9 @@ public class CostListMenu extends Menu {
                     placeholders = "{amount}, {currency_name}";
                 }
 
-                p.sendMessage(ConfigManager.fromSection("§aEditing Failure Message."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Failure Message."));
                 p.sendMessage(ConfigManager.fromSection("§7Placeholders: " + placeholders));
-                p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset to config default."));
+                p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset to config default, 'cancel' to exit."));
                 p.sendMessage(ConfigManager.fromSection("§aEnter new message in chat."));
             }
         }

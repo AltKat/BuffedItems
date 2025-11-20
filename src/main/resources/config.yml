@@ -37,6 +37,7 @@ messages:
   upgrade-failure-keep-base: "&eUpgrade Failed! Ingredients lost, but item kept."
   upgrade-failure-keep-everything: "&bUpgrade Failed! Nothing was lost."
   upgrade-inventory-full: "&eInventory full! Item dropped on ground."
+  upgrade-requirements-not-met: "&c⚠ You do not meet the requirements:"
 
 # ===================================================================
 #                   ACTIVE ITEMS - VISUAL SETTINGS

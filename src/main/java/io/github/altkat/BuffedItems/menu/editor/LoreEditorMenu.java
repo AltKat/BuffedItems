@@ -49,19 +49,19 @@ public class LoreEditorMenu extends PaginatedMenu {
                 break;
             case ANVIL:
                 if (lore.size() >= MAX_TOTAL_LORE_LINES) {
-                    p.sendMessage(ConfigManager.fromSection("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
                     p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     return;
                 }
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("lore.add");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromLegacy("§aPlease type the new lore line in chat. Use '&' for color codes.  &7[ &#E12B5DH&#E12B5De&#E12B5Dx &#E12B5Dc&#E12B5Do&#DD3266l&#D83870o&#D43F79r&#D04583s &#C75295s&#C3599Fu&#BF5FA8p&#BB66B2p&#B66CBBo&#B273C4r&#AE79CEt&#AA80D7e&#A586E1d&#A18DEA! &7]"));
+                p.sendMessage(ConfigManager.fromLegacyWithPrefix("§aPlease type the new lore line in chat. Use '&' for color codes.  &7[ &#E12B5DH&#E12B5De&#E12B5Dx &#E12B5Dc&#E12B5Do&#DD3266l&#D83870o&#D43F79r&#D04583s &#C75295s&#C3599Fu&#BF5FA8p&#BB66B2p&#B66CBBo&#B273C4r&#AE79CEt&#AA80D7e&#A586E1d&#A18DEA! &7]"));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case PAPER:
                 if (lore.size() >= MAX_TOTAL_LORE_LINES) {
-                    p.sendMessage(ConfigManager.fromSection("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
                     p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     return;
                 }
@@ -79,7 +79,7 @@ public class LoreEditorMenu extends PaginatedMenu {
                     playerMenuUtility.setWaitingForChatInput(true);
                     playerMenuUtility.setChatInputPath("lore." + loreIndex);
                     p.closeInventory();
-                    p.sendMessage(ConfigManager.fromSection("§aPlease type the edited lore line in chat."));
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the edited lore line in chat."));
                     p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 } else if (e.isRightClick()) {
                     lore.remove(loreIndex);

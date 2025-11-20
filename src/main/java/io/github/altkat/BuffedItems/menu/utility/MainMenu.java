@@ -93,7 +93,7 @@ public class MainMenu extends PaginatedMenu {
 
                     p.getInventory().addItem(stack);
 
-                    p.sendMessage(ConfigManager.fromSection("§aItem received: §f" + itemId));
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aItem received: §f" + itemId));
                     p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
 
                     plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
@@ -106,7 +106,7 @@ public class MainMenu extends PaginatedMenu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("duplicateitem");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aDuplicating '§e" + itemId + "§a'."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aDuplicating '§e" + itemId + "§a'."));
                 p.sendMessage(ConfigManager.fromSection("§aPlease type the NEW unique ID for the copy in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(e.g., 'new_fire_sword'). (Type 'cancel' to exit)"));
 
@@ -127,7 +127,7 @@ public class MainMenu extends PaginatedMenu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("createnewitem");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection( "§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword')."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix( "§aPlease type the unique ID for the new item in chat (e.g., 'fire_sword')."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
             case COMPARATOR:
@@ -159,7 +159,7 @@ public class MainMenu extends PaginatedMenu {
                 "§7Configure global plugin settings.",
                 "§7(Debug level, Potion icons, etc.)"));
         inventory.setItem(46, filler);
-        inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes.", "§7(No file editing required!)"));
+        inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes for /bi upgrade menu."));
         inventory.setItem(51, filler);
         inventory.setItem(52, filler);
 
