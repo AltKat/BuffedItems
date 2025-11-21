@@ -24,8 +24,13 @@ public class CostInputHandler implements ChatInputHandler {
 
     @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
+        if (path.equals("active.costs.add.ITEM_QUANTITY")) {
+            handleItemQuantityInput(player, pmu, input, itemId);
+            return;
+        }
+
         if (path.equals("active.costs.add.BUFFED_ITEM_QUANTITY")) {
-            handleQuantityInput(player, pmu, input, itemId);
+            handleBuffedItemQuantityInput(player, pmu, input, itemId);
             return;
         }
 
@@ -209,7 +214,7 @@ public class CostInputHandler implements ChatInputHandler {
         new CostListMenu(pmu, plugin).open();
     }
 
-    private void handleQuantityInput(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+    private void handleBuffedItemQuantityInput(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         try {
             int amount = Integer.parseInt(input);
             if (amount <= 0) throw new NumberFormatException();
@@ -223,6 +228,28 @@ public class CostInputHandler implements ChatInputHandler {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
+        }
+    }
+
+    private void handleItemQuantityInput(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        try {
+            int amount = Integer.parseInt(input);
+            if (amount <= 0) throw new NumberFormatException();
+
+            Material selectedMat = pmu.getTempMaterial();
+            if (selectedMat == null) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Session lost. Please select material again."));
+                closeChatInput(pmu);
+                return;
+            }
+
+            String simulatedInput = amount + ";" + selectedMat.name();
+            handleAddCost(player, pmu, simulatedInput, "ITEM", itemId);
+
+        } catch (NumberFormatException e) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("active.costs.add.ITEM_QUANTITY");
         }
     }
 

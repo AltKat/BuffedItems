@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
+import io.github.altkat.BuffedItems.menu.upgrade.IngredientTypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -44,32 +45,88 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         int clickedSlot = e.getSlot();
         Material clickedType = e.getCurrentItem().getType();
 
-        if (clickedSlot < this.maxItemsPerPage) {
-            String itemId = playerMenuUtility.getItemToEditId();
-
-            ConfigManager.setItemValue(itemId, "material", clickedType.name());
-
-
-            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aMaterial has been updated to " + clickedType.name()));
-
-            new ItemEditorMenu(playerMenuUtility, plugin).open();
-            return;
-        }
-
         if (handlePageChange(e, materials.size())) {
             return;
         }
 
         if (clickedType == Material.BARRIER && clickedSlot == 49) {
-            new ItemEditorMenu(playerMenuUtility, plugin).open();
+            handleBack();
+            return;
         }
 
         if (clickedType == Material.ANVIL && clickedSlot == 48) {
+            handleManualInput(p);
+            return;
+        }
+
+        if (clickedSlot < this.maxItemsPerPage) {
+            handleMaterialSelection(p, clickedType);
+        }
+    }
+
+    private void handleMaterialSelection(Player p, Material material) {
+        PlayerMenuUtility.MaterialSelectionContext context = playerMenuUtility.getMaterialContext();
+
+        if (context == PlayerMenuUtility.MaterialSelectionContext.ICON) {
+            String itemId = playerMenuUtility.getItemToEditId();
+            ConfigManager.setItemValue(itemId, "material", material.name());
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aMaterial has been updated to " + material.name()));
+            new ItemEditorMenu(playerMenuUtility, plugin).open();
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
+            playerMenuUtility.setTempMaterial(material);
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("material.manual");
+            playerMenuUtility.setChatInputPath("active.costs.add.ITEM_QUANTITY");
             p.closeInventory();
-            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'STONE', 'diamond_pickaxe')."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: §e" + material.name()));
+            p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
+            playerMenuUtility.setTempMaterial(material);
+            playerMenuUtility.setWaitingForChatInput(true);
+            playerMenuUtility.setChatInputPath("upgrade.ingredients.add.ITEM_QUANTITY");
+            p.closeInventory();
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: §e" + material.name()));
+            p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+        }
+    }
+
+    private void handleManualInput(Player p) {
+        playerMenuUtility.setWaitingForChatInput(true);
+        p.closeInventory();
+
+        PlayerMenuUtility.MaterialSelectionContext context = playerMenuUtility.getMaterialContext();
+
+        if (context == PlayerMenuUtility.MaterialSelectionContext.ICON) {
+            playerMenuUtility.setChatInputPath("material.manual");
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'STONE')."));
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
+            playerMenuUtility.setChatInputPath("active.costs.add.ITEM");
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§eFormat: AMOUNT;MATERIAL (e.g. 10;DIAMOND)"));
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
+            playerMenuUtility.setChatInputPath("upgrade.ingredients.add.ITEM");
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§eFormat: AMOUNT;MATERIAL (e.g. 10;DIAMOND)"));
+        }
+
+        p.sendMessage(ConfigManager.fromSectionWithPrefix("§7(Type 'cancel' to exit)"));
+    }
+
+    private void handleBack() {
+        PlayerMenuUtility.MaterialSelectionContext context = playerMenuUtility.getMaterialContext();
+        if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
+            new CostTypeSelectorMenu(playerMenuUtility, plugin).open();
+        } else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
+            new IngredientTypeSelectorMenu(playerMenuUtility, plugin).open();
+        } else {
+            new ItemEditorMenu(playerMenuUtility, plugin).open();
+        }
+
+        if (context != PlayerMenuUtility.MaterialSelectionContext.ICON) {
+            playerMenuUtility.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.ICON);
         }
     }
 

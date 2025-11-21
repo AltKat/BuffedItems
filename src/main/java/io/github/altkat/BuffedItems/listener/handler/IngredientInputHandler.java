@@ -21,8 +21,13 @@ public class IngredientInputHandler implements ChatInputHandler {
 
     @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String recipeId) {
+        if (path.equals("upgrade.ingredients.add.ITEM_QUANTITY")) {
+            handleItemQuantityInput(player, pmu, input, recipeId);
+            return;
+        }
+
         if (path.equals("upgrade.ingredients.add.BUFFED_ITEM_QUANTITY")) {
-            handleQuantityInput(player, pmu, input, recipeId);
+            handleBuffedItemQuantityInput(player, pmu, input, recipeId);
             return;
         }
 
@@ -184,7 +189,7 @@ public class IngredientInputHandler implements ChatInputHandler {
         }
     }
 
-    private void handleQuantityInput(Player player, PlayerMenuUtility pmu, String input, String recipeId) {
+    private void handleBuffedItemQuantityInput(Player player, PlayerMenuUtility pmu, String input, String recipeId) {
         try {
             int amount = Integer.parseInt(input);
             if (amount <= 0) throw new NumberFormatException();
@@ -199,6 +204,28 @@ public class IngredientInputHandler implements ChatInputHandler {
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("upgrade.ingredients.add.BUFFED_ITEM_QUANTITY");
+        }
+    }
+
+    private void handleItemQuantityInput(Player player, PlayerMenuUtility pmu, String input, String recipeId) {
+        try {
+            int amount = Integer.parseInt(input);
+            if (amount <= 0) throw new NumberFormatException();
+
+            Material selectedMat = pmu.getTempMaterial();
+            if (selectedMat == null) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Session lost. Please select material again."));
+                closeChat(pmu);
+                return;
+            }
+
+            String simulatedInput = amount + ";" + selectedMat.name();
+            handleAddIngredient(player, pmu, simulatedInput, "ITEM", recipeId);
+
+        } catch (NumberFormatException e) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("upgrade.ingredients.add.ITEM_QUANTITY");
         }
     }
 

@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -46,17 +47,11 @@ public class IngredientTypeSelectorMenu extends Menu {
             return;
         }
 
-        String chatPath = "upgrade.ingredients.add.";
-
-        playerMenuUtility.setWaitingForChatInput(true);
-        playerMenuUtility.setChatInputPath(chatPath + type);
-
-        e.getWhoClicked().closeInventory();
-        e.getWhoClicked().sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: " + type));
 
         if (type.equals("ITEM")) {
-            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;MATERIAL (e.g. 1;DIAMOND)"));
-            e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            playerMenuUtility.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.INGREDIENT);
+            new MaterialSelectorMenu(playerMenuUtility, plugin).open();
+            return;
         }else if (type.equals("COINSENGINE")) {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID (e.g. 100;gold)"));
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Or just AMOUNT for default 'coins')"));
@@ -65,6 +60,14 @@ public class IngredientTypeSelectorMenu extends Menu {
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§aEnter amount:"));
             e.getWhoClicked().sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
+
+        String chatPath = "upgrade.ingredients.add.";
+
+        playerMenuUtility.setWaitingForChatInput(true);
+        playerMenuUtility.setChatInputPath(chatPath + type);
+
+        e.getWhoClicked().closeInventory();
+        e.getWhoClicked().sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: " + type));
     }
 
     @Override

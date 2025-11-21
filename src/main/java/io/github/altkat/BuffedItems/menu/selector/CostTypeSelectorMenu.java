@@ -46,21 +46,10 @@ public class CostTypeSelectorMenu extends Menu {
             return;
         }
 
-        playerMenuUtility.setWaitingForChatInput(true);
-        playerMenuUtility.setChatInputPath("active.costs.add." + type);
-
-        p.closeInventory();
-        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Type: " + type));
-
         if (type.equals("ITEM")) {
-            p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;MATERIAL"));
-            p.sendMessage(ConfigManager.fromSection("§7Example: 1;DIAMOND"));
-            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
-        }
-        else if (type.equals("BUFFED_ITEM")) {
-            p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;BUFFED_ITEM_ID"));
-            p.sendMessage(ConfigManager.fromSection("§7Example: 1;warriors_talisman"));
-            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            playerMenuUtility.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
+            new MaterialSelectorMenu(playerMenuUtility, plugin).open();
+            return;
         }
         else if (type.equals("COINSENGINE")) {
             p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID"));
@@ -72,6 +61,12 @@ public class CostTypeSelectorMenu extends Menu {
             p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
+
+        p.closeInventory();
+        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Type: " + type));
+
+        playerMenuUtility.setWaitingForChatInput(true);
+        playerMenuUtility.setChatInputPath("active.costs.add." + type);
     }
 
     @Override
