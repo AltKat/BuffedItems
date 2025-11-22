@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.listener.ChatListener;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
+import io.github.altkat.BuffedItems.menu.editor.PermissionSettingsMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,7 +27,13 @@ public class BasicInputHandler implements ChatInputHandler {
                 handleDisplayNameEdit(player, pmu, input, itemId);
                 break;
             case "permission":
-                handlePermissionEdit(player, pmu, input, itemId);
+                handlePermissionEdit(player, pmu, input, itemId, "permission");
+                break;
+            case "active_permission":
+                handlePermissionEdit(player, pmu, input, itemId, "active_permission");
+                break;
+            case "passive_permission":
+                handlePermissionEdit(player, pmu, input, itemId, "passive_permission");
                 break;
             case "material.manual":
                 handleMaterialManualEdit(player, pmu, input, itemId);
@@ -44,25 +51,25 @@ public class BasicInputHandler implements ChatInputHandler {
         new ItemEditorMenu(pmu, plugin).open();
     }
 
-    private void handlePermissionEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+    private void handlePermissionEdit(Player player, PlayerMenuUtility pmu, String input, String itemId, String configKey) {
         if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
-            ConfigManager.setItemValue(itemId, "permission", null);
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aPermission has been removed."));
+            ConfigManager.setItemValue(itemId, configKey, null);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey + " has been removed/reset."));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                    () -> "[BasicHandler] Removed permission for " + itemId);
+                    () -> "[BasicHandler] Removed " + configKey + " for " + itemId);
         } else if (isValidPermissionNode(input)) {
-            ConfigManager.setItemValue(itemId, "permission", input);
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aPermission has been set!"));
+            ConfigManager.setItemValue(itemId, configKey, input);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey + " has been set to: " + input));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                    () -> "[BasicHandler] Set permission for " + itemId + " to: " + input);
+                    () -> "[BasicHandler] Set " + configKey + " for " + itemId + " to: " + input);
         } else {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid permission node! Permissions can only contain letters, numbers, dots (.), hyphens (-), and underscores (_)."));
-            player.sendMessage(ConfigManager.fromSection("§cYour input was: §e" + input));
-            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cYour input was: §e" + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§7(Type 'cancel' to exit)"));
             return;
         }
         closeChatInput(pmu);
-        new ItemEditorMenu(pmu, plugin).open();
+        new PermissionSettingsMenu(pmu, plugin).open();
     }
 
     private void handleMaterialManualEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {

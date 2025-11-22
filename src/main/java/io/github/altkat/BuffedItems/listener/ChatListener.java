@@ -7,6 +7,7 @@ import io.github.altkat.BuffedItems.menu.active.*;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.editor.LoreEditorMenu;
+import io.github.altkat.BuffedItems.menu.editor.PermissionSettingsMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
 import io.github.altkat.BuffedItems.menu.selector.EnchantmentSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
@@ -107,7 +108,8 @@ public class ChatListener implements Listener {
             creationInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("lore.")) {
             loreInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.equals("display_name") || path.equals("permission") || path.equals("material.manual") || path.equals("custom_model_data")) {
+        } else if (path.equals("display_name") || path.equals("permission") || path.equals("active_permission") || path.equals("passive_permission") ||
+                path.equals("material.manual") || path.equals("custom_model_data")) {
             basicInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("active.cooldown") || path.startsWith("active.duration") ||
                 path.startsWith("active.commands.") || path.startsWith("active.msg.") ||
@@ -154,9 +156,13 @@ public class ChatListener implements Listener {
             return;
         }
 
-        if (path.equals("display_name") || path.equals("permission") ||
-                path.equals("custom_model_data") || path.equals("material.manual")) {
+        if (path.equals("display_name") || path.equals("custom_model_data") || path.equals("material.manual")) {
             new ItemEditorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if(path.equals("permission") || path.equals("active_permission") || path.equals("passive_permission")){
+            new PermissionSettingsMenu(pmu, plugin).open();
             return;
         }
 

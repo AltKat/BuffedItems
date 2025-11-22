@@ -126,6 +126,16 @@ public class ItemManager {
             permission = null;
         }
 
+        String activePerm = itemSection.getString("active_permission");
+        if (activePerm != null && (activePerm.equals(ConfigManager.NO_PERMISSION) || activePerm.trim().isEmpty())) {
+            activePerm = null;
+        }
+
+        String passivePerm = itemSection.getString("passive_permission");
+        if (passivePerm != null && (passivePerm.equals(ConfigManager.NO_PERMISSION) || passivePerm.trim().isEmpty())) {
+            passivePerm = null;
+        }
+
         List<String> errorMessages = new ArrayList<>();
 
         Integer customModelData;
@@ -409,6 +419,8 @@ public class ItemManager {
                 glow,
                 effects,
                 permission,
+                activePerm,
+                passivePerm,
                 flags,
                 enchantments,
                 customModelData,

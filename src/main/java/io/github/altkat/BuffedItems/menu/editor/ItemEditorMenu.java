@@ -85,12 +85,7 @@ public class ItemEditorMenu extends Menu {
                 new LoreEditorMenu(playerMenuUtility, plugin).open();
                 break;
             case PAPER:
-                playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("permission");
-                p.closeInventory();
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the permission node in chat."));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'none' or 'remove' to clear the permission)"));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                new PermissionSettingsMenu(playerMenuUtility, plugin).open();
                 break;
             case BEACON:
                 BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
@@ -194,7 +189,8 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(10, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
         inventory.setItem(11, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(12, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
-        inventory.setItem(14, makeItem(Material.PAPER, "§aSet Permission", "§7Current: §e" + item.getPermission().orElse("§cNone")));
+
+        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings"));
 
         String cmdDisplay;
         if (item.getCustomModelData().isPresent()) {
@@ -245,7 +241,9 @@ public class ItemEditorMenu extends Menu {
 
         infoLore.add(ConfigManager.fromSection("§7- Material: §e" + item.getMaterial().name()));
         infoLore.add(ConfigManager.fromSection("§7- Glow: " + (item.hasGlow() ? "§aTrue" : "§cFalse")));
-        infoLore.add(ConfigManager.fromSection("§7- Permission: §e" + item.getPermission().orElse("§cNone")));
+
+        String permDisplay = (item.getPermission() != null) ? item.getPermission() : "§cNone";
+        infoLore.add(ConfigManager.fromSection("§7- Permission: §e" + permDisplay));
 
         String cmdDisplayInfo;
         if (item.getCustomModelData().isPresent()) {

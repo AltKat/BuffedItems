@@ -67,13 +67,11 @@ public class ItemInteractListener implements Listener {
             return;
         }
 
-        if (buffedItem.getPermission().isPresent()) {
-            if (!player.hasPermission(buffedItem.getPermission().get())) {
-                String rawMsg = plugin.getConfig().getString("messages.protection-prevent-use-no-permission", "&cYou do not have permission to use this item.");
-                String parsedMsg = hooks.processPlaceholders(player, rawMsg);
-                player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
-                return;
-            }
+        if (!buffedItem.hasActivePermission(player)) {
+            String rawMsg = plugin.getConfig().getString("messages.protection-prevent-use-no-permission", "&cYou do not have permission to use this item.");
+            String parsedMsg = hooks.processPlaceholders(player, rawMsg);
+            player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
+            return;
         }
 
         // Cooldown check
