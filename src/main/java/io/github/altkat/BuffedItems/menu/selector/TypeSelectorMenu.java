@@ -4,23 +4,27 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility.MaterialSelectionContext;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
-public class CostTypeSelectorMenu extends Menu {
+public class TypeSelectorMenu extends Menu {
 
     private final BuffedItems plugin;
+    private final MaterialSelectionContext context;
 
-    public CostTypeSelectorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
+    public TypeSelectorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin, MaterialSelectionContext context) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.context = context;
     }
 
     @Override
     public String getMenuName() {
-        return "Select Cost Type";
+        return "Select " + (context == MaterialSelectionContext.COST ? "Cost" : "Ingredient") + " Type";
     }
 
     @Override
@@ -32,8 +36,13 @@ public class CostTypeSelectorMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
         if (e.getCurrentItem().getType() == Material.BLACK_STAINED_GLASS_PANE) return;
+
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new CostListMenu(playerMenuUtility, plugin).open();
+            if (context == MaterialSelectionContext.COST) {
+                new CostListMenu(playerMenuUtility, plugin).open();
+            } else {
+                new IngredientListMenu(playerMenuUtility, plugin).open();
+            }
             return;
         }
 
@@ -41,32 +50,39 @@ public class CostTypeSelectorMenu extends Menu {
         Player p = (Player) e.getWhoClicked();
 
         if (type.equals("BUFFED_ITEM")) {
-            new BuffedItemSelectorMenu(playerMenuUtility, plugin,
-                    BuffedItemSelectorMenu.SelectionContext.COST).open();
+            BuffedItemSelectorMenu.SelectionContext buffedContext =
+                    (context == MaterialSelectionContext.COST)
+                            ? BuffedItemSelectorMenu.SelectionContext.COST
+                            : BuffedItemSelectorMenu.SelectionContext.INGREDIENT;
+
+            new BuffedItemSelectorMenu(playerMenuUtility, plugin, buffedContext).open();
             return;
         }
 
         if (type.equals("ITEM")) {
-            playerMenuUtility.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
+            playerMenuUtility.setMaterialContext(context);
             new MaterialSelectorMenu(playerMenuUtility, plugin).open();
             return;
         }
-        else if (type.equals("COINSENGINE")) {
-            p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;CURRENCY_ID"));
-            p.sendMessage(ConfigManager.fromSection("§7Example: 100;coins"));
-            p.sendMessage(ConfigManager.fromSection("§7(If you use default currency 'coins', you can just type the amount)"));
-            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
-        }
-        else {
-            p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
-            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
-        }
+
+        String prefix = (context == MaterialSelectionContext.COST)
+                ? "active.costs.add."
+                : "upgrade.ingredients.add.";
+
+        playerMenuUtility.setWaitingForChatInput(true);
+        playerMenuUtility.setChatInputPath(prefix + type);
 
         p.closeInventory();
         p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Type: " + type));
 
-        playerMenuUtility.setWaitingForChatInput(true);
-        playerMenuUtility.setChatInputPath("active.costs.add." + type);
+        if (type.equals("COINSENGINE")) {
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§eFormat: AMOUNT;CURRENCY_ID"));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§7Example: 100;coins"));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§7(If you use default currency 'coins', you can just type the amount)"));
+        } else {
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease enter the Amount in chat."));
+        }
+        p.sendMessage(ConfigManager.fromSectionWithPrefix("§7(Type 'cancel' to exit)"));
     }
 
     @Override
@@ -79,6 +95,7 @@ public class CostTypeSelectorMenu extends Menu {
         inventory.setItem(14, makeItem(Material.RED_DYE, "§aHEALTH", "§7Health Points (Hearts)"));
         inventory.setItem(15, makeItem(Material.CHEST, "§aITEM", "§7Physical Items"));
         inventory.setItem(16, makeItem(Material.NETHER_STAR, "§aBUFFED_ITEM", "§7Custom Buffed Items"));
+
         if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
             inventory.setItem(19, makeItem(Material.SUNFLOWER, "§aCOINSENGINE", "§7CoinsEngine Currency"));
         }

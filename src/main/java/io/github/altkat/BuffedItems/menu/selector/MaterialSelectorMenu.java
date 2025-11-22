@@ -4,7 +4,6 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
-import io.github.altkat.BuffedItems.menu.upgrade.IngredientTypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -118,9 +117,9 @@ public class MaterialSelectorMenu extends PaginatedMenu {
     private void handleBack() {
         PlayerMenuUtility.MaterialSelectionContext context = playerMenuUtility.getMaterialContext();
         if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
-            new CostTypeSelectorMenu(playerMenuUtility, plugin).open();
+            new TypeSelectorMenu(playerMenuUtility, plugin, context).open();
         } else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
-            new IngredientTypeSelectorMenu(playerMenuUtility, plugin).open();
+            new TypeSelectorMenu(playerMenuUtility, plugin, context).open();
         } else {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
         }

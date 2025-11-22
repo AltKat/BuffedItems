@@ -4,7 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
-import io.github.altkat.BuffedItems.menu.selector.CostTypeSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -98,7 +98,7 @@ public class CostInputHandler implements ChatInputHandler {
                 if (Material.matchMaterial(material) == null) {
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid material: " + material));
                     closeChatInput(pmu);
-                    new CostTypeSelectorMenu(pmu, plugin).open();
+                    new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
                     return;
                 }
 
