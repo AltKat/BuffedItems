@@ -79,8 +79,9 @@ public class CostListMenu extends Menu {
                 String type = (String) costData.get("type");
 
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Amount for: §e" + type));
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§eCurrent: " + costData.get("amount")));
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new amount in chat."));
+                p.sendMessage(ConfigManager.fromSection("§eCurrent: " + costData.get("amount")));
+                p.sendMessage(ConfigManager.fromSection("§aEnter new amount in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
             // 3. EDIT MESSAGE (Shift + Left Click)
             else if (e.getClick() == ClickType.SHIFT_LEFT) {
@@ -104,9 +105,9 @@ public class CostListMenu extends Menu {
                 }
 
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Failure Message."));
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§7Placeholders: " + placeholders));
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§7Type 'default' to reset to config default."));
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new message in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7Placeholders: " + placeholders));
+                p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset to config default."));
+                p.sendMessage(ConfigManager.fromSection("§aEnter new message in chat."));
             }
         }
     }

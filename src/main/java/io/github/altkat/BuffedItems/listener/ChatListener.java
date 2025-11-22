@@ -3,13 +3,14 @@ package io.github.altkat.BuffedItems.listener;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.listener.handler.*;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.menu.active.ActiveItemSettingsMenu;
-import io.github.altkat.BuffedItems.menu.active.ActiveItemVisualsMenu;
+import io.github.altkat.BuffedItems.menu.active.*;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.editor.LoreEditorMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
 import io.github.altkat.BuffedItems.menu.selector.EnchantmentSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
@@ -125,51 +126,106 @@ public class ChatListener implements Listener {
     }
 
     private void handleCancelAction(Player player, PlayerMenuUtility pmu, String path) {
-        if (path.startsWith("upgrade.")) {
+        if (path.startsWith("upgrade.") || path.equals("create_upgrade")) {
+            if (path.equals("create_upgrade")) {
+                new UpgradeRecipeListMenu(pmu, plugin).open();
+                return;
+            }
+
             if (path.startsWith("upgrade.ingredients.")) {
-                new IngredientListMenu(pmu, plugin).open();
-            } else if (path.startsWith("upgrade.base.")) {
-                new UpgradeRecipeEditorMenu(pmu, plugin).open();
+                if (path.startsWith("upgrade.ingredients.edit.")) {
+                    new IngredientListMenu(pmu, plugin).open();
+                } else if (path.equals("upgrade.ingredients.add.ITEM_QUANTITY")) {
+                    pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.INGREDIENT);
+                    new MaterialSelectorMenu(pmu, plugin).open();
+                } else if (path.startsWith("upgrade.ingredients.add.")) {
+                    new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.INGREDIENT).open();
+                } else {
+                    new IngredientListMenu(pmu, plugin).open();
+                }
             } else {
                 new UpgradeRecipeEditorMenu(pmu, plugin).open();
             }
             return;
         }
-        else if (path.equals("create_upgrade")) {
-            new UpgradeRecipeListMenu(pmu, plugin).open();
-            return;
-        }
 
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
             new MainMenu(pmu, plugin).open();
-        } else if (path.startsWith("lore.")) {
-            new LoreEditorMenu(pmu, plugin).open();
-        } else if (path.equals("display_name") || path.equals("permission") ||
-                path.equals("material.manual") || path.equals("custom_model_data")) {
+            return;
+        }
+
+        if (path.equals("display_name") || path.equals("permission") ||
+                path.equals("custom_model_data") || path.equals("material.manual")) {
             new ItemEditorMenu(pmu, plugin).open();
-        } else if (path.startsWith("active.")) {
-            if (path.startsWith("active.msg.") || path.startsWith("active.sounds.")) {
-                new ActiveItemVisualsMenu(pmu, plugin).open();
-            } else if (path.equals("active.cooldown") || path.equals("active.duration") ||
-                    path.equals("active.commands.add") || path.startsWith("active.commands.edit.")) {
-                new ActiveItemSettingsMenu(pmu, plugin).open();
-            } else if (path.startsWith("active.potion_effects")) {
-                new EffectListMenu(pmu, plugin,
-                        EffectListMenu.EffectType.POTION_EFFECT, "ACTIVE").open();
-            } else if (path.startsWith("active.attributes")) {
-                new EffectListMenu(pmu, plugin,
-                        EffectListMenu.EffectType.ATTRIBUTE, "ACTIVE").open();
+            return;
+        }
+
+        if (path.startsWith("lore.")) {
+            new LoreEditorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("active.")) {
+            if (path.startsWith("active.costs.")) {
+                if (path.startsWith("active.costs.edit.")) {
+                    new CostListMenu(pmu, plugin).open();
+                } else if (path.equals("active.costs.add.ITEM_QUANTITY")) {
+                    pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
+                    new MaterialSelectorMenu(pmu, plugin).open();
+                } else if (path.startsWith("active.costs.add.")) {
+                    new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
+                } else {
+                    new CostListMenu(pmu, plugin).open();
+                }
+                return;
             }
-        } else if (path.startsWith("potion_effects")) {
+
+            if (path.startsWith("active.commands.")) {
+                new CommandListMenu(pmu, plugin).open();
+                return;
+            }
+
+            if (path.startsWith("active.msg.")) {
+                new ActiveItemVisualsMenu(pmu, plugin).open();
+                return;
+            }
+
+            if (path.startsWith("active.sounds.")) {
+                new ActiveItemSoundsMenu(pmu, plugin).open();
+                return;
+            }
+
+            if (path.startsWith("active.potion_effects")) {
+                new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, "ACTIVE").open();
+                return;
+            }
+            if (path.startsWith("active.attributes")) {
+                new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, "ACTIVE").open();
+                return;
+            }
+
+            new ActiveItemSettingsMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("potion_effects.")) {
             String slot = pmu.getTargetSlot();
-            new EffectListMenu(pmu, plugin,
-                    EffectListMenu.EffectType.POTION_EFFECT, slot).open();
-        } else if (path.startsWith("attributes")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, slot).open();
+            return;
+        }
+        if (path.startsWith("attributes.")) {
             String slot = pmu.getTargetSlot();
-            new EffectListMenu(pmu, plugin,
-                    EffectListMenu.EffectType.ATTRIBUTE, slot).open();
-        } else if (path.startsWith("enchantments")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, slot).open();
+            return;
+        }
+
+        if (path.startsWith("enchantments.")) {
             new EnchantmentListMenu(pmu, plugin).open();
+            return;
+        }
+        if (path.equals("enchantment_search")) {
+            new EnchantmentSelectorMenu(pmu, plugin).open();
+            return;
         }
     }
 

@@ -31,7 +31,7 @@ public class ActiveItemSettingsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 36;
+        return 45;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class ActiveItemSettingsMenu extends Menu {
             return;
         }
 
-        if (type == Material.BARRIER && e.getSlot() == 35) {
+        if (type == Material.BARRIER && e.getSlot() == 44) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -111,8 +111,6 @@ public class ActiveItemSettingsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        setFillerGlass();
-
         boolean isActive = item.isActiveMode();
         inventory.setItem(10, makeItem(Material.LEVER,
                 isActive ? "§aActive Mode: ON" : "§cActive Mode: OFF",
@@ -154,6 +152,8 @@ public class ActiveItemSettingsMenu extends Menu {
                 "",
                 "§eClick to Manage"));
 
-        inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
+
+        setFillerGlass();
     }
 }
