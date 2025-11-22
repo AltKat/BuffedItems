@@ -55,6 +55,7 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
 
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Potion Level (e.g., 1, 2, 5) in chat."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             return;
         }
 

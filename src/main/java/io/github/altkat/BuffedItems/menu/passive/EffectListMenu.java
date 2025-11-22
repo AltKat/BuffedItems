@@ -117,6 +117,7 @@ public class EffectListMenu extends Menu {
                 p.closeInventory();
                 String effectName = effects.get(clickedSlot).split(";")[0];
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new level for '" + effectName + "' in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
             else if (e.isLeftClick() && clickedType == Material.IRON_SWORD) {
                 // Edit attribute
@@ -125,6 +126,7 @@ public class EffectListMenu extends Menu {
                 playerMenuUtility.setChatInputPath(buildChatPath("edit"));
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new amount for the attribute in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
         }
     }

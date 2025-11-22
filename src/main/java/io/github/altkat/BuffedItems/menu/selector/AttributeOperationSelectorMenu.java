@@ -50,6 +50,7 @@ public class AttributeOperationSelectorMenu extends Menu {
 
         p.closeInventory();
         p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));
+        p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
     }
 
     @Override

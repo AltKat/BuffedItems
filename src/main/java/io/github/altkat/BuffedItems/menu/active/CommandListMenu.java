@@ -74,6 +74,7 @@ public class CommandListMenu extends PaginatedMenu {
 
             p.sendMessage(ConfigManager.fromSection("§6Chaining:"));
             p.sendMessage(ConfigManager.fromSection("§fUse ';;' to separate commands."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             return;
         }
 
