@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems;
 import io.github.altkat.BuffedItems.command.BuffedItemCommand;
 import io.github.altkat.BuffedItems.command.TabCompleteHandler;
 import io.github.altkat.BuffedItems.handler.UpdateHandler;
+import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.listener.*;
 import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
@@ -43,13 +44,13 @@ public final class BuffedItems extends JavaPlugin {
     private static final ConcurrentHashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new ConcurrentHashMap<>();
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
     private Metrics metrics;
-    private boolean placeholderApiEnabled = false;
     private InventoryListener inventoryListener;
     private UpdateHandler updateHandler;
     private CooldownManager cooldownManager;
     private CooldownVisualsTask cooldownVisualsTask;
     private CostManager costManager;
     private UpgradeManager upgradeManager;
+    private HookManager hookManager;
 
     @Override
     public void onEnable() {
@@ -90,14 +91,6 @@ public final class BuffedItems extends JavaPlugin {
         }
 
         ConfigManager.reloadConfig(true);
-
-        PluginManager pm = getServer().getPluginManager();
-        if (pm.getPlugin("PlaceholderAPI") != null) {
-            placeholderApiEnabled = true;
-            ConfigManager.logInfo("&aPlaceholderAPI found! Enabling placeholder support.");
-        } else {
-            placeholderApiEnabled = false;
-        }
 
         registerListenersAndCommands();
         startEffectTask();
@@ -159,6 +152,7 @@ public final class BuffedItems extends JavaPlugin {
 
     private void initializeManagers() {
         ConfigManager.loadGlobalSettings();
+        hookManager = new HookManager(this);
         costManager = new CostManager(this);
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
@@ -252,9 +246,6 @@ public final class BuffedItems extends JavaPlugin {
         }
         playerMenuUtilityMap.remove(uuid);
     }
-    public boolean isPlaceholderApiEnabled() {
-        return placeholderApiEnabled;
-    }
     public InventoryListener getInventoryChangeListener(){
         return inventoryListener;
     }
@@ -265,6 +256,9 @@ public final class BuffedItems extends JavaPlugin {
         return costManager;
     }
     public UpgradeManager getUpgradeManager() { return upgradeManager; }
+    public HookManager getHookManager() {
+        return hookManager;
+    }
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");

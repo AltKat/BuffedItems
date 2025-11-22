@@ -1,11 +1,11 @@
 package io.github.altkat.BuffedItems.command;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -23,9 +23,11 @@ public class BuffedItemCommand implements CommandExecutor {
 
     private final BuffedItems plugin;
     private final Component noPermissionMessage = ConfigManager.fromSection("§cYou do not have permission to use this command.");
+    private final HookManager hooks;
 
     public BuffedItemCommand(BuffedItems plugin) {
         this.plugin = plugin;
+        this.hooks = plugin.getHookManager();
     }
 
     @Override
@@ -150,43 +152,49 @@ public class BuffedItemCommand implements CommandExecutor {
         ItemStack itemStack = new ItemBuilder(buffedItem, plugin).build();
         itemStack.setAmount(amount);
 
-        if (plugin.isPlaceholderApiEnabled()) {
-            ItemMeta meta = itemStack.getItemMeta();
-            if (meta != null) {
-                if (meta.hasDisplayName()) {
-                    Component originalName = meta.displayName();
-                    if (originalName != null) {
-                        String legacyNameWithSection = ConfigManager.toSection(originalName);
-                        String parsedName = PlaceholderAPI.setPlaceholders(target, legacyNameWithSection);
-                        meta.displayName(ConfigManager.fromSection(parsedName));
-                    }
-                }
 
-                if (meta.hasLore()) {
-                    List<Component> originalLore = meta.lore();
-                    if (originalLore != null) {
-                        List<Component> parsedLore = originalLore.stream()
-                                .map(ConfigManager::toSection)
-                                .map(line -> PlaceholderAPI.setPlaceholders(target, line))
-                                .map(ConfigManager::fromSection)
-                                .collect(Collectors.toList());
-                        meta.lore(parsedLore);
-                    }
+        ItemMeta meta = itemStack.getItemMeta();
+        if (meta != null) {
+            if (meta.hasDisplayName()) {
+                Component originalName = meta.displayName();
+                if (originalName != null) {
+                    String legacyNameWithSection = ConfigManager.toSection(originalName);
+                    String parsedName = hooks.processPlaceholders(target, legacyNameWithSection);
+                    meta.displayName(ConfigManager.fromSection(parsedName));
                 }
-                itemStack.setItemMeta(meta);
             }
+
+            if (meta.hasLore()) {
+                List<Component> originalLore = meta.lore();
+                if (originalLore != null) {
+                    List<Component> parsedLore = originalLore.stream()
+                            .map(ConfigManager::toSection)
+                            .map(line -> hooks.processPlaceholders(target, line))
+                            .map(ConfigManager::fromSection)
+                            .collect(Collectors.toList());
+                    meta.lore(parsedLore);
+                }
+            }
+            itemStack.setItemMeta(meta);
         }
+
 
         target.getInventory().addItem(itemStack);
 
         sender.sendMessage(ConfigManager.fromLegacyWithPrefix("&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
 
+        String rawMsg = plugin.getConfig().getString("messages.give-success-receiver", "&#00FF00You have received &#FFD700{amount}x &#00FF00{item_name}&#00FF00.");
+
+        String papiMsg = hooks.processPlaceholders(target, rawMsg);
+
+        Component baseComp = ConfigManager.fromLegacyWithPrefix(papiMsg);
+
         int finalAmount = amount;
-        Component messageToReceiver = ConfigManager.getPrefixedMessageAsComponent("give-success-receiver")
+        Component finalMessage = baseComp
                 .replaceText(builder -> builder.matchLiteral("{amount}").replacement(String.valueOf(finalAmount)))
                 .replaceText(builder -> builder.matchLiteral("{item_name}").replacement(ConfigManager.fromLegacy(buffedItem.getDisplayName())));
 
-        target.sendMessage(messageToReceiver);
+        target.sendMessage(finalMessage);
 
         ConfigManager.logInfo("&aGave &e" + amount + "x " + itemId + "&a to &e" + target.getName() + "&a (by: &e" + sender.getName() + "&a)");
 

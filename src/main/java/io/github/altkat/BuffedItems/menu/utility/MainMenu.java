@@ -1,13 +1,13 @@
 package io.github.altkat.BuffedItems.menu.utility;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -27,12 +27,14 @@ import java.util.stream.Collectors;
 public class MainMenu extends PaginatedMenu {
 
     private final BuffedItems plugin;
+    private final HookManager hooks;
 
     private int maxItemsPerPage = 27;
 
     public MainMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.hooks = plugin.getHookManager();
         this.maxItemsPerPage = 27;
     }
 
@@ -64,32 +66,32 @@ public class MainMenu extends PaginatedMenu {
                 if (item != null) {
                     ItemStack stack = new ItemBuilder(item, plugin).build();
 
-                    if (plugin.isPlaceholderApiEnabled()) {
-                        ItemMeta meta = stack.getItemMeta();
-                        if (meta != null) {
-                            if (meta.hasDisplayName()) {
-                                Component originalName = meta.displayName();
-                                if (originalName != null) {
-                                    String legacyNameWithSection = ConfigManager.toSection(originalName);
-                                    String parsedName = PlaceholderAPI.setPlaceholders(p, legacyNameWithSection);
-                                    meta.displayName(ConfigManager.fromSection(parsedName));
-                                }
-                            }
 
-                            if (meta.hasLore()) {
-                                List<Component> originalLore = meta.lore();
-                                if (originalLore != null) {
-                                    List<Component> parsedLore = originalLore.stream()
-                                            .map(ConfigManager::toSection)
-                                            .map(line -> PlaceholderAPI.setPlaceholders(p, line))
-                                            .map(ConfigManager::fromSection)
-                                            .collect(Collectors.toList());
-                                    meta.lore(parsedLore);
-                                }
+                    ItemMeta meta = stack.getItemMeta();
+                    if (meta != null) {
+                        if (meta.hasDisplayName()) {
+                            Component originalName = meta.displayName();
+                            if (originalName != null) {
+                                String legacyNameWithSection = ConfigManager.toSection(originalName);
+                                String parsedName = hooks.processPlaceholders(p, legacyNameWithSection);
+                                meta.displayName(ConfigManager.fromSection(parsedName));
                             }
-                            stack.setItemMeta(meta);
                         }
+
+                        if (meta.hasLore()) {
+                            List<Component> originalLore = meta.lore();
+                            if (originalLore != null) {
+                                List<Component> parsedLore = originalLore.stream()
+                                        .map(ConfigManager::toSection)
+                                        .map(line -> hooks.processPlaceholders(p, line))
+                                        .map(ConfigManager::fromSection)
+                                        .collect(Collectors.toList());
+                                meta.lore(parsedLore);
+                            }
+                        }
+                        stack.setItemMeta(meta);
                     }
+
 
                     p.getInventory().addItem(stack);
 

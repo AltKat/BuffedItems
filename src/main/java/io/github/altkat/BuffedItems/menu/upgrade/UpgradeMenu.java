@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.menu.upgrade;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
@@ -213,12 +214,13 @@ public class UpgradeMenu extends Menu {
         List<String> missingRequirements = new ArrayList<>();
         for (ICost cost : recipe.getIngredients()) {
             if (!cost.hasEnough(p)) {
-                missingRequirements.add(cost.getFailureMessage());
+                String failureMsg = cost.getFailureMessage();
+                missingRequirements.add(plugin.getHookManager().processPlaceholders(p, failureMsg));
             }
         }
 
         if (!missingRequirements.isEmpty()) {
-            p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-requirements-not-met"));
+            sendMessageWithPapi(p,"upgrade-requirements-not-met");
             for (String error : missingRequirements) {
                 p.sendMessage(ConfigManager.fromLegacy(" &7- " + error));
             }
@@ -236,18 +238,54 @@ public class UpgradeMenu extends Menu {
                 cost.deduct(p);
             }
 
-            ItemStack result = inventory.getItem(OUTPUT_SLOT).clone();
-            java.util.HashMap<Integer, ItemStack> leftovers = p.getInventory().addItem(result);
+            BuffedItem resultBuffedItem = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
+            ItemStack resultStack;
+
+            if (resultBuffedItem != null) {
+                resultStack = new ItemBuilder(resultBuffedItem, plugin).build();
+                resultStack.setAmount(recipe.getResultAmount());
+
+                org.bukkit.inventory.meta.ItemMeta meta = resultStack.getItemMeta();
+
+                if (meta != null) {
+                    if (meta.hasDisplayName()) {
+                        net.kyori.adventure.text.Component originalName = meta.displayName();
+                        if (originalName != null) {
+                            String legacyName = ConfigManager.toSection(originalName);
+                            String parsedName = plugin.getHookManager().processPlaceholders(p, legacyName);
+                            meta.displayName(ConfigManager.fromSection(parsedName));
+                        }
+                    }
+
+                    if (meta.hasLore()) {
+                        List<net.kyori.adventure.text.Component> originalLore = meta.lore();
+                        if (originalLore != null) {
+                            List<net.kyori.adventure.text.Component> parsedLore = originalLore.stream()
+                                    .map(ConfigManager::toSection)
+                                    .map(line -> plugin.getHookManager().processPlaceholders(p, line))
+                                    .map(ConfigManager::fromSection)
+                                    .collect(java.util.stream.Collectors.toList());
+                            meta.lore(parsedLore);
+                        }
+                    }
+                    resultStack.setItemMeta(meta);
+                }
+
+            } else {
+                resultStack = new ItemStack(Material.BARRIER);
+            }
+
+            java.util.HashMap<Integer, ItemStack> leftovers = p.getInventory().addItem(resultStack);
 
             if (!leftovers.isEmpty()) {
                 for (ItemStack item : leftovers.values()) {
                     p.getWorld().dropItemNaturally(p.getLocation(), item);
                 }
-                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-inventory-full"));
+                sendMessageWithPapi(p,"upgrade-inventory-full");
             }
 
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1, 1);
-            p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-success"));
+            sendMessageWithPapi(p,"upgrade-success");;
             plugin.getEffectApplicatorTask().markPlayerForUpdate(p.getUniqueId());
 
         } else {
@@ -258,15 +296,15 @@ public class UpgradeMenu extends Menu {
                 inventory.setItem(INPUT_SLOT, inputItem);
                 for (ICost cost : recipe.getIngredients()) cost.deduct(p);
 
-                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-failure-lose-everything"));
+                sendMessageWithPapi(p,"upgrade-failure-lose-everything");
             }
             else if (action == FailureAction.KEEP_BASE_ONLY) {
                 for (ICost cost : recipe.getIngredients()) cost.deduct(p);
 
-                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-failure-keep-base"));
+                sendMessageWithPapi(p,"upgrade-failure-keep-base");
             }
             else if (action == FailureAction.KEEP_EVERYTHING) {
-                p.sendMessage(ConfigManager.getPrefixedMessageAsComponent("upgrade-failure-keep-everything"));
+                sendMessageWithPapi(p,"upgrade-failure-keep-everything");
             }
 
             p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
@@ -304,5 +342,13 @@ public class UpgradeMenu extends Menu {
             return input.getType() == reqMat;
         }
         return false;
+    }
+
+    private void sendMessageWithPapi(Player p, String configKey) {
+        String rawMsg = plugin.getConfig().getString("messages." + configKey);
+        if (rawMsg == null) return;
+
+        String parsedMsg = plugin.getHookManager().processPlaceholders(p, rawMsg);
+        p.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
     }
 }

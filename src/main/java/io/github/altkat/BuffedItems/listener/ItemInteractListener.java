@@ -1,12 +1,13 @@
 package io.github.altkat.BuffedItems.listener;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
-import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
@@ -32,9 +33,11 @@ public class ItemInteractListener implements Listener {
 
     private final BuffedItems plugin;
     private final NamespacedKey nbtKey;
+    private final HookManager hooks;
 
     public ItemInteractListener(BuffedItems plugin) {
         this.plugin = plugin;
+        this.hooks = plugin.getHookManager();
         this.nbtKey = new NamespacedKey(plugin, "buffeditem_id");
     }
 
@@ -64,10 +67,11 @@ public class ItemInteractListener implements Listener {
             return;
         }
 
-        // Permission check
         if (buffedItem.getPermission().isPresent()) {
             if (!player.hasPermission(buffedItem.getPermission().get())) {
-                player.sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-interact"));
+                String rawMsg = plugin.getConfig().getString("messages.protection-prevent-use-no-permission", "&cYou do not have permission to use this item.");
+                String parsedMsg = hooks.processPlaceholders(player, rawMsg);
+                player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
                 return;
             }
         }
@@ -85,7 +89,7 @@ public class ItemInteractListener implements Listener {
 
             for (ICost cost : costs) {
                 if (!cost.hasEnough(player)) {
-                    missingRequirements.add(cost.getFailureMessage());
+                    missingRequirements.add(hooks.processPlaceholders(player, cost.getFailureMessage()));
                 }
             }
 
@@ -131,7 +135,8 @@ public class ItemInteractListener implements Listener {
             if (rawMsg == null) {
                 rawMsg = plugin.getConfig().getString("active-items.messages.cooldown-chat", "&cWait {time}s");
             }
-            player.sendMessage(ConfigManager.fromLegacy(rawMsg.replace("{time}", String.format("%.1f", remaining))));
+            String parsedMsg = hooks.processPlaceholders(player, rawMsg.replace("{time}", String.format("%.1f", remaining)));
+            player.sendMessage(ConfigManager.fromLegacy(parsedMsg));
         }
 
         if (buffedItem.isVisualTitle()) {
@@ -145,9 +150,12 @@ public class ItemInteractListener implements Listener {
                 subtitle = plugin.getConfig().getString("active-items.messages.cooldown-subtitle", "");
             }
 
-            player.showTitle(net.kyori.adventure.title.Title.title(
-                    ConfigManager.fromLegacy(title.replace("{time}", String.format("%.1f", remaining))),
-                    ConfigManager.fromLegacy(subtitle.replace("{time}", String.format("%.1f", remaining)))
+            String finalTitle = hooks.processPlaceholders(player, title.replace("{time}", String.format("%.1f", remaining)));
+            String finalSubtitle = hooks.processPlaceholders(player, subtitle.replace("{time}", String.format("%.1f", remaining)));
+
+            player.showTitle(Title.title(
+                    ConfigManager.fromLegacy(finalTitle),
+                    ConfigManager.fromLegacy(finalSubtitle)
             ));
         }
 
@@ -257,9 +265,9 @@ public class ItemInteractListener implements Listener {
                 .replace("%player_yaw%", String.format(Locale.US, "%.2f", loc.getYaw()))
                 .replace("%player_pitch%", String.format(Locale.US, "%.2f", loc.getPitch()));
 
-        if (plugin.isPlaceholderApiEnabled()) {
-            parsedCmd = PlaceholderAPI.setPlaceholders(player, parsedCmd);
-        }
+
+        parsedCmd = hooks.processPlaceholders(player, parsedCmd);
+
 
         String lowerCmd = parsedCmd.toLowerCase().trim();
 
