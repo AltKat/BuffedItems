@@ -40,7 +40,7 @@ public class ItemEditorMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 45;
+        return 36;
     }
 
     @Override
@@ -133,13 +133,6 @@ public class ItemEditorMenu extends Menu {
             return;
         }
 
-        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
-
-        for (int i = 0; i < 9; i++) {
-            if (i == 4) continue;
-            inventory.setItem(i, filler);
-        }
-
         ItemStack previewItem = new ItemBuilder(item, plugin).build();
         ItemMeta previewMeta = previewItem.getItemMeta();
 
@@ -173,24 +166,13 @@ public class ItemEditorMenu extends Menu {
 
         inventory.setItem(4, previewItem);
 
-        for (int i = 36; i < 44; i++) {
-            inventory.setItem(i, filler);
-        }
-
-        inventory.setItem(9, filler);
-        inventory.setItem(17, filler);
-        inventory.setItem(18, filler);
-        inventory.setItem(26, filler);
-        inventory.setItem(27, filler);
-        inventory.setItem(35, filler);
-
         String currentName = item.getDisplayName().replace('&', '§');
 
-        inventory.setItem(10, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
-        inventory.setItem(11, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
-        inventory.setItem(12, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
-
-        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings"));
+        inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
+        inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
+        inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
+        String permDisplay = (item.getPermission() != null) ? item.getPermission() : "§cNone";
+        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings", "§7Current: " + permDisplay));
 
         String cmdDisplay;
         if (item.getCustomModelData().isPresent()) {
@@ -209,27 +191,30 @@ public class ItemEditorMenu extends Menu {
                 "§7Used for custom resource pack models.",
                 "§7Supports: Direct, ItemsAdder, Nexo"));
 
-        inventory.setItem(16, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
-        inventory.setItem(28, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
-        inventory.setItem(29, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
-        inventory.setItem(32, makeItem(Material.CHEST_MINECART, "§b§lPassive Effects",
+        inventory.setItem(20, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
+        inventory.setItem(21, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
+        inventory.setItem(22, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
+        inventory.setItem(23, makeItem(Material.CHEST_MINECART, "§b§lPassive Effects",
                 "§7Effects that apply when holding",
                 "§7or wearing the item.",
                 "",
                 "§f• Potion Effects",
                 "§f• Attribute Modifiers",
+                "",
                 "§eClick to Manage"));
 
-        inventory.setItem(34, makeItem(Material.CLOCK, "§6§lActive Abilities",
+        inventory.setItem(24, makeItem(Material.CLOCK, "§6§lActive Abilities",
                 "§7Features triggered by",
                 "§7right-clicking the item.",
                 "",
                 "§f• Cooldowns & Visuals",
                 "§f• Commands & Sounds",
                 "§f• Temporary Effects",
+                "",
                 "§eClick to Manage"));
 
         addBackButton(new MainMenu(playerMenuUtility, plugin));
+        setFillerGlass();
     }
 
     private List<Component> generateItemInfoLore(BuffedItem item) {
