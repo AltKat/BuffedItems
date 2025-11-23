@@ -12,6 +12,11 @@ public class HungerCost implements ICost {
 
     public HungerCost(Map<String, Object> data) {
         this.amount = ((Number) data.getOrDefault("amount", 1)).intValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("HUNGER");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }

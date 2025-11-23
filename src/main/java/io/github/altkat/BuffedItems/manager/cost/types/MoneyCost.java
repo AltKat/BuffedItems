@@ -14,7 +14,16 @@ public class MoneyCost implements ICost {
 
     public MoneyCost(Map<String, Object> data, VaultHook vault) {
         this.vault = vault;
+        if (vault == null || !vault.isHooked()) {
+            throw new IllegalStateException("Vault economy is not hooked/loaded.");
+        }
+
         this.amount = ((Number) data.getOrDefault("amount", 0)).doubleValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("MONEY");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }

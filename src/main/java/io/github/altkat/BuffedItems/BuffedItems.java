@@ -28,10 +28,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class BuffedItems extends JavaPlugin {
@@ -198,37 +195,76 @@ public final class BuffedItems extends JavaPlugin {
     }
 
     private void printStartupSummary() {
+        String separator = "&#FF6347==================================================";
+        ConfigManager.logInfo(separator);
+        ConfigManager.logInfo("&#FCD05CBuffedItems v" + getDescription().getVersion() + " - Startup Summary");
+        ConfigManager.logInfo("");
+
         Map<String, BuffedItem> items = itemManager.getLoadedItems();
         long validItems = items.values().stream().filter(BuffedItem::isValid).count();
         long invalidItems = items.size() - validItems;
 
-        String separator = "&#FF6347==================================================";
-        ConfigManager.logInfo(separator);
-        ConfigManager.logInfo("&#FCD05CBuffedItems v" + getDescription().getVersion() + " - Startup Summary");
-        ConfigManager.logInfo("&#5FE2C5  Total Items: " + items.size());
-        ConfigManager.logInfo("&#5FE2C5  Valid Items: " + validItems);
-
+        ConfigManager.logInfo("&#5FE2C5  Items:");
+        ConfigManager.logInfo("&#5FE2C5    • Total: &f" + items.size());
+        ConfigManager.logInfo("&#5FE2C5    • Valid: &a" + validItems);
         if (invalidItems > 0) {
-            ConfigManager.logInfo("&#E25F5F  Items with Errors: " + invalidItems);
-            ConfigManager.logInfo("&#F5CD66  Run '/bi list' or '/bi menu' to view details.");
+            ConfigManager.logInfo("&#5FE2C5    • Errors: &c" + invalidItems + " &7(Check console logs)");
+        }
+
+        Map<String, io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe> recipes = upgradeManager.getRecipes();
+        long validRecipes = recipes.values().stream().filter(io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe::isValid).count();
+        long invalidRecipes = recipes.size() - validRecipes;
+
+        if (!recipes.isEmpty()) {
+            ConfigManager.logInfo("");
+            ConfigManager.logInfo("&#F5CD66  Upgrades:");
+            ConfigManager.logInfo("&#F5CD66    • Total: &f" + recipes.size());
+            ConfigManager.logInfo("&#F5CD66    • Valid: &a" + validRecipes);
+            if (invalidRecipes > 0) {
+                ConfigManager.logInfo("&#F5CD66    • Errors: &c" + invalidRecipes + " &7(Check console logs)");
+            }
+        }
+
+        List<String> activeHooks = new ArrayList<>();
+        if (hookManager.isPlaceholderAPILoaded()) activeHooks.add("PlaceholderAPI");
+        if (hookManager.isVaultLoaded()) activeHooks.add("Vault");
+        if (hookManager.isCoinsEngineLoaded()) activeHooks.add("CoinsEngine");
+        if (hookManager.isItemsAdderLoaded()) activeHooks.add("ItemsAdder");
+        if (hookManager.isNexoLoaded()) activeHooks.add("Nexo");
+
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#9B59B6  Hooks:");
+        if (activeHooks.isEmpty()) {
+            ConfigManager.logInfo("&#9B59B6    • &7None");
+        } else {
+            ConfigManager.logInfo("&#9B59B6    • Active: &f" + String.join(", ", activeHooks));
         }
 
         int currentDebugLevel = ConfigManager.getDebugLevel();
         String debugLevelInfo;
+        if (currentDebugLevel <= ConfigManager.DEBUG_OFF) debugLevelInfo = "OFF";
+        else if (currentDebugLevel == ConfigManager.DEBUG_INFO) debugLevelInfo = "INFO";
+        else if (currentDebugLevel == ConfigManager.DEBUG_TASK) debugLevelInfo = "TASK";
+        else if (currentDebugLevel == ConfigManager.DEBUG_DETAILED) debugLevelInfo = "DETAILED";
+        else debugLevelInfo = "VERBOSE";
 
-        if (currentDebugLevel <= ConfigManager.DEBUG_OFF) { // 0
-            debugLevelInfo = "0 (OFF)";
-        } else if (currentDebugLevel == ConfigManager.DEBUG_INFO) { // 1
-            debugLevelInfo = "1 (INFO)";
-        } else if (currentDebugLevel == ConfigManager.DEBUG_TASK) { // 2
-            debugLevelInfo = "2 (TASK)";
-        } else if (currentDebugLevel == ConfigManager.DEBUG_DETAILED) { // 3
-            debugLevelInfo = "3 (DETAILED)";
-        } else { // 4+ (VERBOSE)
-            debugLevelInfo = currentDebugLevel + " (VERBOSE)";
+        String currentVersion = getDescription().getVersion();
+        String latestVersion = (updateHandler != null) ? updateHandler.getLatestVersionCached() : null;
+        String versionStatus;
+        if (latestVersion == null) {
+            versionStatus = "&7(Checking...)";
+        } else if (UpdateHandler.isNewerVersion(currentVersion, latestVersion)) {
+            versionStatus = "&c(Update Available: " + latestVersion + ")";
+        } else {
+            versionStatus = "&a(Latest)";
         }
 
-        ConfigManager.logInfo("&#5FE2C5  Debug Level: " + debugLevelInfo);
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#5DADE2  System:");
+        ConfigManager.logInfo("&#5DADE2    • Version: &f" + currentVersion + " " + versionStatus);
+        ConfigManager.logInfo("&#5DADE2    • Debug Level: &f" + debugLevelInfo + " (" + currentDebugLevel + ")");
+        ConfigManager.logInfo("&#5DADE2    • Server: &f" + Bukkit.getName() + " " + Bukkit.getMinecraftVersion());
+
         ConfigManager.logInfo(separator);
     }
 

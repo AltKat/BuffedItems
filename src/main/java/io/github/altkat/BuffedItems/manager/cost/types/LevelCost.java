@@ -12,6 +12,11 @@ public class LevelCost implements ICost {
 
     public LevelCost(Map<String, Object> data) {
         this.amount = ((Number) data.getOrDefault("amount", 1)).intValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("LEVEL");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }

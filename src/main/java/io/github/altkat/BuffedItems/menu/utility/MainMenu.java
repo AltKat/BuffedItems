@@ -9,6 +9,10 @@ import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -138,32 +142,60 @@ public class MainMenu extends PaginatedMenu {
             case SMITHING_TABLE:
                 new UpgradeRecipeListMenu(playerMenuUtility, plugin).open();
                 break;
-
+            case BOOK:
+                p.closeInventory();
+                p.sendMessage(ConfigManager.fromSection("§8§m-------------------------------------------"));
+                p.sendMessage(ConfigManager.fromSection("§6§lBuffedItems Information"));
+                p.sendMessage(Component.empty());
+                Component wikiLink = Component.text("Click Here", NamedTextColor.YELLOW)
+                        .decoration(TextDecoration.UNDERLINED, true)
+                        .clickEvent(ClickEvent.openUrl("https://github.com/AltKat/BuffedItems/wiki"))
+                        .hoverEvent(HoverEvent.showText(ConfigManager.fromSection("§7Click to open the Wiki page.")));
+                p.sendMessage(ConfigManager.fromSection("§bWiki & Docs: ").append(wikiLink));
+                p.sendMessage(Component.empty());
+                Component discordLink = Component.text("Click Here", NamedTextColor.YELLOW)
+                        .decoration(TextDecoration.UNDERLINED, true)
+                        .clickEvent(ClickEvent.openUrl("https://discord.gg/nxY3fc7xz9"))
+                        .hoverEvent(HoverEvent.showText(ConfigManager.fromSection("§7Click to join our Discord server.")));
+                p.sendMessage(ConfigManager.fromSection("§9Discord Support: ").append(discordLink));
+                p.sendMessage(ConfigManager.fromSection("§8§m-------------------------------------------"));
+                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                break;
         }
+
+
     }
 
     @Override
     public void setMenuItems() {
-        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
-
-        for (int i = 0; i < 9; i++) {
-            inventory.setItem(i, filler);
-        }
-
-        for (int i = 36; i < 45; i++) {
-            inventory.setItem(i, filler);
-        }
 
         addMenuControls();
         inventory.setItem(49, makeItem(Material.ANVIL, "§bCreate New Item", "§7Click to create a brand new item."));
+
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("");
+        infoLore.add("§7Version: §f" + plugin.getDescription().getVersion());
+        infoLore.add("");
+        infoLore.add("§6Did you know?");
+        infoLore.add("§7You can use §dPlaceholderAPI");
+        infoLore.add("§7placeholders in every message,");
+        infoLore.add("§7item name, and lore!");
+        infoLore.add("");
+        infoLore.add("§bNeed Help?");
+        infoLore.add("§7Click to get links for:");
+        infoLore.add("§f• Wiki Page");
+        infoLore.add("§f• Discord Support");
+        infoLore.add("");
+        infoLore.add("§eClick to print links in chat.");
+
+        inventory.setItem(52, makeItem(Material.BOOK, "§aPlugin Information", infoLore.toArray(new String[0])));
+
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
         inventory.setItem(45, makeItem(Material.COMPARATOR, "§6General Settings",
                 "§7Configure global plugin settings.",
                 "§7(Debug level, Potion icons, etc.)"));
-        inventory.setItem(46, filler);
         inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes."));
-        inventory.setItem(51, filler);
-        inventory.setItem(52, filler);
+
 
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
 
@@ -213,6 +245,7 @@ public class MainMenu extends PaginatedMenu {
                 inventory.setItem(i + 9, itemStack);
             }
         }
+        setFillerGlass();
     }
 
     @Override

@@ -16,9 +16,19 @@ public class CoinsEngineCost implements ICost {
     private final CoinsEngineHook hook;
 
     public CoinsEngineCost(Map<String, Object> data, CoinsEngineHook hook) {
-        this.amount = ((Number) data.getOrDefault("amount", 0)).doubleValue();
-        this.currencyId = (String) data.getOrDefault("currency_id", "coins");
         this.hook = hook;
+        this.currencyId = (String) data.getOrDefault("currency_id", "coins");
+
+        Currency currency = hook.getCurrency(this.currencyId);
+        if (currency == null) {
+            throw new IllegalArgumentException("Invalid CoinsEngine Currency ID: '" + this.currencyId + "'");
+        }
+
+        this.amount = ((Number) data.getOrDefault("amount", 0)).doubleValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
 
         String defaultMsg = ConfigManager.getDefaultCostMessage("COINSENGINE");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);

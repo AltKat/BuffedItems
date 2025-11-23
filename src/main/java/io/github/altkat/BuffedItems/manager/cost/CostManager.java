@@ -48,25 +48,21 @@ public class CostManager {
      * Generates Cost objects from the config list.
      */
     public ICost parseCost(Map<?, ?> rawMap) {
-        try {
-            Map<String, Object> data = new HashMap<>();
-            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
-                data.put(entry.getKey().toString(), entry.getValue());
-            }
-
-            String type = (String) data.get("type");
-            if (type == null) return null;
-
-            CostFactory factory = factories.get(type.toUpperCase());
-            if (factory != null) {
-                return factory.create(data);
-            } else {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Unknown cost type: " + type);
-            }
-        } catch (Exception e) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Error parsing cost: " + e.getMessage());
+        Map<String, Object> data = new HashMap<>();
+        for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+            data.put(entry.getKey().toString(), entry.getValue());
         }
-        return null;
+
+        String type = (String) data.get("type");
+        if (type == null) return null;
+
+        CostFactory factory = factories.get(type.toUpperCase());
+        if (factory != null) {
+            return factory.create(data);
+        } else {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[CostManager] Unknown cost type: " + type);
+            return null;
+        }
     }
 
     /**

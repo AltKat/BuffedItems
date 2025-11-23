@@ -13,6 +13,11 @@ public class ExperienceCost implements ICost {
 
     public ExperienceCost(Map<String, Object> data) {
         this.amount = ((Number) data.getOrDefault("amount", 0)).intValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("EXPERIENCE");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }

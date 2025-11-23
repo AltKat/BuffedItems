@@ -12,6 +12,11 @@ public class HealthCost implements ICost {
 
     public HealthCost(Map<String, Object> data) {
         this.amount = ((Number) data.getOrDefault("amount", 2.0)).doubleValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("HEALTH");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }
