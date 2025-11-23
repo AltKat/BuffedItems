@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.menu.base.Menu;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.InventoryHolder;
 
 public class MenuListener implements Listener {
@@ -14,13 +15,15 @@ public class MenuListener implements Listener {
 
         if (holder instanceof Menu) {
             e.setCancelled(true);
-
-            if (e.getCurrentItem() == null) {
-                return;
-            }
-
             Menu menu = (Menu) holder;
             menu.handleMenu(e);
+        }
+    }
+
+    @EventHandler
+    public void onMenuClose(InventoryCloseEvent e) {
+        if (e.getInventory().getHolder() instanceof Menu menu) {
+            menu.handleClose(e);
         }
     }
 }

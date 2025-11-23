@@ -69,8 +69,8 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("enchantment_search");
             p.closeInventory();
-            p.sendMessage(ConfigManager.fromSection("§aType the enchantment name to search (e.g., 'sharp', 'sharpness', 'quantum'):"));
-            p.sendMessage(ConfigManager.fromSection("§7Type 'clear' to clear search."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType the enchantment name to search (e.g., 'sharp', 'sharpness', 'quantum'):"));
+            p.sendMessage(ConfigManager.fromSection("§7Type 'clear' to clear search, 'cancel' to exit."));
             return;
         }
 
@@ -94,7 +94,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             Enchantment selectedEnchant = EnchantmentFinder.findEnchantment(enchantKey, plugin);
 
             if (selectedEnchant == null) {
-                p.sendMessage(ConfigManager.fromSection("§cError: Could not identify selected enchantment '" + enchantKey + "'."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Could not identify selected enchantment '" + enchantKey + "'."));
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                         () -> "[EnchantmentSelector] Failed to find enchantment: " + enchantKey);
                 return;
@@ -106,7 +106,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
                     .anyMatch(s -> s.toUpperCase().startsWith(selectedEnchant.getName() + ";"));
 
             if (alreadyExists) {
-                p.sendMessage(ConfigManager.fromSection("§cThis item already has the enchantment: " + selectedEnchant.getName()));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cThis item already has the enchantment: " + selectedEnchant.getName()));
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 return;
             }
@@ -114,7 +114,7 @@ public class EnchantmentSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("enchantments.add." + selectedEnchant.getName());
             p.closeInventory();
-            p.sendMessage(ConfigManager.fromSection("§aPlease type the Level for '" + selectedEnchant.getName() + "' in chat (e.g., 1, 5, 10)."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Level for '" + selectedEnchant.getName() + "' in chat (e.g., 1, 5, 10)."));
             return;
         }
 

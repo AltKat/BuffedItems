@@ -110,7 +110,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 BuffedItem item = entry.getKey();
                 String slot = entry.getValue();
 
-                if (item.getPermission().isPresent() && !player.hasPermission(item.getPermission().get())) {
+                if (!item.hasPassivePermission(player)) {
                     if (debugTick) {
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Fast Path] Player " + player.getName() + " lacks permission for " + item.getId() + ". Skipping effects.");
                     }

@@ -30,7 +30,7 @@ public class AttributeOperationSelectorMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
-        if (e.getCurrentItem().getType() == Material.BARRIER || e.getCurrentItem().getType() == Material.GRAY_STAINED_GLASS_PANE) {
+        if (e.getCurrentItem().getType() == Material.BARRIER || e.getCurrentItem().getType() == Material.BLACK_STAINED_GLASS_PANE) {
             if (e.getCurrentItem().getType() == Material.BARRIER) {
                 new AttributeSelectorMenu(playerMenuUtility, plugin).open();
             }
@@ -49,7 +49,8 @@ public class AttributeOperationSelectorMenu extends Menu {
         playerMenuUtility.setChatInputPath(prefix + "attributes.add." + attributeName + "." + operationName);
 
         p.closeInventory();
-        p.sendMessage(ConfigManager.fromSection("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));
+        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));
+        p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
     }
 
     @Override

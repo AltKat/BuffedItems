@@ -3,15 +3,18 @@ package io.github.altkat.BuffedItems;
 import io.github.altkat.BuffedItems.command.BuffedItemCommand;
 import io.github.altkat.BuffedItems.command.TabCompleteHandler;
 import io.github.altkat.BuffedItems.handler.UpdateHandler;
+import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.listener.*;
 import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigUpdater;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
 import io.github.altkat.BuffedItems.manager.cost.CostManager;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.manager.item.ItemManager;
+import io.github.altkat.BuffedItems.manager.upgrade.UpgradeManager;
 import io.github.altkat.BuffedItems.menu.MenuListener;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.task.CooldownVisualsTask;
@@ -22,14 +25,10 @@ import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class BuffedItems extends JavaPlugin {
@@ -41,12 +40,13 @@ public final class BuffedItems extends JavaPlugin {
     private static final ConcurrentHashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new ConcurrentHashMap<>();
     private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
     private Metrics metrics;
-    private boolean placeholderApiEnabled = false;
     private InventoryListener inventoryListener;
     private UpdateHandler updateHandler;
     private CooldownManager cooldownManager;
     private CooldownVisualsTask cooldownVisualsTask;
     private CostManager costManager;
+    private UpgradeManager upgradeManager;
+    private HookManager hookManager;
 
     @Override
     public void onEnable() {
@@ -74,26 +74,19 @@ public final class BuffedItems extends JavaPlugin {
         ConfigManager.setup(this);
         saveDefaultConfig();
         ItemsConfig.setup(this);
-
+        UpgradesConfig.setup(this);
         initializeManagers();
 
         try {
             ConfigUpdater.update(this, "config.yml");
             ConfigUpdater.update(this, "items.yml");
+            ConfigUpdater.update(this, "upgrades.yml");
         } catch (Exception e) {
             getLogger().severe("WARNING: Failed to run file updater tasks.");
             e.printStackTrace();
         }
 
         ConfigManager.reloadConfig(true);
-
-        PluginManager pm = getServer().getPluginManager();
-        if (pm.getPlugin("PlaceholderAPI") != null) {
-            placeholderApiEnabled = true;
-            ConfigManager.logInfo("&aPlaceholderAPI found! Enabling placeholder support.");
-        } else {
-            placeholderApiEnabled = false;
-        }
 
         registerListenersAndCommands();
         startEffectTask();
@@ -108,6 +101,7 @@ public final class BuffedItems extends JavaPlugin {
             public void run() {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading task running...");
                 itemManager.loadItems(false);
+                upgradeManager.loadRecipes(false);
                 printStartupSummary();
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading complete.");
             }
@@ -154,11 +148,13 @@ public final class BuffedItems extends JavaPlugin {
 
     private void initializeManagers() {
         ConfigManager.loadGlobalSettings();
+        hookManager = new HookManager(this);
         costManager = new CostManager(this);
         itemManager = new ItemManager(this);
         effectManager = new EffectManager(this);
         activeAttributeManager = new ActiveAttributeManager();
         cooldownManager = new CooldownManager();
+        upgradeManager = new UpgradeManager(this);
     }
 
     private void registerListenersAndCommands() {
@@ -199,37 +195,76 @@ public final class BuffedItems extends JavaPlugin {
     }
 
     private void printStartupSummary() {
+        String separator = "&#FF6347==================================================";
+        ConfigManager.logInfo(separator);
+        ConfigManager.logInfo("&#FCD05CBuffedItems v" + getDescription().getVersion() + " - Startup Summary");
+        ConfigManager.logInfo("");
+
         Map<String, BuffedItem> items = itemManager.getLoadedItems();
         long validItems = items.values().stream().filter(BuffedItem::isValid).count();
         long invalidItems = items.size() - validItems;
 
-        String separator = "&#FF6347==================================================";
-        ConfigManager.logInfo(separator);
-        ConfigManager.logInfo("&#FCD05CBuffedItems v" + getDescription().getVersion() + " - Startup Summary");
-        ConfigManager.logInfo("&#5FE2C5  Total Items: " + items.size());
-        ConfigManager.logInfo("&#5FE2C5  Valid Items: " + validItems);
-
+        ConfigManager.logInfo("&#5FE2C5  Items:");
+        ConfigManager.logInfo("&#5FE2C5    • Total: &f" + items.size());
+        ConfigManager.logInfo("&#5FE2C5    • Valid: &a" + validItems);
         if (invalidItems > 0) {
-            ConfigManager.logInfo("&#E25F5F  Items with Errors: " + invalidItems);
-            ConfigManager.logInfo("&#F5CD66  Run '/bi list' or '/bi menu' to view details.");
+            ConfigManager.logInfo("&#5FE2C5    • Errors: &c" + invalidItems + " &7(Check console logs)");
+        }
+
+        Map<String, io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe> recipes = upgradeManager.getRecipes();
+        long validRecipes = recipes.values().stream().filter(io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe::isValid).count();
+        long invalidRecipes = recipes.size() - validRecipes;
+
+        if (!recipes.isEmpty()) {
+            ConfigManager.logInfo("");
+            ConfigManager.logInfo("&#F5CD66  Upgrades:");
+            ConfigManager.logInfo("&#F5CD66    • Total: &f" + recipes.size());
+            ConfigManager.logInfo("&#F5CD66    • Valid: &a" + validRecipes);
+            if (invalidRecipes > 0) {
+                ConfigManager.logInfo("&#F5CD66    • Errors: &c" + invalidRecipes + " &7(Check console logs)");
+            }
+        }
+
+        List<String> activeHooks = new ArrayList<>();
+        if (hookManager.isPlaceholderAPILoaded()) activeHooks.add("PlaceholderAPI");
+        if (hookManager.isVaultLoaded()) activeHooks.add("Vault");
+        if (hookManager.isCoinsEngineLoaded()) activeHooks.add("CoinsEngine");
+        if (hookManager.isItemsAdderLoaded()) activeHooks.add("ItemsAdder");
+        if (hookManager.isNexoLoaded()) activeHooks.add("Nexo");
+
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#9B59B6  Hooks:");
+        if (activeHooks.isEmpty()) {
+            ConfigManager.logInfo("&#9B59B6    • &7None");
+        } else {
+            ConfigManager.logInfo("&#9B59B6    • Active: &f" + String.join(", ", activeHooks));
         }
 
         int currentDebugLevel = ConfigManager.getDebugLevel();
         String debugLevelInfo;
+        if (currentDebugLevel <= ConfigManager.DEBUG_OFF) debugLevelInfo = "OFF";
+        else if (currentDebugLevel == ConfigManager.DEBUG_INFO) debugLevelInfo = "INFO";
+        else if (currentDebugLevel == ConfigManager.DEBUG_TASK) debugLevelInfo = "TASK";
+        else if (currentDebugLevel == ConfigManager.DEBUG_DETAILED) debugLevelInfo = "DETAILED";
+        else debugLevelInfo = "VERBOSE";
 
-        if (currentDebugLevel <= ConfigManager.DEBUG_OFF) { // 0
-            debugLevelInfo = "0 (OFF)";
-        } else if (currentDebugLevel == ConfigManager.DEBUG_INFO) { // 1
-            debugLevelInfo = "1 (INFO)";
-        } else if (currentDebugLevel == ConfigManager.DEBUG_TASK) { // 2
-            debugLevelInfo = "2 (TASK)";
-        } else if (currentDebugLevel == ConfigManager.DEBUG_DETAILED) { // 3
-            debugLevelInfo = "3 (DETAILED)";
-        } else { // 4+ (VERBOSE)
-            debugLevelInfo = currentDebugLevel + " (VERBOSE)";
+        String currentVersion = getDescription().getVersion();
+        String latestVersion = (updateHandler != null) ? updateHandler.getLatestVersionCached() : null;
+        String versionStatus;
+        if (latestVersion == null) {
+            versionStatus = "&7(Checking...)";
+        } else if (UpdateHandler.isNewerVersion(currentVersion, latestVersion)) {
+            versionStatus = "&c(Update Available: " + latestVersion + ")";
+        } else {
+            versionStatus = "&a(Latest)";
         }
 
-        ConfigManager.logInfo("&#5FE2C5  Debug Level: " + debugLevelInfo);
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#5DADE2  System:");
+        ConfigManager.logInfo("&#5DADE2    • Version: &f" + currentVersion + " " + versionStatus);
+        ConfigManager.logInfo("&#5DADE2    • Debug Level: &f" + debugLevelInfo + " (" + currentDebugLevel + ")");
+        ConfigManager.logInfo("&#5DADE2    • Server: &f" + Bukkit.getName() + " " + Bukkit.getMinecraftVersion());
+
         ConfigManager.logInfo(separator);
     }
 
@@ -246,9 +281,6 @@ public final class BuffedItems extends JavaPlugin {
         }
         playerMenuUtilityMap.remove(uuid);
     }
-    public boolean isPlaceholderApiEnabled() {
-        return placeholderApiEnabled;
-    }
     public InventoryListener getInventoryChangeListener(){
         return inventoryListener;
     }
@@ -257,6 +289,10 @@ public final class BuffedItems extends JavaPlugin {
     }
     public CostManager getCostManager() {
         return costManager;
+    }
+    public UpgradeManager getUpgradeManager() { return upgradeManager; }
+    public HookManager getHookManager() {
+        return hookManager;
     }
     private void isCompatible() {
         try {

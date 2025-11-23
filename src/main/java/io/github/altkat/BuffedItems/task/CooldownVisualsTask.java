@@ -78,7 +78,8 @@ public class CooldownVisualsTask extends BukkitRunnable {
                 rawMsg = plugin.getConfig().getString("active-items.messages.cooldown-action-bar", "&fCD: {time}s");
             }
 
-            String finalMsg = rawMsg.replace("{time}", String.format("%.1f", remaining));
+            String timeMsg = rawMsg.replace("{time}", String.format("%.1f", remaining));
+            String finalMsg = plugin.getHookManager().processPlaceholders(player, timeMsg);
             player.sendActionBar(ConfigManager.fromLegacy(finalMsg));
         }
 
@@ -112,7 +113,8 @@ public class CooldownVisualsTask extends BukkitRunnable {
                 rawTitle = plugin.getConfig().getString("active-items.messages.cooldown-boss-bar", "CD: {time}s");
             }
 
-            String finalTitle = rawTitle.replace("{time}", String.format("%.1f", remaining));
+            String timeTitle = rawTitle.replace("{time}", String.format("%.1f", remaining));
+            String finalTitle = plugin.getHookManager().processPlaceholders(player, timeTitle);
             bar.setTitle(ConfigManager.toSection(ConfigManager.fromLegacy(finalTitle)));
         } else {
             if (activeBossBars.containsKey(uuid)) {

@@ -106,7 +106,7 @@ public class EffectListMenu extends Menu {
                 String removedInfo = effects.get(clickedSlot);
                 effects.remove(clickedSlot);
                 ConfigManager.setItemValue(itemId, extractConfigKey(configPath), effects);
-                p.sendMessage(ConfigManager.fromSection("§aRemoved: §e" + removedInfo));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aRemoved: §e" + removedInfo));
                 this.open();
             }
             else if (e.isLeftClick() && clickedType == Material.POTION) {
@@ -116,7 +116,8 @@ public class EffectListMenu extends Menu {
                 playerMenuUtility.setChatInputPath(buildChatPath("edit"));
                 p.closeInventory();
                 String effectName = effects.get(clickedSlot).split(";")[0];
-                p.sendMessage(ConfigManager.fromSection("§aType new level for '" + effectName + "' in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new level for '" + effectName + "' in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
             else if (e.isLeftClick() && clickedType == Material.IRON_SWORD) {
                 // Edit attribute
@@ -124,7 +125,8 @@ public class EffectListMenu extends Menu {
                 playerMenuUtility.setEditIndex(clickedSlot);
                 playerMenuUtility.setChatInputPath(buildChatPath("edit"));
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aType new amount for the attribute in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new amount for the attribute in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
         }
     }

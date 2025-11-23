@@ -126,15 +126,15 @@ public class ActiveItemVisualsMenu extends Menu {
                             ConfigManager.setItemValue(itemId, subtitlePath, null);
                         }
                         ConfigManager.setItemValue(itemId, configPath, null);
-                        p.sendMessage(ConfigManager.fromSection("§aReset to default config message."));
+                        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aReset to default config message."));
                         this.open();
                     } else {
                         playerMenuUtility.setWaitingForChatInput(true);
                         playerMenuUtility.setChatInputPath(path);
                         p.closeInventory();
-                        p.sendMessage(ConfigManager.fromSection("§aEnter new " + title + " in chat."));
+                        p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new " + title + " in chat."));
                         p.sendMessage(ConfigManager.fromSection("§7Use {time} for remaining seconds."));
-                        p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset."));
+                        p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset, 'cancel' to exit."));
                     }
                 }
                 break;

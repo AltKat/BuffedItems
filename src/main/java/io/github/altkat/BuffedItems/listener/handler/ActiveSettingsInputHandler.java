@@ -43,11 +43,11 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
             int val = Integer.parseInt(input);
             if (val < 0) throw new NumberFormatException();
             ConfigManager.setItemValue(itemId, "cooldown", val);
-            player.sendMessage(ConfigManager.fromSection("§aCooldown updated to: §e" + val + "s"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCooldown updated to: §e" + val + "s"));
             closeChatInput(pmu);
             new ActiveItemSettingsMenu(pmu, plugin).open();
         } catch (NumberFormatException error) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid number! Please enter a positive integer (e.g. 10)."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number! Please enter a positive integer (e.g. 10)."));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
     }
@@ -57,11 +57,11 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
             int val = Integer.parseInt(input);
             if (val < 0) throw new NumberFormatException();
             ConfigManager.setItemValue(itemId, "effect_duration", val);
-            player.sendMessage(ConfigManager.fromSection("§aEffect Duration updated to: §e" + val + "s"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aEffect Duration updated to: §e" + val + "s"));
             closeChatInput(pmu);
             new ActiveItemSettingsMenu(pmu, plugin).open();
         } catch (NumberFormatException error) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid number! Please enter a positive integer (e.g. 5)."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number! Please enter a positive integer (e.g. 5)."));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
     }
@@ -71,7 +71,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active-mode.commands"));
         commands.add(input);
         ConfigManager.setItemValue(itemId, "commands", commands);
-        player.sendMessage(ConfigManager.fromSection("§aCommand added!"));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCommand added!"));
         closeChatInput(pmu);
         new CommandListMenu(pmu, plugin).open();
     }
@@ -84,14 +84,14 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
             if (index >= 0 && index < commands.size()) {
                 commands.set(index, input);
                 ConfigManager.setItemValue(itemId, "commands", commands);
-                player.sendMessage(ConfigManager.fromSection("§aCommand updated!"));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCommand updated!"));
             } else {
-                player.sendMessage(ConfigManager.fromSection("§cError: Command index out of bounds."));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Command index out of bounds."));
             }
             closeChatInput(pmu);
             new CommandListMenu(pmu, plugin).open();
         } catch (Exception error) {
-            player.sendMessage(ConfigManager.fromSection("§cError processing edit."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError processing edit."));
             closeChatInput(pmu);
             new CommandListMenu(pmu, plugin).open();
         }
@@ -103,7 +103,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         String configPath = getMessageConfigPath(messageType);
 
         if (configPath == null) {
-            player.sendMessage(ConfigManager.fromSection("§cError: Unknown message type: " + messageType));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Unknown message type: " + messageType));
             closeChatInput(pmu);
             new ActiveItemVisualsMenu(pmu, plugin).open();
             return;
@@ -114,15 +114,15 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
                 ConfigManager.setItemValue(itemId, "visuals.messages.subtitle", null);
             }
             ConfigManager.setItemValue(itemId, configPath, null);
-            player.sendMessage(ConfigManager.fromSection("§aReset to default."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aReset to default."));
         } else if ("title".equals(messageType) && input.contains("|")) {
             String[] parts = input.split("\\|", 2);
             ConfigManager.setItemValue(itemId, configPath, parts[0].trim());
             ConfigManager.setItemValue(itemId, "visuals.messages.subtitle", parts[1].trim());
-            player.sendMessage(ConfigManager.fromSection("§aTitle and Subtitle updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aTitle and Subtitle updated!"));
         } else {
             ConfigManager.setItemValue(itemId, configPath, input);
-            player.sendMessage(ConfigManager.fromSection("§aMessage updated!"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aMessage updated!"));
         }
         closeChatInput(pmu);
         new ActiveItemVisualsMenu(pmu, plugin).open();
@@ -132,7 +132,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         String soundType = path.substring(14);
 
         if (!isValidSoundFormat(input)) {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid format! Use: NAME;VOLUME;PITCH"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid format! Use: NAME;VOLUME;PITCH"));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("active.sounds." + soundType);
@@ -140,7 +140,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         }
 
         ConfigManager.setItemValue(itemId, "sounds." + soundType, input);
-        player.sendMessage(ConfigManager.fromSection("§aSound updated!"));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSound updated!"));
 
         try {
             String soundName = input.split(";")[0];

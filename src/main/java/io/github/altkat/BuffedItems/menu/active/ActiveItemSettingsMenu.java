@@ -31,7 +31,7 @@ public class ActiveItemSettingsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 36;
+        return 45;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class ActiveItemSettingsMenu extends Menu {
             return;
         }
 
-        if (type == Material.BARRIER && e.getSlot() == 35) {
+        if (type == Material.BARRIER && e.getSlot() == 44) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -64,7 +64,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("active.cooldown");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aEnter the Cooldown (in seconds) in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the Cooldown (in seconds) in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getCooldown() + "s)"));
                 break;
 
@@ -72,7 +72,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("active.duration");
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSection("§aEnter the Effect Duration (in seconds) in chat."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the Effect Duration (in seconds) in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getActiveDuration() + "s)"));
                 break;
 
@@ -110,8 +110,6 @@ public class ActiveItemSettingsMenu extends Menu {
     public void setMenuItems() {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
-
-        setFillerGlass();
 
         boolean isActive = item.isActiveMode();
         inventory.setItem(10, makeItem(Material.LEVER,
@@ -154,6 +152,8 @@ public class ActiveItemSettingsMenu extends Menu {
                 "",
                 "§eClick to Manage"));
 
-        inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
+
+        setFillerGlass();
     }
 }

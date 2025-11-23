@@ -1,9 +1,9 @@
 package io.github.altkat.BuffedItems.listener.handler;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import io.github.altkat.BuffedItems.listener.ChatListener;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
+import io.github.altkat.BuffedItems.menu.editor.PermissionSettingsMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,7 +26,13 @@ public class BasicInputHandler implements ChatInputHandler {
                 handleDisplayNameEdit(player, pmu, input, itemId);
                 break;
             case "permission":
-                handlePermissionEdit(player, pmu, input, itemId);
+                handlePermissionEdit(player, pmu, input, itemId, "permission");
+                break;
+            case "active_permission":
+                handlePermissionEdit(player, pmu, input, itemId, "active_permission");
+                break;
+            case "passive_permission":
+                handlePermissionEdit(player, pmu, input, itemId, "passive_permission");
                 break;
             case "material.manual":
                 handleMaterialManualEdit(player, pmu, input, itemId);
@@ -39,30 +45,30 @@ public class BasicInputHandler implements ChatInputHandler {
 
     private void handleDisplayNameEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         ConfigManager.setItemValue(itemId, "display_name", input);
-        player.sendMessage(ConfigManager.fromSection("§aDisplay name has been updated!"));
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDisplay name has been updated!"));
         closeChatInput(pmu);
         new ItemEditorMenu(pmu, plugin).open();
     }
 
-    private void handlePermissionEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+    private void handlePermissionEdit(Player player, PlayerMenuUtility pmu, String input, String itemId, String configKey) {
         if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
-            ConfigManager.setItemValue(itemId, "permission", null);
-            player.sendMessage(ConfigManager.fromSection("§aPermission has been removed."));
+            ConfigManager.setItemValue(itemId, configKey, null);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey + " has been removed/reset."));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                    () -> "[BasicHandler] Removed permission for " + itemId);
+                    () -> "[BasicHandler] Removed " + configKey + " for " + itemId);
         } else if (isValidPermissionNode(input)) {
-            ConfigManager.setItemValue(itemId, "permission", input);
-            player.sendMessage(ConfigManager.fromSection("§aPermission has been set!"));
+            ConfigManager.setItemValue(itemId, configKey, input);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey + " has been set to: " + input));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                    () -> "[BasicHandler] Set permission for " + itemId + " to: " + input);
+                    () -> "[BasicHandler] Set " + configKey + " for " + itemId + " to: " + input);
         } else {
-            player.sendMessage(ConfigManager.fromSection("§cInvalid permission node! Permissions can only contain letters, numbers, dots (.), hyphens (-), and underscores (_)."));
-            player.sendMessage(ConfigManager.fromSection("§cYour input was: §e" + input));
-            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid permission node! Permissions can only contain letters, numbers, dots (.), hyphens (-), and underscores (_)."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cYour input was: §e" + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§7(Type 'cancel' to exit)"));
             return;
         }
         closeChatInput(pmu);
-        new ItemEditorMenu(pmu, plugin).open();
+        new PermissionSettingsMenu(pmu, plugin).open();
     }
 
     private void handleMaterialManualEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
@@ -71,11 +77,11 @@ public class BasicInputHandler implements ChatInputHandler {
 
         if (selectedMaterial != null && selectedMaterial.isItem()) {
             ConfigManager.setItemValue(itemId, "material", selectedMaterial.name());
-            player.sendMessage(ConfigManager.fromSection("§aMaterial has been updated to " + selectedMaterial.name()));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aMaterial has been updated to " + selectedMaterial.name()));
             closeChatInput(pmu);
             new ItemEditorMenu(pmu, plugin).open();
         } else {
-            player.sendMessage(ConfigManager.fromSection("§cError: Invalid material name: '" + input + "'"));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid material name: '" + input + "'"));
             player.sendMessage(ConfigManager.fromSection("§cMaterial not found or is not an item. Please try again."));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
@@ -84,7 +90,7 @@ public class BasicInputHandler implements ChatInputHandler {
     private void handleCustomModelDataEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
             ConfigManager.setItemValue(itemId, "custom-model-data", null);
-            player.sendMessage(ConfigManager.fromSection("§aCustom Model Data has been removed."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCustom Model Data has been removed."));
             closeChatInput(pmu);
         } else {
             try {
@@ -93,16 +99,16 @@ public class BasicInputHandler implements ChatInputHandler {
                     throw new NumberFormatException();
                 }
                 ConfigManager.setItemValue(itemId, "custom-model-data", directValue);
-                player.sendMessage(ConfigManager.fromSection("§aCustom Model Data set to: §e" + directValue));
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCustom Model Data set to: §e" + directValue));
                 closeChatInput(pmu);
             } catch (NumberFormatException ex) {
                 if (input.contains(":")) {
                     ConfigManager.setItemValue(itemId, "custom-model-data", input);
-                    player.sendMessage(ConfigManager.fromSection("§aCustom Model Data set to: §e" + input));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCustom Model Data set to: §e" + input));
                     player.sendMessage(ConfigManager.fromSection("§7It will be resolved on next reload/save."));
                     closeChatInput(pmu);
                 } else {
-                    player.sendMessage(ConfigManager.fromSection("§cInvalid format! Use:"));
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid format! Use:"));
                     player.sendMessage(ConfigManager.fromSection("§e100001 §7(direct integer)"));
                     player.sendMessage(ConfigManager.fromSection("§eitemsadder:item_id"));
                     player.sendMessage(ConfigManager.fromSection("§enexo:item_id"));

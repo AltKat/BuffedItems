@@ -4,13 +4,19 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.base.Menu;
-import io.github.altkat.BuffedItems.menu.selector.CostTypeSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
+import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import su.nightexpress.coinsengine.api.currency.Currency;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +54,7 @@ public class CostListMenu extends Menu {
         }
 
         if (e.getCurrentItem().getType() == Material.ANVIL && e.getSlot() == 51) {
-            new CostTypeSelectorMenu(playerMenuUtility, plugin).open();
+            new TypeSelectorMenu(playerMenuUtility, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
             return;
         }
 
@@ -60,7 +66,7 @@ public class CostListMenu extends Menu {
             if (e.getClick() == ClickType.RIGHT) {
                 costList.remove(e.getSlot());
                 ConfigManager.setItemValue(itemId, "costs", costList);
-                p.sendMessage(ConfigManager.fromSection("§cCost removed."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cCost removed."));
                 this.open();
             }
             // 2. EDIT AMOUNT (Left Click)
@@ -73,14 +79,10 @@ public class CostListMenu extends Menu {
                 Map<?, ?> costData = costList.get(e.getSlot());
                 String type = (String) costData.get("type");
 
-                p.sendMessage(ConfigManager.fromSection("§aEditing Amount for: §e" + type));
-                if ("ITEM".equals(type)) {
-                    p.sendMessage(ConfigManager.fromSection("§eCurrent: " + costData.get("amount")));
-                    p.sendMessage(ConfigManager.fromSection("§aEnter new integer amount in chat."));
-                } else {
-                    p.sendMessage(ConfigManager.fromSection("§eCurrent: " + costData.get("amount")));
-                    p.sendMessage(ConfigManager.fromSection("§aEnter new amount in chat."));
-                }
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Amount for: §e" + type));
+                p.sendMessage(ConfigManager.fromSection("§eCurrent: " + costData.get("amount")));
+                p.sendMessage(ConfigManager.fromSection("§aEnter new amount in chat."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
             // 3. EDIT MESSAGE (Shift + Left Click)
             else if (e.getClick() == ClickType.SHIFT_LEFT) {
@@ -103,7 +105,7 @@ public class CostListMenu extends Menu {
                     placeholders = "{amount}, {currency_name}";
                 }
 
-                p.sendMessage(ConfigManager.fromSection("§aEditing Failure Message."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Failure Message."));
                 p.sendMessage(ConfigManager.fromSection("§7Placeholders: " + placeholders));
                 p.sendMessage(ConfigManager.fromSection("§7Type 'default' to reset to config default."));
                 p.sendMessage(ConfigManager.fromSection("§aEnter new message in chat."));
@@ -122,75 +124,166 @@ public class CostListMenu extends Menu {
 
         for (Map<?, ?> costData : costList) {
             if (index >= 45) break;
-
-            String type = (String) costData.get("type");
-            Object amount = costData.get("amount");
-            String msg = (String) costData.get("message");
-            boolean isDefault = false;
-
-            if (msg == null) {
-                msg = ConfigManager.getDefaultCostMessage(type);
-                isDefault = true;
-            }
-
-            Material icon = getIconForType(type);
-
-            List<String> lore = new ArrayList<>();
-            lore.add("§7Type: §f" + type);
-            lore.add("§7Amount: §e" + amount);
-            if (costData.containsKey("material")) {
-                lore.add("§7Item: §b" + costData.get("material"));
-            }
-
-            if (costData.containsKey("item_id")) {
-                String refId = (String) costData.get("item_id");
-                BuffedItem bItem = plugin.getItemManager().getBuffedItem(refId);
-
-                String displayName;
-                if (bItem != null) {
-                    displayName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
-                } else {
-                    displayName = "§c" + refId + " (No BuffedItem found with this id!)";
-                }
-
-                lore.add("§7Item: §r" + displayName);
-            }
-
-            if (costData.containsKey("currency_id")) {
-                lore.add("§7Currency: §e" + costData.get("currency_id"));
-            }
-
-            lore.add("");
-            lore.add("§7Message:");
-            String formattedMsg = ConfigManager.toSection(ConfigManager.fromLegacy(msg));
-            if (isDefault) {
-                lore.add("§r" + formattedMsg);
-                lore.add("§8(Default Config)");
-            } else {
-                lore.add("§r" + formattedMsg);
-            }
-            lore.add("");
-            lore.add("§eLeft-Click to Edit Amount");
-            lore.add("§bShift+Left-Click to Edit Message");
-            lore.add("§cRight-Click to Remove");
-
-            inventory.setItem(index, makeItem(icon, "§6Cost #" + (index + 1), lore.toArray(new String[0])));
+            inventory.setItem(index, createVisualItem(costData, index));
             index++;
         }
     }
 
-    private Material getIconForType(String type) {
-        if (type == null) return Material.PAPER;
-        switch (type.toUpperCase()) {
-            case "MONEY": return Material.GOLD_INGOT;
-            case "EXPERIENCE": return Material.EXPERIENCE_BOTTLE;
-            case "LEVEL": return Material.ENCHANTING_TABLE;
-            case "HUNGER": return Material.COOKED_BEEF;
-            case "HEALTH": return Material.RED_DYE;
-            case "ITEM": return Material.CHEST;
-            case "BUFFED_ITEM": return Material.NETHER_STAR;
-            case "COINSENGINE": return Material.SUNFLOWER;
-            default: return Material.PAPER;
+    private ItemStack createVisualItem(Map<?, ?> map, int index) {
+        String type = (String) map.get("type");
+        Object amountObj = map.get("amount");
+        String amountStr = String.valueOf(amountObj);
+        String message = (String) map.get("message");
+
+        boolean isError = false;
+        String errorDetail = "";
+
+        ItemStack displayItem;
+        Component title = null;
+        List<Component> lore = new ArrayList<>();
+
+        // --- 1. VANILLA ITEM ---
+        if ("ITEM".equals(type)) {
+            Object matObj = map.get("material");
+            String matName = (matObj != null) ? matObj.toString() : "NULL";
+            Material mat = Material.matchMaterial(matName);
+
+            if (mat == null) {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cInvalid Item Cost");
+                errorDetail = "Unknown Material: " + matName;
+            } else {
+                displayItem = new ItemStack(mat);
+                title = ConfigManager.fromSection("§f" + amountStr + "x " + formatMaterialName(mat));
+                lore.add(ConfigManager.fromSection("§8Type: §7Vanilla Item"));
+                lore.add(ConfigManager.fromSection("§8Material: §b" + mat.name()));
+            }
+
+            // --- 2. CUSTOM BUFFED ITEM ---
+        } else if ("BUFFED_ITEM".equals(type)) {
+            String bItemId = (String) map.get("item_id");
+            BuffedItem bItem = plugin.getItemManager().getBuffedItem(bItemId);
+
+            if (bItem != null) {
+                displayItem = new ItemBuilder(bItem, plugin).build();
+                title = ConfigManager.fromSection("§f" + amountStr + "x ")
+                        .append(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                lore.add(ConfigManager.fromSection("§8Type: §#FF6347Buffed Item§#FFD700"));
+                lore.add(ConfigManager.fromSection("§8ID: §7" + bItemId));
+            } else {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cUnknown Buffed Item");
+                errorDetail = "ID not found: " + bItemId;
+            }
+
+            // --- 3. COINS ENGINE ---
+        } else if ("COINSENGINE".equals(type)) {
+            Object currObj = map.get("currency_id");
+            String currencyId = (currObj != null) ? currObj.toString() : "coins";
+
+            if (!plugin.getHookManager().isCoinsEngineLoaded()) {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cCoinsEngine Missing");
+                errorDetail = "Plugin not hooked!";
+            } else {
+                Currency currency = plugin.getHookManager().getCoinsEngineHook().getCurrency(currencyId);
+                if (currency == null) {
+                    isError = true;
+                    displayItem = new ItemStack(Material.BARRIER);
+                    title = ConfigManager.fromSection("§cInvalid Currency");
+                    errorDetail = "Currency ID: " + currencyId;
+                } else {
+                    displayItem = new ItemStack(Material.SUNFLOWER);
+                    title = ConfigManager.fromSection("§a" + currency.getName());
+                    lore.add(ConfigManager.fromSection("§8Type: §7CoinsEngine"));
+                    lore.add(ConfigManager.fromSection("§8Currency ID: §e" + currencyId));
+                    lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+                }
+            }
+
+            // --- 4. MONEY / VAULT ---
+        } else if ("MONEY".equals(type)) {
+            if (plugin.getHookManager().getVaultHook() == null) {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cVault Error");
+                errorDetail = "Vault/Economy missing!";
+            } else {
+                displayItem = new ItemStack(Material.GOLD_INGOT);
+                title = ConfigManager.fromSection("§aVault Currency");
+                lore.add(ConfigManager.fromSection("§8Type: §7MONEY"));
+                lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+            }
+
+            // --- 5. GENERIC TYPES ---
+        } else {
+            Material iconMat = Material.PAPER;
+            String name = type;
+            boolean knownType = true;
+
+            if ("EXPERIENCE".equals(type)) { iconMat = Material.EXPERIENCE_BOTTLE; name = "XP Points"; }
+            else if ("LEVEL".equals(type)) { iconMat = Material.ENCHANTING_TABLE; name = "XP Levels"; }
+            else if ("HUNGER".equals(type)) { iconMat = Material.COOKED_BEEF; name = "Food Level"; }
+            else if ("HEALTH".equals(type)) { iconMat = Material.RED_DYE; name = "Health (Hearts)"; }
+            else {
+                knownType = false;
+                isError = true;
+                iconMat = Material.BARRIER;
+                title = ConfigManager.fromSection("§cInvalid Cost Type");
+                errorDetail = "Unknown Type: " + type;
+            }
+
+            displayItem = new ItemStack(iconMat);
+            if (!isError) {
+                title = ConfigManager.fromSection("§a" + name);
+                lore.add(ConfigManager.fromSection("§8Type: §7" + type));
+                lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+            }
         }
+
+        if (isError) {
+            lore.add(ConfigManager.fromSection("§c⚠ CONFIGURATION ERROR"));
+            lore.add(ConfigManager.fromSection("§7" + errorDetail));
+            lore.add(ConfigManager.fromSection(""));
+            lore.add(ConfigManager.fromSection("§eRight-Click to Remove"));
+        } else {
+            lore.add(net.kyori.adventure.text.Component.empty());
+            lore.add(ConfigManager.fromSection("§7Failure Message:"));
+            if (message == null) {
+                String defaultMsg = ConfigManager.getDefaultCostMessage(type);
+                lore.add(ConfigManager.fromSection("§r").append(ConfigManager.fromLegacy(defaultMsg)));
+                lore.add(ConfigManager.fromSection("§8(Default Config)"));
+            } else {
+                lore.add(ConfigManager.fromSection("§r").append(ConfigManager.fromLegacy(message)));
+            }
+
+            lore.add(net.kyori.adventure.text.Component.empty());
+            lore.add(ConfigManager.fromSection("§eLeft-Click to Edit Amount"));
+            lore.add(ConfigManager.fromSection("§bShift+Left-Click to Edit Message"));
+            lore.add(ConfigManager.fromSection("§cRight-Click to Remove"));
+        }
+
+        lore.add(ConfigManager.fromSection("§8(#" + (index + 1) + ")"));
+
+        ItemMeta meta = displayItem.getItemMeta();
+        if (meta != null) {
+            meta.displayName(title);
+            meta.lore(lore);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            displayItem.setItemMeta(meta);
+        }
+        return displayItem;
+    }
+
+    private String formatMaterialName(Material material) {
+        String name = material.name().toLowerCase().replace("_", " ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : name.split(" ")) {
+            sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+        }
+        return sb.toString().trim();
     }
 }

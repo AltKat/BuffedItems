@@ -52,7 +52,7 @@ public class ConfigUpdater {
 
         int keysAdded = 0;
 
-        for (String key : defaultConfig.getKeys(false)) {
+        for (String key : defaultConfig.getKeys(true)) {
             if (!userConfig.contains(key)) {
                 userConfig.set(key, defaultConfig.get(key));
                 keysAdded++;

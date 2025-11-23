@@ -17,4 +17,10 @@ public interface ICost {
      * Message to be sent in case of insufficient balance.
      */
     String getFailureMessage();
+
+    /**
+     * Short description to be displayed in menus.
+     * E.g.: “5x Diamond”, “100 XP”, “$500”
+     */
+    String getDisplayString();
 }

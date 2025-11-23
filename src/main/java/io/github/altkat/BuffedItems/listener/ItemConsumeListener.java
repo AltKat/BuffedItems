@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.listener;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -39,6 +40,9 @@ public class ItemConsumeListener implements Listener {
 
         if (buffedItem.getFlag("PREVENT_CONSUME")) {
             e.setCancelled(true);
+            String rawMsg = plugin.getConfig().getString("messages.protection-prevent-consume", "&cYou cannot consume this.");
+            String parsedMsg = plugin.getHookManager().processPlaceholders(e.getPlayer(), rawMsg);
+            e.getPlayer().sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
         }
     }
 }

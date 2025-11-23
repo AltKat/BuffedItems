@@ -1,0 +1,115 @@
+# -------------------------------------------------------------------------------------------
+# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Discord: streetmelodeez
+# Website: https://altkat.github.io
+# -------------------------------------------------------------------------------------------
+
+# ===================================================================
+#                       BUFFED ITEMS - UPGRADES.YML
+# ===================================================================
+#
+# This file allows you to create upgrade recipes for your BuffedItems.
+# Players can use the Upgrade Station (/bi upgrade) to upgrade their items.
+#
+# We RECOMMEND using the in-game editor (/bi menu -> Configure Upgrades)
+# to make changes easily without editing this file manually.
+#
+# If you edit this file manually, use /bi reload to apply changes.
+# ===================================================================
+
+# --- CONFIGURATION GUIDE ---
+#
+# upgrades:
+#   unique_recipe_id:  <-- Unique identifier for the recipe (not visible to players)
+#     display_name: "&aDisplay Name"  <-- Name shown in the Upgrade Menu
+#     success_rate: 100.0             <-- Chance of success (0.0 to 100.0)
+#
+#     # FAILURE ACTION (What happens if the upgrade fails?)
+#     # Options:
+#     # - LOSE_EVERYTHING: Input item and ingredients are lost. (Hardcore/Default)
+#     # - KEEP_BASE_ONLY: Ingredients are lost, but the input item is returned.
+#     # - KEEP_EVERYTHING: Nothing is lost. (Safe)
+#     failure_action: LOSE_EVERYTHING
+#
+#     # BASE ITEM (The item to be upgraded - Input Slot)
+#     # Just write the BuffedItem ID directly.
+#     # (The system automatically requires exactly 1 of this item).
+#     base: "your_base_item_id"
+#
+#     # INGREDIENTS (Additional costs required from player's inventory)
+#     # You can add multiple ingredients.
+#     ingredients:
+#       - type: ITEM
+#         material: DIAMOND
+#         amount: 5
+#       - type: MONEY
+#         amount: 1000.0
+#
+#     # RESULT (The output item if upgrade succeeds)
+#     result:
+#       item: "your_result_item_id"  <-- ID of the BuffedItem to give
+#       amount: 1
+#
+# -------------------------------------------------------------------------------------------
+# AVAILABLE COST TYPES & FORMATS (For 'ingredients'):
+#
+# - MONEY: Requires Vault currency.
+#     Format: AMOUNT (e.g., 1000.0)
+#
+# - EXPERIENCE: Requires total XP points.
+#     Format: AMOUNT (e.g., 500)
+#
+# - LEVEL: Requires XP levels.
+#     Format: AMOUNT (e.g., 5)
+#
+# - HUNGER: Requires food points (20 = full bar).
+#     Format: AMOUNT (e.g., 4)
+#
+# - HEALTH: Requires health points (2 = 1 heart).
+#     Format: AMOUNT (e.g., 10)
+#
+# - ITEM: Requires a vanilla Minecraft item.
+#     Format: AMOUNT;MATERIAL (e.g., 5;DIAMOND)
+#
+# - BUFFED_ITEM: Requires a custom BuffedItem defined in items.yml.
+#     Format: AMOUNT;ITEM_ID (e.g., 1;bunny_charm)
+#
+# - COINSENGINE: Requires a CoinsEngine custom currency.
+#     Format: AMOUNT;CURRENCY_ID (e.g., 100;coins)
+# -------------------------------------------------------------------------------------------
+#
+# ===================================================================
+#                       GLOBAL SETTINGS
+# ===================================================================
+settings:
+  # Should the "Browse All Recipes" button appear in the Upgrade Station?
+  # Players can click this to see a list of all available upgrades.
+  browser-button: true
+
+# ===================================================================
+
+upgrades:
+  # Example: Upgrading 'swiftness_boots' to 'berserkers_greaves'
+  # You can edit or remove this example.
+  example_upgrade:
+    display_name: "&eBoots Evolution"
+    success_rate: 80.0
+
+    # Ingredients lost on fail, but boots are kept.
+    failure_action: KEEP_BASE_ONLY
+
+    # The item the player must place in the Upgrade Station
+    base: "swiftness_boots"
+
+    # Extra items required in the player's inventory
+    ingredients:
+      - type: ITEM
+        material: DIAMOND
+        amount: 5
+      - type: EXPERIENCE
+        amount: 500
+
+    # The item the player receives upon success
+    result:
+      item: "berserkers_greaves"
+      amount: 1

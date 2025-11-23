@@ -18,6 +18,7 @@ permissions:
       - buffeditems.command.reload
       - buffeditems.command.list
       - buffeditems.command.menu
+      - buffeditems.command.upgrade
   buffeditems.command.give:
     description: Allows usage of the /buffeditems give command.
     default: op
@@ -29,4 +30,7 @@ permissions:
     default: op
   buffeditems.command.menu:
     description: Allows opening the BuffedItems GUI menu.
+    default: op
+  buffeditems.command.upgrade:
+    description: Allows usage of the /buffeditems upgrade command.
     default: op

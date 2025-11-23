@@ -47,7 +47,7 @@ public class SoundSettingsMenu extends Menu {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("active.sounds." + soundType);
             p.closeInventory();
-            p.sendMessage(ConfigManager.fromSection("§aEnter the sound name in chat."));
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the sound name in chat."));
             p.sendMessage(ConfigManager.fromSection("§7Format: SOUND_NAME;VOLUME;PITCH"));
             p.sendMessage(ConfigManager.fromSection("§7Examples:"));
             p.sendMessage(ConfigManager.fromSection("§7- ENTITY_PLAYER_LEVELUP;1.0;2.0"));

@@ -30,12 +30,12 @@ public class CreationInputHandler implements ChatInputHandler {
                 () -> "[CreationHandler] Creating new item: " + newItemId);
 
         if (ConfigManager.createNewItem(newItemId)) {
-            player.sendMessage(ConfigManager.fromSection("§aNew item '" + newItemId + "' created. Now editing..."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aNew item '" + newItemId + "' created. Now editing..."));
             pmu.setItemToEditId(newItemId);
             closeChatInput(pmu);
             new ItemEditorMenu(pmu, plugin).open();
         } else {
-            player.sendMessage(ConfigManager.fromSection("§cError: An item with the ID '" + newItemId + "' already exists."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: An item with the ID '" + newItemId + "' already exists."));
             closeChatInput(pmu);
             new MainMenu(pmu, plugin).open();
         }
@@ -46,7 +46,7 @@ public class CreationInputHandler implements ChatInputHandler {
         String newItemId = input.toLowerCase().replaceAll("\\s+", "_");
 
         if (newItemId.equals(sourceItemId)) {
-            player.sendMessage(ConfigManager.fromSection("§cError: New ID cannot be the same as the source ID."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: New ID cannot be the same as the source ID."));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("duplicateitem");
@@ -59,11 +59,11 @@ public class CreationInputHandler implements ChatInputHandler {
         String createdId = ConfigManager.duplicateItem(sourceItemId, newItemId);
 
         if (createdId != null) {
-            player.sendMessage(ConfigManager.fromSection("§aItem '§e" + sourceItemId + "§a' successfully duplicated as '§e" + createdId + "§a'."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aItem '§e" + sourceItemId + "§a' successfully duplicated as '§e" + createdId + "§a'."));
             closeChatInput(pmu);
             new MainMenu(pmu, plugin).open();
         } else {
-            player.sendMessage(ConfigManager.fromSection("§cError: An item with the ID '§e" + newItemId + "§c' already exists."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: An item with the ID '§e" + newItemId + "§c' already exists."));
             player.sendMessage(ConfigManager.fromSection("§aPlease try a different ID."));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);

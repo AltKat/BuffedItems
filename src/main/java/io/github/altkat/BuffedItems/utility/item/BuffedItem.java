@@ -13,7 +13,9 @@ public class BuffedItem {
     private Material material;
     private final boolean glow;
     private final Map<String, BuffedItemEffect> effects;
-    private final Optional<String> permission;
+    private final String permission;
+    private final String activePermission;
+    private final String passivePermission;
     private final Map<Enchantment, Integer> enchantments;
     private final Integer customModelData;
     private final String customModelDataRaw;
@@ -46,9 +48,9 @@ public class BuffedItem {
 
     public BuffedItem(String id, String displayName, List<String> lore, Material material,
                       boolean glow, Map<String, BuffedItemEffect> effects, String permission,
-                      Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments,
-                      Integer customModelData, String customModelDataRaw, boolean activeMode,
-                      int cooldown, int activeDuration, List<String> activeCommands, boolean visualChat,
+                      String activePermission, String passivePermission, Map<String, Boolean> flags,
+                      Map<Enchantment, Integer> enchantments, Integer customModelData, String customModelDataRaw,
+                      boolean activeMode, int cooldown, int activeDuration, List<String> activeCommands, boolean visualChat,
                       boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
@@ -59,7 +61,9 @@ public class BuffedItem {
         this.material = material;
         this.glow = glow;
         this.effects = effects;
-        this.permission = Optional.ofNullable(permission);
+        this.permission = permission;
+        this.activePermission = activePermission;
+        this.passivePermission = passivePermission;
         this.flags = (flags != null) ? flags : new HashMap<>();
         this.enchantments = (enchantments != null) ? enchantments : new HashMap<>();
         this.customModelData = customModelData;
@@ -143,7 +147,7 @@ public class BuffedItem {
         return effects;
     }
 
-    public Optional<String> getPermission() {
+    public String getPermission() {
         return permission;
     }
 
@@ -213,8 +217,30 @@ public class BuffedItem {
     public String getCustomSuccessSound() { return customSuccessSound; }
     public String getCustomCooldownSound() { return customCooldownSound; }
     public String getCustomCostFailSound() { return customCostFailSound; }
+    public String getActivePermissionRaw() { return activePermission; }
+    public String getPassivePermissionRaw() { return passivePermission; }
 
     public List<ICost> getCosts() {
         return costs;
+    }
+
+    public boolean hasActivePermission(org.bukkit.entity.Player player) {
+        if (activePermission != null && !activePermission.equalsIgnoreCase("NONE")) {
+            return player.hasPermission(activePermission);
+        }
+        if (permission != null) {
+            return player.hasPermission(permission);
+        }
+        return true;
+    }
+
+    public boolean hasPassivePermission(org.bukkit.entity.Player player) {
+        if (passivePermission != null && !passivePermission.equalsIgnoreCase("NONE")) {
+            return player.hasPermission(passivePermission);
+        }
+        if (permission != null) {
+            return player.hasPermission(permission);
+        }
+        return true;
     }
 }

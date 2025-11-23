@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.manager.cost.types;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.entity.Player;
+
 import java.util.Map;
 
 public class HealthCost implements ICost {
@@ -11,6 +12,11 @@ public class HealthCost implements ICost {
 
     public HealthCost(Map<String, Object> data) {
         this.amount = ((Number) data.getOrDefault("amount", 2.0)).doubleValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("HEALTH");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }
@@ -18,6 +24,11 @@ public class HealthCost implements ICost {
     @Override
     public boolean hasEnough(Player player) {
         return player.getHealth() > amount;
+    }
+
+    @Override
+    public String getDisplayString() {
+        return amount + " Health (Hearts)";
     }
 
     @Override

@@ -120,7 +120,7 @@ public class ItemProtectionListener implements Listener {
             if (item.getType().isBlock()) return;
 
             e.setCancelled(true);
-            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-interact"));
+            sendProtectionMessage(e.getPlayer(),"protection-prevent-interact");
         }
     }
 
@@ -138,7 +138,7 @@ public class ItemProtectionListener implements Listener {
         {
             if (itemHasFlag(e.getItem(), "PREVENT_PLACEMENT")) {
                 e.setCancelled(true);
-                e.getPlayer().sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-placement-entity"));
+                sendProtectionMessage(e.getPlayer(),"protection-prevent-placement-entity");
             }
         }
     }
@@ -147,7 +147,7 @@ public class ItemProtectionListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent e) {
         if (itemHasFlag(e.getItemInHand(), "PREVENT_PLACEMENT")) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-placement-block"));
+            sendProtectionMessage(e.getPlayer(),"protection-prevent-placement-block");
         }
     }
 
@@ -155,7 +155,7 @@ public class ItemProtectionListener implements Listener {
     public void onHangingPlace(HangingPlaceEvent e) {
         if (itemHasFlag(e.getPlayer().getInventory().getItemInMainHand(), "PREVENT_PLACEMENT")) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-placement"));
+            sendProtectionMessage(e.getPlayer(),"protection-prevent-placement");
         }
     }
 
@@ -169,7 +169,7 @@ public class ItemProtectionListener implements Listener {
             e.setResult(null);
             for (HumanEntity viewer : e.getViewers()) {
                 if (viewer instanceof Player) {
-                    ((Player) viewer).sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-anvil-use"));
+                   sendProtectionMessage(((Player) viewer),"protection-prevent-anvil-use");
                     break;
                 }
             }
@@ -180,7 +180,7 @@ public class ItemProtectionListener implements Listener {
     public void onEnchantItem(EnchantItemEvent e) {
         if (itemHasFlag(e.getItem(), "PREVENT_ENCHANT_TABLE")) {
             e.setCancelled(true);
-            e.getEnchanter().sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-enchant-table"));
+            sendProtectionMessage(e.getEnchanter(),"protection-prevent-enchant-table");
         }
     }
 
@@ -201,7 +201,7 @@ public class ItemProtectionListener implements Listener {
 
         if (prevent || isTrimRecipe) {
             e.setResult(null);
-            player.sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-smithing-use"));
+            sendProtectionMessage(player,"protection-prevent-smithing-use");
         }
     }
 
@@ -211,7 +211,7 @@ public class ItemProtectionListener implements Listener {
             if (itemHasFlag(item, "PREVENT_CRAFTING_USE")) {
                 e.setCancelled(true);
                 if (e.getWhoClicked() instanceof Player) {
-                    ((Player) e.getWhoClicked()).sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-crafting-use"));
+                    sendProtectionMessage(((Player) e.getWhoClicked()),"protection-prevent-crafting-use");
                 }
                 return;
             }
@@ -222,7 +222,7 @@ public class ItemProtectionListener implements Listener {
     public void onItemDrop(PlayerDropItemEvent e) {
         if (itemHasFlag(e.getItemDrop().getItemStack(), "PREVENT_DROP")) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-drop"));
+            sendProtectionMessage(e.getPlayer(),"protection-prevent-drop");
         }
     }
 
@@ -257,7 +257,7 @@ public class ItemProtectionListener implements Listener {
         if (targetInventory != null && itemToCheck != null && itemHasFlag(itemToCheck, "PREVENT_DROP")) {
             e.setCancelled(true);
             if (e.getWhoClicked() instanceof Player) {
-                ((Player) e.getWhoClicked()).sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-container-store"));
+                sendProtectionMessage(((Player) e.getWhoClicked()),"protection-prevent-container-store");
             }
         }
     }
@@ -272,7 +272,7 @@ public class ItemProtectionListener implements Listener {
                 ItemFrame frame = (ItemFrame) e.getRightClicked();
                 if (frame.getItem() == null || frame.getItem().getType() == Material.AIR) {
                     e.setCancelled(true);
-                    player.sendMessage(ConfigManager.getPrefixedMessageAsComponent("protection-prevent-itemframe-store"));
+                    sendProtectionMessage(player,"protection-prevent-itemframe-store");
                 }
             }
         }
@@ -282,5 +282,12 @@ public class ItemProtectionListener implements Listener {
         if (inv == null) return false;
         InventoryType type = inv.getType();
         return inv.getHolder() instanceof BlockInventoryHolder && type != InventoryType.ENDER_CHEST;
+    }
+
+    private void sendProtectionMessage(Player p, String key) {
+        String rawMsg = plugin.getConfig().getString("messages." + key);
+        if (rawMsg == null) rawMsg = "&cAction blocked.";
+        String parsedMsg = plugin.getHookManager().processPlaceholders(p, rawMsg);
+        p.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
     }
 }

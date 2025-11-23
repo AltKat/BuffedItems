@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.menu.utility;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 
@@ -14,10 +15,35 @@ public class PlayerMenuUtility {
     private String chatInputPath;
     private String attributeToEdit;
     private boolean showPreviewDetails = false;
+    private String tempId;
+    private Material tempMaterial;
+    private MaterialSelectionContext materialContext = MaterialSelectionContext.ICON;
+
+    public enum MaterialSelectionContext {
+        ICON,
+        COST,
+        INGREDIENT
+    }
 
 
     public PlayerMenuUtility(Player owner) {
         this.owner = owner;
+    }
+
+    public Material getTempMaterial() {
+        return tempMaterial;
+    }
+
+    public void setTempMaterial(Material tempMaterial) {
+        this.tempMaterial = tempMaterial;
+    }
+
+    public MaterialSelectionContext getMaterialContext() {
+        return materialContext;
+    }
+
+    public void setMaterialContext(MaterialSelectionContext materialContext) {
+        this.materialContext = materialContext;
     }
 
     public Player getOwner() {
@@ -78,5 +104,13 @@ public class PlayerMenuUtility {
 
     public void toggleShowPreviewDetails() {
         this.showPreviewDetails = !this.showPreviewDetails;
+    }
+
+    public String getTempId() {
+        return tempId;
+    }
+
+    public void setTempId(String tempId) {
+        this.tempId = tempId;
     }
 }

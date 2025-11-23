@@ -37,11 +37,11 @@ public class ConfirmationMenu extends Menu {
         switch (e.getCurrentItem().getType()) {
             case GREEN_WOOL:
                 ConfigManager.setItemValue(itemToDeleteId, null, null);
-                p.sendMessage(ConfigManager.fromSection("§aItem '" + itemToDeleteId + "' has been successfully deleted."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aItem '" + itemToDeleteId + "' has been successfully deleted."));
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
             case RED_WOOL:
-                p.sendMessage(ConfigManager.fromSection("§cDeletion cancelled."));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cDeletion cancelled."));
                 new MainMenu(playerMenuUtility, plugin).open();
                 break;
         }

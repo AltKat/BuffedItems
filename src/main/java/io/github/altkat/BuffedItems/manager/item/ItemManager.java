@@ -126,6 +126,16 @@ public class ItemManager {
             permission = null;
         }
 
+        String activePerm = itemSection.getString("active_permission");
+        if (activePerm != null && (activePerm.equals(ConfigManager.NO_PERMISSION) || activePerm.trim().isEmpty())) {
+            activePerm = null;
+        }
+
+        String passivePerm = itemSection.getString("passive_permission");
+        if (passivePerm != null && (passivePerm.equals(ConfigManager.NO_PERMISSION) || passivePerm.trim().isEmpty())) {
+            passivePerm = null;
+        }
+
         List<String> errorMessages = new ArrayList<>();
 
         Integer customModelData;
@@ -335,6 +345,13 @@ public class ItemManager {
             activeDuration = activeModeSection.getInt("duration", 0);
             activeCommands = activeModeSection.getStringList("commands");
 
+            if (cooldown < 0) {
+                errorMessages.add("§cActive Mode: Cooldown cannot be negative.");
+            }
+            if (activeDuration < 0) {
+                errorMessages.add("§cActive Mode: Duration cannot be negative.");
+            }
+
             if (activeMode) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is loaded as ACTIVE item (CD: " + cooldown + "s)");
             }
@@ -345,8 +362,20 @@ public class ItemManager {
                 vTitle = visualsSection.getBoolean("title", true);
                 vActionBar = visualsSection.getBoolean("action-bar", true);
                 vBossBar = visualsSection.getBoolean("boss-bar", true);
+
                 bbColor = visualsSection.getString("boss-bar-color", "RED");
+                try {
+                    org.bukkit.boss.BarColor.valueOf(bbColor);
+                } catch (IllegalArgumentException e) {
+                    errorMessages.add("§cActive Mode Error: Invalid BossBar Color '" + bbColor + "'. Valid: RED, BLUE, GREEN, etc.");
+                }
+
                 bbStyle = visualsSection.getString("boss-bar-style", "SOLID");
+                try {
+                    org.bukkit.boss.BarStyle.valueOf(bbStyle);
+                } catch (IllegalArgumentException e) {
+                    errorMessages.add("§cActive Mode Error: Invalid BossBar Style '" + bbStyle + "'. Valid: SOLID, SEGMENTED_6, etc.");
+                }
 
                 msgChat = visualsSection.getString("messages.cooldown-chat");
                 msgTitle = visualsSection.getString("messages.cooldown-title");
@@ -357,14 +386,61 @@ public class ItemManager {
 
             ConfigurationSection soundsSection = activeModeSection.getConfigurationSection("sounds");
             if (soundsSection != null) {
-                soundSuccess = soundsSection.getString("success");
-                soundCooldown = soundsSection.getString("cooldown");
-                soundCostFail = soundsSection.getString("cost-fail");
+                soundSuccess = validateSound(soundsSection.getString("success"), "success", errorMessages);
+                soundCooldown = validateSound(soundsSection.getString("cooldown"), "cooldown", errorMessages);
+                soundCostFail = validateSound(soundsSection.getString("cost-fail"), "cost-fail", errorMessages);
+            }
+
+            for (int i = 0; i < activeCommands.size(); i++) {
+                String cmd = activeCommands.get(i);
+                if (cmd.contains("[chance:")) {
+                    try {
+                        int start = cmd.indexOf("[chance:") + 8;
+                        int end = cmd.indexOf("]", start);
+                        if (end != -1) {
+                            double chanceVal = Double.parseDouble(cmd.substring(start, end));
+                            if (chanceVal < 0 || chanceVal > 100) {
+                                errorMessages.add("§cActive Mode Error: Command chance must be 0-100. Found: " + chanceVal + " in command #" + (i+1));
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        errorMessages.add("§cActive Mode Error: Invalid chance number format in command #" + (i+1));
+                    }
+                }
+                if (cmd.contains("[delay:")) {
+                    try {
+                        int start = cmd.indexOf("[delay:") + 7;
+                        int end = cmd.indexOf("]", start);
+                        if (end != -1) {
+                            long delayVal = Long.parseLong(cmd.substring(start, end));
+                            if (delayVal < 0) {
+                                errorMessages.add("§cActive Mode Error: Command delay cannot be negative. Found: " + delayVal + " in command #" + (i+1));
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        errorMessages.add("§cActive Mode Error: Invalid delay number format in command #" + (i+1));
+                    }
+                }
             }
 
             if (activeModeSection.contains("costs")) {
                 List<Map<?, ?>> costList = activeModeSection.getMapList("costs");
-                costs = plugin.getCostManager().parseCosts(costList);
+                for (int i = 0; i < costList.size(); i++) {
+                    Map<?, ?> rawMap = costList.get(i);
+                    try {
+                        ICost cost = plugin.getCostManager().parseCost(rawMap);
+                        if (cost != null) {
+                            costs.add(cost);
+                        } else {
+                            String type = String.valueOf(rawMap.get("type"));
+                            errorMessages.add("§cActive Mode Error: Invalid Cost at index " + (i + 1) + " (Unknown Type: " + type + ")");
+                        }
+                    } catch (Exception e) {
+                        String type = String.valueOf(rawMap.get("type"));
+                        errorMessages.add("§cActive Mode Error: " + e.getMessage() + " (Type: " + type + ")");
+                    }
+                }
+
                 List<ICost> finalCosts = costs;
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + finalCosts.size() + " costs for item: " + itemId);
             }
@@ -372,24 +448,41 @@ public class ItemManager {
             ConfigurationSection activeEffectsSection = activeModeSection.getConfigurationSection("effects");
             if (activeEffectsSection != null) {
                 Map<PotionEffectType, Integer> activePotions = new HashMap<>();
+
                 for (String effectString : activeEffectsSection.getStringList("potion_effects")) {
                     try {
                         String[] parts = effectString.split(";");
+                        if (parts.length < 2) throw new IllegalArgumentException("Missing level");
+
                         PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
+                        if (type == null) throw new IllegalArgumentException("Invalid potion type: " + parts[0]);
+
                         int level = Integer.parseInt(parts[1]);
-                        if (type != null) activePotions.put(type, level);
-                    } catch (Exception ignored) {}
+                        if (level <= 0) throw new IllegalArgumentException("Level must be positive");
+
+                        activePotions.put(type, level);
+                    } catch (Exception e) {
+                        errorMessages.add("§cActive Mode Error: " + e.getMessage() + " in '" + effectString + "'");
+                    }
                 }
 
                 List<ParsedAttribute> activeAttributes = new ArrayList<>();
+
                 for (String attrString : activeEffectsSection.getStringList("attributes")) {
                     try {
                         String[] parts = attrString.split(";");
+                        if (parts.length < 3) throw new IllegalArgumentException("Invalid format");
+
                         Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
                         AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                         double amount = Double.parseDouble(parts[2]);
+
                         activeAttributes.add(new ParsedAttribute(attribute, operation, amount, UUID.randomUUID()));
-                    } catch (Exception ignored) {}
+                    } catch (IllegalArgumentException e) {
+                        errorMessages.add("§cActive Mode Error: Invalid Attribute/Operation in '" + attrString + "'");
+                    } catch (Exception e) {
+                        errorMessages.add("§cActive Mode Error: Corrupt attribute format '" + attrString + "'");
+                    }
                 }
                 activeEffectsObj = new BuffedItemEffect(activePotions, activeAttributes);
             }
@@ -409,6 +502,8 @@ public class ItemManager {
                 glow,
                 effects,
                 permission,
+                activePerm,
+                passivePerm,
                 flags,
                 enchantments,
                 customModelData,
@@ -452,6 +547,39 @@ public class ItemManager {
                 managedAttributeUUIDs.remove(attr.getUuid());
             }
         }
+    }
+
+    private String validateSound(String soundString, String type, List<String> errors) {
+        if (soundString == null || soundString.equalsIgnoreCase("NONE")) return null;
+
+        String[] parts = soundString.split(";");
+        String soundName = parts[0];
+
+        if (!soundName.contains(":")) {
+            try {
+                org.bukkit.Sound.valueOf(soundName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                errors.add("§cActive Mode Error: Invalid Sound name '" + soundName + "' in '" + type + "'.");
+            }
+        }
+
+        if (parts.length > 1) {
+            try {
+                Float.parseFloat(parts[1]);
+            } catch (NumberFormatException e) {
+                errors.add("§cActive Mode Error: Invalid volume number in '" + type + "' sound.");
+            }
+        }
+
+        if (parts.length > 2) {
+            try {
+                Float.parseFloat(parts[2]);
+            } catch (NumberFormatException e) {
+                errors.add("§cActive Mode Error: Invalid pitch number in '" + type + "' sound.");
+            }
+        }
+
+        return soundString;
     }
 
     public BuffedItem getBuffedItem(String itemId) {

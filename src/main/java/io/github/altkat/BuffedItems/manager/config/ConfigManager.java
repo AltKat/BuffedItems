@@ -145,6 +145,18 @@ public class ConfigManager {
                 plugin.getLogger().warning("Could not create items.yml backup: " + e.getMessage());
             }
         }
+
+        File upgradesFile = new File(plugin.getDataFolder(), "upgrades.yml");
+        File upgradesBackup = new File(backupDir, "upgrades.yml.backup");
+
+        if (upgradesFile.exists()) {
+            try {
+                Files.copy(upgradesFile.toPath(), upgradesBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                sendDebugMessage(DEBUG_INFO, () -> "[Backup] upgrades.yml backed up to backups/ folder.");
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not create upgrades.yml backup: " + e.getMessage());
+            }
+        }
     }
 
     public static void reloadConfig() {
@@ -161,8 +173,10 @@ public class ConfigManager {
 
             plugin.reloadConfig();
             ItemsConfig.reload();
+            UpgradesConfig.reload();
 
             plugin.getItemManager().loadItems(silent);
+            plugin.getUpgradeManager().loadRecipes(silent);
 
             loadGlobalSettings();
             invalidateAllPlayerCaches();
@@ -321,6 +335,19 @@ public class ConfigManager {
         }
     }
 
+    public static void setUpgradeValue(String upgradeId, String path, Object value) {
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Setting upgrade value: upgrades." + upgradeId + "." + path + " = " + value);
+
+            String fullPath = (path == null) ? "upgrades." + upgradeId : "upgrades." + upgradeId + "." + path;
+
+            UpgradesConfig.get().set(fullPath, value);
+            UpgradesConfig.save();
+            UpgradesConfig.reload();
+            plugin.getUpgradeManager().loadRecipes(true);
+        }
+    }
+
     private static void invalidateAllPlayerCaches() {
         if (plugin.getEffectApplicatorTask() == null) {
             return;
@@ -340,6 +367,20 @@ public class ConfigManager {
         String prefix = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
         String msg = plugin.getConfig().getString("messages." + path, "&cMissing message: messages." + path);
         return fromLegacy(prefix + msg);
+    }
+
+    public static Component fromSectionWithPrefix(String text) {
+        String prefixStr = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
+        Component prefixComp = fromLegacy(prefixStr);
+        Component textComp = fromSection(text);
+        return prefixComp.append(textComp);
+    }
+
+    public static Component fromLegacyWithPrefix(String text) {
+        String prefixStr = plugin.getConfig().getString("messages.prefix", PLUGIN_PREFIX_CONFIG);
+        Component prefixComp = fromLegacy(prefixStr);
+        Component textComp = fromLegacy(text);
+        return prefixComp.append(textComp);
     }
 
     public static void setDebugLevel(int level) {
