@@ -8,6 +8,7 @@ import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -15,6 +16,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import su.nightexpress.coinsengine.api.currency.Currency;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -133,22 +135,30 @@ public class CostListMenu extends Menu {
         String amountStr = String.valueOf(amountObj);
         String message = (String) map.get("message");
 
+        boolean isError = false;
+        String errorDetail = "";
+
         ItemStack displayItem;
-        net.kyori.adventure.text.Component title;
-        List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
+        Component title = null;
+        List<Component> lore = new ArrayList<>();
 
         // --- 1. VANILLA ITEM ---
         if ("ITEM".equals(type)) {
             Object matObj = map.get("material");
-            String matName = (matObj != null) ? matObj.toString() : "STONE";
+            String matName = (matObj != null) ? matObj.toString() : "NULL";
             Material mat = Material.matchMaterial(matName);
-            if (mat == null) mat = Material.STONE;
 
-            displayItem = new ItemStack(mat);
-            title = ConfigManager.fromSection("§f" + amountStr + "x " + formatMaterialName(mat));
-
-            lore.add(ConfigManager.fromSection("§8Type: §7Vanilla Item"));
-            lore.add(ConfigManager.fromSection("§8Material: §b" + mat.name()));
+            if (mat == null) {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cInvalid Item Cost");
+                errorDetail = "Unknown Material: " + matName;
+            } else {
+                displayItem = new ItemStack(mat);
+                title = ConfigManager.fromSection("§f" + amountStr + "x " + formatMaterialName(mat));
+                lore.add(ConfigManager.fromSection("§8Type: §7Vanilla Item"));
+                lore.add(ConfigManager.fromSection("§8Material: §b" + mat.name()));
+            }
 
             // --- 2. CUSTOM BUFFED ITEM ---
         } else if ("BUFFED_ITEM".equals(type)) {
@@ -159,82 +169,103 @@ public class CostListMenu extends Menu {
                 displayItem = new ItemBuilder(bItem, plugin).build();
                 title = ConfigManager.fromSection("§f" + amountStr + "x ")
                         .append(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                lore.add(ConfigManager.fromSection("§8Type: §#FF6347Buffed Item§#FFD700"));
+                lore.add(ConfigManager.fromSection("§8ID: §7" + bItemId));
             } else {
-                displayItem = new ItemStack(Material.BEDROCK);
-                title = ConfigManager.fromSection("§cUnknown Buffed Item: " + bItemId);
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cUnknown Buffed Item");
+                errorDetail = "ID not found: " + bItemId;
             }
-            lore.add(ConfigManager.fromSection("§8Type: §#FF6347Buffed Item§#FFD700"));
-            lore.add(ConfigManager.fromSection("§8ID: §7" + bItemId));
 
-            // --- 3. COINS ENGINE (NEW) ---
+            // --- 3. COINS ENGINE ---
         } else if ("COINSENGINE".equals(type)) {
             Object currObj = map.get("currency_id");
             String currencyId = (currObj != null) ? currObj.toString() : "coins";
 
-            if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") == null) {
-                displayItem = new ItemStack(Material.BEDROCK);
-                title = ConfigManager.fromSection("§cCoinsEngine Not Found");
-                lore.add(ConfigManager.fromSection("§cPlugin is missing!"));
+            if (!plugin.getHookManager().isCoinsEngineLoaded()) {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cCoinsEngine Missing");
+                errorDetail = "Plugin not hooked!";
             } else {
-                su.nightexpress.coinsengine.api.currency.Currency currency = su.nightexpress.coinsengine.api.CoinsEngineAPI.getCurrency(currencyId);
+                Currency currency = plugin.getHookManager().getCoinsEngineHook().getCurrency(currencyId);
                 if (currency == null) {
-                    displayItem = new ItemStack(Material.BEDROCK);
-                    title = ConfigManager.fromSection("§cUnknown Currency: " + currencyId);
+                    isError = true;
+                    displayItem = new ItemStack(Material.BARRIER);
+                    title = ConfigManager.fromSection("§cInvalid Currency");
+                    errorDetail = "Currency ID: " + currencyId;
                 } else {
                     displayItem = new ItemStack(Material.SUNFLOWER);
                     title = ConfigManager.fromSection("§a" + currency.getName());
+                    lore.add(ConfigManager.fromSection("§8Type: §7CoinsEngine"));
+                    lore.add(ConfigManager.fromSection("§8Currency ID: §e" + currencyId));
+                    lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
                 }
             }
-            lore.add(ConfigManager.fromSection("§8Type: §7CoinsEngine"));
-            lore.add(ConfigManager.fromSection("§8Currency ID: §e" + currencyId));
-            lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
 
-            // --- 4. MONEY / VAULT (NEW) ---
+            // --- 4. MONEY / VAULT ---
         } else if ("MONEY".equals(type)) {
             if (plugin.getHookManager().getVaultHook() == null) {
-                displayItem = new ItemStack(Material.BEDROCK);
-                title = ConfigManager.fromSection("§cVault/Economy Not Found");
-                lore.add(ConfigManager.fromSection("§cVault is missing or not hooked!"));
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cVault Error");
+                errorDetail = "Vault/Economy missing!";
             } else {
                 displayItem = new ItemStack(Material.GOLD_INGOT);
                 title = ConfigManager.fromSection("§aVault Currency");
+                lore.add(ConfigManager.fromSection("§8Type: §7MONEY"));
+                lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
             }
-            lore.add(ConfigManager.fromSection("§8Type: §7MONEY"));
-            lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
 
             // --- 5. GENERIC TYPES ---
         } else {
-            Material iconMat;
-            String name;
-            switch (type) {
-                case "EXPERIENCE": iconMat = Material.EXPERIENCE_BOTTLE; name = "XP Points"; break;
-                case "LEVEL": iconMat = Material.ENCHANTING_TABLE; name = "XP Levels"; break;
-                case "HUNGER": iconMat = Material.COOKED_BEEF; name = "Food Level"; break;
-                case "HEALTH": iconMat = Material.RED_DYE; name = "Health (Hearts)"; break;
-                default: iconMat = Material.PAPER; name = type; break;
+            Material iconMat = Material.PAPER;
+            String name = type;
+            boolean knownType = true;
+
+            if ("EXPERIENCE".equals(type)) { iconMat = Material.EXPERIENCE_BOTTLE; name = "XP Points"; }
+            else if ("LEVEL".equals(type)) { iconMat = Material.ENCHANTING_TABLE; name = "XP Levels"; }
+            else if ("HUNGER".equals(type)) { iconMat = Material.COOKED_BEEF; name = "Food Level"; }
+            else if ("HEALTH".equals(type)) { iconMat = Material.RED_DYE; name = "Health (Hearts)"; }
+            else {
+                knownType = false;
+                isError = true;
+                iconMat = Material.BARRIER;
+                title = ConfigManager.fromSection("§cInvalid Cost Type");
+                errorDetail = "Unknown Type: " + type;
             }
+
             displayItem = new ItemStack(iconMat);
-            title = ConfigManager.fromSection("§a" + name);
-            lore.add(ConfigManager.fromSection("§8Type: §7" + type));
-            lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+            if (!isError) {
+                title = ConfigManager.fromSection("§a" + name);
+                lore.add(ConfigManager.fromSection("§8Type: §7" + type));
+                lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+            }
         }
 
-        // --- MESSAGE INFO (Cost Only) ---
-        lore.add(net.kyori.adventure.text.Component.empty());
-        lore.add(ConfigManager.fromSection("§7Failure Message:"));
-        if (message == null) {
-            String defaultMsg = ConfigManager.getDefaultCostMessage(type);
-            lore.add(ConfigManager.fromSection("§r").append(ConfigManager.fromLegacy(defaultMsg)));
-            lore.add(ConfigManager.fromSection("§8(Default Config)"));
+        if (isError) {
+            lore.add(ConfigManager.fromSection("§c⚠ CONFIGURATION ERROR"));
+            lore.add(ConfigManager.fromSection("§7" + errorDetail));
+            lore.add(ConfigManager.fromSection(""));
+            lore.add(ConfigManager.fromSection("§eRight-Click to Remove"));
         } else {
-            lore.add(ConfigManager.fromSection("§r").append(ConfigManager.fromLegacy(message)));
+            lore.add(net.kyori.adventure.text.Component.empty());
+            lore.add(ConfigManager.fromSection("§7Failure Message:"));
+            if (message == null) {
+                String defaultMsg = ConfigManager.getDefaultCostMessage(type);
+                lore.add(ConfigManager.fromSection("§r").append(ConfigManager.fromLegacy(defaultMsg)));
+                lore.add(ConfigManager.fromSection("§8(Default Config)"));
+            } else {
+                lore.add(ConfigManager.fromSection("§r").append(ConfigManager.fromLegacy(message)));
+            }
+
+            lore.add(net.kyori.adventure.text.Component.empty());
+            lore.add(ConfigManager.fromSection("§eLeft-Click to Edit Amount"));
+            lore.add(ConfigManager.fromSection("§bShift+Left-Click to Edit Message"));
+            lore.add(ConfigManager.fromSection("§cRight-Click to Remove"));
         }
 
-        // --- FOOTER ---
-        lore.add(net.kyori.adventure.text.Component.empty());
-        lore.add(ConfigManager.fromSection("§eLeft-Click to Edit Amount"));
-        lore.add(ConfigManager.fromSection("§bShift+Left-Click to Edit Message"));
-        lore.add(ConfigManager.fromSection("§cRight-Click to Remove"));
         lore.add(ConfigManager.fromSection("§8(#" + (index + 1) + ")"));
 
         ItemMeta meta = displayItem.getItemMeta();

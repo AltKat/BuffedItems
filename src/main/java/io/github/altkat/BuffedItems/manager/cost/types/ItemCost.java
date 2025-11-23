@@ -16,8 +16,18 @@ public class ItemCost implements ICost {
 
     public ItemCost(Map<String, Object> data) {
         String matName = (String) data.getOrDefault("material", "STONE");
-        this.material = Material.matchMaterial(matName);
+
+        Material matched = Material.matchMaterial(matName);
+        if (matched == null) {
+            throw new IllegalArgumentException("Invalid material name: '" + matName + "'");
+        }
+        this.material = matched;
+
         this.amount = ((Number) data.getOrDefault("amount", 1)).intValue();
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive. Found: " + this.amount);
+        }
+
         String defaultMsg = ConfigManager.getDefaultCostMessage("ITEM");
         this.failureMessage = (String) data.getOrDefault("message", defaultMsg);
     }

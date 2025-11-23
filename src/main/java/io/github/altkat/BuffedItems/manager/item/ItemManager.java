@@ -345,6 +345,13 @@ public class ItemManager {
             activeDuration = activeModeSection.getInt("duration", 0);
             activeCommands = activeModeSection.getStringList("commands");
 
+            if (cooldown < 0) {
+                errorMessages.add("§cActive Mode: Cooldown cannot be negative.");
+            }
+            if (activeDuration < 0) {
+                errorMessages.add("§cActive Mode: Duration cannot be negative.");
+            }
+
             if (activeMode) {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is loaded as ACTIVE item (CD: " + cooldown + "s)");
             }
@@ -374,32 +381,60 @@ public class ItemManager {
 
             if (activeModeSection.contains("costs")) {
                 List<Map<?, ?>> costList = activeModeSection.getMapList("costs");
-                costs = plugin.getCostManager().parseCosts(costList);
-                List<ICost> finalCosts = costs;
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + finalCosts.size() + " costs for item: " + itemId);
+                for (int i = 0; i < costList.size(); i++) {
+                    Map<?, ?> rawMap = costList.get(i);
+                    ICost cost = plugin.getCostManager().parseCost(rawMap);
+
+                    if (cost != null) {
+                        costs.add(cost);
+                    } else {
+                        String type = String.valueOf(rawMap.get("type"));
+                        Object amt = rawMap.get("amount");
+                        errorMessages.add("§cActive Mode Error: Invalid Cost at index " + (i + 1) + " (Type: " + type + ", Val: " + amt + ")");
+                    }
+                }
+
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + costs.size() + " valid costs for item: " + itemId);
             }
 
             ConfigurationSection activeEffectsSection = activeModeSection.getConfigurationSection("effects");
             if (activeEffectsSection != null) {
                 Map<PotionEffectType, Integer> activePotions = new HashMap<>();
+
                 for (String effectString : activeEffectsSection.getStringList("potion_effects")) {
                     try {
                         String[] parts = effectString.split(";");
+                        if (parts.length < 2) throw new IllegalArgumentException("Missing level");
+
                         PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
+                        if (type == null) throw new IllegalArgumentException("Invalid potion type: " + parts[0]);
+
                         int level = Integer.parseInt(parts[1]);
-                        if (type != null) activePotions.put(type, level);
-                    } catch (Exception ignored) {}
+                        if (level <= 0) throw new IllegalArgumentException("Level must be positive");
+
+                        activePotions.put(type, level);
+                    } catch (Exception e) {
+                        errorMessages.add("§cActive Mode Error: " + e.getMessage() + " in '" + effectString + "'");
+                    }
                 }
 
                 List<ParsedAttribute> activeAttributes = new ArrayList<>();
+
                 for (String attrString : activeEffectsSection.getStringList("attributes")) {
                     try {
                         String[] parts = attrString.split(";");
+                        if (parts.length < 3) throw new IllegalArgumentException("Invalid format");
+
                         Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
                         AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                         double amount = Double.parseDouble(parts[2]);
+
                         activeAttributes.add(new ParsedAttribute(attribute, operation, amount, UUID.randomUUID()));
-                    } catch (Exception ignored) {}
+                    } catch (IllegalArgumentException e) {
+                        errorMessages.add("§cActive Mode Error: Invalid Attribute/Operation in '" + attrString + "'");
+                    } catch (Exception e) {
+                        errorMessages.add("§cActive Mode Error: Corrupt attribute format '" + attrString + "'");
+                    }
                 }
                 activeEffectsObj = new BuffedItemEffect(activePotions, activeAttributes);
             }

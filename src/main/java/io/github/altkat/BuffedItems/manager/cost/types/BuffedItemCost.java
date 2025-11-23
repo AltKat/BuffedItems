@@ -22,7 +22,16 @@ public class BuffedItemCost implements ICost {
     public BuffedItemCost(Map<String, Object> data, BuffedItems plugin) {
         this.plugin = plugin;
         this.requiredItemId = (String) data.get("item_id");
+
+        if (this.requiredItemId == null || this.requiredItemId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Missing 'item_id' for BUFFED_ITEM cost.");
+        }
+
         this.amount = ((Number) data.getOrDefault("amount", 1)).intValue();
+
+        if (this.amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive.");
+        }
 
         String defaultMsg = "&cMissing Item: &e{amount}x {item_name}";
         if (plugin.getConfig().contains("active-items.costs.messages.buffed_item")) {

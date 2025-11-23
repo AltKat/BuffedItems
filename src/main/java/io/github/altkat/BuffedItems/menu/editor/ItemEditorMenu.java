@@ -2,13 +2,13 @@ package io.github.altkat.BuffedItems.menu.editor;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemSettingsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.passive.PassiveItemSettingsMenu;
 import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
-import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
@@ -222,73 +222,119 @@ public class ItemEditorMenu extends Menu {
         infoLore.add(ConfigManager.fromSection("§8§m------------------"));
 
         infoLore.add(ConfigManager.fromSection("§7Item ID: §b" + item.getId()));
-        infoLore.add(ConfigManager.fromSection("§7Item Info:"));
+        infoLore.add(ConfigManager.fromSection("§7Material: §f" + item.getMaterial().name()));
 
-        infoLore.add(ConfigManager.fromSection("§7- Material: §e" + item.getMaterial().name()));
-        infoLore.add(ConfigManager.fromSection("§7- Glow: " + (item.hasGlow() ? "§aTrue" : "§cFalse")));
+        String glowStatus = item.hasGlow() ? "§aYes" : "§cNo";
+        infoLore.add(ConfigManager.fromSection("§7Glow: " + glowStatus));
 
-        String permDisplay = (item.getPermission() != null) ? item.getPermission() : "§cNone";
-        infoLore.add(ConfigManager.fromSection("§7- Permission: §e" + permDisplay));
+        String mainPerm = (item.getPermission() != null) ? item.getPermission() : "§7None";
+        infoLore.add(ConfigManager.fromSection("§7Permission: §f" + mainPerm));
 
-        String cmdDisplayInfo;
+        if (item.getActivePermissionRaw() != null) {
+            infoLore.add(ConfigManager.fromSection("§7- Active Perm: §b" + item.getActivePermissionRaw()));
+        }
+        if (item.getPassivePermissionRaw() != null) {
+            infoLore.add(ConfigManager.fromSection("§7- Passive Perm: §d" + item.getPassivePermissionRaw()));
+        }
+
         if (item.getCustomModelData().isPresent()) {
-            cmdDisplayInfo = "§e" + item.getCustomModelData().get();
+            String cmdDisplay = "§e" + item.getCustomModelData().get();
             if (item.getCustomModelDataRaw().isPresent()) {
                 String raw = item.getCustomModelDataRaw().get();
                 if (!raw.equals(String.valueOf(item.getCustomModelData().get()))) {
-                    cmdDisplayInfo += " §7(" + raw + ")";
+                    cmdDisplay += " §7(" + raw + ")";
                 }
             }
-        } else {
-            cmdDisplayInfo = "§cNone";
+            infoLore.add(ConfigManager.fromSection("§7Model Data: " + cmdDisplay));
         }
-        infoLore.add(ConfigManager.fromSection("§7- Model Data: " + cmdDisplayInfo));
+
+        infoLore.add(Component.empty());
+        if (item.isActiveMode()) {
+            infoLore.add(ConfigManager.fromSection("§6§l[Active Ability: ON]"));
+            infoLore.add(ConfigManager.fromSection("§7Cooldown: §f" + item.getCooldown() + "s §7| Duration: §f" + item.getActiveDuration() + "s"));
+
+            StringBuilder visuals = new StringBuilder();
+            visuals.append(item.isVisualChat() ? "§a[Chat] " : "§8[Chat] ");
+            visuals.append(item.isVisualTitle() ? "§a[Title] " : "§8[Title] ");
+            visuals.append(item.isVisualActionBar() ? "§a[Action] " : "§8[Action] ");
+            visuals.append(item.isVisualBossBar() ? "§a[BossBar]" : "§8[BossBar]");
+            infoLore.add(ConfigManager.fromSection("§7Visuals: " + visuals.toString()));
+
+            List<ICost> costs = item.getCosts();
+            if (!costs.isEmpty()) {
+                infoLore.add(ConfigManager.fromSection("§7Costs:"));
+                for (ICost cost : costs) {
+                    infoLore.add(ConfigManager.fromSection("  §c- " + cost.getDisplayString()));
+                }
+            } else {
+                infoLore.add(ConfigManager.fromSection("§7Costs: §aFree"));
+            }
+
+            if (!item.getActiveCommands().isEmpty()) {
+                infoLore.add(ConfigManager.fromSection("§7Commands: §f" + item.getActiveCommands().size() + " active"));
+            }
+
+            BuffedItemEffect activeEffects = item.getActiveEffects();
+            if (activeEffects != null) {
+                if (!activeEffects.getPotionEffects().isEmpty() || !activeEffects.getParsedAttributes().isEmpty()) {
+                    infoLore.add(ConfigManager.fromSection("§7On-Click Effects:"));
+                    activeEffects.getPotionEffects().forEach((type, level) ->
+                            infoLore.add(ConfigManager.fromSection("  §7+ Potion: §d" + type.getName() + " " + level)));
+
+                    activeEffects.getParsedAttributes().forEach(attr -> {
+                        String attrName = attr.getAttribute().name().replace("GENERIC_", "");
+                        infoLore.add(ConfigManager.fromSection("  §7+ Attr: §d" + attrName + " " + attr.getAmount()));
+                    });
+                }
+            }
+
+        } else {
+            infoLore.add(ConfigManager.fromSection("§7Active Ability: §cOFF"));
+        }
 
         Map<Enchantment, Integer> enchants = item.getEnchantments();
-        if (enchants.isEmpty()) {
-            infoLore.add(ConfigManager.fromSection("§7- Enchants: §cNone"));
-        } else {
+        if (!enchants.isEmpty()) {
+            infoLore.add(Component.empty());
+            infoLore.add(ConfigManager.fromSection("§b§l[Enchantments]"));
             enchants.forEach((enchant, level) -> {
-                String enchantName = enchant.getKey().getKey();
-                enchantName = enchantName.replace("minecraft:", "").toUpperCase();
-                infoLore.add(ConfigManager.fromSection("§7- Enchant: §d" + enchantName + " Lvl " + level));
+                String enchantName = enchant.getKey().getKey().replace("minecraft:", "").toUpperCase();
+                infoLore.add(ConfigManager.fromSection("§7- " + enchantName + " " + level));
             });
         }
 
         Map<String, BuffedItemEffect> effects = item.getEffects();
-        if (effects.isEmpty()) {
-            infoLore.add(ConfigManager.fromSection("§7- Effects: §cNone"));
-        } else {
-            infoLore.add(ConfigManager.fromSection("§7- Effects:"));
+        if (!effects.isEmpty()) {
+            infoLore.add(Component.empty());
+            infoLore.add(ConfigManager.fromSection("§d§l[Passive Effects]"));
             effects.forEach((slot, effect) -> {
-                infoLore.add(ConfigManager.fromSection("§b  [" + slot + "]"));
+                boolean hasContent = !effect.getPotionEffects().isEmpty() || !effect.getParsedAttributes().isEmpty();
+                if (hasContent) {
+                    infoLore.add(ConfigManager.fromSection("§eSlot: " + slot));
 
-                Map<org.bukkit.potion.PotionEffectType, Integer> potions = effect.getPotionEffects();
-                if (!potions.isEmpty()) {
-                    potions.forEach((type, level) -> {
-                        infoLore.add(ConfigManager.fromSection("§7    - Potion: §e" + type.getName() + " Lvl " + level));
-                    });
-                }
+                    effect.getPotionEffects().forEach((type, level) ->
+                            infoLore.add(ConfigManager.fromSection("  §7• Potion: §f" + type.getName() + " " + level)));
 
-                List<ParsedAttribute> attributes = effect.getParsedAttributes();
-                if (!attributes.isEmpty()) {
-                    attributes.forEach(attr -> {
+                    effect.getParsedAttributes().forEach(attr -> {
                         String attrName = attr.getAttribute().name().replace("GENERIC_", "");
-                        String opName = attr.getOperation().name().replace("_NUMBER", "").replace("_SCALAR_1", "");
-                        infoLore.add(ConfigManager.fromSection("§7    - Attr: §e" + attrName + " " + opName + " " + attr.getAmount()));
+                        String opSymbol = attr.getOperation() == org.bukkit.attribute.AttributeModifier.Operation.ADD_NUMBER ? "+" : "%";
+                        infoLore.add(ConfigManager.fromSection("  §7• Attr: §f" + attrName + " " + opSymbol + attr.getAmount()));
                     });
                 }
             });
         }
 
         Map<String, Boolean> flags = item.getFlags();
-        if (flags.isEmpty()) {
-            infoLore.add(ConfigManager.fromSection("§7- Flags: §a(Using Defaults)"));
-        } else {
-            infoLore.add(ConfigManager.fromSection("§7- Flags (Overridden):"));
-            flags.forEach((flag, value) -> {
-                infoLore.add(ConfigManager.fromSection("§7  - §6" + flag + ": " + (value ? "§aTrue" : "§cFalse")));
-            });
+        List<String> activeFlags = new ArrayList<>();
+        flags.forEach((flag, value) -> {
+            if(value) activeFlags.add(flag);
+        });
+
+        if (!activeFlags.isEmpty()) {
+            infoLore.add(Component.empty());
+            infoLore.add(ConfigManager.fromSection("§c§l[Flags]"));
+            for (String flag : activeFlags) {
+                infoLore.add(ConfigManager.fromSection("§7- " + flag));
+            }
         }
 
         return infoLore;
