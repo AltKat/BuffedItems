@@ -8,9 +8,6 @@ import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class UpgradeInputHandler implements ChatInputHandler {
 
     private final BuffedItems plugin;

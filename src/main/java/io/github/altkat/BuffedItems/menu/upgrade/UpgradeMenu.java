@@ -1,7 +1,6 @@
 package io.github.altkat.BuffedItems.menu.upgrade;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
@@ -24,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class UpgradeMenu extends Menu {

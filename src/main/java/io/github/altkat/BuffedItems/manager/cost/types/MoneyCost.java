@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.hooks.VaultHook;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.entity.Player;
+
 import java.util.Map;
 
 public class MoneyCost implements ICost {

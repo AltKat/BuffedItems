@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.manager.cost.types;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.entity.Player;
+
 import java.util.Map;
 
 public class HungerCost implements ICost {

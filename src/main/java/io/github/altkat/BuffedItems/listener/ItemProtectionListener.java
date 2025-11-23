@@ -1,7 +1,6 @@
 package io.github.altkat.BuffedItems.listener;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;

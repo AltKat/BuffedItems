@@ -1,7 +1,6 @@
 package io.github.altkat.BuffedItems.listener.handler;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import io.github.altkat.BuffedItems.listener.ChatListener;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.editor.PermissionSettingsMenu;

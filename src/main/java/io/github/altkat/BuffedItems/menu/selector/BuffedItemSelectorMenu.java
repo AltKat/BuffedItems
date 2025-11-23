@@ -1,7 +1,6 @@
 package io.github.altkat.BuffedItems.menu.selector;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import io.github.altkat.BuffedItems.listener.handler.IngredientInputHandler;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
