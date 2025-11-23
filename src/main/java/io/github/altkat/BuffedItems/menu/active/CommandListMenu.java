@@ -59,18 +59,15 @@ public class CommandListMenu extends PaginatedMenu {
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the command in chat."));
 
             p.sendMessage(ConfigManager.fromSection("§6Logic Prefixes (Any Order):"));
-            p.sendMessage(ConfigManager.fromSection("§d• [delay:20] §7(Wait ticks)."));
+            p.sendMessage(ConfigManager.fromSection("§c• [else]      §7(Run if prev failed)."));
+            p.sendMessage(ConfigManager.fromSection("§d• [delay:20]  §7(Wait ticks)."));
             p.sendMessage(ConfigManager.fromSection("§b• [chance:50] §7(Success chance)."));
-            p.sendMessage(ConfigManager.fromSection("§e• [console] §7(Run as admin)."));
+            p.sendMessage(ConfigManager.fromSection("§e• [console]   §7(Run as admin)."));
 
             p.sendMessage(ConfigManager.fromSection("§6Message Actions:"));
             p.sendMessage(ConfigManager.fromSection("§a• [message] Hi! §7(Chat)"));
             p.sendMessage(ConfigManager.fromSection("§b• [actionbar] Hi! §7(Hotbar)"));
             p.sendMessage(ConfigManager.fromSection("§d• [title] Hi!|Sub §7(Title)"));
-
-            p.sendMessage(ConfigManager.fromSection("§6Placeholders:"));
-            p.sendMessage(ConfigManager.fromSection("§7• Built-in: %player%, %player_x%, %player_yaw%..."));
-            p.sendMessage(ConfigManager.fromSection("§d• PlaceholderAPI: Fully Supported! (e.g. %player_ping%)"));
 
             p.sendMessage(ConfigManager.fromSection("§6Chaining:"));
             p.sendMessage(ConfigManager.fromSection("§fUse ';;' to separate commands."));
@@ -91,7 +88,7 @@ public class CommandListMenu extends PaginatedMenu {
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the new command in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7Current: §f" + commands.get(commandIndex)));
             } else if (e.isRightClick()) {
-                String removed = commands.remove(commandIndex);
+                commands.remove(commandIndex);
                 ConfigManager.setItemValue(itemId, "commands", commands);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cRemoved command."));
                 this.open();
@@ -109,23 +106,20 @@ public class CommandListMenu extends PaginatedMenu {
         inventory.setItem(4, makeItem(Material.BOOK, "§eCommand Info & Help",
                 "§7Commands run when the item is right-clicked.",
                 "",
-                "§6Actions & Messages:",
-                "§a• [message] Text   §7(Clean chat msg)",
-                "§b• [actionbar] Text §7(Above hotbar)",
-                "§d• [title] Main|Sub §7(Screen text)",
+                "§6Logic Flow:",
+                "§f• Normal commands execute sequentially.",
+                "§c• [else] §7commands ONLY execute if the",
+                "§7  IMMEDIATELY PRECEDING command failed",
+                "§7  (e.g., due to chance).",
                 "",
-                "§6Logic Prefixes:",
-                "§d• [delay:ticks] §7(20 ticks = 1s)",
+                "§6Actions & Logic:",
                 "§b• [chance:%]    §7(Success % 0-100)",
+                "§d• [delay:ticks] §7(20 ticks = 1s)",
                 "§e• [console]     §7(Run as Admin)",
-                "",
-                "§6Variables & PAPI:",
-                "§7• %player%, %player_x%, %player_yaw%...",
-                "§d• PlaceholderAPI Supported!",
-                "§7  (e.g. %vault_eco_balance%)",
+                "§a• [message]     §7(Send chat msg)",
                 "",
                 "§6Chaining:",
-                "§7Use ';;' to combine them."));
+                "§7Use ';;' to combine actions."));
 
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
@@ -138,16 +132,30 @@ public class CommandListMenu extends PaginatedMenu {
                 if (index >= commands.size()) break;
 
                 String rawCmd = commands.get(index);
+                String lowerCmd = rawCmd.toLowerCase().trim();
 
+                boolean isElse = lowerCmd.startsWith("[else]");
                 boolean isChain = rawCmd.contains(";;");
-                boolean hasConsole = rawCmd.toLowerCase().contains("[console]");
 
                 Material icon;
-                if (isChain) icon = Material.CHAIN_COMMAND_BLOCK;
-                else if (hasConsole) icon = Material.COMMAND_BLOCK;
-                else icon = Material.PAPER;
+                String title;
 
-                String title = isChain ? "§6⚡ Chain Sequence" : "§fCommand #" + (index + 1);
+                int commandNumber = index + 1;
+
+                if (isElse) {
+                    int connectedTo = Math.max(1, commandNumber - 1);
+
+                    icon = Material.CHAIN_COMMAND_BLOCK;
+                    title = "§c§l⚡ Else Block of #" + connectedTo;
+                } else {
+                    if (isChain) {
+                        icon = Material.REPEATING_COMMAND_BLOCK;
+                        title = "§e§l▶ Command #" + commandNumber + " §7(Chain)";
+                    } else {
+                        icon = Material.COMMAND_BLOCK;
+                        title = "§a§l▶ Command #" + commandNumber;
+                    }
+                }
 
                 List<String> formattedLore = formatCommandForDisplay(rawCmd);
 
@@ -169,9 +177,7 @@ public class CommandListMenu extends PaginatedMenu {
             String step = steps[i].trim();
             String stepLabel = (steps.length > 1) ? "§7Step " + (i + 1) + ": " : "";
 
-            String displayDelay = "";
-            String displayChance = "";
-            String displayType = "§a(Player)";
+            String displayPrefixes = "";
             String cleanCmd = step;
 
             boolean parsing = true;
@@ -179,53 +185,63 @@ public class CommandListMenu extends PaginatedMenu {
                 parsing = false;
                 String lower = cleanCmd.toLowerCase();
 
-                if (lower.startsWith("[delay:")) {
+                if (lower.startsWith("[else]")) {
+                    displayPrefixes += "§e(Else) ";
+                    cleanCmd = cleanCmd.substring(6).trim();
+                    parsing = true;
+                }
+                else if (lower.startsWith("[delay:")) {
                     int close = cleanCmd.indexOf("]");
                     if (close != -1) {
                         String val = cleanCmd.substring(7, close);
                         try {
                             double sec = Long.parseLong(val) / 20.0;
-                            displayDelay = "§d⏳" + val + "t §8(" + sec + "s) ";
-                        } catch (Exception e) { displayDelay = "§d⏳" + val + " "; }
+                            displayPrefixes += "§d⏳" + val + "t ";
+                        } catch (Exception e) { displayPrefixes += "§d⏳" + val + " "; }
                         cleanCmd = cleanCmd.substring(close + 1).trim();
                         parsing = true;
                     }
-                } else if (lower.startsWith("[chance:")) {
+                }
+                else if (lower.startsWith("[chance:")) {
                     int close = cleanCmd.indexOf("]");
                     if (close != -1) {
                         String val = cleanCmd.substring(8, close);
-                        displayChance = "§b🎲" + val + "% ";
+                        displayPrefixes += "§b🎲" + val + "% ";
                         cleanCmd = cleanCmd.substring(close + 1).trim();
                         parsing = true;
                     }
-                } else if (lower.startsWith("[console]")) {
-                    displayType = "§c(Console)";
-                    cleanCmd = cleanCmd.substring(9).trim();
-                    parsing = true;
-                } else if (lower.startsWith("[console]")) {
-                    displayType = "§c(Console)";
+                }
+                else if (lower.startsWith("[console]")) {
+                    displayPrefixes += "§c(Console) ";
                     cleanCmd = cleanCmd.substring(9).trim();
                     parsing = true;
                 }
-                else if (lower.startsWith("[message]") || lower.startsWith("[msg]")) {
-                    displayType = "§6(Chat)";
+
+                if (lower.startsWith("[message]") || lower.startsWith("[msg]")) {
+                    displayPrefixes += "§6(Chat) ";
                     cleanCmd = cleanCmd.substring(cleanCmd.indexOf("]") + 1).trim();
-                    parsing = true;
+                    parsing = false;
                 }
                 else if (lower.startsWith("[actionbar]") || lower.startsWith("[ab]")) {
-                    displayType = "§b(Action Bar)";
+                    displayPrefixes += "§b(Action Bar) ";
                     cleanCmd = cleanCmd.substring(cleanCmd.indexOf("]") + 1).trim();
-                    parsing = true;
+                    parsing = false;
                 }
                 else if (lower.startsWith("[title]")) {
-                    displayType = "§d(Title)";
+                    displayPrefixes += "§d(Title) ";
                     cleanCmd = cleanCmd.substring(7).trim();
-                    parsing = true;
+                    parsing = false;
                 }
             }
 
-            lore.add(stepLabel + displayDelay + displayChance + displayType);
-            lore.add(" §7➥ §f/" + (cleanCmd.length() > 35 ? cleanCmd.substring(0, 32) + "..." : cleanCmd));
+            lore.add(stepLabel + displayPrefixes);
+
+            String displayCmd = cleanCmd;
+            if (displayCmd.length() > 40) {
+                displayCmd = displayCmd.substring(0, 37) + "...";
+            }
+
+            lore.add(" §7➥ §f" + displayCmd);
 
             if (i < steps.length - 1) {
                 lore.add("§8§m  ⬇  ");

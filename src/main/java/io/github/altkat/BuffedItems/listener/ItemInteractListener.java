@@ -114,7 +114,7 @@ public class ItemInteractListener implements Listener {
             plugin.getCooldownManager().setCooldown(player, itemId, buffedItem.getCooldown());
         }
 
-        // Execute active effects
+        // Execute active effects and commands
         executeCommands(player, buffedItem.getActiveCommands());
         applyActiveEffects(player, buffedItem);
         playConfiguredSound(player, buffedItem.getCustomSuccessSound(), ConfigManager.getGlobalSuccessSound());
@@ -122,9 +122,6 @@ public class ItemInteractListener implements Listener {
         event.setCancelled(true);
     }
 
-    /**
-     * Handles cooldown messaging (chat, title, action bar, boss bar)
-     */
     private void handleCooldownMessage(Player player, BuffedItem buffedItem) {
         double remaining = plugin.getCooldownManager().getRemainingSeconds(player, buffedItem.getId());
 
@@ -160,30 +157,109 @@ public class ItemInteractListener implements Listener {
         playConfiguredSound(player, buffedItem.getCustomCooldownSound(), ConfigManager.getGlobalCooldownSound());
     }
 
-
     /**
-     * Main entry point: Iterates through the command list and sends each line to the processor.
+     * Executes the list of commands with logic support ([chance], [delay], [else]).
      */
     private void executeCommands(Player player, List<String> commands) {
         if (commands == null || commands.isEmpty()) return;
 
         long cumulativeDelay = 0;
+        boolean lastChainFailed = false;
 
         for (String cmdLine : commands) {
-            cumulativeDelay = processCommand(player, cmdLine, cumulativeDelay, false);
+            String cmdToProcess = cmdLine.trim();
+
+            boolean isElseBlock = false;
+            if (cmdToProcess.toLowerCase().startsWith("[else]")) {
+                isElseBlock = true;
+                cmdToProcess = cmdToProcess.substring(6).trim();
+            }
+
+            if (isElseBlock && !lastChainFailed) {
+                continue;
+            }
+
+            if (!isElseBlock) {
+                lastChainFailed = false;
+            }
+
+            long localDelay = 0;
+            double localChance = 100.0;
+            boolean isConsole = false;
+
+            boolean findingPrefixes = true;
+            while (findingPrefixes) {
+                findingPrefixes = false;
+                String lowerCmd = cmdToProcess.toLowerCase();
+
+                if (lowerCmd.startsWith("[delay:")) {
+                    try {
+                        int closeIndex = cmdToProcess.indexOf("]");
+                        if (closeIndex != -1) {
+                            localDelay += Long.parseLong(cmdToProcess.substring(7, closeIndex));
+                            cmdToProcess = cmdToProcess.substring(closeIndex + 1).trim();
+                            findingPrefixes = true;
+                        }
+                    } catch (Exception ignored) {}
+                }
+                else if (lowerCmd.startsWith("[chance:")) {
+                    try {
+                        int closeIndex = cmdToProcess.indexOf("]");
+                        if (closeIndex != -1) {
+                            localChance = Double.parseDouble(cmdToProcess.substring(8, closeIndex));
+                            cmdToProcess = cmdToProcess.substring(closeIndex + 1).trim();
+                            findingPrefixes = true;
+                        }
+                    } catch (Exception ignored) {}
+                }
+                else if (lowerCmd.startsWith("[console]")) {
+                    isConsole = true;
+                    cmdToProcess = cmdToProcess.substring(9).trim();
+                    findingPrefixes = true;
+                }
+            }
+
+            if (localChance < 100.0) {
+                if (ThreadLocalRandom.current().nextDouble(100.0) > localChance) {
+                    lastChainFailed = true;
+                    continue;
+                }
+            }
+
+            lastChainFailed = false;
+
+            if (cmdToProcess.isEmpty()) continue;
+
+            final String finalCmd = cmdToProcess;
+            final boolean finalIsConsole = isConsole;
+            final long executionTime = cumulativeDelay + localDelay;
+
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!player.isOnline()) return;
+
+                if (finalCmd.contains(";;")) {
+                    String[] subCommands = finalCmd.split(";;");
+                    long chainDelay = 0;
+                    for (String sub : subCommands) {
+                        processSubCommand(player, sub, chainDelay, finalIsConsole);
+                    }
+                } else {
+                    executeSingleCommand(player, finalCmd, finalIsConsole);
+                }
+
+            }, executionTime);
+
+            cumulativeDelay += localDelay;
         }
     }
 
     /**
-     * Smart Command Processor (Recursive)
-     * @param delayOffset The accumulated delay to wait before executing this command.
-     * @param inheritedConsole Console permission inherited from the parent command if chained.
-     * @return The [delay] amount found in this command (to be added to the main loop).
+     * Helper for processing sub-commands (split by ;;) recursively or linearly.
+     * This handles nested [delay] tags inside a chain string.
      */
-    private long processCommand(Player player, String commandLine, long delayOffset, boolean inheritedConsole) {
-        String cmdToProcess = commandLine.trim();
+    private void processSubCommand(Player player, String commandPart, long delayOffset, boolean inheritedConsole) {
+        String cmdToProcess = commandPart.trim();
         long localDelay = 0;
-        double localChance = 100.0;
         boolean isConsole = inheritedConsole;
 
         boolean findingPrefixes = true;
@@ -201,57 +277,38 @@ public class ItemInteractListener implements Listener {
                     }
                 } catch (Exception ignored) {}
             }
-            else if (lowerCmd.startsWith("[chance:")) {
-                try {
-                    int closeIndex = cmdToProcess.indexOf("]");
-                    if (closeIndex != -1) {
-                        localChance = Double.parseDouble(cmdToProcess.substring(8, closeIndex));
-                        cmdToProcess = cmdToProcess.substring(closeIndex + 1).trim();
-                        findingPrefixes = true;
-                    }
-                } catch (Exception ignored) {}
-            }
             else if (lowerCmd.startsWith("[console]")) {
                 isConsole = true;
                 cmdToProcess = cmdToProcess.substring(9).trim();
                 findingPrefixes = true;
             }
+            else if (lowerCmd.startsWith("[chance:")) {
+                try {
+                    int closeIndex = cmdToProcess.indexOf("]");
+                    if (closeIndex != -1) {
+                        double chance = Double.parseDouble(cmdToProcess.substring(8, closeIndex));
+                        if (ThreadLocalRandom.current().nextDouble(100.0) > chance) {
+                            return;
+                        }
+                        cmdToProcess = cmdToProcess.substring(closeIndex + 1).trim();
+                        findingPrefixes = true;
+                    }
+                } catch (Exception ignored) {}
+            }
         }
 
-        if (cmdToProcess.isEmpty()) return localDelay;
+        if (cmdToProcess.isEmpty()) return;
 
         final String finalCmd = cmdToProcess;
-        final double finalChance = localChance;
         final boolean finalIsConsole = isConsole;
-        final long totalWaitTime = delayOffset + localDelay;
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!player.isOnline()) return;
-
-            if (finalChance < 100.0) {
-                if (ThreadLocalRandom.current().nextDouble(100.0) > finalChance) return;
+            if (player.isOnline()) {
+                executeSingleCommand(player, finalCmd, finalIsConsole);
             }
-
-            if (finalCmd.contains(";;")) {
-                String[] subCommands = finalCmd.split(";;");
-
-                long chainDelay = 0;
-                for (String sub : subCommands) {
-                    chainDelay = processCommand(player, sub, chainDelay, false);
-                }
-                return;
-            }
-
-            executeSingleCommand(player, finalCmd, finalIsConsole);
-
-        }, totalWaitTime);
-
-        return localDelay;
+        }, delayOffset + localDelay);
     }
 
-    /**
-     * Helper method that executes the final command (Placeholder + Dispatch).
-     */
     private void executeSingleCommand(Player player, String cmd, boolean asConsole) {
         Location loc = player.getLocation();
         String parsedCmd = cmd
@@ -263,9 +320,7 @@ public class ItemInteractListener implements Listener {
                 .replace("%player_yaw%", String.format(Locale.US, "%.2f", loc.getYaw()))
                 .replace("%player_pitch%", String.format(Locale.US, "%.2f", loc.getPitch()));
 
-
         parsedCmd = hooks.processPlaceholders(player, parsedCmd);
-
 
         String lowerCmd = parsedCmd.toLowerCase().trim();
 
@@ -313,13 +368,11 @@ public class ItemInteractListener implements Listener {
         }
     }
 
-
     private void applyActiveEffects(Player player, BuffedItem item) {
         BuffedItemEffect effects = item.getActiveEffects();
         if (effects == null) return;
 
         int durationTicks = item.getActiveDuration() > 0 ? item.getActiveDuration() * 20 : 100;
-
         boolean showIcon = ConfigManager.shouldShowPotionIcons();
 
         for (Map.Entry<PotionEffectType, Integer> entry : effects.getPotionEffects().entrySet()) {
@@ -361,10 +414,6 @@ public class ItemInteractListener implements Listener {
         }
     }
 
-    /**
-     * Plays a configured sound or uses global default
-     * Format: "SOUND_NAME;VOLUME;PITCH"
-     */
     private void playConfiguredSound(Player player, String itemSound, String globalSound) {
         String soundString = (itemSound != null) ? itemSound : globalSound;
 

@@ -69,6 +69,13 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
 
     private void handleAddCommand(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active-mode.commands"));
+        if (commands.isEmpty() && input.trim().toLowerCase().startsWith("[else]")) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: The VERY FIRST command cannot start with [else]!"));
+            player.sendMessage(ConfigManager.fromSection("§7Logic requires a preceding command to fail first."));
+            player.sendMessage(ConfigManager.fromSection("§ePlease enter the command again without [else]."));
+            return;
+        }
+
         commands.add(input);
         ConfigManager.setItemValue(itemId, "commands", commands);
         player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCommand added!"));
