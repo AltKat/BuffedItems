@@ -12,6 +12,7 @@ import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -20,6 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -167,6 +169,19 @@ public class UpgradeMenu extends Menu {
                 ? new ItemBuilder(resultBuffedItem, plugin).build()
                 : new ItemStack(Material.BARRIER);
         resultStack.setAmount(recipe.getResultAmount());
+
+        if (recipe.getResultAmount() > 1) {
+            ItemMeta meta = resultStack.getItemMeta();
+            if (meta != null && meta.hasDisplayName()) {
+                Component originalName = meta.displayName();
+                if (originalName != null) {
+                    Component amountSuffix = ConfigManager.fromLegacy(" &e(x" + recipe.getResultAmount() + ")");
+                    meta.displayName(originalName.append(amountSuffix));
+                    resultStack.setItemMeta(meta);
+                }
+            }
+        }
+
         inventory.setItem(OUTPUT_SLOT, resultStack);
 
         if (matchingRecipes.size() > 1) {

@@ -109,7 +109,7 @@ public class RecipeBrowserMenu extends PaginatedMenu {
         }
         lore.add(ConfigManager.fromSection("§7From: §f" + baseName));
         lore.add(ConfigManager.fromSection("   §7⬇"));
-        lore.add(ConfigManager.fromSection("§7To: §f" + resultName + (recipe.getResultAmount() > 1 ? " §ex" + recipe.getResultAmount() : "")));
+        lore.add(ConfigManager.fromSection("§7To: §f" + resultName + (recipe.getResultAmount() > 1 ? " §e(x" + recipe.getResultAmount() + ")" : "")));
         lore.add(ConfigManager.fromSection(""));
 
         lore.add(ConfigManager.fromSection("§7Requires:"));

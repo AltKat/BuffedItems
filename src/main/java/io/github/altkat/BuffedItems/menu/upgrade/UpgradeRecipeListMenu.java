@@ -136,6 +136,10 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                 resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getDisplayName()));
             }
 
+            if (recipe.getResultAmount() > 1) {
+                resultName += " §e(x" + recipe.getResultAmount() + ")";
+            }
+
             List<String> lore = new ArrayList<>();
             lore.add("§8ID: " + recipe.getId());
             lore.add("");
