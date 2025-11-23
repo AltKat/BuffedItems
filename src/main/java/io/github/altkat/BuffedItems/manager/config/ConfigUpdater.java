@@ -50,9 +50,21 @@ public class ConfigUpdater {
             }
         }
 
+        String defaultHeader = defaultConfig.options().header();
+        String userHeader = userConfig.options().header();
+
+        if (!defaultHeader.equals(userHeader)) {
+            needsSave = true;
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Config] Header update detected for: " + fileName);
+        }
+
         int keysAdded = 0;
 
         for (String key : defaultConfig.getKeys(true)) {
+
+            if (fileName.equals("items.yml") && key.startsWith("items.")) continue;
+            if (fileName.equals("upgrades.yml") && key.startsWith("upgrades.")) continue;
+
             if (!userConfig.contains(key)) {
                 userConfig.set(key, defaultConfig.get(key));
                 keysAdded++;

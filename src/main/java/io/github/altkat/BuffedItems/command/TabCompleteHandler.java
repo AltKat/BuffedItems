@@ -26,21 +26,13 @@ public class TabCompleteHandler implements TabCompleter {
 
         if (args.length == 1) {
             List<String> subcommands = new ArrayList<>();
-            if (sender.hasPermission("buffeditems.command.give")) {
-                subcommands.add("give");
-            }
-            if (sender.hasPermission("buffeditems.command.reload")) {
-                subcommands.add("reload");
-            }
-            if (sender.hasPermission("buffeditems.command.list")) {
-                subcommands.add("list");
-            }
-            if (sender.hasPermission("buffeditems.command.menu")) {
-                subcommands.add("menu");
-            }
-            if (sender.hasPermission("buffeditems.command.upgrade")) {
-                subcommands.add("upgrade");
-            }
+            if (sender.hasPermission("buffeditems.command.give")) {subcommands.add("give");}
+            if (sender.hasPermission("buffeditems.command.reload")) {subcommands.add("reload");}
+            if (sender.hasPermission("buffeditems.command.list")) {subcommands.add("list");}
+            if (sender.hasPermission("buffeditems.command.menu")) {subcommands.add("menu");}
+            if (sender.hasPermission("buffeditems.command.upgrade")) {subcommands.add("upgrade");}
+            if (sender.hasPermission("buffeditems.command.wiki")) subcommands.add("wiki");
+            if (sender.hasPermission("buffeditems.command.update")) subcommands.add("update");
 
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
 

@@ -104,7 +104,7 @@ public class UpgradeManager {
                     }
                     else if (plugin.getItemManager().getBuffedItem(bCost.getRequiredItemId()) == null) {
                         isValid = false;
-                        errors.add("Invalid Base Item ID: " + bCost.getRequiredItemId() + " (Not loaded)");
+                        errors.add("Invalid Base Item ID: " + bCost.getRequiredItemId());
                     }
                 }
             }

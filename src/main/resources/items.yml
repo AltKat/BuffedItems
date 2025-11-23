@@ -1,7 +1,8 @@
 # -------------------------------------------------------------------------------------------
 # Buffed Items v${project.version} by Altkat(StreetMelodeez)
-# Discord: streetmelodeez
+# Discord: https://discord.gg/nxY3fc7xz9
 # Website: https://altkat.github.io
+# Wiki: https://github.com/AltKat/BuffedItems/wiki
 # -------------------------------------------------------------------------------------------
 
 # ===================================================================
@@ -12,6 +13,7 @@
 # We RECOMMEND using the in-game editor (/bi menu) to make changes easily.
 #
 # If you edit this file manually, use /bi reload to apply changes.
+# Please see wiki before editing this file.
 # ===================================================================
 
 # --- CONFIGURATION GUIDE ---
@@ -44,6 +46,7 @@
 #                            Delays are cumulative (added to previous delays).
 #     - [chance:percent]  -> Runs the command with X% success chance (0-100).
 #     - [console]         -> Runs the command as Console (Admin). Without this, it runs as Player.
+#     - [else]            -> Runs only if the IMMEDIATELY preceding [chance] command fails.
 #
 #     MESSAGE ACTIONS (No command needed):
 #     - [message] text      -> Sends a clean message to player (colored, no prefix).
@@ -114,93 +117,59 @@
 # ===================================================================
 
 items:
-  mjolnir:
-    display_name: '&#F4D03F&lMjölnir'
-    material: MACE
+  identify_scroll:
+    display_name: '&#708090Identify Scroll'
+    material: PAPER
     lore:
-      - '&7The weapon of THOR.'
+      - '&#D3D3D3A risky scroll used to identify'
+      - '&#D3D3D3valuable items.'
       - ''
-      - '&bPassive:'
-      - '&7- Slow Falling (Feather-light)'
-      - ''
-      - '&eActive (Right-Click):'
-      - '&6&lSKY WRATH!'
-      - '&7- Ascend to the sky.'
-      - '&7- Channel lightning storms.'
-      - '&7- &bSuperhero Landing!'
-      - ''
-      - '&cCooldown: 30s'
+      - '&cCost: &e$500 &7+ &f1x Scroll'
+      - '&7- &aSuccess: &680% (Reward)'
+      - '&7- &cFailure: &420% (Scroll wasted)'
     glow: true
-    permission: NONE
-    custom-model-data: 0
     active-mode:
       enabled: true
-      cooldown: 30
-      duration: 10
+      cooldown: 0
       costs:
-        - type: LEVEL
-          amount: 5
-          message: '&cNot enough power! You need &e5 XP Levels&c.'
-        - type: ITEM
-          material: DIAMOND
+        - type: MONEY
+          amount: 500.0
+          message: '&cYou need &e$500 &cto use this scroll.'
+        - type: BUFFED_ITEM
+          item_id: identify_scroll
           amount: 1
-          message: '&cMissing catalyst! (1x Diamond)'
       commands:
-        - '[console] effect give %player% minecraft:levitation 1 30 true ;; [console] playsound entity.ender_dragon.flap master %player% ~ ~ ~ 2 0.5 ;; [title] &b&lSKY WRATH!|&7Ascending...'
-        - '[delay:20] [console] effect clear %player% minecraft:levitation ;; [console] effect give %player% minecraft:slow_falling 3 0 true ;; [console] execute at %player% run summon lightning_bolt ~5 ~-5 ~5 ;; [console] execute at %player% run summon lightning_bolt ~-5 ~-5 ~-5'
-        - '[delay:20] [console] execute at %player% run summon lightning_bolt ~5 ~-5 ~-5 ;; [console] execute at %player% run summon lightning_bolt ~-5 ~-5 ~5 ;; [console] playsound entity.lightning_bolt.thunder master %player% ~ ~ ~ 5 2'
-        - '[delay:20] [console] execute at %player% run particle explosion_emitter ~ ~-10 ~ 2 2 2 0.1 50 ;; [console] playsound entity.generic.explode master %player% ~ ~ ~ 5 0.5'
-        - '[delay:20] [console] effect clear %player% minecraft:slow_falling ;; [console] effect give %player% minecraft:resistance 5 4 true ;; [actionbar] &c&l⚠ IMPACT IMMINENT!'
-        - '[delay:15] [console] playsound entity.iron_golem.damage master %player% ~ ~ ~ 2 0.5 ;; [console] particle cloud %player_x% %player_y% %player_z% 1 0.1 1 0.1 20'
-      effects:
-        potion_effects:
-          - DAMAGE_RESISTANCE;5
-          - INCREASE_DAMAGE;2
-          - LUCK;1
-        attributes:
-          - GENERIC_ATTACK_SPEED;ADD_NUMBER;100.0
-      visuals:
-        chat: true
-        title: false
-        action-bar: true
-        boss-bar: true
-        boss-bar-color: BLUE
-        boss-bar-style: SEGMENTED_10
-        messages:
-          cooldown-chat: '&cYou are exhausted! Wait &e{time}s&c.'
-          cooldown-title: '&cTIRED'
-          cooldown-subtitle: '&7Wait &e{time}s'
-          cooldown-action-bar: '&bMjölnir Cooldown: &f{time}s'
-          cooldown-boss-bar: '&b&lSKY POWER RECHARGING: &f{time}s'
+        - '[chance:80] [console] give %player% diamond_sword 1 ;; [title] &aSUCCESS!|&7Item Identified.'
+        - '[else] [title] &cFAILED!|&7The scroll crumbled to dust.'
       sounds:
-        success: ITEM_TRIDENT_THUNDER;1.0;0.8
-        cooldown: BLOCK_ENCHANTMENT_TABLE_USE;1.0;2.0
-        cost-fail: BLOCK_ANVIL_LAND;1.0;0.5
-    effects:
-      MAIN_HAND:
-        potion_effects:
-          - SLOW_FALLING;1
-        attributes:
-          - GENERIC_ATTACK_DAMAGE;ADD_NUMBER;5.0
+        success: ITEM_BOOK_PAGE_TURN;1.0;1.0
+        cost-fail: ENTITY_VILLAGER_NO;1.0;1.0
     flags:
-      UNBREAKABLE: true
-      HIDE_ATTRIBUTES: true
-      HIDE_ENCHANTS: true
-      HIDE_UNBREAKABLE: true
-      HIDE_DESTROYS: false
-      HIDE_PLACED_ON: false
-      HIDE_ADDITIONAL_TOOLTIP: false
-      PREVENT_ANVIL_USE: false
-      PREVENT_ENCHANT_TABLE: false
-      PREVENT_SMITHING_USE: false
-      PREVENT_CRAFTING_USE: false
-      PREVENT_DROP: false
-      PREVENT_CONSUME: false
-      PREVENT_PLACEMENT: false
-      PREVENT_DEATH_DROP: false
-      PREVENT_INTERACT: false
-    enchantments:
-      - FIRE_ASPECT;5
+      PREVENT_DROP: true
+
+  elemental_staff:
+    display_name: '&#FFA500Elemental Staff'
+    material: BLAZE_ROD
+    lore:
+      - '&7Channels chaotic elemental energy.'
+      - ''
+      - '&eActive (Right-Click):'
+      - '&7Casts a random spell:'
+      - '&c• 33% Fireball'
+      - '&e• 33% Lightning Strike'
+      - '&f• 33% Gust (Levitation)'
+    glow: true
+    active-mode:
+      enabled: true
+      cooldown: 5
+      commands:
+        - '[chance:33] [console] execute at %player% run summon fireball ^ ^1 ^2 {ExplosionPower:2,direction:[0.0,0.0,0.0]} ;; [message] &c&l🔥 FIREBALL!'
+        - '[else] [chance:50] [console] execute at %player% run summon lightning_bolt ^ ^ ^8 ;; [message] &e&l⚡ THUNDER!'
+        - '[else] [console] effect give %player% levitation 2 5 ;; [message] &f&l💨 GUST!'
+      sounds:
+        success: ITEM_TRIDENT_THUNDER;1.0;2.0
+    flags:
+      PREVENT_CRAFTING_USE: true
 
   bunny_charm:
     display_name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
@@ -230,19 +199,31 @@ items:
       - '&#DAA520This legendary pickaxe hums with'
       - '&#DAA520the very essence of the earth.'
       - ''
-      - '&#00FF00Active Effects (Main Hand):'
-      - '&#7FFF7F• Haste III (Super Mining Speed)'
+      - '&#00FF00Passive Effects (Main Hand):'
+      - '&#7FFF7F• SPEED II'
       - '&#7FFF7F• +2 Attack Speed'
       - '&#7FFF7F• Unbreakable'
+      - ''
+      - '&eActive (Right-Click - 10s CD):'
+      - '&6Super Mining Speed: &aHASTE III for 5s'
       - ''
       - '&#FFD700Enchantments:'
       - '&#DAA520Efficiency V, Unbreaking III'
     material: DIAMOND_PICKAXE
     glow: true
+    active-mode:
+      enabled: true
+      cooldown: 10
+      duration: 5
+      commands:
+        - '[actionbar] &aSpeed Burst Activated! (5s)'
+      effects:
+        potion_effects:
+          - HASTE;3
     effects:
       MAIN_HAND:
         potion_effects:
-          - HASTE;3
+          - SPEED;2
         attributes:
           - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.2
     enchantments:
@@ -275,34 +256,6 @@ items:
         attributes:
           - GENERIC_MAX_HEALTH;ADD_NUMBER;4.0
           - GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0
-
-  helmet_of_wisdom:
-    display_name: '&#2E88F9H&#348CF2e&#3A90ECl&#4093E5m&#4697DEe&#4C9BD7t &#58A3CAo&#5EA7C3f &#6AAEB6W&#70B2AFi&#70B2AFs&#70B2AFd&#70B2AFo&#70B2AFm'
-    lore:
-      - '&#1E90FFThis ethereal helmet grants sight'
-      - '&#1E90FFbeyond mortal comprehension.'
-      - ''
-      - '&#87CEFAPassive Effects (Helmet):'
-      - '&#87CEFD• Night Vision I (Permanent)'
-      - '&#87CEFD• Water Breathing I (Permanent)'
-      - '&#87CEFD• +2 Intelligence (Bonus Luck)'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#4169E1Respiration III, Aqua Affinity I'
-    material: DIAMOND_HELMET
-    glow: true
-    effects:
-      HELMET:
-        potion_effects:
-          - NIGHT_VISION;1
-          - WATER_BREATHING;1
-        attributes:
-          - GENERIC_LUCK;ADD_NUMBER;2.0
-    enchantments:
-      - RESPIRATION;3
-      - AQUA_AFFINITY;1
-    flags:
-
   berserkers_greaves:
     display_name: '&cBerserker Greaves'
     lore:
@@ -352,162 +305,3 @@ items:
         attributes:
           - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
     flags:
-
-  guardian_chestplate:
-    display_name: '&#FFD700G&#FFDE00u&#FFF900a&#FFFF00r&#F0FF00d&#E1FF00i&#D2FF00a&#C3FF00n&#B4FF00s &#A5FF00C&#96FF00h&#87FF00e&#78FF00s&#69FF00t&#5AFF00p&#4BFF00l&#3CFF00a&#2DFF00t&#1EFF00e'
-    lore:
-      - '&#FFD700Imbued with protective energies'
-      - '&#FFD700that shield the wearer from harm.'
-      - ''
-      - '&#98FB98Passive Effects:'
-      - '&#98FB98• +5 Armor (2.5 Armor Points)'
-      - '&#98FB98• +0.3 Knockback Resistance'
-      - '&#98FB98• Resistance I (Damage Reduction)'
-      - ''
-      - '&#FFA500Permission: buffeditems.item.guardian'
-    material: DIAMOND_CHESTPLATE
-    permission: buffeditems.item.guardian
-    effects:
-      CHESTPLATE:
-        potion_effects:
-          - RESISTANCE;1
-        attributes:
-          - GENERIC_ARMOR;ADD_NUMBER;5.0
-          - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.3
-    flags:
-
-  legendary_sword:
-    display_name: '&#FD9A00L&#FCA100e&#FBA800g&#FAB000e&#F9B700n&#F8BE00d&#F7C500a&#F6CD00r&#F5D400y &#F3E200S&#F2E900w&#F1F100o&#F0F800r&#EFFF00d'
-    lore:
-      - '&#8B0000A blade whispered about in legends.'
-      - '&#8B0000Few dare to wield its power.'
-      - ''
-      - '&#FFB6C1Passive Effects:'
-      - '&#FFB6C1• +3 Attack Damage (via Sharpness VII)'
-      - '&#FFB6C1• Fire Aspect II (Burn Enemies)'
-      - '&#FFB6C1• Sweeping Edge III'
-      - '&#FFB6C1• Looting III (More Drops)'
-      - '&#FFB6C1• Unbreakable'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#FF6347Sharpness VII, Fire Aspect II, Looting III, Sweeping Edge III'
-    material: NETHERITE_SWORD
-    glow: true
-    enchantments:
-      - SHARPNESS;7
-      - FIRE_ASPECT;2
-      - LOOTING;3
-      - SWEEPING_EDGE;3
-    flags:
-      UNBREAKABLE: true
-
-  amulet_of_vitality:
-    display_name: '&#E39BFAA&#E395EDm&#E28EE1u&#E288D4l&#E282C7e&#E17BBBt &#E16FA1o&#E06895f &#E05C7BV&#DF556Fi&#DF4F62t&#DF4955a&#DE4249l&#DE3C3Ci&#DE3C3Ct&#DE3C3Cy'
-    lore:
-      - '&#FFB6C1A pulsating gem that enhances'
-      - '&#FFB6C1the wearer''s life force.'
-      - ''
-      - '&#00FF00Passive Effects (Inventory):'
-      - '&#00FF00• +2 Max Health (1 Heart)'
-      - '&#00FF00• Regeneration II (Heal Over Time)'
-      - '&#00FF00• Health Boost I (Extra Hearts)'
-    material: HEART_OF_THE_SEA
-    glow: true
-    effects:
-      INVENTORY:
-        potion_effects:
-          - REGENERATION;2
-          - HEALTH_BOOST;1
-        attributes:
-          - GENERIC_MAX_HEALTH;ADD_NUMBER;2.0
-    flags:
-
-  axe_of_the_berserker:
-    display_name: '&cAxe of The Berserker'
-    lore:
-      - '&#FF0000Unleash your fury with this'
-      - '&#FF0000instrument of chaos.'
-      - ''
-      - '&#FFB6C1Active Effects (Main Hand):'
-      - '&#FFB6C1• Strength II (Increased Damage)'
-      - '&#FFB6C1• +1.5 Attack Speed'
-      - '&#FFB6C1• Haste I (Faster Swings)'
-      - '&#FFB6C1• Resistance I (Partial Immunity)'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#FF6347Sharpness V, Unbreaking III'
-      - ''
-      - '&#FF0000Flags:'
-      - '&#FF0000Cannot be dropped or lost on death!'
-    material: NETHERITE_AXE
-    glow: true
-    effects:
-      MAIN_HAND:
-        potion_effects:
-          - STRENGTH;2
-          - HASTE;1
-          - RESISTANCE;1
-        attributes:
-          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.15
-    enchantments:
-      - SHARPNESS;5
-      - UNBREAKING;3
-    flags:
-      PREVENT_DEATH_DROP: true
-
-  helmet_of_the_deep:
-    display_name: '&#41BCA2H&#47BBA4e&#4DBAA7l&#54B8A9m&#5AB7ACe&#60B6AEt &#6CB3B3o&#72B2B5f &#7FB0BAt&#85AEBDh&#8BADBFe &#8BADBFD&#8BADBFe&#8BADBFe&#8BADBFp'
-    lore:
-      - '&#1E90FFBreathe easy beneath the waves.'
-      - '&#1E90FFA treasure from the abyss.'
-      - ''
-      - '&#87CEFDPassive Effects (Helmet):'
-      - '&#87CEFD• Water Breathing I (Permanent)'
-      - '&#87CEFD• Night Vision I'
-      - '&#87CEFD• +3 Armor'
-      - '&#87CEFD• Aqua Affinity I'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#00BFFF Aqua Affinity I, Protection IV, Respiration III'
-    material: TURTLE_HELMET
-    glow: true
-    effects:
-      HELMET:
-        potion_effects:
-          - WATER_BREATHING;1
-          - NIGHT_VISION;1
-        attributes:
-          - GENERIC_ARMOR;ADD_NUMBER;3.0
-    enchantments:
-      - AQUA_AFFINITY;1
-      - PROTECTION;4
-      - RESPIRATION;3
-    flags:
-
-  orb_of_elements:
-    display_name: '&#EC8C8CO&#F6A98Cr&#FFC58Bb &#FFEC98o&#FFFF9Ef &#9AFF9AE&#99E7C8l&#97CFF5e&#9BBDF8m&#9FACFCe&#A39AFFn&#C99DFFt&#EEA0FFs'
-    lore:
-      - '&#FF1493Harness the power of fire and frost.'
-      - '&#FF1493Balance between two extremes.'
-      - ''
-      - '&#FFB6C1Passive Effects (Off Hand):'
-      - '&#FFB6C1• Fire Resistance I (No Fire Damage)'
-      - '&#FFB6C1• +0.2 Attack Speed (Faster Swings)'
-      - '&#FFB6C1• Swiftness I (Movement Boost)'
-      - '&#FFB6C1• Mending (Self-Repairs)'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#FF69B4Mending I'
-    material: MAGMA_CREAM
-    glow: true
-    effects:
-      OFF_HAND:
-        potion_effects:
-          - FIRE_RESISTANCE;1
-        attributes:
-          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.2
-    enchantments:
-      - MENDING;1
-    flags:
-      PREVENT_CRAFTING_USE: false
-      PREVENT_ANVIL_USE: true

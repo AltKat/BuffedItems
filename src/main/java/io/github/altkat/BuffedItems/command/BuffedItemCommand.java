@@ -83,10 +83,38 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cOnly players can use this command."));
                 }
                 return true;
+            case "wiki":
+                if (!sender.hasPermission("buffeditems.command.wiki")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                handleWikiCommand(sender);
+                return true;
+
+            case "update":
+                if (!sender.hasPermission("buffeditems.command.update")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                if (plugin.getUpdateHandler() != null) {
+                    plugin.getUpdateHandler().checkManually(sender);
+                } else {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUpdate handler is not initialized."));
+                }
+                return true;
             default:
                 sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown subcommand. Use /buffeditems for help."));
                 return true;
         }
+    }
+
+    private void handleWikiCommand(CommandSender sender) {
+        Component message = ConfigManager.fromSectionWithPrefix("§bOfficial Wiki & Documentation:")
+                .append(Component.text(" [Click to Open]", net.kyori.adventure.text.format.NamedTextColor.YELLOW, net.kyori.adventure.text.format.TextDecoration.BOLD)
+                        .clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl("https://github.com/AltKat/BuffedItems/wiki"))
+                        .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text("Go to https://github.com/AltKat/BuffedItems/wiki"))));
+
+        sender.sendMessage(message);
     }
 
     private void sendHelpMessage(CommandSender sender) {
@@ -102,6 +130,15 @@ public class BuffedItemCommand implements CommandExecutor {
         }
         if (sender.hasPermission("buffeditems.command.menu")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi menu"));
+        }
+        if (sender.hasPermission("buffeditems.command.upgrade")) {
+            sender.sendMessage(ConfigManager.fromSection("§6/bi upgrade §7(Upgrade Station)"));
+        }
+        if (sender.hasPermission("buffeditems.command.wiki")) {
+            sender.sendMessage(ConfigManager.fromSection("§6/bi wiki §7(Get Wiki Link)"));
+        }
+        if (sender.hasPermission("buffeditems.command.update")) {
+            sender.sendMessage(ConfigManager.fromSection("§6/bi update §7(Check Updates)"));
         }
     }
 

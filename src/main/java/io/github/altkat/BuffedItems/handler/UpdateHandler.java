@@ -8,6 +8,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -61,53 +62,61 @@ public class UpdateHandler implements Listener {
      */
     public void checkAsync() {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            HttpURLConnection connection = null;
-            try {
-                String apiUrl = String.format(GITHUB_API_URL, this.githubRepo);
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                        () -> "[UpdateChecker] Fetching from GitHub: " + apiUrl);
+            performCheck(null);
+        });
+    }
 
-                connection = (HttpURLConnection) new URL(apiUrl).openConnection();
-                connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-                connection.setReadTimeout(READ_TIMEOUT_MS);
-                connection.setRequestProperty("User-Agent", "BuffedItems-UpdateChecker (" + this.githubRepo + ")");
-                connection.setRequestProperty("Accept", "application/vnd.github.v3+json");
+    /**
+     * Checks for updates manually and notifies the sender.
+     */
+    public void checkManually(CommandSender sender) {
+        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§7Checking for updates on GitHub..."));
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+            performCheck(sender);
+        });
+    }
 
-                int statusCode = connection.getResponseCode();
-                if (statusCode != 200) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                            () -> "[UpdateChecker] GitHub API returned status: " + statusCode);
+    private void performCheck(CommandSender sender) {
+        HttpURLConnection connection = null;
+        try {
+            String apiUrl = String.format(GITHUB_API_URL, this.githubRepo);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                    () -> "[UpdateChecker] Fetching from GitHub: " + apiUrl);
 
-                    if (statusCode == 404) {
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                                () -> "[UpdateChecker] Repository not found (404): " + this.githubRepo);
-                    } else if (statusCode == 403) {
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                                () -> "[UpdateChecker] GitHub API rate limit exceeded (403)");
-                    }
-                    return;
+            connection = (HttpURLConnection) new URL(apiUrl).openConnection();
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            connection.setRequestProperty("User-Agent", "BuffedItems-UpdateChecker (" + this.githubRepo + ")");
+            connection.setRequestProperty("Accept", "application/vnd.github.v3+json");
+
+            int statusCode = connection.getResponseCode();
+            if (statusCode != 200) {
+                String errorMsg = "[UpdateChecker] GitHub API returned status: " + statusCode;
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> errorMsg);
+                if (sender != null) sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cError checking updates: HTTP " + statusCode));
+                return;
+            }
+
+            String jsonResponse;
+            try (InputStream inputStream = connection.getInputStream();
+                 Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8)) {
+                jsonResponse = scanner.useDelimiter("\\A").next();
+            }
+
+            Matcher tagMatcher = TAG_PATTERN.matcher(jsonResponse);
+            if (tagMatcher.find()) {
+                this.latestVersion = tagMatcher.group(1);
+
+                Matcher urlMatcher = URL_PATTERN.matcher(jsonResponse);
+                if (urlMatcher.find()) {
+                    this.latestDownloadUrl = urlMatcher.group(1);
                 }
 
-                String jsonResponse;
-                try (InputStream inputStream = connection.getInputStream();
-                     Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8)) {
-                    jsonResponse = scanner.useDelimiter("\\A").next();
-                }
+                final String currentVersion = plugin.getDescription().getVersion();
+                final boolean newVersionAvailable = isNewerVersion(currentVersion, this.latestVersion);
 
-                Matcher tagMatcher = TAG_PATTERN.matcher(jsonResponse);
-                if (tagMatcher.find()) {
-                    this.latestVersion = tagMatcher.group(1);
-
-                    Matcher urlMatcher = URL_PATTERN.matcher(jsonResponse);
-                    if (urlMatcher.find()) {
-                        this.latestDownloadUrl = urlMatcher.group(1);
-                    }
-
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                            () -> "[UpdateChecker] Latest GitHub release found: " + this.latestVersion);
-
-                    final String currentVersion = plugin.getDescription().getVersion();
-                    if (isNewerVersion(currentVersion, this.latestVersion)) {
+                if (sender == null) {
+                    if (newVersionAvailable) {
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -116,36 +125,48 @@ public class UpdateHandler implements Listener {
                                 ConfigManager.logInfo("&eDownload from Spigot: &6" + SPIGOT_URL);
                             }
                         }.runTaskLater(plugin, CONSOLE_LOG_DELAY_TICKS);
-
                     } else {
                         ConfigManager.logInfo("&aYou are using the latest version. (&e" + currentVersion + "&a)");
                     }
-
                 } else {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                            () -> "[UpdateChecker] Could not parse 'tag_name' from GitHub response.");
-                }
+                    if (newVersionAvailable) {
+                        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aA new update is available! §e" + currentVersion + " §7-> §a" + latestVersion));
 
-            } catch (IOException exception) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->
-                        "[UpdateChecker] Unable to check for updates: " + exception.getClass().getSimpleName() + " - " + exception.getMessage());
-                ConfigManager.logInfo("&cUnable to check for updates on GitHub: &e" + exception.getMessage());
-            } catch (Exception exception) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->
-                        "[UpdateChecker] Unexpected error: " + exception.getClass().getSimpleName() + " - " + exception.getMessage());
-            } finally {
-                if (connection != null) {
-                    try {
-                        connection.disconnect();
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                                () -> "[UpdateChecker] Connection closed successfully.");
-                    } catch (Exception e) {
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () ->
-                                "[UpdateChecker] Error disconnecting: " + e.getMessage());
+                        Component githubLink = Component.text("[GitHub]", NamedTextColor.GREEN, TextDecoration.BOLD)
+                                .clickEvent(ClickEvent.openUrl(GITHUB_REPO_URL))
+                                .hoverEvent(HoverEvent.showText(ConfigManager.fromLegacy("&aClick to open GitHub")));
+
+                        Component spigotLink = Component.text("[Spigot]", NamedTextColor.GOLD, TextDecoration.BOLD)
+                                .clickEvent(ClickEvent.openUrl(SPIGOT_URL))
+                                .hoverEvent(HoverEvent.showText(ConfigManager.fromLegacy("&6Click to open Spigot")));
+
+                        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§eDownload: ").append(githubLink).append(Component.text(" ")).append(spigotLink));
+                    } else {
+                        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aYou are using the latest version (§e" + currentVersion + "§a)."));
                     }
                 }
+
+            } else {
+                if (sender != null) sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Could not parse version info."));
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
+                        () -> "[UpdateChecker] Could not parse 'tag_name' from GitHub response.");
             }
-        });
+
+        } catch (IOException exception) {
+            if (sender != null) sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cConnection failed: " + exception.getMessage()));
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->
+                    "[UpdateChecker] Unable to check for updates: " + exception.getClass().getSimpleName() + " - " + exception.getMessage());
+        } catch (Exception exception) {
+            if (sender != null) sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnexpected error during update check."));
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->
+                    "[UpdateChecker] Unexpected error: " + exception.getClass().getSimpleName() + " - " + exception.getMessage());
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.disconnect();
+                } catch (Exception ignored) {}
+            }
+        }
     }
 
     /**

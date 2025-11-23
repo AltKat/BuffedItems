@@ -119,7 +119,8 @@ public class CommandListMenu extends PaginatedMenu {
                 "§a• [message]     §7(Send chat msg)",
                 "",
                 "§6Chaining:",
-                "§7Use ';;' to combine actions."));
+                "§7Use ';;' to combine actions.",
+                "§eSee wiki for detailed examples."));
 
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
@@ -146,14 +147,14 @@ public class CommandListMenu extends PaginatedMenu {
                     int connectedTo = Math.max(1, commandNumber - 1);
 
                     icon = Material.CHAIN_COMMAND_BLOCK;
-                    title = "§c§l⚡ Else Block of #" + connectedTo;
+                    title = "§c⚡ Else Block of #" + connectedTo;
                 } else {
                     if (isChain) {
                         icon = Material.REPEATING_COMMAND_BLOCK;
-                        title = "§e§l▶ Command #" + commandNumber + " §7(Chain)";
+                        title = "§e▶ Command #" + commandNumber + " §7(Chain)";
                     } else {
                         icon = Material.COMMAND_BLOCK;
-                        title = "§a§l▶ Command #" + commandNumber;
+                        title = "§a▶ Command #" + commandNumber;
                     }
                 }
 

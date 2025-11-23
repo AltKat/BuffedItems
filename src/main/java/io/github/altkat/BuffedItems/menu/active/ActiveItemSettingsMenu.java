@@ -103,6 +103,10 @@ public class ActiveItemSettingsMenu extends Menu {
             case EMERALD:
                 new CostListMenu(playerMenuUtility, plugin).open();
                 break;
+
+            case DIAMOND:
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("This feature is currently under development."));
+                break;
         }
     }
 
@@ -151,6 +155,8 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Money, XP, Items, Health...",
                 "",
                 "§eClick to Manage"));
+
+        inventory.setItem(30, makeItem(Material.DIAMOND, "§aUsage Limits", "§eComing soon!"));
 
         inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
 

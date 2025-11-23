@@ -6,7 +6,7 @@
 
     <groupId>io.github.altkat</groupId>
     <artifactId>BuffedItems</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
     <name>BuffedItems</name>
 
@@ -53,6 +53,14 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>${basedir}</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>LICENSE</include>
+                </includes>
+                <targetPath>.</targetPath>
             </resource>
         </resources>
     </build>

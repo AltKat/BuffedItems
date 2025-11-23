@@ -31,6 +31,12 @@ permissions:
   buffeditems.command.menu:
     description: Allows opening the BuffedItems GUI menu.
     default: op
+  buffeditems.command.wiki:
+    description: Allows usage of the /buffeditems wiki command.
+    default: op
+  buffeditems.command.update:
+    description: Allows usage of the /buffeditems update command.
+    default: op
   buffeditems.command.upgrade:
     description: Allows usage of the /buffeditems upgrade command.
-    default: op
+    default: true

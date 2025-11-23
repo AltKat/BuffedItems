@@ -294,6 +294,9 @@ public final class BuffedItems extends JavaPlugin {
     public HookManager getHookManager() {
         return hookManager;
     }
+    public UpdateHandler getUpdateHandler() {
+        return updateHandler;
+    }
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");
