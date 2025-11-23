@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.menu.upgrade;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
 import io.github.altkat.BuffedItems.manager.cost.types.ItemCost;
@@ -98,6 +99,10 @@ public class UpgradeMenu extends Menu {
                 Player p = (Player) e.getWhoClicked();
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             }
+            else if (e.getSlot() == 22 && e.getCurrentItem().getType() == Material.BOOK) {
+                new RecipeBrowserMenu(playerMenuUtility, plugin).open();
+                return;
+            }
         }
     }
 
@@ -122,6 +127,14 @@ public class UpgradeMenu extends Menu {
         inventory.setItem(INFO_SLOT, makeItem(Material.ANVIL, "§eUpgrade Info", "§7Waiting for item..."));
         inventory.setItem(NEXT_RECIPE_SLOT, makeItem(Material.GRAY_STAINED_GLASS_PANE, " "));
         inventory.setItem(15, makeItem(Material.ARROW, "§e->"));
+
+        boolean showBrowser = UpgradesConfig.get().getBoolean("settings.browser-button", true);
+
+        if (showBrowser) {
+            inventory.setItem(22, makeItem(Material.BOOK, "§aBrowse All Recipes",
+                    "§7Click to view a list of",
+                    "§7all available upgrades on the server."));
+        }
     }
 
     private void updateMenuState() {

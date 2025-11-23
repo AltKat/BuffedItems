@@ -157,7 +157,7 @@ public class IngredientListMenu extends Menu {
 
             // --- 4. MONEY / VAULT (NEW) ---
         } else if ("MONEY".equals(type)) {
-            if (plugin.getCostManager().getEconomy() == null) {
+            if (plugin.getHookManager().getVaultHook() == null) {
                 displayItem = new ItemStack(Material.BEDROCK);
                 title = ConfigManager.fromSection("§cVault/Economy Not Found");
                 lore.add(ConfigManager.fromSection("§cVault is missing or not hooked!"));

@@ -2,15 +2,23 @@ package io.github.altkat.BuffedItems.menu.upgrade;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
+import io.github.altkat.BuffedItems.manager.cost.ICost;
+import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
 import io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
+import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -58,6 +66,17 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             return;
         }
 
+        if (e.getSlot() == 51) {
+            boolean current = UpgradesConfig.get().getBoolean("settings.browser-button", true);
+            UpgradesConfig.get().set("settings.browser-button", !current);
+            UpgradesConfig.save();
+            UpgradesConfig.reload();
+
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+            this.open();
+            return;
+        }
+
         if (e.getSlot() == 53) {
             new MainMenu(playerMenuUtility, plugin).open();
             return;
@@ -88,6 +107,19 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
         inventory.setItem(49, makeItem(Material.ANVIL, "§aCreate New Recipe", "§7Click to create a new upgrade recipe."));
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Main Menu"));
 
+        boolean browserEnabled = UpgradesConfig.get().getBoolean("settings.browser-button", true);
+        String status = browserEnabled ? "§aEnabled" : "§cDisabled";
+
+        inventory.setItem(51, makeItem(Material.BOOKSHELF,
+                "§6Station Browser Button",
+                "§7Toggle the visibility of the",
+                "§7'Browse All Recipes' button",
+                "§7in the Upgrade Station (/bi upgrade).",
+                "",
+                "§7Current: " + status,
+                "",
+                "§eClick to Toggle"));
+
         List<UpgradeRecipe> recipes = getSortedRecipes();
 
         for (int i = 0; i < maxItemsPerPage; i++) {
@@ -104,12 +136,15 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                 resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getDisplayName()));
             }
 
+            List<String> lore = new ArrayList<>();
+            lore.add("§8ID: " + recipe.getId());
+            lore.add("");
+
             String baseName = "§cUnknown";
             if (recipe.getBaseCost() != null) {
                 baseName = "§f" + recipe.getBaseCost().getDisplayString();
-
-                if (recipe.getBaseCost() instanceof io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost) {
-                    String bId = ((io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost) recipe.getBaseCost()).getRequiredItemId();
+                if (recipe.getBaseCost() instanceof BuffedItemCost) {
+                    String bId = ((BuffedItemCost) recipe.getBaseCost()).getRequiredItemId();
                     BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
                     if (bItem != null) {
                         baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
@@ -117,17 +152,11 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                 }
             }
 
-            String chanceColor = (recipe.getSuccessRate() >= 100) ? "§a" : (recipe.getSuccessRate() >= 50 ? "§e" : "§c");
-            Material icon = recipe.isValid() ? Material.PAPER : Material.BARRIER;
-
-            List<String> lore = new ArrayList<>();
-            lore.add("§8ID: " + recipe.getId());
-            lore.add("");
-
             lore.add("§7From: " + baseName);
             lore.add("§7To: " + resultName);
             lore.add("");
 
+            String chanceColor = (recipe.getSuccessRate() >= 100) ? "§a" : (recipe.getSuccessRate() >= 50 ? "§e" : "§c");
             lore.add("§7Chance: " + chanceColor + recipe.getSuccessRate() + "%");
             lore.add("§7Ingredients: §f" + recipe.getIngredients().size());
 
@@ -144,7 +173,39 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             lore.add("§eLeft-Click to Edit");
             lore.add("§cRight-Click to Delete");
 
-            inventory.setItem(i, makeItem(icon, title, lore.toArray(new String[0])));
+            ItemStack iconStack;
+            ICost baseCost = recipe.getBaseCost();
+
+            if (!recipe.isValid()) {
+                iconStack = new ItemStack(Material.BARRIER);
+            }
+            else {
+                BuffedItemCost bCost = (BuffedItemCost) baseCost;
+                String bId = bCost.getRequiredItemId();
+                BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
+
+                if (bItem != null) {
+                    iconStack = new ItemBuilder(bItem, plugin).build();
+                } else {
+                    iconStack = new ItemStack(Material.BEDROCK);
+                }
+            }
+
+            ItemMeta meta = iconStack.getItemMeta();
+            if (meta != null) {
+                meta.displayName(ConfigManager.fromSection(title));
+
+                List<net.kyori.adventure.text.Component> loreComps = new ArrayList<>();
+                for (String line : lore) {
+                    loreComps.add(ConfigManager.fromSection(line));
+                }
+                meta.lore(loreComps);
+
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_UNBREAKABLE);
+                iconStack.setItemMeta(meta);
+            }
+
+            inventory.setItem(i, iconStack);
         }
     }
 }

@@ -77,6 +77,16 @@
 # - COINSENGINE: Requires a CoinsEngine custom currency.
 #     Format: AMOUNT;CURRENCY_ID (e.g., 100;coins)
 # -------------------------------------------------------------------------------------------
+#
+# ===================================================================
+#                       GLOBAL SETTINGS
+# ===================================================================
+settings:
+  # Should the "Browse All Recipes" button appear in the Upgrade Station?
+  # Players can click this to see a list of all available upgrades.
+  browser-button: true
+
+# ===================================================================
 
 upgrades:
   # Example: Upgrading 'swiftness_boots' to 'berserkers_greaves'

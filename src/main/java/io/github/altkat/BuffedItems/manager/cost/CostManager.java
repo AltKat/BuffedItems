@@ -3,8 +3,6 @@ package io.github.altkat.BuffedItems.manager.cost;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.types.*;
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.*;
 
@@ -12,31 +10,10 @@ public class CostManager {
 
     private final BuffedItems plugin;
     private final Map<String, CostFactory> factories = new HashMap<>();
-    private Economy econ = null;
 
     public CostManager(BuffedItems plugin) {
         this.plugin = plugin;
-        setupEconomy();
         registerDefaults();
-    }
-
-    private void setupEconomy() {
-        if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) {
-            return;
-        }
-        try {
-            RegisteredServiceProvider<Economy> rsp = plugin.getServer().getServicesManager().getRegistration(Economy.class);
-            if (rsp != null) {
-                econ = rsp.getProvider();
-                ConfigManager.logInfo("&aVault Economy hooked successfully!");
-            }
-        } catch (Exception e) {
-            ConfigManager.logInfo("&cVault found but failed to hook Economy: " + e.getMessage());
-        }
-    }
-
-    public Economy getEconomy() {
-        return econ;
     }
 
     /**
