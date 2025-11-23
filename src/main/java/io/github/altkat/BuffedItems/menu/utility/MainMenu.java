@@ -178,8 +178,9 @@ public class MainMenu extends PaginatedMenu {
         infoLore.add("");
         infoLore.add("§6Did you know?");
         infoLore.add("§7You can use §dPlaceholderAPI");
-        infoLore.add("§7placeholders in every message,");
-        infoLore.add("§7item name, and lore!");
+        infoLore.add("§dplaceholders§7, and §#00FFE0H§#1AE3E3E§#34C6E7X §#688EEEC§#8371F1o§#9D55F5l§#B739F8o§#D11CFCr§#EB00FFs");
+        infoLore.add("§7in every message, §7item name,");
+        infoLore.add("§7and lore!");
         infoLore.add("");
         infoLore.add("§bNeed Help?");
         infoLore.add("§7Click to get links for:");
@@ -187,7 +188,6 @@ public class MainMenu extends PaginatedMenu {
         infoLore.add("§f• Discord Support");
         infoLore.add("");
         infoLore.add("§eClick to print links in chat.");
-
         inventory.setItem(52, makeItem(Material.BOOK, "§aPlugin Information", infoLore.toArray(new String[0])));
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cClose Menu"));
