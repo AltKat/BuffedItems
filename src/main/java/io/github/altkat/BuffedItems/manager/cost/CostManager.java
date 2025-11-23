@@ -55,13 +55,12 @@ public class CostManager {
         registerFactory("ITEM", ItemCost::new);
         registerFactory("BUFFED_ITEM", data -> new BuffedItemCost(data, plugin));
 
-        if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
-            ConfigManager.logInfo("&aCoinsEngine detected! Enabling custom currency costs.");
-            registerFactory("COINSENGINE", CoinsEngineCost::new);
+        if (plugin.getHookManager().isCoinsEngineLoaded()) {
+            registerFactory("COINSENGINE", data -> new CoinsEngineCost(data, plugin.getHookManager().getCoinsEngineHook()));
         }
 
-        if (econ != null) {
-            registerFactory("MONEY", data -> new MoneyCost(data, econ));
+        if (plugin.getHookManager().isVaultLoaded()) {
+            registerFactory("MONEY", data -> new MoneyCost(data, plugin.getHookManager().getVaultHook()));
         }
     }
 
