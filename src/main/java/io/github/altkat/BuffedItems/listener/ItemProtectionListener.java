@@ -70,6 +70,13 @@ public class ItemProtectionListener implements Listener {
 
         while (iterator.hasNext()) {
             ItemStack item = iterator.next();
+
+            if (itemHasFlag(item, "LOST_ON_DEATH")) {
+                iterator.remove();
+                sendProtectionMessage(player, "protection-lost-on-death");
+                continue;
+            }
+
             if (itemHasFlag(item, "PREVENT_DEATH_DROP")) {
                 iterator.remove();
                 keptItems.add(item);

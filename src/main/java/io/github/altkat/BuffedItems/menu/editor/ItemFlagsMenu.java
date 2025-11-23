@@ -39,7 +39,8 @@ public class ItemFlagsMenu extends Menu {
             new FlagInfo("UNBREAKABLE", Material.ANVIL, "Unbreakable", "Prevents the item from losing durability."),
             new FlagInfo("PREVENT_PLACEMENT", Material.GRASS_BLOCK, "Prevent Placement", "Prevents placing blocks, boats, carts, armor stands, frames, etc."),
             new FlagInfo("PREVENT_DEATH_DROP", Material.TOTEM_OF_UNDYING, "Prevent Death Drop", "Keeps the item in inventory upon death."),
-            new FlagInfo("PREVENT_INTERACT", Material.STRUCTURE_VOID, "Prevent Use (Right-Click)", "Prevents most right-clicks (axe strip, hoe till, flint&steel, shield, etc.).")
+            new FlagInfo("PREVENT_INTERACT", Material.STRUCTURE_VOID, "Prevent Use (Right-Click)", "Prevents most right-clicks (axe strip, hoe till, flint&steel, shield, etc.)."),
+            new FlagInfo("LOST_ON_DEATH", Material.WITHER_ROSE, "Lost On Death", "Item is permanently destroyed/vanishes upon death.")
     );
 
     public ItemFlagsMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
@@ -75,9 +76,9 @@ public class ItemFlagsMenu extends Menu {
         }
 
         List<Integer> itemSlots = Arrays.asList(
-                11, 12, 13, 14, 15,
-                20, 21, 22, 23, 24,
-                29, 30, 31, 32, 33, 34
+                10, 11, 12, 13, 14, 15, 16,
+                19, 20, 21, 22, 23, 24, 25,
+                28, 29, 30, 31, 32, 33, 34
         );
 
         int clickedSlot = e.getSlot();
@@ -129,9 +130,9 @@ public class ItemFlagsMenu extends Menu {
         inventory.setItem(35, filler);
 
         List<Integer> itemSlots = Arrays.asList(
-                11, 12, 13, 14, 15,
-                20, 21, 22, 23, 24,
-                29, 30, 31, 32, 33, 34
+                10, 11, 12, 13, 14, 15, 16,
+                19, 20, 21, 22, 23, 24, 25,
+                28, 29, 30, 31, 32, 33, 34
         );
 
         for (int i = 0; i < flags.size(); i++) {

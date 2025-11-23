@@ -111,6 +111,7 @@ public class BuffedItem {
                 "PREVENT_PLACEMENT"
                 //"PREVENT_DEATH_DROP",
                 //"PREVENT_INTERACT"
+                //"LOST_ON_DEATH"
         ));
     }
 

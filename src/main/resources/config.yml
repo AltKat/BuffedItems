@@ -34,6 +34,7 @@ messages:
   protection-prevent-itemframe-store: "&#FF0000You cannot place this special item in an item frame."
   protection-prevent-consume: "&#FF0000You cannot consume this item."
   protection-prevent-use-no-permission: "&#FF0000You do not have permission to use this item."
+  protection-lost-on-death: "&#FF0000Your buffed item got lost because you have died."
   upgrade-success: "&aUpgrade Successful!"
   upgrade-failure-lose-everything: "&cUpgrade Failed! Item and ingredients lost."
   upgrade-failure-keep-base: "&eUpgrade Failed! Ingredients lost, but item kept."
