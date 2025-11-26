@@ -25,7 +25,14 @@ public class SoundSettingsMenu extends Menu {
 
     @Override
     public String getMenuName() {
-        return "Set " + (soundType.equals("success") ? "Success" : "Cooldown") + " Sound";
+        String displayType = switch (soundType) {
+            case "success" -> "Success";
+            case "cooldown" -> "Cooldown";
+            case "cost-fail" -> "Cost Fail";
+            case "depletion" -> "Depletion";
+            default -> soundType;
+        };
+        return "Set " + displayType + " Sound";
     }
 
     @Override

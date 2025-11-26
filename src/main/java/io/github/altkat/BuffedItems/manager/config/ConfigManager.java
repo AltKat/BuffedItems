@@ -255,6 +255,8 @@ public class ConfigManager {
                     normalizedPath = "active-mode." + path;
                 } else if (path.startsWith("sounds")) {
                     normalizedPath = "active-mode." + path;
+                } else if (path.startsWith("usage-limit")) {
+                    normalizedPath = "active-mode." + path;
                 } else if (path.startsWith("active_effects")) {
                     // active_effects.potion_effects -> active-mode.effects.potion_effects
                     normalizedPath = path.replace("active_effects", "active-mode.effects");
@@ -396,6 +398,31 @@ public class ConfigManager {
         plugin.getConfig().set("show-potion-icons", show);
         plugin.saveConfig();
         loadGlobalSettings();
+    }
+
+
+    public static String getGlobalUsageLore() {
+        if (plugin == null) return "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%";
+        return plugin.getConfig().getString("active-items.messages.usage-limit-lore", "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%");
+    }
+
+    public static String getGlobalDepletedLore() {
+        if (plugin == null) return "&cITEM DEPLETED - NO USES LEFT";
+        return plugin.getConfig().getString("active-items.messages.usage-limit-depleted-lore", "&cITEM DEPLETED - NO USES LEFT");
+    }
+
+    public static String getGlobalDepletedMessage() {
+        if (plugin == null) return "&cThis item is depleted! You can't use its ability anymore.";
+        return plugin.getConfig().getString("active-items.messages.usage-limit-depleted-message", "&cThis item is depleted! You can't use its ability anymore.");
+    }
+
+    public static String getGlobalDepletionNotification() {
+        if (plugin == null) return "&cYour item has run out of charges!";
+        return plugin.getConfig().getString("active-items.messages.usage-limit-depletion-notification", "&cYour item has run out of charges!");
+    }
+
+    public static String getGlobalDepletionSound() {
+        return plugin.getConfig().getString("active-items.sounds.depletion", "ENTITY_ITEM_BREAK;1.0;1.0");
     }
 
     public static boolean isDebugLevelEnabled(int level) {

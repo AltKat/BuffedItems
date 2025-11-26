@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.utility.item;
 
+import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -22,6 +23,11 @@ public class BuffedItem {
 
     private final boolean activeMode;
     private final int cooldown;
+    private final int maxUses;
+    private final String customUsageLore;
+    private final String customDepletedLore;
+    private final String customDepletedMessage;
+    private final String customDepletionNotification;
     private final int activeDuration;
     private final List<String> activeCommands;
     private final boolean visualChat;
@@ -39,6 +45,10 @@ public class BuffedItem {
     private final String customSuccessSound;
     private final String customCooldownSound;
     private final String customCostFailSound;
+    private final String customDepletionSound;
+    private final DepletionAction depletionAction;
+    private final String depletionTransformId;
+    private final List<String> depletionCommands;
     private final List<ICost> costs;
 
     private boolean isValid = true;
@@ -50,11 +60,11 @@ public class BuffedItem {
                       boolean glow, Map<String, BuffedItemEffect> effects, String permission,
                       String activePermission, String passivePermission, Map<String, Boolean> flags,
                       Map<Enchantment, Integer> enchantments, Integer customModelData, String customModelDataRaw,
-                      boolean activeMode, int cooldown, int activeDuration, List<String> activeCommands, boolean visualChat,
+                      boolean activeMode, int cooldown, int maxUses, String customUsageLore, String customDepletedLore, String customDepletedMessage, String customDepletionNotification, int activeDuration, List<String> activeCommands, boolean visualChat,
                       boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
-                      String customCooldownSound, String customCostFailSound, List<ICost> costs) {
+                      String customCooldownSound, String customCostFailSound, String customDepletionSound, DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, List<ICost> costs) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -70,7 +80,12 @@ public class BuffedItem {
         this.customModelDataRaw = customModelDataRaw;
         this.activeMode = activeMode;
         this.cooldown = cooldown;
+        this.maxUses = maxUses;
         this.activeDuration = activeDuration;
+        this.customUsageLore = customUsageLore;
+        this.customDepletedLore = customDepletedLore;
+        this.customDepletedMessage = customDepletedMessage;
+        this.customDepletionNotification = customDepletionNotification;
         this.activeCommands = (activeCommands != null) ? activeCommands : new ArrayList<>();
         this.visualChat = visualChat;
         this.visualTitle = visualTitle;
@@ -87,6 +102,10 @@ public class BuffedItem {
         this.customSuccessSound = customSuccessSound;
         this.customCooldownSound = customCooldownSound;
         this.customCostFailSound = customCostFailSound;
+        this.customDepletionSound = customDepletionSound;
+        this.depletionAction = depletionAction;
+        this.depletionTransformId = depletionTransformId;
+        this.depletionCommands = (depletionCommands != null) ? depletionCommands : new ArrayList<>();
         this.costs = (costs != null) ? costs : new ArrayList<>();
     }
 
@@ -151,6 +170,8 @@ public class BuffedItem {
     public String getPermission() {
         return permission;
     }
+    public String getActivePermissionRaw() { return activePermission; }
+    public String getPassivePermissionRaw() { return passivePermission; }
 
     public boolean isValid() {
         return isValid;
@@ -193,6 +214,36 @@ public class BuffedItem {
         return cooldown;
     }
 
+    public int getMaxUses() { return maxUses; }
+
+    public String getUsageLore(int currentUses) {
+        String format = (this.customUsageLore != null && !this.customUsageLore.isEmpty())
+                ? this.customUsageLore
+                : ConfigManager.getGlobalUsageLore();
+
+        return format
+                .replace("%remaining_uses%", String.valueOf(currentUses))
+                .replace("%total_uses%", String.valueOf(this.maxUses));
+    }
+
+    public String getDepletedLore() {
+        return (this.customDepletedLore != null && !this.customDepletedLore.isEmpty())
+                ? this.customDepletedLore
+                : ConfigManager.getGlobalDepletedLore();
+    }
+
+    public String getDepletedMessage() {
+        return (this.customDepletedMessage != null && !this.customDepletedMessage.isEmpty())
+                ? this.customDepletedMessage
+                : ConfigManager.getGlobalDepletedMessage();
+    }
+
+    public String getDepletionNotification() {
+        return (this.customDepletionNotification != null && !this.customDepletionNotification.isEmpty())
+                ? this.customDepletionNotification
+                : ConfigManager.getGlobalDepletionNotification();
+    }
+
     public int getActiveDuration() {
         return activeDuration;
     }
@@ -218,8 +269,10 @@ public class BuffedItem {
     public String getCustomSuccessSound() { return customSuccessSound; }
     public String getCustomCooldownSound() { return customCooldownSound; }
     public String getCustomCostFailSound() { return customCostFailSound; }
-    public String getActivePermissionRaw() { return activePermission; }
-    public String getPassivePermissionRaw() { return passivePermission; }
+    public String getCustomDepletionSound() { return customDepletionSound; }
+    public DepletionAction getDepletionAction() { return depletionAction; }
+    public String getDepletionTransformId() { return depletionTransformId; }
+    public List<String> getDepletionCommands() { return depletionCommands; }
 
     public List<ICost> getCosts() {
         return costs;

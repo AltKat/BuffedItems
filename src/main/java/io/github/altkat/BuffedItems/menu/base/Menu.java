@@ -78,6 +78,7 @@ public abstract class Menu implements InventoryHolder {
                 .collect(Collectors.toList());
         meta.lore(loreComponents);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         return item;
     }

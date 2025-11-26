@@ -105,7 +105,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 break;
 
             case DIAMOND:
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("This feature is currently under development."));
+                new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
                 break;
         }
     }
@@ -118,22 +118,34 @@ public class ActiveItemSettingsMenu extends Menu {
         boolean isActive = item.isActiveMode();
         inventory.setItem(10, makeItem(Material.LEVER,
                 isActive ? "§aActive Mode: ON" : "§cActive Mode: OFF",
-                "§7Enable/Disable right-click functionality.", "", "§eClick to Toggle"));
+                "§7Enable/Disable right-click functionality.",
+                "",
+                "§eClick to Toggle"));
 
         inventory.setItem(12, makeItem(Material.CLOCK, "§bSet Cooldown",
-                "§7Current: §e" + item.getCooldown() + "s", "§eClick to Edit"));
+                "§7Current: §e" + item.getCooldown() + "s",
+                "",
+                "§eClick to Edit"));
 
         inventory.setItem(14, makeItem(Material.COMPASS, "§bSet Effect Duration",
-                "§7Current: §e" + item.getActiveDuration() + "s", "§eClick to Edit"));
+                "§7Current: §e" + item.getActiveDuration() + "s",
+                "",
+                "§eClick to Edit"));
 
         inventory.setItem(16, makeItem(Material.COMMAND_BLOCK, "§6Manage Commands",
-                "§7Current: §e" + item.getActiveCommands().size() + " commands", "§eClick to Edit List"));
+                "§7Current: §e" + item.getActiveCommands().size() + " commands",
+                "",
+                "§eClick to Edit List"));
 
         inventory.setItem(19, makeItem(Material.LINGERING_POTION, "§dActive Potion Effects",
-                "§7Manage potion effects applied", "§7when used.", "", "§eClick to Edit"));
+                "§7Manage potion effects applied", "§7when used.",
+                "",
+                "§eClick to Edit"));
 
         inventory.setItem(21, makeItem(Material.NETHER_STAR, "§bActive Attributes",
-                "§7Manage temporary attributes", "§7given when used.", "", "§eClick to Edit"));
+                "§7Manage temporary attributes", "§7given when used.",
+                "",
+                "§eClick to Edit"));
 
         inventory.setItem(23, makeItem(Material.PAINTING, "§eVisual Settings",
                 "§7Configure visual indicators:",
@@ -147,6 +159,8 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§7Configure item sounds:",
                 "§f• Success Sound",
                 "§f• Cooldown Sound",
+                "§f• Cost Fail Sound",
+                "§f• Depletion Sound",
                 "",
                 "§eClick to Edit"));
 
@@ -156,7 +170,16 @@ public class ActiveItemSettingsMenu extends Menu {
                 "",
                 "§eClick to Manage"));
 
-        inventory.setItem(30, makeItem(Material.DIAMOND, "§aUsage Limits", "§eComing soon!"));
+        inventory.setItem(30, makeItem(Material.DIAMOND, "§aUsage Limits",
+                "§7Limit how many times this item's",
+                "§7ability can be used.",
+                "",
+                "§f• Max Usage & Actions",
+                "§f• Usage Lore",
+                "§f• Depletion Messages",
+                "§f• Transformation Logic",
+                "",
+                "§eClick to Manage"));
 
         inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
 

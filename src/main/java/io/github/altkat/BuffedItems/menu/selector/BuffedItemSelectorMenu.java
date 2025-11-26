@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.menu.selector;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
+import io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
@@ -29,7 +30,8 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         COST,
         INGREDIENT,
         BASE,
-        RESULT
+        RESULT,
+        USAGE_LIMIT
     }
 
     public BuffedItemSelectorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin, SelectionContext context) {
@@ -78,12 +80,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
     private void handleSelection(Player p, String itemId) {
         switch (context) {
             case BASE:
-                Map<String, Object> data = new HashMap<>();
-                data.put("type", "BUFFED_ITEM");
-                data.put("amount", 1);
-                data.put("item_id", itemId);
-                ConfigManager.setUpgradeValue(playerMenuUtility.getItemToEditId(), "base", data);
-
+                ConfigManager.setUpgradeValue(playerMenuUtility.getItemToEditId(), "base", itemId);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase item updated to: §e" + itemId));
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
                 break;
@@ -113,6 +110,12 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount (Quantity) in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+
+            case USAGE_LIMIT:
+                ConfigManager.setItemValue(playerMenuUtility.getItemToEditId(), "usage-limit.transform-item", itemId);
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aTransform Target updated to: §e" + itemId));
+                new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
+                break;
         }
     }
 
@@ -124,26 +127,31 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
             case BASE:
                 playerMenuUtility.setChatInputPath("upgrade.base.set_id");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Base Item ID manually."));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+
             case RESULT:
                 playerMenuUtility.setChatInputPath("upgrade.result.item");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Result Item ID manually."));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+
             case INGREDIENT:
                 playerMenuUtility.setChatInputPath("upgrade.ingredients.add.BUFFED_ITEM");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;ITEM_ID"));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+
             case COST:
                 playerMenuUtility.setChatInputPath("active.costs.add.BUFFED_ITEM");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;ITEM_ID"));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                break;
+
+            case USAGE_LIMIT:
+                playerMenuUtility.setChatInputPath("usage-limit.transform-item");
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Target Buffed Item ID manually."));
                 break;
         }
+        p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
     }
 
     private void handleBack() {
@@ -152,11 +160,17 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
             case RESULT:
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
                 break;
+
             case INGREDIENT:
                 new IngredientListMenu(playerMenuUtility, plugin).open();
                 break;
+
             case COST:
                 new CostListMenu(playerMenuUtility, plugin).open();
+                break;
+
+            case USAGE_LIMIT:
+                new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
                 break;
         }
     }

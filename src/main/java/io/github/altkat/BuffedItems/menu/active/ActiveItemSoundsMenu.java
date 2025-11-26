@@ -43,16 +43,20 @@ public class ActiveItemSoundsMenu extends Menu {
             return;
         }
 
-        if (e.getSlot() == 11) {
+        if (e.getSlot() == 10) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "success").open();
         }
 
-        else if (e.getSlot() == 13) {
+        else if (e.getSlot() == 12) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cost-fail").open();
         }
 
-        else if (e.getSlot() == 15) {
+        else if (e.getSlot() == 14) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cooldown").open();
+        }
+
+        else if (e.getSlot() == 16) {
+            new SoundSettingsMenu(playerMenuUtility, plugin, "depletion").open();
         }
     }
 
@@ -70,7 +74,7 @@ public class ActiveItemSoundsMenu extends Menu {
             currSuccess = "§a" + currSuccess;
         }
 
-        inventory.setItem(11, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
+        inventory.setItem(10, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
                 "§7Sound played on successful use.",
                 "§7Current: " + currSuccess,
                 "",
@@ -84,7 +88,7 @@ public class ActiveItemSoundsMenu extends Menu {
             currCostFail = "§6" + currCostFail;
         }
 
-        inventory.setItem(13, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
+        inventory.setItem(12, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
                 "§7Sound played when a cost is not met.",
                 "§7Current: " + currCostFail,
                 "",
@@ -99,9 +103,22 @@ public class ActiveItemSoundsMenu extends Menu {
             currCool = "§c" + currCool;
         }
 
-        inventory.setItem(15, makeItem(Material.ANVIL, "§cCooldown Sound",
+        inventory.setItem(14, makeItem(Material.ANVIL, "§cCooldown Sound",
                 "§7Sound played when on cooldown.",
                 "§7Current: " + currCool,
+                "",
+                "§eClick to Change"));
+
+        String currDepletion = item.getCustomDepletionSound();
+        if (currDepletion == null) {
+            currDepletion = "§5" + ConfigManager.getGlobalDepletionSound() + " §8(Default)";
+        } else {
+            currDepletion = "§5" + currDepletion;
+        }
+
+        inventory.setItem(16, makeItem(Material.JUKEBOX, "§5Depletion Sound",
+                "§7Sound played when item breaks/depletes.",
+                "§7Current: " + currDepletion,
                 "",
                 "§eClick to Change"));
 

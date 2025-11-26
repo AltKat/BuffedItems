@@ -161,13 +161,21 @@ items:
     glow: true
     active-mode:
       enabled: true
-      cooldown: 5
+      usage-limit:
+        max-usage: 10
+        action: DISABLE
+        lore: "&bMana: &f%remaining_uses% &7(Max: %total_uses%)"
+        depleted-lore: "&c&lOut of mana!"
+        depleted-message: "&cMana drained! You can't use this item's ability anymore!"
+        depletion-notification: "&6&lMana Crystal of Staff is shattered! You can't use this item's ability anymore!"
       commands:
         - '[chance:33] [console] execute at %player% run summon fireball ^ ^1 ^2 {ExplosionPower:2,direction:[0.0,0.0,0.0]} ;; [message] &c&l🔥 FIREBALL!'
         - '[else] [chance:50] [console] execute at %player% run summon lightning_bolt ^ ^ ^8 ;; [message] &e&l⚡ THUNDER!'
         - '[else] [console] effect give %player% levitation 2 5 ;; [message] &f&l💨 GUST!'
       sounds:
         success: ITEM_TRIDENT_THUNDER;1.0;2.0
+        break: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;0.5
+        depletion: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;0.5
     flags:
       PREVENT_CRAFTING_USE: true
 

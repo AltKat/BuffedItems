@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemSettingsMenu;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemVisualsMenu;
 import io.github.altkat.BuffedItems.menu.active.CommandListMenu;
+import io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.menu.utility.SoundSettingsMenu;
 import org.bukkit.entity.Player;
@@ -35,6 +36,8 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
             handleActiveMessageEdit(player, pmu, input, path, itemId);
         } else if (path.startsWith("active.sounds.")) {
             handleActiveSoundEdit(player, pmu, input, path, itemId);
+        }else if (path.startsWith("usage-limit.")) {
+            handleUsageLimitEdit(player, pmu, input, path, itemId);
         }
     }
 
@@ -159,6 +162,34 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
 
         closeChatInput(pmu);
         new SoundSettingsMenu(pmu, plugin, soundType).open();
+    }
+
+    private void handleUsageLimitEdit(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
+        if (path.equals("usage-limit.max-usage")) {
+            try {
+                int val = Integer.parseInt(input);
+                if (val < -1 || val == 0) throw new NumberFormatException();
+
+                ConfigManager.setItemValue(itemId, "usage-limit.max-usage", val);
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aMax Usage updated to: §e" + (val == -1 ? "Unlimited" : val)));
+            } catch (NumberFormatException e) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number! Enter a positive integer or -1 for unlimited."));
+            }
+        }
+        else if (path.equals("usage-limit.transform-item")) {
+            if (plugin.getItemManager().getBuffedItem(input) == null) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Item ID '" + input + "' does not exist yet."));
+            }
+            ConfigManager.setItemValue(itemId, "usage-limit.transform-item", input);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aTransform Target updated to: §e" + input));
+        }
+        else {
+            ConfigManager.setItemValue(itemId, path, input);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aMessage setting updated!"));
+        }
+
+        closeChatInput(pmu);
+        new UsageLimitSettingsMenu(pmu, plugin).open();
     }
 
     private void closeChatInput(PlayerMenuUtility pmu) {

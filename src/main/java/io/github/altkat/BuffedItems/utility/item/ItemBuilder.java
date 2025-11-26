@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.item.ItemManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -158,6 +160,19 @@ public class ItemBuilder {
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, buffedItem.getId());
+
+        if(buffedItem.getMaxUses() > 0){
+            NamespacedKey maxKey = new NamespacedKey(plugin, "remaining_active_uses");
+            meta.getPersistentDataContainer().set(maxKey, PersistentDataType.INTEGER, buffedItem.getMaxUses());
+
+            List<Component> lore = meta.lore();
+            if(lore == null){
+                lore = new ArrayList<>();
+            }
+            String dynamicLore = buffedItem.getUsageLore(buffedItem.getMaxUses());
+            lore.add(ConfigManager.fromLegacy(dynamicLore));
+            meta.lore(lore);
+        }
 
         itemStack.setItemMeta(meta);
         return itemStack;

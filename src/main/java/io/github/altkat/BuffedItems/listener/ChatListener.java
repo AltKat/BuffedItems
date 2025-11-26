@@ -113,7 +113,7 @@ public class ChatListener implements Listener {
             basicInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("active.cooldown") || path.startsWith("active.duration") ||
                 path.startsWith("active.commands.") || path.startsWith("active.msg.") ||
-                path.startsWith("active.sounds.")) {
+                path.startsWith("active.sounds.") || path.startsWith("usage-limit.")) {
             activeSettingsInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")) {
             effectInputHandler.handle(player, pmu, input, path, itemId);
@@ -168,6 +168,11 @@ public class ChatListener implements Listener {
 
         if (path.startsWith("lore.")) {
             new LoreEditorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("usage-limit.")) {
+            new UsageLimitSettingsMenu(pmu, plugin).open();
             return;
         }
 

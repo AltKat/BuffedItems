@@ -10,6 +10,7 @@ import io.github.altkat.BuffedItems.menu.selector.EnchantmentFinder;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
+import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -318,6 +319,14 @@ public class ItemManager {
         boolean activeMode = false;
         int cooldown;
         int activeDuration = 0;
+        int maxUses = 0;
+        String durabilityLore = null;
+        String depletedLore = null;
+        String depletedMessage = null;
+        String depletionNotification = null;
+        DepletionAction depletionAction = DepletionAction.DISABLE;
+        String depletionTransformId = null;
+        List<String> depletionCommands = new ArrayList<>();
         List<String> activeCommands = new ArrayList<>();
 
         boolean vChat = true;
@@ -335,6 +344,7 @@ public class ItemManager {
         String soundSuccess = null;
         String soundCooldown = null;
         String soundCostFail = null;
+        String soundDepletion = null;
 
         List<ICost> costs = new ArrayList<>();
         BuffedItemEffect activeEffectsObj = null;
@@ -342,6 +352,26 @@ public class ItemManager {
         if (activeModeSection != null) {
             activeMode = activeModeSection.getBoolean("enabled", false);
             cooldown = activeModeSection.getInt("cooldown", 0);
+
+            if (activeModeSection.isConfigurationSection("usage-limit")) {
+                ConfigurationSection durabilitySection = activeModeSection.getConfigurationSection("usage-limit");
+                maxUses = durabilitySection.getInt("max-usage", -1);
+                durabilityLore = durabilitySection.getString("lore", null);
+                depletedLore = durabilitySection.getString("depleted-lore", null);
+                depletedMessage = durabilitySection.getString("depleted-message", null);
+                depletionNotification = durabilitySection.getString("depletion-notification", null);
+
+                String actionStr = durabilitySection.getString("action", "DISABLE");
+                try {
+                    depletionAction = DepletionAction.valueOf(actionStr.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    errorMessages.add("§cInvalid Depletion Action: " + actionStr + " (Defaulting to DISABLE)");
+                }
+
+                depletionTransformId = durabilitySection.getString("transform-item", null);
+                depletionCommands = durabilitySection.getStringList("commands");
+            }
+
             activeDuration = activeModeSection.getInt("duration", 0);
             activeCommands = activeModeSection.getStringList("commands");
 
@@ -389,6 +419,7 @@ public class ItemManager {
                 soundSuccess = validateSound(soundsSection.getString("success"), "success", errorMessages);
                 soundCooldown = validateSound(soundsSection.getString("cooldown"), "cooldown", errorMessages);
                 soundCostFail = validateSound(soundsSection.getString("cost-fail"), "cost-fail", errorMessages);
+                soundDepletion = validateSound(soundsSection.getString("depletion"), "depletion", errorMessages);
             }
 
             for (int i = 0; i < activeCommands.size(); i++) {
@@ -487,6 +518,8 @@ public class ItemManager {
                 activeEffectsObj = new BuffedItemEffect(activePotions, activeAttributes);
             }
         } else {
+            durabilityLore = null;
+            maxUses = -1;
             cooldown = 0;
         }
 
@@ -510,6 +543,11 @@ public class ItemManager {
                 customModelDataRaw,
                 activeMode,
                 cooldown,
+                maxUses,
+                durabilityLore,
+                depletedLore,
+                depletedMessage,
+                depletionNotification,
                 activeDuration,
                 activeCommands,
                 vChat,
@@ -527,6 +565,10 @@ public class ItemManager {
                 soundSuccess,
                 soundCooldown,
                 soundCostFail,
+                soundDepletion,
+                depletionAction,
+                depletionTransformId,
+                depletionCommands,
                 costs
         );
 
