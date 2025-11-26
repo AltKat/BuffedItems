@@ -592,7 +592,8 @@ public class ItemManager {
     }
 
     private String validateSound(String soundString, String type, List<String> errors) {
-        if (soundString == null || soundString.equalsIgnoreCase("NONE")) return null;
+        if (soundString == null) return null;
+        if (soundString.equalsIgnoreCase("NONE")) return "NONE";
 
         String[] parts = soundString.split(";");
         String soundName = parts[0];
