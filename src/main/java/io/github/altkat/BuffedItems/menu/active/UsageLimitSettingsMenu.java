@@ -81,6 +81,11 @@ public class UsageLimitSettingsMenu extends Menu {
             return;
         }
 
+        else if (e.getSlot() == 16) {
+            new CommandListMenu(playerMenuUtility, plugin, CommandListMenu.CommandContext.DEPLETION).open();
+            return;
+        }
+
         String configKey = null;
         String inputPath = null;
         String title = null;
@@ -173,6 +178,14 @@ public class UsageLimitSettingsMenu extends Menu {
         } else {
             inventory.setItem(15, makeItem(Material.MINECART, "§8Transform Target", "§7(Requires TRANSFORM action)"));
         }
+
+        inventory.setItem(16, makeItem(Material.COMMAND_BLOCK, "§6Depletion Commands",
+                "§7Manage commands executed when",
+                "§7the item usage reaches 0.",
+                "",
+                "§7Current: §f" + item.getDepletionCommands().size() + " commands",
+                "",
+                "§eClick to Edit"));
 
         inventory.setItem(28, makeMessageItem(Material.PAPER, "Usage Lore", item.getUsageLore(maxUses > 0 ? maxUses : 1), "usage-limit-lore"));
         inventory.setItem(30, makeMessageItem(Material.BOOK, "Depleted Lore", item.getDepletedLore(), "usage-limit-broken-lore"));

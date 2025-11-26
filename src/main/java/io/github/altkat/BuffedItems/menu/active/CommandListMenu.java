@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.menu.active;
 
+import com.mojang.brigadier.context.CommandContext;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
@@ -16,16 +17,45 @@ public class CommandListMenu extends PaginatedMenu {
 
     private final BuffedItems plugin;
     private final String itemId;
+    private final CommandContext context;
 
-    public CommandListMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
+    public enum CommandContext {
+        ACTIVE(
+                "Active Commands",
+                "active.commands.",
+                "commands",
+                "When Right-Clicked"
+        ),
+        DEPLETION(
+                "Depletion Commands",
+                "usage-limit.commands.",
+                "usage-limit.commands",
+                "When Item Depletes"
+        );
+
+        private final String title;
+        private final String chatPrefix;
+        private final String configKey;
+        private final String description;
+
+        CommandContext(String title, String chatPrefix, String configKey, String description) {
+            this.title = title;
+            this.chatPrefix = chatPrefix;
+            this.configKey = configKey;
+            this.description = description;
+        }
+    }
+
+    public CommandListMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin, CommandContext context) {
         super(playerMenuUtility);
         this.plugin = plugin;
         this.itemId = playerMenuUtility.getItemToEditId();
+        this.context = context;
     }
 
     @Override
     public String getMenuName() {
-        return "Commands: " + itemId;
+        return context.title + ": " + itemId;
     }
 
     @Override
@@ -39,7 +69,9 @@ public class CommandListMenu extends PaginatedMenu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        List<String> commands = new ArrayList<>(item.getActiveCommands());
+        List<String> commands = (context == CommandContext.ACTIVE)
+                ? new ArrayList<>(item.getActiveCommands())
+                : new ArrayList<>(item.getDepletionCommands());
 
         if (handlePageChange(e, commands.size())) return;
 
@@ -47,30 +79,31 @@ public class CommandListMenu extends PaginatedMenu {
         Material type = e.getCurrentItem().getType();
 
         if (type == Material.BARRIER && e.getSlot() == 49) {
-            new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+            if (context == CommandContext.ACTIVE) {
+                new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+            } else {
+                new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
+            }
             return;
         }
 
         if (type == Material.ANVIL && e.getSlot() == 51) {
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("active.commands.add");
+            playerMenuUtility.setChatInputPath(context.chatPrefix + "add");
             p.closeInventory();
 
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the command in chat."));
-
-            p.sendMessage(ConfigManager.fromSection("§6Logic Prefixes (Any Order):"));
-            p.sendMessage(ConfigManager.fromSection("§c• [else]      §7(Run if prev failed)."));
-            p.sendMessage(ConfigManager.fromSection("§d• [delay:20]  §7(Wait ticks)."));
-            p.sendMessage(ConfigManager.fromSection("§b• [chance:50] §7(Success chance)."));
-            p.sendMessage(ConfigManager.fromSection("§e• [console]   §7(Run as admin)."));
-
-            p.sendMessage(ConfigManager.fromSection("§6Message Actions:"));
-            p.sendMessage(ConfigManager.fromSection("§a• [message] Hi! §7(Chat)"));
-            p.sendMessage(ConfigManager.fromSection("§b• [actionbar] Hi! §7(Hotbar)"));
-            p.sendMessage(ConfigManager.fromSection("§d• [title] Hi!|Sub §7(Title)"));
-
+            p.sendMessage(ConfigManager.fromSection("§6Logic Prefixes:"));
+            p.sendMessage(ConfigManager.fromSection("§f[console], [chance:50], [delay:20], [else]"));
+            p.sendMessage(ConfigManager.fromSection("§6Actions:"));
+            p.sendMessage(ConfigManager.fromSection("§f[message], [title], [actionbar], [sound]"));
+            p.sendMessage(ConfigManager.fromSection("§6Variables & PAPI:"));
+            p.sendMessage(ConfigManager.fromSection("§eInternals: §f%player%, %player_x%, %player_yaw%..."));
+            p.sendMessage(ConfigManager.fromSection("§ePAPI Supported! §f(e.g %vault_eco_balance%)"));
             p.sendMessage(ConfigManager.fromSection("§6Chaining:"));
-            p.sendMessage(ConfigManager.fromSection("§fUse ';;' to separate commands."));
+            p.sendMessage(ConfigManager.fromSection("§fUse '§e;;§f' to separate commands."));
+            p.sendMessage(ConfigManager.fromSection(""));
+            p.sendMessage(ConfigManager.fromSection("§eFor full guide use: §6/buffeditems wiki"));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             return;
         }
@@ -83,13 +116,13 @@ public class CommandListMenu extends PaginatedMenu {
 
             if (e.isLeftClick()) {
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("active.commands.edit." + commandIndex);
+                playerMenuUtility.setChatInputPath(context.chatPrefix + "edit." + commandIndex);
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the new command in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7Current: §f" + commands.get(commandIndex)));
             } else if (e.isRightClick()) {
                 commands.remove(commandIndex);
-                ConfigManager.setItemValue(itemId, "commands", commands);
+                ConfigManager.setItemValue(itemId, context.configKey, commands);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cRemoved command."));
                 this.open();
             }
@@ -104,28 +137,35 @@ public class CommandListMenu extends PaginatedMenu {
         inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd New Command", "§7Click to add a command via chat."));
 
         inventory.setItem(4, makeItem(Material.BOOK, "§eCommand Info & Help",
-                "§7Commands run when the item is right-clicked.",
+                "§7Mode: §6" + context.description,
                 "",
-                "§6Logic Flow:",
-                "§f• Normal commands execute sequentially.",
-                "§c• [else] §7commands ONLY execute if the",
-                "§7  IMMEDIATELY PRECEDING command failed",
-                "§7  (e.g., due to chance).",
+                "§6Logic Prefixes:",
+                "§f• §e[console] §f-> §7Run as Console",
+                "§f• §e[chance:%] §f-> §7Success Chance",
+                "§f• §e[delay:ticks] §f-> §7Wait before run",
+                "§f• §c[else] §f-> §7Run if prev [chance] failed",
                 "",
-                "§6Actions & Logic:",
-                "§b• [chance:%]    §7(Success % 0-100)",
-                "§d• [delay:ticks] §7(20 ticks = 1s)",
-                "§e• [console]     §7(Run as Admin)",
-                "§a• [message]     §7(Send chat msg)",
+                "§6Actions:",
+                "§f• §e[message] §f-> §7Send Chat Msg",
+                "§f• §e[title] §f-> §7Show Title",
+                "§f• §e[actionbar] §f-> §7Show Actionbar",
+                "§f• §e[sound] §f-> §7Play Sound",
+                "",
+                "§6Variables & PAPI:",
+                "§f• §eInternals: §7%player%, %player_x%...",
+                "§f• §ePAPI Supported!",
                 "",
                 "§6Chaining:",
-                "§7Use ';;' to combine actions.",
-                "§eSee wiki for detailed examples."));
+                "§7Use '§e;;§7' to run multiple commands.",
+                "",
+                "§eFull Guide: §6/buffeditems wiki"));
 
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        List<String> commands = item.getActiveCommands();
+        List<String> commands = (context == CommandContext.ACTIVE)
+                ? item.getActiveCommands()
+                : item.getDepletionCommands();
 
         if (!commands.isEmpty()) {
             for (int i = 0; i < maxItemsPerPage; i++) {

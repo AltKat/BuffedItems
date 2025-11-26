@@ -83,7 +83,7 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         ConfigManager.setItemValue(itemId, "commands", commands);
         player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCommand added!"));
         closeChatInput(pmu);
-        new CommandListMenu(pmu, plugin).open();
+        new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
     }
 
     private void handleEditCommand(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
@@ -99,11 +99,11 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Command index out of bounds."));
             }
             closeChatInput(pmu);
-            new CommandListMenu(pmu, plugin).open();
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
         } catch (Exception error) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError processing edit."));
             closeChatInput(pmu);
-            new CommandListMenu(pmu, plugin).open();
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
         }
     }
 
@@ -165,6 +165,37 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
     }
 
     private void handleUsageLimitEdit(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
+        if (path.equals("usage-limit.commands.add")) {
+            List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active-mode.usage-limit.commands"));
+            commands.add(input);
+            ConfigManager.setItemValue(itemId, "usage-limit.commands", commands);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDepletion command added!"));
+            closeChatInput(pmu);
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
+            return;
+        }
+        else if (path.startsWith("usage-limit.commands.edit.")) {
+            try {
+                int index = Integer.parseInt(path.substring(26));
+                List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active-mode.usage-limit.commands"));
+
+                if (index >= 0 && index < commands.size()) {
+                    commands.set(index, input);
+                    ConfigManager.setItemValue(itemId, "usage-limit.commands", commands);
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDepletion command updated!"));
+                } else {
+                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Command index out of bounds."));
+                }
+                closeChatInput(pmu);
+                new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
+            } catch (Exception e) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError processing edit."));
+                closeChatInput(pmu);
+                new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
+            }
+            return;
+        }
+
         if (path.equals("usage-limit.max-usage")) {
             try {
                 int val = Integer.parseInt(input);

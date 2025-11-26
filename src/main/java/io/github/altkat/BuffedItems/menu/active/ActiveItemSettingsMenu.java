@@ -77,7 +77,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 break;
 
             case COMMAND_BLOCK:
-                new CommandListMenu(playerMenuUtility, plugin).open();
+                new CommandListMenu(playerMenuUtility, plugin, CommandListMenu.CommandContext.ACTIVE).open();
                 break;
 
             case LINGERING_POTION:

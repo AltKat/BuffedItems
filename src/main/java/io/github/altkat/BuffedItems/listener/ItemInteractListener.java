@@ -513,6 +513,12 @@ public class ItemInteractListener implements Listener {
             return;
         }
 
+        if (lowerCmd.startsWith("[sound] ")) {
+            String soundData = parsedCmd.substring(parsedCmd.indexOf("] ") + 2);
+            playConfiguredSound(player, soundData, "NONE");
+            return;
+        }
+
         Boolean rule = player.getWorld().getGameRuleValue(GameRule.SEND_COMMAND_FEEDBACK);
         player.getWorld().setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false);
 

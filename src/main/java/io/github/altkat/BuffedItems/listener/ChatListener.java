@@ -171,6 +171,11 @@ public class ChatListener implements Listener {
             return;
         }
 
+        if (path.startsWith("usage-limit.commands.")) {
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
+            return;
+        }
+
         if (path.startsWith("usage-limit.")) {
             new UsageLimitSettingsMenu(pmu, plugin).open();
             return;
@@ -192,7 +197,7 @@ public class ChatListener implements Listener {
             }
 
             if (path.startsWith("active.commands.")) {
-                new CommandListMenu(pmu, plugin).open();
+                new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
                 return;
             }
 
