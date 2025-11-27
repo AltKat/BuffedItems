@@ -160,7 +160,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Success Sound",
                 "§f• Cooldown Sound",
                 "§f• Cost Fail Sound",
-                "§f• Depletion Sound",
+                "§f• Depletion Sounds",
                 "",
                 "§eClick to Edit"));
 

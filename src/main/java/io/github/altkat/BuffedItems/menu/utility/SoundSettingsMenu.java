@@ -38,7 +38,7 @@ public class SoundSettingsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 45;
+        return 54;
     }
 
     @Override
@@ -70,32 +70,21 @@ public class SoundSettingsMenu extends Menu {
             return;
         }
 
-        if (e.getSlot() >= 10 && e.getSlot() <= 34) {
-            ItemStack clicked = e.getCurrentItem();
-            if (!clicked.hasItemMeta() || !clicked.getItemMeta().hasDisplayName()) return;
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked.hasItemMeta() && clicked.getItemMeta().hasLore()) {
+            String idLine = ConfigManager.toPlainText(clicked.getItemMeta().lore().get(0));
+            if (idLine.startsWith("ID: ")) {
+                String soundData = idLine.substring(4) + ";1.0;1.0";
+                if (soundData.contains("NOTE_BLOCK_PLING")) soundData = soundData.replace("1.0", "2.0");
 
-            String name = clicked.getItemMeta().getDisplayName();
-            String soundData = null;
-
-            if (name.contains("Level Up")) soundData = "ENTITY_PLAYER_LEVELUP;1.0;1.0";
-            else if (name.contains("Exp Orb")) soundData = "ENTITY_EXPERIENCE_ORB_PICKUP;1.0;1.0";
-            else if (name.contains("Villager No")) soundData = "ENTITY_VILLAGER_NO;1.0;1.0";
-            else if (name.contains("Anvil Land")) soundData = "BLOCK_ANVIL_LAND;1.0;1.0";
-            else if (name.contains("Explosion")) soundData = "ENTITY_GENERIC_EXPLODE;1.0;1.0";
-            else if (name.contains("Click")) soundData = "UI_BUTTON_CLICK;1.0;1.0";
-            else if (name.contains("Pling")) soundData = "BLOCK_NOTE_BLOCK_PLING;1.0;2.0";
-            else if (name.contains("Break")) soundData = "ENTITY_ITEM_BREAK;1.0;1.0";
-            else if (name.contains("Totem")) soundData = "ITEM_TOTEM_USE;1.0;1.0";
-            else if (name.contains("Beacon")) soundData = "BLOCK_BEACON_ACTIVATE;1.0;1.0";
-
-            if (soundData != null) {
                 if (e.isLeftClick()) {
                     ConfigManager.setItemValue(itemId, "sounds." + soundType, soundData);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
                     new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
                 } else if (e.isRightClick()) {
                     try {
-                        p.playSound(p.getLocation(), org.bukkit.Sound.valueOf(soundData.split(";")[0]), 1f, 1f);
+                        float pitch = soundData.contains("2.0") ? 2.0f : 1.0f;
+                        p.playSound(p.getLocation(), Sound.valueOf(soundData.split(";")[0]), 1f, pitch);
                     } catch (Exception ignored) {}
                 }
             }
@@ -106,33 +95,53 @@ public class SoundSettingsMenu extends Menu {
     public void setMenuItems() {
         setFillerGlass();
 
-        inventory.setItem(4, makeItem(Material.BOOK, "§6Sound Info",
-                "§7Select a common sound below",
-                "§7or enter a custom one via chat.",
+        inventory.setItem(4, makeItem(Material.BOOK, "§6Sound Library",
+                "§7Select a preset sound below",
+                "§7or use Jukebox for custom input.",
                 "",
-                "§7Format: §fNAME;VOL;PITCH",
-                "§7Resource packs supported!"));
+                "§aLeft-Click to Set",
+                "§eRight-Click to Preview"));
 
-        inventory.setItem(40, makeItem(Material.JUKEBOX, "§bCustom Sound (Chat)",
-                "§7Click to type a custom sound",
-                "§7name and pitch/volume in chat."));
+        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
 
-        inventory.setItem(36, makeItem(Material.REDSTONE_BLOCK, "§cDisable Sound",
-                "§7Set to NONE."));
+        inventory.setItem(45, makeItem(Material.REDSTONE_BLOCK, "§cDisable Sound", "§7Set to NONE."));
+        inventory.setItem(53, makeItem(Material.JUKEBOX, "§bCustom Sound (Chat)", "§7Type sound ID manually."));
 
-        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
+        int i = 10;
+        inventory.setItem(i++, makeSoundItem(Material.EXPERIENCE_BOTTLE, "Level Up", "ENTITY_PLAYER_LEVELUP", "Classic RPG level up sound."));
+        inventory.setItem(i++, makeSoundItem(Material.GOLD_NUGGET, "Exp Orb", "ENTITY_EXPERIENCE_ORB_PICKUP", "Subtle 'ding' sound."));
+        inventory.setItem(i++, makeSoundItem(Material.NOTE_BLOCK, "Pling (High)", "BLOCK_NOTE_BLOCK_PLING", "High pitched note block."));
+        inventory.setItem(i++, makeSoundItem(Material.EMERALD, "Success", "ENTITY_VILLAGER_YES", "Villager agreement sound."));
+        inventory.setItem(i++, makeSoundItem(Material.BEACON, "Beacon Power", "BLOCK_BEACON_POWER_SELECT", "Magical power up."));
+        inventory.setItem(i++, makeSoundItem(Material.TOTEM_OF_UNDYING, "Totem Use", "ITEM_TOTEM_USE", "Divine activation sound."));
+        inventory.setItem(i++, makeSoundItem(Material.ENCHANTING_TABLE, "Enchant", "BLOCK_ENCHANTMENT_TABLE_USE", "Magical hum."));
 
-        inventory.setItem(10, makeSoundItem(Material.EXPERIENCE_BOTTLE, "Level Up", "ENTITY_PLAYER_LEVELUP", "Classic RPG level up sound."));
-        inventory.setItem(11, makeSoundItem(Material.GOLD_NUGGET, "Exp Orb", "ENTITY_EXPERIENCE_ORB_PICKUP", "Subtle 'ding' sound."));
-        inventory.setItem(12, makeSoundItem(Material.NOTE_BLOCK, "Pling (High)", "BLOCK_NOTE_BLOCK_PLING", "High pitched note block."));
-        inventory.setItem(13, makeSoundItem(Material.TOTEM_OF_UNDYING, "Totem", "ITEM_TOTEM_USE", "Loud totem activation."));
-        inventory.setItem(14, makeSoundItem(Material.BEACON, "Beacon", "BLOCK_BEACON_ACTIVATE", "Powered up sound."));
+        i = 19;
+        inventory.setItem(i++, makeSoundItem(Material.REDSTONE, "Villager No", "ENTITY_VILLAGER_NO", "Classic error sound."));
+        inventory.setItem(i++, makeSoundItem(Material.NOTE_BLOCK, "Bass (Fail)", "BLOCK_NOTE_BLOCK_BASS", "Low pitch error sound."));
+        inventory.setItem(i++, makeSoundItem(Material.IRON_TRAPDOOR, "Click/Trapdoor", "BLOCK_IRON_TRAPDOOR_OPEN", "Mechanical click."));
+        inventory.setItem(i++, makeSoundItem(Material.FLINT_AND_STEEL, "Extinguish", "ENTITY_GENERIC_EXTINGUISH_FIRE", "Fizzle sound."));
+        inventory.setItem(i++, makeSoundItem(Material.DISPENSER, "Dispenser Fail", "BLOCK_DISPENSER_FAIL", "Empty click sound."));
+        inventory.setItem(i++, makeSoundItem(Material.LAVA_BUCKET, "Lava Pop", "BLOCK_LAVA_POP", "Bubble pop sound."));
+        inventory.setItem(i++, makeSoundItem(Material.CHAIN, "Chain Break", "BLOCK_CHAIN_BREAK", "Metallic snap."));
 
-        inventory.setItem(19, makeSoundItem(Material.EMERALD, "Villager No", "ENTITY_VILLAGER_NO", "Classic 'Hrmm' error sound."));
-        inventory.setItem(20, makeSoundItem(Material.ANVIL, "Anvil Land", "BLOCK_ANVIL_LAND", "Heavy metallic clang."));
-        inventory.setItem(21, makeSoundItem(Material.TNT, "Explosion", "ENTITY_GENERIC_EXPLODE", "Boom!"));
-        inventory.setItem(22, makeSoundItem(Material.FLINT, "Item Break", "ENTITY_ITEM_BREAK", "Crunchy snapping sound."));
-        inventory.setItem(23, makeSoundItem(Material.STONE_BUTTON, "Click", "UI_BUTTON_CLICK", "Simple UI click."));
+        i = 28;
+        inventory.setItem(i++, makeSoundItem(Material.FLINT, "Item Break", "ENTITY_ITEM_BREAK", "Crunchy snapping sound."));
+        inventory.setItem(i++, makeSoundItem(Material.ANVIL, "Anvil Land", "BLOCK_ANVIL_LAND", "Heavy metallic clang."));
+        inventory.setItem(i++, makeSoundItem(Material.TNT, "Explosion", "ENTITY_GENERIC_EXPLODE", "Boom!"));
+        inventory.setItem(i++, makeSoundItem(Material.IRON_DOOR, "Zombie Door", "ENTITY_ZOMBIE_ATTACK_IRON_DOOR", "Loud banging sound."));
+        inventory.setItem(i++, makeSoundItem(Material.GHAST_TEAR, "Ghast Shoot", "ENTITY_GHAST_SHOOT", "Retro arcade shot."));
+        inventory.setItem(i++, makeSoundItem(Material.BLAZE_ROD, "Blaze Shoot", "ENTITY_BLAZE_SHOOT", "Fire shot sound."));
+        inventory.setItem(i++, makeSoundItem(Material.DRAGON_HEAD, "Dragon Growl", "ENTITY_ENDER_DRAGON_GROWL", "Epic boss roar."));
+
+        i = 37;
+        inventory.setItem(i++, makeSoundItem(Material.WITHER_SKELETON_SKULL, "Wither Spawn", "ENTITY_WITHER_SPAWN", "Dark summon sound."));
+        inventory.setItem(i++, makeSoundItem(Material.BELL, "Bell Ring", "BLOCK_BELL_USE", "Clear ding sound."));
+        inventory.setItem(i++, makeSoundItem(Material.CHEST, "Chest Open", "BLOCK_CHEST_OPEN", "Wooden creak."));
+        inventory.setItem(i++, makeSoundItem(Material.ENDER_CHEST, "Ender Chest", "BLOCK_ENDER_CHEST_OPEN", "Mystical open sound."));
+        inventory.setItem(i++, makeSoundItem(Material.SHIELD, "Shield Block", "ITEM_SHIELD_BLOCK", "Thud sound."));
+        inventory.setItem(i++, makeSoundItem(Material.TRIDENT, "Trident Throw", "ITEM_TRIDENT_THROW", "Whoosh sound."));
+        inventory.setItem(i++, makeSoundItem(Material.CROSSBOW, "Crossbow Shoot", "ITEM_CROSSBOW_SHOOT", "Sharp release sound."));
     }
 
     private ItemStack makeSoundItem(Material mat, String displayName, String soundName, String desc) {

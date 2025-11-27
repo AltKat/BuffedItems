@@ -49,7 +49,7 @@ public class UsageLimitSettingsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        if (e.getSlot() == 11) {
+        if (e.getSlot() == 10) {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("usage-limit.max-usage");
             p.closeInventory();
@@ -59,7 +59,7 @@ public class UsageLimitSettingsMenu extends Menu {
             return;
         }
 
-        if (e.getSlot() == 13) {
+        if (e.getSlot() == 12) {
             DepletionAction current = item.getDepletionAction();
             DepletionAction next;
             if (current == DepletionAction.DISABLE) next = DepletionAction.DESTROY;
@@ -72,7 +72,7 @@ public class UsageLimitSettingsMenu extends Menu {
             return;
         }
 
-        if (e.getSlot() == 15 && type == Material.HOPPER) {
+        if (e.getSlot() == 14 && type == Material.HOPPER) {
             new BuffedItemSelectorMenu(
                     playerMenuUtility,
                     plugin,
@@ -136,7 +136,7 @@ public class UsageLimitSettingsMenu extends Menu {
 
         int maxUses = item.getMaxUses();
         String usageStatus = (maxUses > 0) ? "§e" + maxUses : "§aUnlimited (-1)";
-        inventory.setItem(11, makeItem(Material.REDSTONE, "§cMax Usage Limit",
+        inventory.setItem(10, makeItem(Material.REDSTONE, "§cMax Usage Limit",
                 "§7Current: " + usageStatus, "", "§eClick to Edit"));
 
         DepletionAction action = item.getDepletionAction();
@@ -149,7 +149,7 @@ public class UsageLimitSettingsMenu extends Menu {
             actionIcon = Material.CHEST;
             actionDesc = "§bItem transforms.";
         }
-        inventory.setItem(13, makeItem(actionIcon, "§6Depletion Action",
+        inventory.setItem(12, makeItem(actionIcon, "§6Depletion Action",
                 "§7Current: §f" + action.name(), actionDesc, "", "§eClick to Switch"));
 
         if (action == DepletionAction.TRANSFORM) {
@@ -168,7 +168,7 @@ public class UsageLimitSettingsMenu extends Menu {
                 idLine = "§8(ID: " + targetId + ")";
             }
 
-            inventory.setItem(15, makeItem(Material.HOPPER, "§dTransform Target",
+            inventory.setItem(14, makeItem(Material.HOPPER, "§dTransform Target",
                     "§7The item to give upon depletion.",
                     "",
                     "§7Current: " + displayName,
@@ -176,7 +176,7 @@ public class UsageLimitSettingsMenu extends Menu {
                     "",
                     "§eClick to Select"));
         } else {
-            inventory.setItem(15, makeItem(Material.MINECART, "§8Transform Target", "§7(Requires TRANSFORM action)"));
+            inventory.setItem(14, makeItem(Material.MINECART, "§8Transform Target", "§7(Requires TRANSFORM action)"));
         }
 
         inventory.setItem(16, makeItem(Material.COMMAND_BLOCK, "§6Depletion Commands",
