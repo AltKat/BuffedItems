@@ -141,13 +141,11 @@ public class ItemInteractListener implements Listener {
 
         if (currentUses != null && currentUses > 0) {
             int newUses = currentUses - 1;
-
             ItemStack itemToUpdate;
             boolean isStackSplit = false;
 
             if (item.getAmount() > 1) {
                 item.setAmount(item.getAmount() - 1);
-
                 itemToUpdate = item.clone();
                 itemToUpdate.setAmount(1);
                 isStackSplit = true;
@@ -172,28 +170,26 @@ public class ItemInteractListener implements Listener {
                             String rawNewLine = buffedItem.getUsageLore(newUses);
                             String parsedNewLine = hooks.processPlaceholders(player, rawNewLine);
                             lore.set(i, ConfigManager.fromLegacy(parsedNewLine));
-                            meta.lore(lore);
-                            itemToUpdate.setItemMeta(meta);
-                        }
-                        else {
-                            String rawDepletedLore = buffedItem.getDepletedLore();
-                            String parsedDepletedLore = hooks.processPlaceholders(player, rawDepletedLore);
-                            lore.set(i, ConfigManager.fromLegacy(parsedDepletedLore));
-                            meta.lore(lore);
-                            itemToUpdate.setItemMeta(meta);
-
-                            handleDepletion(player, buffedItem, itemToUpdate, isStackSplit);
-                            return;
+                        } else {
+                            String rawBrokenLore = buffedItem.getDepletedLore();
+                            String parsedBrokenLore = hooks.processPlaceholders(player, rawBrokenLore);
+                            lore.set(i, ConfigManager.fromLegacy(parsedBrokenLore));
                         }
                         break;
                     }
                 }
+                meta.lore(lore);
+            }
+            itemToUpdate.setItemMeta(meta);
+
+            if (newUses == 0) {
+                handleDepletion(player, buffedItem, itemToUpdate, isStackSplit);
+                return;
             }
 
-            if (isStackSplit && newUses > 0) {
-                itemToUpdate.setItemMeta(meta);
+            if (isStackSplit) {
                 giveItemToPlayer(player, itemToUpdate);
-            } else if (!isStackSplit && newUses > 0) {
+            } else {
                 item.setItemMeta(meta);
             }
         }
