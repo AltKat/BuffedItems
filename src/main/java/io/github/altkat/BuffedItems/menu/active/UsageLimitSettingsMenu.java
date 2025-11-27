@@ -5,7 +5,6 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
-import io.github.altkat.BuffedItems.menu.utility.SoundSettingsMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import org.bukkit.Material;

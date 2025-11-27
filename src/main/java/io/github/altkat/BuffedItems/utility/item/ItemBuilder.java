@@ -1,7 +1,6 @@
 package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.manager.item.ItemManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
