@@ -96,6 +96,7 @@ public class ItemInteractListener implements Listener {
                 String rawDepletedMsg = buffedItem.getDepletedMessage();
                 String parsedDepletedMsg = hooks.processPlaceholders(player, rawDepletedMsg);
                 player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepletedMsg));
+                playConfiguredSound(player, buffedItem.getCustomDepletedTrySound(), ConfigManager.getGlobalDepletedTrySound());
                 return;
             }
         }

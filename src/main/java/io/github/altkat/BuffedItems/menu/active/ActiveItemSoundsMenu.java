@@ -28,7 +28,7 @@ public class ActiveItemSoundsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 27;
+        return 36;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class ActiveItemSoundsMenu extends Menu {
 
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 26) {
+        if (type == Material.BARRIER && e.getSlot() == 35) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -57,6 +57,10 @@ public class ActiveItemSoundsMenu extends Menu {
 
         else if (e.getSlot() == 16) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "depletion").open();
+        }
+
+        else if (e.getSlot() == 25) {
+            new SoundSettingsMenu(playerMenuUtility, plugin, "depleted-try").open();
         }
     }
 
@@ -122,6 +126,16 @@ public class ActiveItemSoundsMenu extends Menu {
                 "",
                 "§eClick to Change"));
 
-        inventory.setItem(26, makeItem(Material.BARRIER, "§cBack"));
+        String currTry = item.getCustomDepletedTrySound();
+        if (currTry == null) currTry = "§7" + ConfigManager.getGlobalDepletedTrySound() + " §8(Default)";
+        else currTry = "§7" + currTry;
+
+        inventory.setItem(25, makeItem(Material.DISPENSER, "§8Depleted Try Sound",
+                "§7Sound played when trying to use",
+                "§7an empty/depleted item.",
+                "§7Current: " + currTry,
+                "", "§eClick to Change"));
+
+        inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
     }
 }

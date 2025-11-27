@@ -345,6 +345,7 @@ public class ItemManager {
         String soundCooldown = null;
         String soundCostFail = null;
         String soundDepletion = null;
+        String soundDepletedTry = null;
 
         List<ICost> costs = new ArrayList<>();
         BuffedItemEffect activeEffectsObj = null;
@@ -420,6 +421,7 @@ public class ItemManager {
                 soundCooldown = validateSound(soundsSection.getString("cooldown"), "cooldown", errorMessages);
                 soundCostFail = validateSound(soundsSection.getString("cost-fail"), "cost-fail", errorMessages);
                 soundDepletion = validateSound(soundsSection.getString("depletion"), "depletion", errorMessages);
+                soundDepletedTry = validateSound(soundsSection.getString("depleted-try"), "depleted-try", errorMessages);
             }
 
             for (int i = 0; i < activeCommands.size(); i++) {
@@ -566,6 +568,7 @@ public class ItemManager {
                 soundCooldown,
                 soundCostFail,
                 soundDepletion,
+                soundDepletedTry,
                 depletionAction,
                 depletionTransformId,
                 depletionCommands,

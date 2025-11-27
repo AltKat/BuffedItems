@@ -425,6 +425,11 @@ public class ConfigManager {
         return plugin.getConfig().getString("active-items.sounds.depletion", "ENTITY_ITEM_BREAK;1.0;1.0");
     }
 
+    public static String getGlobalDepletedTrySound() {
+        if (plugin == null) return "BLOCK_DISPENSER_FAIL;1.0;1.2";
+        return plugin.getConfig().getString("active-items.sounds.depleted-try", "BLOCK_DISPENSER_FAIL;1.0;1.2");
+    }
+
     public static boolean isDebugLevelEnabled(int level) {
         return debugLevel >= level;
     }

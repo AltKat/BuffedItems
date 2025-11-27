@@ -30,6 +30,7 @@ public class SoundSettingsMenu extends Menu {
             case "cooldown" -> "Cooldown";
             case "cost-fail" -> "Cost Fail";
             case "depletion" -> "Depletion";
+            case "depleted-try" -> "Depleted Try";
             default -> soundType;
         };
         return "Set " + displayType + " Sound";

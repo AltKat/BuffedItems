@@ -83,6 +83,7 @@ active-items:
     cooldown: "ENTITY_VILLAGER_NO;1.0;1.0"
     cost-fail: "BLOCK_NOTE_BLOCK_HARP;1.0;0.5"
     depletion: "ENTITY_ITEM_BREAK;1.0;1.0"
+    depleted-try: "BLOCK_DISPENSER_FAIL;1.0;1.2"
 
   # ===================================================================
   #                       COST SYSTEM MESSAGES

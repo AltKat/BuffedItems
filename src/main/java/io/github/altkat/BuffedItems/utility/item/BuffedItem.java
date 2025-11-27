@@ -46,6 +46,7 @@ public class BuffedItem {
     private final String customCooldownSound;
     private final String customCostFailSound;
     private final String customDepletionSound;
+    private final String customDepletedTrySound;
     private final DepletionAction depletionAction;
     private final String depletionTransformId;
     private final List<String> depletionCommands;
@@ -60,11 +61,13 @@ public class BuffedItem {
                       boolean glow, Map<String, BuffedItemEffect> effects, String permission,
                       String activePermission, String passivePermission, Map<String, Boolean> flags,
                       Map<Enchantment, Integer> enchantments, Integer customModelData, String customModelDataRaw,
-                      boolean activeMode, int cooldown, int maxUses, String customUsageLore, String customDepletedLore, String customDepletedMessage, String customDepletionNotification, int activeDuration, List<String> activeCommands, boolean visualChat,
+                      boolean activeMode, int cooldown, int maxUses, String customUsageLore, String customDepletedLore, String customDepletedMessage,
+                      String customDepletionNotification, int activeDuration, List<String> activeCommands, boolean visualChat,
                       boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
-                      String customCooldownSound, String customCostFailSound, String customDepletionSound, DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, List<ICost> costs) {
+                      String customCooldownSound, String customCostFailSound, String customDepletionSound, String customDepletedTrySound,
+                      DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, List<ICost> costs) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -103,6 +106,7 @@ public class BuffedItem {
         this.customCooldownSound = customCooldownSound;
         this.customCostFailSound = customCostFailSound;
         this.customDepletionSound = customDepletionSound;
+        this.customDepletedTrySound = customDepletedTrySound;
         this.depletionAction = depletionAction;
         this.depletionTransformId = depletionTransformId;
         this.depletionCommands = (depletionCommands != null) ? depletionCommands : new ArrayList<>();
@@ -270,6 +274,7 @@ public class BuffedItem {
     public String getCustomCooldownSound() { return customCooldownSound; }
     public String getCustomCostFailSound() { return customCostFailSound; }
     public String getCustomDepletionSound() { return customDepletionSound; }
+    public String getCustomDepletedTrySound() { return customDepletedTrySound; }
     public DepletionAction getDepletionAction() { return depletionAction; }
     public String getDepletionTransformId() { return depletionTransformId; }
     public List<String> getDepletionCommands() { return depletionCommands; }
