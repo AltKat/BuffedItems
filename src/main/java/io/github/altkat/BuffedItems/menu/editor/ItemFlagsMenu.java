@@ -33,6 +33,7 @@ public class ItemFlagsMenu extends Menu {
             new FlagInfo("PREVENT_ANVIL_USE", Material.CHAINMAIL_CHESTPLATE, "Prevent Anvil Use", "Prevents renaming, repairing, or combining in an anvil."),
             new FlagInfo("PREVENT_ENCHANT_TABLE", Material.LAPIS_LAZULI, "Prevent Enchant Table", "Prevents placing the item in an enchanting table."),
             new FlagInfo("PREVENT_SMITHING_USE", Material.SMITHING_TABLE, "Prevent Smithing Use", "Prevents using the item in a smithing table."),
+            new FlagInfo("HIDE_ARMOR_TRIM", Material.PINK_DYE, "Hide Armor Trim", "Hides 'Upgrade: ...' trim details."),
             new FlagInfo("PREVENT_CRAFTING_USE", Material.CRAFTING_TABLE, "Prevent Crafting Use", "Prevents using the item as a crafting ingredient."),
             new FlagInfo("PREVENT_DROP", Material.DROPPER, "Prevent Drop/Store", "Prevents dropping (Q/drag), storing in containers, or item frames."),
             new FlagInfo("PREVENT_CONSUME", Material.APPLE, "Prevent Consumption", "Prevents eating, drinking (potions), or consuming."),

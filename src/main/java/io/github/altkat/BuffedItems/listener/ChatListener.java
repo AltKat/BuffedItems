@@ -22,6 +22,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class ChatListener implements Listener {
@@ -48,7 +49,7 @@ public class ChatListener implements Listener {
         this.ingredientInputHandler = new IngredientInputHandler(plugin);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerChat(AsyncChatEvent e) {
         Player player = e.getPlayer();
         PlayerMenuUtility pmu = BuffedItems.getPlayerMenuUtility(player);

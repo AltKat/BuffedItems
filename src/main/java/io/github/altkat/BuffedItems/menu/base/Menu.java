@@ -77,8 +77,18 @@ public abstract class Menu implements InventoryHolder {
                 .map(ConfigManager::fromSection)
                 .collect(Collectors.toList());
         meta.lore(loreComponents);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        meta.addItemFlags(
+                ItemFlag.HIDE_ATTRIBUTES,
+                ItemFlag.HIDE_ENCHANTS,
+                ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
+                ItemFlag.HIDE_UNBREAKABLE,
+                ItemFlag.HIDE_DESTROYS,
+                ItemFlag.HIDE_PLACED_ON,
+                ItemFlag.HIDE_ADDITIONAL_TOOLTIP,
+                ItemFlag.HIDE_DYE,
+                ItemFlag.HIDE_ARMOR_TRIM,
+                ItemFlag.HIDE_STORED_ENCHANTS
+        );
         item.setItemMeta(meta);
         return item;
     }

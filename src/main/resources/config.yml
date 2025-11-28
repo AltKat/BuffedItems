@@ -30,7 +30,6 @@ messages:
   protection-prevent-crafting-use: "&#FF0000You cannot use this special item in crafting."
   protection-prevent-drop: "&#FF0000You cannot drop this item."
   protection-prevent-anvil-use: "&#FF0000This special item cannot be used in an anvil."
-  protection-prevent-smithing-use: "&#FF0000This special item cannot be used in a smithing table."
   protection-prevent-container-store: "&#FF0000You cannot store this special item in a container."
   protection-prevent-itemframe-store: "&#FF0000You cannot place this special item in an item frame."
   protection-prevent-consume: "&#FF0000You cannot consume this item."

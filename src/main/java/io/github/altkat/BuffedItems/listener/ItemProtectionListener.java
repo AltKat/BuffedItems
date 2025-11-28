@@ -204,11 +204,8 @@ public class ItemProtectionListener implements Listener {
                 || itemHasFlag(addition, "PREVENT_SMITHING_USE")
                 || itemHasFlag(material, "PREVENT_SMITHING_USE");
 
-        boolean isTrimRecipe = (e.getInventory().getRecipe() instanceof SmithingTrimRecipe);
-
-        if (prevent || isTrimRecipe) {
+        if (prevent) {
             e.setResult(null);
-            sendProtectionMessage(player,"protection-prevent-smithing-use");
         }
     }
 

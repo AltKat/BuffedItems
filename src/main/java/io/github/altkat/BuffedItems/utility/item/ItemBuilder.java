@@ -156,6 +156,9 @@ public class ItemBuilder {
         if (buffedItem.getFlag("HIDE_ADDITIONAL_TOOLTIP")) {
             meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         }
+        if (buffedItem.getFlag("HIDE_ARMOR_TRIM")) {
+            meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+        }
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, buffedItem.getId());

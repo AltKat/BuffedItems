@@ -7,10 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.inventory.meta.*;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -81,6 +78,14 @@ public class ItemUpdater {
             LeatherArmorMeta newLeather = (LeatherArmorMeta) newMeta;
             if (!oldLeather.getColor().equals(plugin.getServer().getItemFactory().getDefaultLeatherColor())) {
                 newLeather.setColor(oldLeather.getColor());
+            }
+        }
+        if (oldMeta instanceof ArmorMeta && newMeta instanceof ArmorMeta) {
+            ArmorMeta oldArmor = (ArmorMeta) oldMeta;
+            ArmorMeta newArmor = (ArmorMeta) newMeta;
+
+            if (oldArmor.hasTrim()) {
+                newArmor.setTrim(oldArmor.getTrim());
             }
         }
 

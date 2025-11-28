@@ -125,6 +125,7 @@ public class BuffedItem {
                 "HIDE_ADDITIONAL_TOOLTIP",
                 "HIDE_DESTROYS",
                 "HIDE_PLACED_ON",
+                "HIDE_ARMOR_TRIM",
                 //"PREVENT_ANVIL_USE",
                 //"PREVENT_ENCHANT_TABLE",
                 //"PREVENT_SMITHING_USE",

@@ -39,6 +39,7 @@ public class ConfigUpdater {
         if (fileName.equals("config.yml")) {
             String[] obsoleteKeys = {
                     "auto-save-interval-minutes",
+                    "messages.protection-prevent-smithing-use"
             };
 
             for (String key : obsoleteKeys) {
