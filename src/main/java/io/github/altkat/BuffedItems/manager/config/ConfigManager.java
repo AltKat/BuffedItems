@@ -402,7 +402,7 @@ public class ConfigManager {
 
 
     public static String getGlobalUsageLore() {
-        if (plugin == null) return "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%";
+        if (plugin == null) return "&7Remaining Uses: &e{remaining_uses}&7/&6{total_uses}";
         return plugin.getConfig().getString("active-items.messages.usage-limit-lore", "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%");
     }
 

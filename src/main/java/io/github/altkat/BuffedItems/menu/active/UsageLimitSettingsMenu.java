@@ -121,7 +121,7 @@ public class UsageLimitSettingsMenu extends Menu {
                 playerMenuUtility.setChatInputPath(inputPath);
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new " + title + " in chat."));
-                p.sendMessage(ConfigManager.fromSection("§7Placeholders: %remaining_uses%, %total_uses%"));
+                p.sendMessage(ConfigManager.fromSection("§7Placeholders: {remaining_uses}, {total_uses}"));
                 p.sendMessage(ConfigManager.fromSection("§7Type 'cancel' to exit."));
             }
         }

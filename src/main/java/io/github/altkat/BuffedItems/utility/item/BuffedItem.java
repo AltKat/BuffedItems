@@ -229,8 +229,8 @@ public class BuffedItem {
                 : ConfigManager.getGlobalUsageLore();
 
         return format
-                .replace("%remaining_uses%", String.valueOf(currentUses))
-                .replace("%total_uses%", String.valueOf(this.maxUses));
+                .replace("{remaining_uses}", String.valueOf(currentUses))
+                .replace("{total_uses}", String.valueOf(this.maxUses));
     }
 
     public String getDepletedLore() {

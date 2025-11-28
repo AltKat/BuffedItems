@@ -69,6 +69,12 @@ public class HookManager {
     public boolean isCoinsEngineLoaded() { return coinsEngineHook != null; }
 
     public String processPlaceholders(OfflinePlayer p, String s) {
+        if(s == null) return null;
+
+        if (s.indexOf('%') == -1) {
+            return s;
+        }
+
         if (placeholderAPIHook == null) return s;
         return placeholderAPIHook.setPlaceholders(p, s);
     }

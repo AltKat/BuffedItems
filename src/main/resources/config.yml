@@ -67,7 +67,7 @@ active-items:
     cooldown-subtitle: "&e{time}s &7remaining."
     cooldown-action-bar: "&fCooldown: &e{time}s"
     cooldown-boss-bar: "&c&lCooldown: &e{time}s"
-    usage-limit-lore: "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%"
+    usage-limit-lore: "&7Remaining Uses: &e{remaining_uses}&7/&6{total_uses}"
     usage-limit-depleted-lore: "&cITEM DEPLETED - NO USES LEFT"
     usage-limit-depleted-message: "&cThis item is depleted! You can't use its ability anymore."
     usage-limit-depletion-notification: "&cYour item has run out of charges!"
