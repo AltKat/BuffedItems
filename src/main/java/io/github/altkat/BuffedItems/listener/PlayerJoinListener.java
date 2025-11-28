@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -49,7 +50,30 @@ public class PlayerJoinListener implements Listener {
                     () -> "[Join] Error while clearing stale potion effects for " + player.getName() + ": " + e.getMessage());
         }
 
+        updateArmorSlots(player);
+
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Join] Attribute cleanup check finished for " + player.getName());
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+    }
+
+    private void updateArmorSlots(Player player) {
+        ItemStack[] armorContents = player.getInventory().getArmorContents();
+        boolean changed = false;
+
+        for (int i = 0; i < armorContents.length; i++) {
+            ItemStack item = armorContents[i];
+            if (item != null && !item.getType().isAir()) {
+                ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+                if (updated != null && !updated.isSimilar(item)) {
+                    armorContents[i] = updated;
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            player.getInventory().setArmorContents(armorContents);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Updated armor for " + player.getName() + " on join.");
+        }
     }
 }

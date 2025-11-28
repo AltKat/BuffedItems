@@ -20,6 +20,7 @@ import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.task.CooldownVisualsTask;
 import io.github.altkat.BuffedItems.task.EffectApplicatorTask;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
+import io.github.altkat.BuffedItems.utility.item.ItemUpdater;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
@@ -47,6 +48,7 @@ public final class BuffedItems extends JavaPlugin {
     private CostManager costManager;
     private UpgradeManager upgradeManager;
     private HookManager hookManager;
+    private ItemUpdater itemUpdater;
 
     @Override
     public void onEnable() {
@@ -155,6 +157,7 @@ public final class BuffedItems extends JavaPlugin {
         activeAttributeManager = new ActiveAttributeManager();
         cooldownManager = new CooldownManager();
         upgradeManager = new UpgradeManager(this);
+        itemUpdater = new ItemUpdater(this);
     }
 
     private void registerListenersAndCommands() {
@@ -297,6 +300,7 @@ public final class BuffedItems extends JavaPlugin {
     public UpdateHandler getUpdateHandler() {
         return updateHandler;
     }
+    public ItemUpdater getItemUpdater() { return itemUpdater; }
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");

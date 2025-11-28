@@ -61,10 +61,21 @@ public class ItemInteractListener implements Listener {
             return;
         }
 
-        String itemId = item.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
-        if (itemId == null) {
-            return;
+        ItemStack updatedItem = plugin.getItemUpdater().updateItem(item, player);
+
+        if (updatedItem != null && !updatedItem.isSimilar(item)) {
+            if (event.getHand() == EquipmentSlot.HAND) {
+                player.getInventory().setItemInMainHand(updatedItem);
+            } else {
+                player.getInventory().setItemInOffHand(updatedItem);
+            }
+            item = updatedItem;
+
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Item updated in hand.");
         }
+
+        String itemId = item.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
+        if (itemId == null) return;
 
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
         if (buffedItem == null || !buffedItem.isActiveMode()) {
@@ -190,7 +201,11 @@ public class ItemInteractListener implements Listener {
             if (isStackSplit) {
                 giveItemToPlayer(player, itemToUpdate);
             } else {
-                item.setItemMeta(meta);
+                if (event.getHand() == EquipmentSlot.HAND) {
+                    player.getInventory().setItemInMainHand(itemToUpdate);
+                } else {
+                    player.getInventory().setItemInOffHand(itemToUpdate);
+                }
             }
         }
 

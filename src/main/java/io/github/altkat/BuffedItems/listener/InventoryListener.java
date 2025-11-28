@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -61,6 +62,16 @@ public class InventoryListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
+
+            ItemStack clicked = e.getCurrentItem();
+            if (isBuffedItem(clicked)) {
+                ItemStack updated = plugin.getItemUpdater().updateItem(clicked, (Player) e.getWhoClicked());
+                if (updated != null && !updated.isSimilar(clicked)) {
+                    e.setCurrentItem(updated);
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Item updated in inventory click.");
+                }
+            }
+
             if (isBuffedItem(e.getCurrentItem()) || isBuffedItem(e.getCursor())) {
                 scheduleInventoryCheckWithDebounce((Player) e.getWhoClicked());
             }
@@ -86,9 +97,15 @@ public class InventoryListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemPickup(EntityPickupItemEvent e) {
-        if (e.getEntity() instanceof Player) {
-            if (isBuffedItem(e.getItem().getItemStack())) {
-                scheduleInventoryCheckWithDebounce((Player) e.getEntity());
+        if (e.getEntity() instanceof Player player) {
+            ItemStack item = e.getItem().getItemStack();
+
+            if (isBuffedItem(item)) {
+                ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+                if (updated != null && !updated.isSimilar(item)) {
+                    e.getItem().setItemStack(updated);
+                }
+                scheduleInventoryCheckWithDebounce(player);
             }
         }
     }
@@ -102,19 +119,52 @@ public class InventoryListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemHeld(PlayerItemHeldEvent e) {
-        PlayerInventory inv = e.getPlayer().getInventory();
-        ItemStack oldItem = inv.getItem(e.getPreviousSlot());
-        ItemStack newItem = inv.getItem(e.getNewSlot());
+        Player player = e.getPlayer();
+        ItemStack item = player.getInventory().getItem(e.getNewSlot());
 
-        if (isBuffedItem(oldItem) || isBuffedItem(newItem)) {
-            scheduleInventoryCheckWithDebounce(e.getPlayer());
+        if (isBuffedItem(item)) {
+            ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+            if (updated != null && !updated.isSimilar(item)) {
+                player.getInventory().setItem(e.getNewSlot(), updated);
+            }
+            scheduleInventoryCheckWithDebounce(player);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSwapHands(PlayerSwapHandItemsEvent e) {
-        if (isBuffedItem(e.getMainHandItem()) || isBuffedItem(e.getOffHandItem())) {
-            scheduleInventoryCheckWithDebounce(e.getPlayer());
+        Player player = e.getPlayer();
+
+        ItemStack mainItem = e.getMainHandItem();
+        if (isBuffedItem(mainItem)) {
+            ItemStack updated = plugin.getItemUpdater().updateItem(mainItem, player);
+            if (updated != null && !updated.isSimilar(mainItem)) {
+                e.setMainHandItem(updated);
+            }
+        }
+
+        ItemStack offItem = e.getOffHandItem();
+        if (isBuffedItem(offItem)) {
+            ItemStack updated = plugin.getItemUpdater().updateItem(offItem, player);
+            if (updated != null && !updated.isSimilar(offItem)) {
+                e.setOffHandItem(updated);
+            }
+        }
+
+        scheduleInventoryCheckWithDebounce(player);
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageByEntityEvent e) {
+        if (e.getDamager() instanceof Player player) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+
+            if (isBuffedItem(item)) {
+                ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+                if (updated != null && !updated.isSimilar(item)) {
+                    player.getInventory().setItemInMainHand(updated);
+                }
+            }
         }
     }
 
