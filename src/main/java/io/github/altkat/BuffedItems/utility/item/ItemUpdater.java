@@ -89,7 +89,7 @@ public class ItemUpdater {
             }
         }
 
-        if (template.getMaxUses() > 0) {
+        if (template.isActiveMode() && template.getMaxUses() > 0) {
             int usesToSet = template.getMaxUses();
 
             if (oldMeta.getPersistentDataContainer().has(usesKey, PersistentDataType.INTEGER)) {

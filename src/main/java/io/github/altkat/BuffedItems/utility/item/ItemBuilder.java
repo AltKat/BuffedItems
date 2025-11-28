@@ -163,7 +163,7 @@ public class ItemBuilder {
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, buffedItem.getId());
 
-        if(buffedItem.getMaxUses() > 0){
+        if(buffedItem.isActiveMode() && buffedItem.getMaxUses() > 0){
             NamespacedKey maxKey = new NamespacedKey(plugin, "remaining_active_uses");
             meta.getPersistentDataContainer().set(maxKey, PersistentDataType.INTEGER, buffedItem.getMaxUses());
 
@@ -173,6 +173,7 @@ public class ItemBuilder {
             }
             String dynamicLore = buffedItem.getUsageLore(buffedItem.getMaxUses());
             lore.add(ConfigManager.fromLegacy(dynamicLore));
+
             meta.lore(lore);
         }
 
