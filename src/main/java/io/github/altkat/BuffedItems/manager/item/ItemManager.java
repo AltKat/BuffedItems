@@ -11,11 +11,13 @@ import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
+import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
@@ -578,6 +580,9 @@ public class ItemManager {
         for (String errorMsg : errorMessages) {
             finalBuffedItem.addErrorMessage(errorMsg);
         }
+
+        ItemStack stack = new ItemBuilder(finalBuffedItem, plugin).build();
+        finalBuffedItem.setCachedItem(stack);
 
         return finalBuffedItem;
     }

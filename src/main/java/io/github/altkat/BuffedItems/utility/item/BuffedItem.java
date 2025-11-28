@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
@@ -20,6 +21,7 @@ public class BuffedItem {
     private final Map<Enchantment, Integer> enchantments;
     private final Integer customModelData;
     private final String customModelDataRaw;
+    private ItemStack cachedItem;
 
     private final boolean activeMode;
     private final int cooldown;
@@ -282,6 +284,14 @@ public class BuffedItem {
 
     public List<ICost> getCosts() {
         return costs;
+    }
+
+    public void setCachedItem(ItemStack cachedItem) {
+        this.cachedItem = cachedItem;
+    }
+
+    public ItemStack getCachedItem() {
+        return cachedItem;
     }
 
     public boolean hasActivePermission(org.bukkit.entity.Player player) {

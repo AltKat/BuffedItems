@@ -26,10 +26,6 @@ public class ItemUpdater {
         this.usesKey = new NamespacedKey(plugin, "remaining_active_uses");
     }
 
-    /**
-     * Verilen eşyayı Config'deki en son ayarlara göre yeniler.
-     * PAPI placeholderları destekler.
-     */
     public ItemStack updateItem(ItemStack oldItem, Player player) {
         if (oldItem == null || !oldItem.hasItemMeta()) return null;
 
@@ -39,7 +35,11 @@ public class ItemUpdater {
         BuffedItem template = plugin.getItemManager().getBuffedItem(itemId);
         if (template == null) return null;
 
-        ItemStack newItem = new ItemBuilder(template, plugin).build();
+        if (template.getCachedItem() == null) {
+            template.setCachedItem(new ItemBuilder(template, plugin).build());
+        }
+
+        ItemStack newItem = template.getCachedItem().clone();
         newItem.setAmount(oldItem.getAmount());
 
         ItemMeta oldMeta = oldItem.getItemMeta();
