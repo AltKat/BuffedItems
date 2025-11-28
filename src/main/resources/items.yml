@@ -13,7 +13,7 @@
 # We RECOMMEND using the in-game editor (/bi menu) to make changes easily.
 #
 # If you edit this file manually, use /bi reload to apply changes.
-# Please see wiki before editing this file.
+# This file contains limited information. Please see wiki for more info.
 # ===================================================================
 
 # --- CONFIGURATION GUIDE ---
@@ -114,6 +114,16 @@
 #     success: 'SOUND_NAME;VOL;PITCH'
 #     cooldown: 'SOUND_NAME;VOL;PITCH'
 #     cost-fail: "SOUND_NAME;VOL;PITCH"
+#
+#   usage-limit: Limiting the number of uses (Durability system).
+#     max-usage: (int) Total uses. Set -1 for unlimited.
+#     action: (DISABLE / DESTROY / TRANSFORM) What happens when depleted?
+#     transform-item: Buffed Item ID to give if action is TRANSFORM.
+#     lore: Custom lore line for remaining uses. Use {remaining_uses} and {total_uses}.
+#     depleted-lore: Lore line shown when item has 0 uses left.
+#     depleted-message: Message sent when trying to use an already depleted item.
+#     depletion-notification: Message sent to player at the moment item breaks/depletes.
+#     commands: List of commands to run when item depletes. (Supports logic prefixes like active-mode)
 # ===================================================================
 
 items:
@@ -127,25 +137,27 @@ items:
       - '&cCost: &e$500 &7+ &f1x Scroll'
       - '&7- &aSuccess: &680% (Reward)'
       - '&7- &cFailure: &420% (Scroll wasted)'
+      - ''
     glow: true
     active-mode:
       enabled: true
+      usage-limit:
+        max-usage: 1
+        action: DESTROY
+        lore: '&6Remaining Tries: {remaining_uses}/{total_uses}'
       cooldown: 0
       costs:
         - type: MONEY
           amount: 500.0
           message: '&cYou need &e$500 &cto use this scroll.'
-        - type: BUFFED_ITEM
-          item_id: identify_scroll
-          amount: 1
       commands:
         - '[chance:80] [console] give %player% diamond_sword 1 ;; [title] &aSUCCESS!|&7Item Identified.'
         - '[else] [title] &cFAILED!|&7The scroll crumbled to dust.'
       sounds:
         success: ITEM_BOOK_PAGE_TURN;1.0;1.0
         cost-fail: ENTITY_VILLAGER_NO;1.0;1.0
-    flags:
-      PREVENT_DROP: true
+        depletion: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;1.0
+        depleted-try: BLOCK_DISPENSER_FAIL;1.0;1.0
 
   elemental_staff:
     display_name: '&#FFA500Elemental Staff'
@@ -158,27 +170,28 @@ items:
       - '&c• 33% Fireball'
       - '&e• 33% Lightning Strike'
       - '&f• 33% Gust (Levitation)'
+      - ''
     glow: true
     active-mode:
       enabled: true
       usage-limit:
         max-usage: 10
         action: DISABLE
-        lore: "&bMana: &f%remaining_uses% &7(Max: %total_uses%)"
-        depleted-lore: "&c&lOut of mana!"
-        depleted-message: "&cMana drained! You can't use this item's ability anymore!"
-        depletion-notification: "&6&lMana Crystal of Staff is shattered! You can't use this item's ability anymore!"
+        lore: '&f• &bMana: &f{remaining_uses} &7(Max: {total_uses})'
+        depleted-lore: '&c&l• Out of mana!'
+        depleted-message: '&cMana drained! You can''t use this item''s ability anymore!'
+        depletion-notification: '&6&lMana Crystal of Staff is shattered! You can''t use this item''s ability anymore!'
       commands:
         - '[chance:33] [console] execute at %player% run summon fireball ^ ^1 ^2 {ExplosionPower:2,direction:[0.0,0.0,0.0]} ;; [message] &c&l🔥 FIREBALL!'
         - '[else] [chance:50] [console] execute at %player% run summon lightning_bolt ^ ^ ^8 ;; [message] &e&l⚡ THUNDER!'
-        - '[else] [console] effect give %player% levitation 2 5 ;; [message] &f&l💨 GUST!'
+        - '[else] [console] effect give %player% levitation 2 5 ;; [message] &f&l💨
+          GUST!'
       sounds:
-        success: ITEM_TRIDENT_THUNDER;1.0;2.0
-        break: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;0.5
+        success: BLOCK_BEACON_POWER_SELECT;1.0;1.0
         depletion: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;0.5
         depleted-try: BLOCK_DISPENSER_FAIL;1.0;1.2
-    flags:
-      PREVENT_CRAFTING_USE: true
+        cooldown: BLOCK_NOTE_BLOCK_PLING;2.0;2.0
+        cost-fail: ENTITY_VILLAGER_NO;1.0;1.0
 
   bunny_charm:
     display_name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
@@ -225,7 +238,7 @@ items:
       cooldown: 10
       duration: 5
       commands:
-        - '[actionbar] &aSpeed Burst Activated! (5s)'
+        - '[actionbar] &aHaste Burst Activated! (5s)'
       effects:
         potion_effects:
           - HASTE;3
@@ -292,7 +305,6 @@ items:
     enchantments:
       - FEATHER_FALLING;4
       - PROTECTION;3
-    flags:
 
   swiftness_boots:
     display_name: '&#FFD700B&#FFE500o&#FFF700o&#E5FF00t&#CDFF00s &#B5FF00o&#9DFF00f &#85FF00S&#6DFF00w&#55FF00i&#3DFF00f&#25FF00t&#0DFF00n&#00FF15e&#00FF2Ds&#00FF45s'
@@ -313,4 +325,3 @@ items:
           - JUMP_BOOST;1
         attributes:
           - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
-    flags:

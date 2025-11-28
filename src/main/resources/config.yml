@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------------------------
-# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Buffed Items v1.2.0 by Altkat(StreetMelodeez)
 # Discord: https://discord.gg/nxY3fc7xz9
 # Website: https://altkat.github.io
 # Wiki: https://github.com/AltKat/BuffedItems/wiki
@@ -44,10 +44,10 @@ messages:
 
 # ===================================================================
 #                   ACTIVE ITEMS - VISUAL SETTINGS
+# These can be overridden per-item with in game editor and items.yml.
 # ===================================================================
 active-items:
   # Select which visual indicators to enable for cooldowns globally.
-  # These can be overridden per-item with in game editor and items.yml.
   visuals:
     chat: true        # Send a chat message when clicked during cooldown.
     title: true       # Show a big title on screen when clicked during cooldown.
@@ -60,7 +60,10 @@ active-items:
     style: "SOLID"    # Options: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
 
   # Cooldown Messages
-  # Placeholder: {time} = remaining seconds (e.g., 4.5)
+  # Placeholder:
+  # {time} = remaining seconds (e.g., 4.5)
+  # {remaining_uses} = number of active uses left
+  # {total_uses} = total number of active uses
   messages:
     cooldown-chat: "&cYou must wait &e{time}s &cbefore using this item again."
     cooldown-title: "&cOn Cooldown!"
@@ -68,7 +71,7 @@ active-items:
     cooldown-action-bar: "&fCooldown: &e{time}s"
     cooldown-boss-bar: "&c&lCooldown: &e{time}s"
     usage-limit-lore: "&7Remaining Uses: &e{remaining_uses}&7/&6{total_uses}"
-    usage-limit-depleted-lore: "&cITEM DEPLETED - NO USES LEFT"
+    usage-limit-depleted-lore: "&cItem Depleted - No Uses Left"
     usage-limit-depleted-message: "&cThis item is depleted! You can't use its ability anymore."
     usage-limit-depletion-notification: "&cYour item has run out of charges!"
 
