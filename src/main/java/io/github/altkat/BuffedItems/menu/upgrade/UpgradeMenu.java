@@ -377,4 +377,9 @@ public class UpgradeMenu extends Menu {
         String parsedMsg = plugin.getHookManager().processPlaceholders(p, rawMsg);
         p.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
     }
+
+    @Override
+    public boolean allowBottomInventoryClick() {
+        return true;
+    }
 }

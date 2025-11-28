@@ -94,4 +94,8 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public void handleClose(InventoryCloseEvent e) {}
+
+    public boolean allowBottomInventoryClick() {
+        return false;
+    }
 }

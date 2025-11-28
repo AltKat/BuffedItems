@@ -15,7 +15,15 @@ public class MenuListener implements Listener {
 
         if (holder instanceof Menu) {
             e.setCancelled(true);
+            if (e.getClickedInventory() == null) return;
             Menu menu = (Menu) holder;
+
+            if (e.getClickedInventory() == e.getView().getBottomInventory()) {
+                if (!menu.allowBottomInventoryClick()) {
+                    return;
+                }
+            }
+
             menu.handleMenu(e);
         }
     }
