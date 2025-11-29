@@ -22,7 +22,7 @@
 
 > **Transform your server with Living Items, Passive Stats, and Dynamic Abilities.**
 
-**BuffedItems** is a powerful item engine that allows you to create unique custom items with persistent attributes, passive effects, and scripted active abilities—all managed through a comprehensive **in-game GUI editor**.
+**BuffedItems** is a powerful item engine that allows you to create unique custom items with persistent attributes, passive effects, and scripted active abilities all managed through a comprehensive **in-game GUI editor**.
 
 ***
 
@@ -30,34 +30,47 @@
   <img src="https://altkat.github.io/buffeditems/features.jpg" alt="BuffedItems Features Banner"/>
 </p>
 
-### 🔥 New in v1.3.0: Live Updates & Usage Limits
-
-* **🔄 Live Item Updates:** Your items are now **alive!** Change an item's damage, lore, or name in the config, and players' existing items will **automatically update** the moment they are used or clicked.
-    * *Data Safety:* Custom Enchants, Anvil Names, and Usage Stats are **preserved** during updates.
-* **🔋 Usage Limits (Custom Durability):** Create items with a specific number of uses (independent of vanilla durability).
-    * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
-    * **Feedback:** Custom sounds and messages for depletion events.
-
 ### 🛠️ Core Features
 * **🖥️ Full In-Game GUI Editor:** Create, edit, and manage items without touching a single config file. Just type `/bi menu`.
-* **🛡️ Passive Effects:** Grant permanent stats based on where the item is held/worn (`MAIN_HAND`, `ARMOR`, `INVENTORY`).
+* **🛡️ Passive Effects:** Grant permanent stats based on where the item is held/worn (`MAIN_HAND`, `OFF_HAND`, `ARMOR`, `INVENTORY`).
     * **Potions:** Speed, Night Vision, Jump Boost, etc.
     * **Attributes:** +Max Health, +Attack Damage, +Movement Speed, +Armor Toughness, etc.
+<br><br>
 * **⚡ Active Abilities & Scripting:**
     * Trigger complex command chains with a **Right-Click**.
     * **Logic System:** Use prefixes like `[chance:50]`, `[delay:20]`, and `[else]` to create RNG-based mechanics.
     * **Actions:** Send messages, titles, play sounds, or execute console commands.
+<br><br>
+* **🔄 Live Item Updates:** Change an item's damage, lore, or name in the config, and players' existing items will **automatically update** the moment they are used or clicked.
+    * *Data Safety:* Custom Enchants, Anvil Names, and Usage Stats are **preserved** during updates.
+<br><br>
+* **🔋 Usage Limits (Custom Durability):** Create items with a specific number of uses (independent of vanilla durability).
+    * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
+    * **Feedback:** Custom sounds and messages for depletion events.
+<br><br>
 * **💎 Advanced Cost System:**
     * Set requirements for using items or upgrading them.
     * **Supports:** Money (Vault), CoinsEngine, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
+<br><br>
 * **🆙 Upgrade Station:**
     * Allow players to evolve their items (e.g., *Rusty Sword* -> *Excalibur*).
     * Configure **Success Rates**, **Risk Factors** (Lose item on fail?), and **Failure Actions**.
+<br><br>
+* **🚩 Item Flags & Protections**:
+    * **PREVENT_DEATH_DROP (Soulbound):** Item stays with player on death.
+    * **PREVENT_DROP:** Prevents dropping, storing in chests, or placing in item frames.
+    * **UNBREAKABLE:** Item never loses durability.
+    * **PREVENT_ANVIL_USE / PREVENT_SMITHING_USE:** Restricts item usage in various crafting tables.
+    * **PREVENT_CONSUME / PREVENT_INTERACT:** Blocks eating/drinking or general right-click actions.
+    * and many more...
+<br><br>
+  
 * **🎨 Visuals & Customization:**
     * Full **HEX Color** support (`&#RRGGBB`).
     * **Custom Model Data** support for resource packs (ItemsAdder/Nexo friendly).
     * **Cooldown Visuals:** BossBar, ActionBar, and Title countdowns.
-
+    * **PAPI Placeholders:** Placeholders are accepted everywhere.
+<br><br>
 * 📚 For detailed guides on all features, visit the [BuffedItems Wiki](https://github.com/AltKat/BuffedItems/wiki).
 ***
 
@@ -97,7 +110,7 @@
 </p>
 
 1.  **Create**: Use `/bi menu` to create a new item and give it a unique ID (e.g., `warriors_talisman`).
-2.  **Configure**: Use the GUI to set the item's name, material, and add effects. For example, add `STRENGTH 1` and `GENERIC_MAX_HEALTH +4.0` to the `INVENTORY` slot.
+2.  **Configure**: Use the GUI to set the item's properties.
 3.  **Give**: Give the item to a player using `/bi give <player> warriors_talisman`.
 4.  **Apply**: The plugin's core task detects that the player has the item in their inventory and automatically applies the `STRENGTH 1` and `+2 Hearts` effects. If the player drops the item, the effects are instantly removed.
 * 📚 For detailed setup instructions and advanced configuration, see the [Getting Started section in the Wiki](https://github.com/AltKat/BuffedItems/wiki).
@@ -128,7 +141,7 @@ The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 | `/bi give <player> <item_id> [amount]` | `buffeditems.command.give` | Gives a player the specified custom item. |
 | `/bi reload` | `buffeditems.command.reload` | Safely reloads `config.yml`, `items.yml`, and `upgrades.yml` from disk. |
 | `/bi list` | `buffeditems.command.list` | Lists all created items and shows if any have configuration errors. |
-| `/bi update` | `buffeditems.admin` | Checks for the latest update. |
+| `/bi update` | `buffeditems.command.update` | Checks for the latest update. |
 
 **Admin Permission:**
 * `buffeditems.admin`: Grants access to all BuffedItems commands.
