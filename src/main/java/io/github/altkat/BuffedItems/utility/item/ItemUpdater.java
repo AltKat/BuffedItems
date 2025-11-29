@@ -2,17 +2,20 @@ package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.*;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ItemUpdater {
 
@@ -35,75 +38,110 @@ public class ItemUpdater {
         BuffedItem template = plugin.getItemManager().getBuffedItem(itemId);
         if (template == null) return null;
 
-        if (template.getCachedItem() == null) {
-            template.setCachedItem(new ItemBuilder(template, plugin).build());
+        ItemStack newItem = oldItem.clone();
+
+        if (newItem.getType() != template.getMaterial()) {
+            newItem.setType(template.getMaterial());
         }
 
-        ItemStack newItem = template.getCachedItem().clone();
-        newItem.setAmount(oldItem.getAmount());
+        ItemMeta meta = newItem.getItemMeta();
 
-        ItemMeta oldMeta = oldItem.getItemMeta();
-        ItemMeta newMeta = newItem.getItemMeta();
+        String rawName = template.getDisplayName();
+        String parsedName = plugin.getHookManager().processPlaceholders(player, rawName);
+        meta.displayName(ConfigManager.fromLegacy(parsedName));
 
-        if (newMeta.hasDisplayName()) {
-            String rawName = template.getDisplayName();
-            String parsedName = plugin.getHookManager().processPlaceholders(player, rawName);
-            newMeta.displayName(ConfigManager.fromLegacy(parsedName));
+        List<Component> parsedLore = new ArrayList<>();
+        for (String line : template.getLore()) {
+            String parsedLine = plugin.getHookManager().processPlaceholders(player, line);
+            parsedLore.add(ConfigManager.fromLegacy(parsedLine));
+        }
+        meta.lore(parsedLore);
+
+        if (template.getCustomModelData().isPresent()) {
+            meta.setCustomModelData(template.getCustomModelData().get());
+        } else {
+            meta.setCustomModelData(null);
         }
 
-        if (newMeta.hasLore()) {
-            List<Component> parsedLore = new ArrayList<>();
-            for (String line : template.getLore()) {
-                String parsedLine = plugin.getHookManager().processPlaceholders(player, line);
-                parsedLore.add(ConfigManager.fromLegacy(parsedLine));
+        meta.removeItemFlags(ItemFlag.values());
+        if (template.getFlag("HIDE_ENCHANTS")) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        if (template.getFlag("HIDE_ATTRIBUTES")) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        if (template.getFlag("HIDE_UNBREAKABLE")) meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+        if (template.getFlag("HIDE_DESTROYS")) meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+        if (template.getFlag("HIDE_PLACED_ON")) meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
+        if (template.getFlag("HIDE_ADDITIONAL_TOOLTIP")) meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        if (template.getFlag("HIDE_ARMOR_TRIM")) meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+
+        meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
+
+        for (Map.Entry<Enchantment, Integer> entry : template.getEnchantments().entrySet()) {
+            meta.addEnchant(entry.getKey(), entry.getValue(), true);
+        }
+
+        if (meta.hasAttributeModifiers()) {
+            List<Map.Entry<Attribute, AttributeModifier>> toRemove = new ArrayList<>();
+            meta.getAttributeModifiers().forEach((attr, mod) -> {
+                if (mod.getName().startsWith("buffeditems.")) {
+                    toRemove.add(new AbstractMap.SimpleEntry<>(attr, mod));
+                }
+            });
+            for (Map.Entry<Attribute, AttributeModifier> entry : toRemove) {
+                meta.removeAttributeModifier(entry.getKey(), entry.getValue());
             }
-            newMeta.lore(parsedLore);
         }
 
-        if (oldMeta.hasEnchants()) {
-            for (Map.Entry<Enchantment, Integer> entry : oldMeta.getEnchants().entrySet()) {
-                newMeta.addEnchant(entry.getKey(), entry.getValue(), true);
+        for (Map.Entry<String, BuffedItemEffect> effectEntry : template.getEffects().entrySet()) {
+            String slotKey = effectEntry.getKey().toUpperCase();
+            BuffedItemEffect itemEffect = effectEntry.getValue();
+            EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
+
+            if (equipmentSlot != null) {
+                for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
+
+                    if (meta.hasAttributeModifiers()) {
+                        Collection<AttributeModifier> existingMods = meta.getAttributeModifiers(parsedAttr.getAttribute());
+                        if (existingMods != null) {
+                            for (AttributeModifier existing : new ArrayList<>(existingMods)) {
+                                if (existing.getUniqueId().equals(parsedAttr.getUuid())) {
+                                    meta.removeAttributeModifier(parsedAttr.getAttribute(), existing);
+                                }
+                            }
+                        }
+                    }
+
+                    AttributeModifier modifier = new AttributeModifier(
+                            parsedAttr.getUuid(),
+                            "buffeditems." + template.getId() + "." + slotKey,
+                            parsedAttr.getAmount(),
+                            parsedAttr.getOperation(),
+                            equipmentSlot
+                    );
+                    meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
+                }
             }
         }
 
-        if (oldMeta instanceof Damageable && newMeta instanceof Damageable) {
-            ((Damageable) newMeta).setDamage(((Damageable) oldMeta).getDamage());
-        }
-        if (oldMeta instanceof Repairable && newMeta instanceof Repairable) {
-            int oldCost = ((Repairable) oldMeta).getRepairCost();
-            if (oldCost > 0) ((Repairable) newMeta).setRepairCost(oldCost);
-        }
-        if (oldMeta instanceof LeatherArmorMeta && newMeta instanceof LeatherArmorMeta) {
-            LeatherArmorMeta oldLeather = (LeatherArmorMeta) oldMeta;
-            LeatherArmorMeta newLeather = (LeatherArmorMeta) newMeta;
-            if (!oldLeather.getColor().equals(plugin.getServer().getItemFactory().getDefaultLeatherColor())) {
-                newLeather.setColor(oldLeather.getColor());
-            }
-        }
-        if (oldMeta instanceof ArmorMeta && newMeta instanceof ArmorMeta) {
-            ArmorMeta oldArmor = (ArmorMeta) oldMeta;
-            ArmorMeta newArmor = (ArmorMeta) newMeta;
-
-            if (oldArmor.hasTrim()) {
-                newArmor.setTrim(oldArmor.getTrim());
+        boolean hasRealEnchants = meta.hasEnchants();
+        if (template.hasGlow()) {
+            if (!hasRealEnchants || template.getFlag("HIDE_ENCHANTS")) {
+                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
             }
         }
 
         if (template.isActiveMode() && template.getMaxUses() > 0) {
             int usesToSet = template.getMaxUses();
 
-            if (oldMeta.getPersistentDataContainer().has(usesKey, PersistentDataType.INTEGER)) {
-                usesToSet = oldMeta.getPersistentDataContainer().get(usesKey, PersistentDataType.INTEGER);
+            if (meta.getPersistentDataContainer().has(usesKey, PersistentDataType.INTEGER)) {
+                usesToSet = meta.getPersistentDataContainer().get(usesKey, PersistentDataType.INTEGER);
             }
 
-            newMeta.getPersistentDataContainer().set(usesKey, PersistentDataType.INTEGER, usesToSet);
-            updateLoreWithCurrentUses(newMeta, template, usesToSet, player);
-        }
-        else {
-            newMeta.getPersistentDataContainer().remove(usesKey);
+            meta.getPersistentDataContainer().set(usesKey, PersistentDataType.INTEGER, usesToSet);
+            updateLoreWithCurrentUses(meta, template, usesToSet, player);
+        } else {
+            meta.getPersistentDataContainer().remove(usesKey);
         }
 
-        newItem.setItemMeta(newMeta);
+        newItem.setItemMeta(meta);
         return newItem;
     }
 
@@ -131,8 +169,7 @@ public class ItemUpdater {
 
         for (int i = 0; i < lore.size(); i++) {
             String cleanCurrentLine = ConfigManager.toPlainText(lore.get(i));
-
-            if (cleanCurrentLine.equals(cleanMaxLine)) {
+            if (cleanCurrentLine.equals(cleanMaxLine) || cleanCurrentLine.contains(String.valueOf(item.getMaxUses()))) {
                 lore.set(i, finalComponent);
                 found = true;
                 break;
@@ -144,5 +181,18 @@ public class ItemUpdater {
         }
 
         meta.lore(lore);
+    }
+
+    private EquipmentSlot getEquipmentSlot(String slot) {
+        switch (slot.toUpperCase()) {
+            case "MAIN_HAND": return EquipmentSlot.HAND;
+            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
+            case "HELMET": return EquipmentSlot.HEAD;
+            case "CHESTPLATE": return EquipmentSlot.CHEST;
+            case "LEGGINGS": return EquipmentSlot.LEGS;
+            case "BOOTS": return EquipmentSlot.FEET;
+            case "INVENTORY":
+            default: return null;
+        }
     }
 }
