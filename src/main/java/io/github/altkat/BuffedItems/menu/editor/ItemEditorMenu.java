@@ -11,6 +11,7 @@ import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
+import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -252,6 +253,18 @@ public class ItemEditorMenu extends Menu {
         if (item.isActiveMode()) {
             infoLore.add(ConfigManager.fromSection("§6§l[Active Ability: ON]"));
             infoLore.add(ConfigManager.fromSection("§7Cooldown: §f" + item.getCooldown() + "s §7| Duration: §f" + item.getActiveDuration() + "s"));
+
+            int maxUses = item.getMaxUses();
+            if (maxUses > 0) {
+                infoLore.add(ConfigManager.fromSection("§7Usage Limit: §e" + maxUses));
+                infoLore.add(ConfigManager.fromSection("§7Depletion: §f" + item.getDepletionAction().name()));
+                if (item.getDepletionAction() == DepletionAction.TRANSFORM) {
+                    String target = item.getDepletionTransformId();
+                    infoLore.add(ConfigManager.fromSection("§7Transform: §b" + (target != null ? target : "None")));
+                }
+            } else {
+                infoLore.add(ConfigManager.fromSection("§7Usage Limit: §aUnlimited"));
+            }
 
             StringBuilder visuals = new StringBuilder();
             visuals.append(item.isVisualChat() ? "§a[Chat] " : "§8[Chat] ");
