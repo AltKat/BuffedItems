@@ -1,11 +1,8 @@
 <p align="center">
   <img src="https://altkat.github.io/buffeditems/banner-main.jpg" alt="BuffedItems Banner"/>
-
-
-
   <br/>
-    <img src="https://img.shields.io/badge/MC-1.21+-green?style=for-the-badge" alt="Minecraft 1.21+" />
-  <img src="https://img.shields.io/badge/Java-17+-blueviolet?style=for-the-badge" alt="Java 17+" />
+  <img src="https://img.shields.io/badge/MC-1.21+-green?style=for-the-badge&logo=minecraft" alt="Minecraft 1.21+" />
+  <img src="https://img.shields.io/badge/Java-17+-blueviolet?style=for-the-badge&logo=openjdk" alt="Java 17+" />
   <a href="https://github.com/altkat/BuffedItems/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
@@ -14,15 +11,18 @@
   </a>
   <br>
   <a href="https://discord.gg/nxY3fc7xz9">
-    <img src="https://img.shields.io/badge/Discord-Server-5865F2?style=for-the-badge&logo=discord" alt="Discord Server" />
+    <img src="https://img.shields.io/badge/Discord-Support-5865F2?style=for-the-badge&logo=discord" alt="Discord Server" />
   </a>
   <a href="https://github.com/AltKat/BuffedItems/wiki">
     <img src="https://img.shields.io/badge/Wiki-Documentation-orange?style=for-the-badge&logo=bookstack" alt="Wiki Documentation" />
   </a>
 </p>
 
-**BuffedItems** lets you create unique, custom items with persistent potion effects, attributes, and special properties, all from a comprehensive **in-game GUI editor**.
+<h1 align="center">⚔️ BuffedItems - Item Engine 🛡️</h1>
 
+> **Transform your server with Living Items, Passive Stats, and Dynamic Abilities.**
+
+**BuffedItems** is a powerful item engine that allows you to create unique custom items with persistent attributes, passive effects, and scripted active abilities—all managed through a comprehensive **in-game GUI editor**.
 
 ***
 
@@ -30,31 +30,33 @@
   <img src="https://altkat.github.io/buffeditems/features.jpg" alt="BuffedItems Features Banner"/>
 </p>
 
-* **🖥️ Full In-Game GUI Editor**: Access a powerful menu with `/bi menu` to manage every aspect of your items.
-* **🛡️ Passive Effects**: Grant permanent effects based on where the item is held/worn (`MAIN_HAND`, `ARMOR`, `INVENTORY`).
+### 🔥 New in v1.3.0: Live Updates & Usage Limits
+
+* **🔄 Live Item Updates:** Your items are now **alive!** Change an item's damage, lore, or name in the config, and players' existing items will **automatically update** the moment they are used or clicked.
+    * *Data Safety:* Custom Enchants, Anvil Names, and Usage Stats are **preserved** during updates.
+* **🔋 Usage Limits (Custom Durability):** Create items with a specific number of uses (independent of vanilla durability).
+    * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
+    * **Feedback:** Custom sounds and messages for depletion events.
+
+### 🛠️ Core Features
+* **🖥️ Full In-Game GUI Editor:** Create, edit, and manage items without touching a single config file. Just type `/bi menu`.
+* **🛡️ Passive Effects:** Grant permanent stats based on where the item is held/worn (`MAIN_HAND`, `ARMOR`, `INVENTORY`).
     * **Potions:** Speed, Night Vision, Jump Boost, etc.
-    * **Attributes:** +Max Health, +Attack Damage, +Movement Speed, etc.
-* **⚡ Active Abilities & Scripting**:
-    * Trigger commands and effects with a **Right-Click**.
-    * **Advanced Command Chaining:** Use logic prefixes (`[delay]`, `[chance]`, `[else]`) and command chaining (`;;`) to create complex scenarios.
-    * **Note:** The `[else]` command only triggers if the immediately preceding command fails due to a chance check (`[chance:XX]`). See the [Wiki for detailed logic guides](https://github.com/AltKat/BuffedItems/wiki).
-    * **Visual Feedback:** Built-in cooldowns with BossBar, ActionBar, and Title support.
-* **💎 Cost System**:
-    * Set requirements to use items or upgrades.
-    * Supported Types: **Money (Vault)**, **CoinsEngine**, **XP**, **Level**, **Health**, **Hunger**, **Vanilla Items**, and **Custom BuffedItems**.
-    * **Custom Messages:** Set item-specific failure messages for each cost to provide precise player feedback.
-* **🆙 Upgrade Station**:
-    * Allow players to evolve their items (e.g., *Sword Lvl 1* -> *Sword Lvl 2*).
-    * Configure **Success Rates** and **Risk Factors** (Lose all on fail, keep base item, etc.).
-* **🚩 Item Flags & Protections**:
-    * **PREVENT_DEATH_DROP (Soulbound):** Item stays with player on death.
-    * **PREVENT_DROP:** Prevents dropping, storing in chests, or placing in item frames.
-    * **UNBREAKABLE:** Item never loses durability.
-    * **PREVENT_ANVIL_USE / PREVENT_SMITHING_USE:** Restricts item usage in various crafting tables.
-    * **PREVENT_CONSUME / PREVENT_INTERACT:** Blocks eating/drinking or general right-click actions.
-* **🎨 Deep Customization**:
-    * Full **HEX Color** support (`&#RRGGBB`) for names and lore.
-    * **Custom Model Data** (Integrates with resource packs, **ItemsAdder**, or **Nexo**).
+    * **Attributes:** +Max Health, +Attack Damage, +Movement Speed, +Armor Toughness, etc.
+* **⚡ Active Abilities & Scripting:**
+    * Trigger complex command chains with a **Right-Click**.
+    * **Logic System:** Use prefixes like `[chance:50]`, `[delay:20]`, and `[else]` to create RNG-based mechanics.
+    * **Actions:** Send messages, titles, play sounds, or execute console commands.
+* **💎 Advanced Cost System:**
+    * Set requirements for using items or upgrading them.
+    * **Supports:** Money (Vault), CoinsEngine, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
+* **🆙 Upgrade Station:**
+    * Allow players to evolve their items (e.g., *Rusty Sword* -> *Excalibur*).
+    * Configure **Success Rates**, **Risk Factors** (Lose item on fail?), and **Failure Actions**.
+* **🎨 Visuals & Customization:**
+    * Full **HEX Color** support (`&#RRGGBB`).
+    * **Custom Model Data** support for resource packs (ItemsAdder/Nexo friendly).
+    * **Cooldown Visuals:** BossBar, ActionBar, and Title countdowns.
 
 * 📚 For detailed guides on all features, visit the [BuffedItems Wiki](https://github.com/AltKat/BuffedItems/wiki).
 ***
@@ -62,6 +64,8 @@
 <p align="center">
   <img src="https://altkat.github.io/buffeditems/images.jpg" alt="BuffedItems Images Section Banner"/>
 </p>
+<details>
+<summary><b>📸 Click to view In-Game Screenshots</b></summary>
 
 **Click any image to view full size.**
 
@@ -84,6 +88,8 @@
 |:---:|:---:|:---:|
 | <a href="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" width="240" alt="Warrior's Talisman"/></a> | <a href="https://altkat.github.io/buffeditems/images/swift.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/swift.gif" width="240" alt="Swiftness Boots"/></a> | |
 | **Warrior's Talisman** | **Swiftness Boots** | |
+</details>
+
 ***
 
 <p align="center">
@@ -101,7 +107,6 @@
   <img src="https://altkat.github.io/buffeditems/important-notes.jpg" alt="BuffedItems Important Notes Banner"/>
 </p>
 
-* **PAPI Placeholders**: PlaceholderAPI placeholders (e.g., `%player_name%`) are only parsed when the item is given using the `/bi give` command. They will **not** update dynamically while the item is already in a player's inventory.
 * **Custom Armor Textures**: This plugin only sets the `CustomModelData` tag. It does **not** manage resource packs or custom armor models. Wearable items (helmets, armor) using ItemsAdder/Nexo IDs will show the custom texture in the inventory, but will render as the **default material** (e.g., Diamond Helmet) when equipped on the player.
 * **Configuration Files**:
     * `config.yml`: Contains general plugin settings (messages, debug level, etc.).
@@ -123,6 +128,7 @@ The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 | `/bi give <player> <item_id> [amount]` | `buffeditems.command.give` | Gives a player the specified custom item. |
 | `/bi reload` | `buffeditems.command.reload` | Safely reloads `config.yml`, `items.yml`, and `upgrades.yml` from disk. |
 | `/bi list` | `buffeditems.command.list` | Lists all created items and shows if any have configuration errors. |
+| `/bi update` | `buffeditems.admin` | Checks for the latest update. |
 
 **Admin Permission:**
 * `buffeditems.admin`: Grants access to all BuffedItems commands.
