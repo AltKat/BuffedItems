@@ -36,8 +36,12 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     private int tickCount = 0;
 
-    private int staleCacheCheckTicks = 0;
-    private static final int STALE_CHECK_INTERVAL = 200;
+    private final Map<UUID, Map<String, Boolean>> permissionCache = new ConcurrentHashMap<>();
+    private long lastCacheClearTime = 0;
+    private static final long CACHE_EXPIRE_MS = 1000;
+
+    private Iterator<UUID> staleCheckIterator = null;
+    private static final int PLAYERS_TO_CHECK_PER_TICK = 2;
 
     public EffectApplicatorTask(BuffedItems plugin) {
         this.plugin = plugin;
@@ -50,20 +54,24 @@ public class EffectApplicatorTask extends BukkitRunnable {
     public void run() {
         tickCount++;
         boolean debugTick = (tickCount % 20 == 0);
+        long now = System.currentTimeMillis();
 
-        staleCacheCheckTicks++;
-        if (staleCacheCheckTicks >= STALE_CHECK_INTERVAL) {
-            staleCacheCheckTicks = 0;
-            if (debugTick) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running periodic stale cache validation...");
-            }
-            validateCacheForStaleness(debugTick);
+        if (now - lastCacheClearTime > CACHE_EXPIRE_MS) {
+            permissionCache.clear();
+            lastCacheClearTime = now;
+            if (debugTick) ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Task] Permission cache auto-cleared.");
         }
+
+        processDistributedStaleCheck(debugTick);
 
         Set<UUID> playersToScanFully;
         synchronized (playersToUpdate) {
             playersToScanFully = new HashSet<>(playersToUpdate);
             playersToUpdate.clear();
+        }
+
+        for (UUID uuid : playersToScanFully) {
+            permissionCache.remove(uuid);
         }
 
         if (debugTick && !playersToScanFully.isEmpty()) {
@@ -74,34 +82,27 @@ public class EffectApplicatorTask extends BukkitRunnable {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null || !player.isOnline()) {
                 playerCache.remove(playerUUID);
+                permissionCache.remove(playerUUID);
                 continue;
             }
             processPlayer(player, debugTick);
         }
 
-
-        if (debugTick && !playerCache.isEmpty()) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Running 'Fast Path' (Cache Check) for " + playerCache.size() + " cached players...");
-        }
-
         List<UUID> offlinePlayers = new ArrayList<>();
-
         Map<PotionEffectType, Integer> desiredPotionEffects = new HashMap<>();
         Set<UUID> desiredInventoryAttributeUUIDs = new HashSet<>();
 
         for (Map.Entry<UUID, CachedPlayerData> cacheEntry : playerCache.entrySet()) {
             UUID playerUUID = cacheEntry.getKey();
             CachedPlayerData cachedData = cacheEntry.getValue();
-
             Player player = Bukkit.getPlayer(playerUUID);
+
             if (player == null || !player.isOnline()) {
                 offlinePlayers.add(playerUUID);
                 continue;
             }
 
-            if (cachedData == null || cachedData.activeItems == null) {
-                continue;
-            }
+            if (cachedData == null || cachedData.activeItems == null) continue;
 
             desiredPotionEffects.clear();
             desiredInventoryAttributeUUIDs.clear();
@@ -110,7 +111,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 BuffedItem item = entry.getKey();
                 String slot = entry.getValue();
 
-                if (!item.hasPassivePermission(player)) {
+                if (!checkCachedPermission(player, item)) {
                     if (debugTick) {
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Fast Path] Player " + player.getName() + " lacks permission for " + item.getId() + ". Skipping effects.");
                     }
@@ -242,24 +243,48 @@ public class EffectApplicatorTask extends BukkitRunnable {
         }
     }
 
-    private void validateCacheForStaleness(boolean debugTick) {
-        for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
-            UUID playerUUID = entry.getKey();
+    private void processDistributedStaleCheck(boolean debugTick) {
+        if (playerCache.isEmpty()) return;
+
+        if (staleCheckIterator == null || !staleCheckIterator.hasNext()) {
+            staleCheckIterator = playerCache.keySet().iterator();
+        }
+
+        int checkedCount = 0;
+        while (staleCheckIterator.hasNext() && checkedCount < PLAYERS_TO_CHECK_PER_TICK) {
+            UUID playerUUID = staleCheckIterator.next();
             Player player = Bukkit.getPlayer(playerUUID);
 
-            if (player == null || !player.isOnline()) continue;
+            if (player != null && player.isOnline()) {
+                CachedPlayerData cachedData = playerCache.get(playerUUID);
+                List<Map.Entry<BuffedItem, String>> currentItems = findActiveItems(player, false);
 
-            List<Map.Entry<BuffedItem, String>> currentItems = findActiveItems(player, false);
-            CachedPlayerData cachedData = entry.getValue();
-
-            if (!isSameActiveItems(cachedData.activeItems, currentItems)) {
-                markPlayerForUpdate(playerUUID);
-                if (debugTick) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK,
-                            () -> "[Task-StaleCheck] Stale cache detected for " + player.getName() + ", marking for full update.");
+                if (cachedData != null && !isSameActiveItems(cachedData.activeItems, currentItems)) {
+                    markPlayerForUpdate(playerUUID);
+                    if (debugTick) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK,
+                                () -> "[Task-StaleCheck] Stale cache detected for " + player.getName() + " (Distributed check)");
+                    }
                 }
             }
+            checkedCount++;
         }
+    }
+
+    private boolean checkCachedPermission(Player player, BuffedItem item) {
+        String permNode = item.getPassivePermissionRaw();
+        if (permNode == null && item.getPermission() != null) {
+            permNode = item.getPermission();
+        }
+
+        if (permNode == null || permNode.equalsIgnoreCase("NONE")) {
+            return true;
+        }
+
+        UUID uuid = player.getUniqueId();
+        Map<String, Boolean> playerPerms = permissionCache.computeIfAbsent(uuid, k -> new ConcurrentHashMap<>());
+
+        return playerPerms.computeIfAbsent(permNode, player::hasPermission);
     }
 
     private boolean isSameActiveItems(List<Map.Entry<BuffedItem, String>> cacheList,
@@ -286,6 +311,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         managedPotions.remove(uuid);
         playerCache.remove(uuid);
         playersToUpdate.remove(uuid);
+        permissionCache.remove(uuid);
         attributeManager.clearPlayer(uuid);
     }
 
