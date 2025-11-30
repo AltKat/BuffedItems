@@ -60,7 +60,11 @@ public class ChatListener implements Listener {
 
         e.setCancelled(true);
 
-        String input = PlainTextComponentSerializer.plainText().serialize(e.message());
+        String input = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.builder()
+                .character('&')
+                .hexColors()
+                .build()
+                .serialize(e.message());
         String path = pmu.getChatInputPath();
         String itemId = pmu.getItemToEditId();
 
