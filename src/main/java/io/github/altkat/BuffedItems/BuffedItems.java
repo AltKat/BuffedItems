@@ -6,14 +6,12 @@ import io.github.altkat.BuffedItems.handler.UpdateHandler;
 import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.listener.*;
 import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
-import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.manager.config.ConfigUpdater;
-import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
-import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
+import io.github.altkat.BuffedItems.manager.config.*;
 import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
 import io.github.altkat.BuffedItems.manager.cost.CostManager;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.manager.item.ItemManager;
+import io.github.altkat.BuffedItems.manager.set.SetManager;
 import io.github.altkat.BuffedItems.manager.upgrade.UpgradeManager;
 import io.github.altkat.BuffedItems.menu.MenuListener;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -49,6 +47,7 @@ public final class BuffedItems extends JavaPlugin {
     private UpgradeManager upgradeManager;
     private HookManager hookManager;
     private ItemUpdater itemUpdater;
+    private SetManager setManager;
 
     @Override
     public void onEnable() {
@@ -77,12 +76,14 @@ public final class BuffedItems extends JavaPlugin {
         saveDefaultConfig();
         ItemsConfig.setup(this);
         UpgradesConfig.setup(this);
+        SetsConfig.setup(this);
         initializeManagers();
 
         try {
             ConfigUpdater.update(this, "config.yml");
             ConfigUpdater.update(this, "items.yml");
             ConfigUpdater.update(this, "upgrades.yml");
+            ConfigUpdater.update(this, "sets.yml");
         } catch (Exception e) {
             getLogger().severe("WARNING: Failed to run file updater tasks.");
             e.printStackTrace();
@@ -104,6 +105,7 @@ public final class BuffedItems extends JavaPlugin {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading task running...");
                 itemManager.loadItems(false);
                 upgradeManager.loadRecipes(false);
+                setManager.loadSets(false);
                 printStartupSummary();
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading complete.");
             }
@@ -158,6 +160,7 @@ public final class BuffedItems extends JavaPlugin {
         cooldownManager = new CooldownManager();
         upgradeManager = new UpgradeManager(this);
         itemUpdater = new ItemUpdater(this);
+        setManager = new SetManager(this);
     }
 
     private void registerListenersAndCommands() {
@@ -300,7 +303,8 @@ public final class BuffedItems extends JavaPlugin {
     public UpdateHandler getUpdateHandler() {
         return updateHandler;
     }
-    public ItemUpdater getItemUpdater() { return itemUpdater; }
+    public ItemUpdater getItemUpdater() { return itemUpdater;}
+    public SetManager getSetManager() {return setManager;}
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");

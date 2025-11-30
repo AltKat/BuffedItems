@@ -1,0 +1,24 @@
+# ===================================================================
+#                       BUFFED ITEMS - SETS.YML
+# ===================================================================
+# This file allows you to create "Item Sets".
+# When a player wears/holds multiple items from the same set,
+# they gain extra bonuses (potion effects or attributes).
+# ===================================================================
+
+sets:
+  # Example Set: Warrior's Gear
+  warrior_set:
+    display_name: "&cWarrior Set"
+    items:
+      - warriors_talisman
+      - berserkers_greaves
+    bonuses:
+      # 2 Piece Bonus
+      2:
+        potion_effects:
+          - INCREASE_DAMAGE;1 # Strength I
+      # 3 Piece Bonus (It works if you add 3rd item)
+      3:
+        attributes:
+          - GENERIC_MAX_HEALTH;ADD_NUMBER;4.0 # +2 Hearts
