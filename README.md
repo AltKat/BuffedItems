@@ -76,6 +76,7 @@
 
 <p align="center">
   <img src="https://altkat.github.io/buffeditems/images.jpg" alt="BuffedItems Images Section Banner"/>
+  <img src="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" width="720" alt="Warrior's Talisman"/>
 </p>
 <details>
 <summary><b>📸 Click to view In-Game Screenshots</b></summary>
@@ -97,10 +98,10 @@
 | <a href="https://altkat.github.io/buffeditems/images/miners_dream.png" target="_blank"><img src="https://altkat.github.io/buffeditems/images/miners_dream.png" width="240" alt="Miner's Dream"/></a> | <a href="https://altkat.github.io/buffeditems/images/bunny_hope.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/bunny_hope.gif" width="240" alt="Bunny Charm"/></a> | <a href="https://altkat.github.io/buffeditems/images/minersdream.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/minersdream.gif" width="240" alt="Miner's Dream Effect"/></a> |
 | **Miner's Dream** | **Bunny Charm** | **Miner's Dream (GIF)** |
 
-| | | |
-|:---:|:---:|:---:|
-| <a href="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" width="240" alt="Warrior's Talisman"/></a> | <a href="https://altkat.github.io/buffeditems/images/swift.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/swift.gif" width="240" alt="Swiftness Boots"/></a> | |
-| **Warrior's Talisman** | **Swiftness Boots** | |
+| |
+|:---:|
+| <a href="https://altkat.github.io/buffeditems/images/swift.gif" target="_blank"><img src="https://altkat.github.io/buffeditems/images/swift.gif" width="240" alt="Swiftness Boots"/></a> |
+| **Swiftness Boots** |
 </details>
 
 ***
