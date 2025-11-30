@@ -8,6 +8,7 @@ import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -107,15 +108,27 @@ public class EffectApplicatorTask extends BukkitRunnable {
             desiredPotionEffects.clear();
             desiredInventoryAttributeUUIDs.clear();
 
-            for (Map.Entry<BuffedItem, String> entry : cachedData.activeItems) {
-                BuffedItem item = entry.getKey();
-                String slot = entry.getValue();
+            Map<String, Integer> currentSetCounts = new HashMap<>();
+
+            for (CachedItem entry : cachedData.activeItems) {
+                BuffedItem item = entry.item;
+                String slot = entry.slot;
 
                 if (!checkCachedPermission(player, item)) {
                     if (debugTick) {
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Fast Path] Player " + player.getName() + " lacks permission for " + item.getId() + ". Skipping effects.");
                     }
                     continue;
+                }
+
+                if (entry.setId != null && !slot.equals("INVENTORY")) {
+
+                    boolean isHandSlot = slot.equals("MAIN_HAND") || slot.equals("OFF_HAND");
+                    boolean isArmorItem = isArmor(item.getMaterial());
+
+                    if (!(isHandSlot && isArmorItem)) {
+                        currentSetCounts.merge(entry.setId, 1, Integer::sum);
+                    }
                 }
 
                 if (item.getEffects().containsKey(slot)) {
@@ -130,6 +143,31 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
                             if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
                                 effectManager.applySingleAttribute(player, parsedAttr, slot);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (Map.Entry<String, Integer> setEntry : currentSetCounts.entrySet()) {
+                String setId = setEntry.getKey();
+                int count = setEntry.getValue();
+
+                io.github.altkat.BuffedItems.utility.set.BuffedSet set = plugin.getSetManager().getSet(setId);
+                if (set == null) continue;
+
+                for (int i = 1; i <= count; i++) {
+                    io.github.altkat.BuffedItems.utility.set.SetBonus bonus = set.getBonusFor(i);
+                    if (bonus != null) {
+                        BuffedItemEffect effects = bonus.getEffects();
+
+                        effects.getPotionEffects().forEach((type, level) ->
+                                desiredPotionEffects.merge(type, level, Integer::max));
+
+                        for (ParsedAttribute parsedAttr : effects.getParsedAttributes()) {
+                            desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
+                            if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
+                                effectManager.applySingleAttribute(player, parsedAttr, "SET_BONUS");
                             }
                         }
                     }
@@ -191,7 +229,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task-Slow Path] Scanning inventory and updating cache for " + player.getName());
         }
 
-        List<Map.Entry<BuffedItem, String>> activeItems = findActiveItems(player, debugTick);
+        List<CachedItem> activeItems = findActiveItems(player, debugTick);
 
         if (debugTick && !activeItems.isEmpty()) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Slow Path] Found " + activeItems.size() + " active item(s) for " + player.getName());
@@ -201,8 +239,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
     }
 
-    private List<Map.Entry<BuffedItem, String>> findActiveItems(Player player, boolean debugTick) {
-        List<Map.Entry<BuffedItem, String>> activeItems = new ArrayList<>();
+    private List<CachedItem> findActiveItems(Player player, boolean debugTick) {
+        List<CachedItem> activeItems = new ArrayList<>();
         PlayerInventory inventory = player.getInventory();
 
         checkItem(inventory.getItemInMainHand(), "MAIN_HAND", activeItems, player, debugTick);
@@ -221,7 +259,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         return activeItems;
     }
 
-    private void checkItem(ItemStack item, String slot, List<Map.Entry<BuffedItem, String>> activeItems, Player player, boolean debugTick) {
+    private void checkItem(ItemStack item, String slot, List<CachedItem> activeItems, Player player, boolean debugTick) {
         if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
             return;
         }
@@ -231,9 +269,10 @@ public class EffectApplicatorTask extends BukkitRunnable {
         if (itemId != null) {
             BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
             if (buffedItem != null) {
-                activeItems.add(new AbstractMap.SimpleEntry<>(buffedItem, slot));
+                String setId = plugin.getSetManager().getSetIdByItem(itemId);
+                activeItems.add(new CachedItem(buffedItem, slot, setId));
                 if (debugTick) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Task-FindItem] Detected BuffedItem: " + itemId + " in " + slot + " for " + player.getName());
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Task-FindItem] Detected " + itemId + " (Set: " + setId + ") in " + slot);
                 }
             } else {
                 if (debugTick) {
@@ -257,7 +296,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
             if (player != null && player.isOnline()) {
                 CachedPlayerData cachedData = playerCache.get(playerUUID);
-                List<Map.Entry<BuffedItem, String>> currentItems = findActiveItems(player, false);
+                List<CachedItem> currentItems = findActiveItems(player, false);
 
                 if (cachedData != null && !isSameActiveItems(cachedData.activeItems, currentItems)) {
                     markPlayerForUpdate(playerUUID);
@@ -287,18 +326,16 @@ public class EffectApplicatorTask extends BukkitRunnable {
         return playerPerms.computeIfAbsent(permNode, player::hasPermission);
     }
 
-    private boolean isSameActiveItems(List<Map.Entry<BuffedItem, String>> cacheList,
-                                      List<Map.Entry<BuffedItem, String>> realList) {
-        if (cacheList.size() != realList.size()) {
-            return false;
-        }
+    private boolean isSameActiveItems(List<CachedItem> cacheList, List<CachedItem> realList) {
+        if (cacheList.size() != realList.size()) {return false;}
 
         for (int i = 0; i < cacheList.size(); i++) {
-            Map.Entry<BuffedItem, String> cacheItem = cacheList.get(i);
-            Map.Entry<BuffedItem, String> realItem = realList.get(i);
+            CachedItem cacheItem = cacheList.get(i);
+            CachedItem realItem = realList.get(i);
 
-            if (!cacheItem.getKey().getId().equals(realItem.getKey().getId()) ||
-                    !cacheItem.getValue().equals(realItem.getValue())) {
+            if (!cacheItem.item.getId().equals(realItem.item.getId()) ||
+                    !cacheItem.slot.equals(realItem.slot) ||
+                    !Objects.equals(cacheItem.setId, realItem.setId)) {
                 return false;
             }
         }
@@ -329,8 +366,8 @@ public class EffectApplicatorTask extends BukkitRunnable {
             if (data == null || data.activeItems == null) continue;
 
             boolean isHolding = false;
-            for (Map.Entry<BuffedItem, String> itemEntry : data.activeItems) {
-                if (itemEntry.getKey().getId().equals(itemId)) {
+            for (CachedItem itemEntry : data.activeItems) {
+                if (itemEntry.item.getId().equals(itemId)) {
                     isHolding = true;
                     break;
                 }
@@ -350,11 +387,30 @@ public class EffectApplicatorTask extends BukkitRunnable {
         return managedPotions.getOrDefault(playerUUID, Collections.emptySet());
     }
 
-    private static class CachedPlayerData {
-        final List<Map.Entry<BuffedItem, String>> activeItems;
+    private boolean isArmor(Material m) {
+        String name = m.name();
+        return name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE")
+                || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS")
+                || name.equals("ELYTRA") || name.equals("TURTLE_HELMET");
+    }
 
-        CachedPlayerData(List<Map.Entry<BuffedItem, String>> activeItems) {
+    private static class CachedPlayerData {
+        final List<CachedItem> activeItems;
+
+        CachedPlayerData(List<CachedItem> activeItems) {
             this.activeItems = new ArrayList<>(activeItems);
+        }
+    }
+
+    private static class CachedItem {
+        final BuffedItem item;
+        final String slot;
+        final String setId;
+
+        CachedItem(BuffedItem item, String slot, String setId) {
+            this.item = item;
+            this.slot = slot;
+            this.setId = setId;
         }
     }
 
