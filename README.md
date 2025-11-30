@@ -135,14 +135,15 @@
 
 The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 
-| Command | Permission | Description |
-| :--- | :--- | :--- |
-| `/bi menu` | `buffeditems.command.menu` | Opens the main GUI editor to create, edit, and delete items. |
-| `/bi upgrade` | `buffeditems.command.upgrade` | Opens the Item Upgrade Station. |
-| `/bi give <player> <item_id> [amount]` | `buffeditems.command.give` | Gives a player the specified custom item. |
-| `/bi reload` | `buffeditems.command.reload` | Safely reloads `config.yml`, `items.yml`, and `upgrades.yml` from disk. |
-| `/bi list` | `buffeditems.command.list` | Lists all created items and shows if any have configuration errors. |
-| `/bi update` | `buffeditems.command.update` | Checks for the latest update. |
+| Command                                | Permission                    | Description                                                             |
+|:---------------------------------------|:------------------------------|:------------------------------------------------------------------------|
+| `/bi menu`                             | `buffeditems.command.menu`    | Opens the main GUI editor to create, edit, and delete items.            |
+| `/bi upgrade`                          | `buffeditems.command.upgrade` | Opens the Item Upgrade Station.                                         |
+| `/bi give <player> <item_id> [amount]` | `buffeditems.command.give`    | Gives a player the specified custom item.                               |
+| `/bi reload`                           | `buffeditems.command.reload`  | Safely reloads `config.yml`, `items.yml`, and `upgrades.yml` from disk. |
+| `/bi list`                             | `buffeditems.command.list`    | Lists all created items and shows if any have configuration errors.     |
+| `/bi wiki`                             | `buffeditems.command.wiki`    | Opens wiki page.                                                        |
+| `/bi update`                           | `buffeditems.command.update`  | Checks for the latest update.                                           |
 
 **Admin Permission:**
 * `buffeditems.admin`: Grants access to all BuffedItems commands.
