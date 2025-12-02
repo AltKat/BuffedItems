@@ -136,11 +136,10 @@ public class SetManager {
                     BuffedSet set = sets.get(setId);
                     plugin.getLogger().warning("  • " + setId + " (" + set.getErrorMessages().size() + " error(s))");
 
-                    if (ConfigManager.isDebugLevelEnabled(ConfigManager.DEBUG_INFO)) {
-                        for (String error : set.getErrorMessages()) {
-                            plugin.getLogger().warning("    - " + ConfigManager.stripLegacy(error));
-                        }
+                    for (String error : set.getErrorMessages()) {
+                        plugin.getLogger().warning("    - " + ConfigManager.stripLegacy(error));
                     }
+
                 }
                 plugin.getLogger().warning(separator);
             }
