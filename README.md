@@ -48,6 +48,11 @@
     * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
     * **Feedback:** Custom sounds and messages for depletion events.
 <br><br>
+* **🆕 Item Set Bonuses:** Create RPG-style armor sets!
+    * Combine specific items (Helmet, Chestplate, Sword, etc.) to unlock **Tiered Bonuses**.
+    * **Example:** "Wear 2 pieces for Speed I, wear 4 pieces for +10 Health."
+    * Manage sets entirely via the **In-Game GUI** (`/bi menu` -> Item Sets).
+<br><br>
 * **💎 Advanced Cost System:**
     * Set requirements for using items or upgrading them.
     * **Supports:** Money (Vault), CoinsEngine, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
@@ -110,10 +115,17 @@
   <img src="https://altkat.github.io/buffeditems/how-it-works.jpg" alt="BuffedItems How it works Banner"/>
 </p>
 
-1.  **Create**: Use `/bi menu` to create a new item and give it a unique ID (e.g., `warriors_talisman`).
-2.  **Configure**: Use the GUI to set the item's properties.
-3.  **Give**: Give the item to a player using `/bi give <player> warriors_talisman`.
-4.  **Apply**: The plugin's core task detects that the player has the item in their inventory and automatically applies the `STRENGTH 1` and `+2 Hearts` effects. If the player drops the item, the effects are instantly removed.
+The plugin operates on a **dynamic, event-driven** architecture designed for performance and flexibility:
+
+1.  **Design in-Game**: Use `/bi menu` to create items. No config editing needed. You can attach **Passive Stats** (Attributes/Potions) and **Active Abilities** (Command Logic) to any item.
+2.  **Passive Engine**: The core task scans players' inventories efficiently. If a player equips a specific item in the correct slot (e.g., *Magma Boots* on feet), they instantly gain the configured effects. Unequip it, and the effects vanish.
+3.  **Active Triggers**: When a player right-clicks an **Active Item**:
+    * **Checks**: Cooldowns, Permissions, and Costs (Money, XP, Items) are verified.
+    * **Logic**: If checks pass, the item executes your command script (supports `[chance]`, `[delay]`, `[console]` logic).
+    * **Feedback**: Plays sounds, visuals, etc.
+4.  **Set Bonuses**: The plugin tracks how many items from a specific **Set** a player is wearing. As they equip more pieces (2/4, 3/4...), they unlock tiered bonuses automatically.
+5.  **Live Updates**: Changed a stat in the config? The moment a player uses or clicks their existing item, it **auto-updates** to the new version while preserving their custom enchantments and data.
+   
 * 📚 For detailed setup instructions and advanced configuration, see the [Getting Started section in the Wiki](https://github.com/AltKat/BuffedItems/wiki).
 ***
 
