@@ -1,0 +1,75 @@
+# -------------------------------------------------------------------------------------------
+# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Discord: https://discord.gg/nxY3fc7xz9
+# Website: https://altkat.github.io
+# Wiki: https://github.com/AltKat/BuffedItems/wiki
+# -------------------------------------------------------------------------------------------
+
+# ===================================================================
+#                       BUFFED ITEMS - SETS.YML
+# ===================================================================
+#
+# This file allows you to create "Item Sets" to grant special bonuses
+# to players who wear or hold multiple items from the same collection.
+#
+# We RECOMMEND using the in-game editor (/bi menu -> Item Sets)
+# to make changes easily without editing this file manually.
+#
+# If you edit this file manually, use /bi reload to apply changes.
+# This file contains limited information. Please see wiki for more info.
+# ===================================================================
+
+# --- CONFIGURATION GUIDE ---
+#
+# sets:
+#   unique_set_id:        <-- Unique identifier for the set.
+#     display_name: "&6Set Name"  <-- Name used in GUI menus.
+#
+#     items:              <-- List of BuffedItem IDs that belong to this set.
+#       - item_id_1
+#       - item_id_2
+#
+#     bonuses:            <-- Define effects based on active piece count.
+#       2:                <-- When player has 2 items from this set:
+#         potion_effects:
+#           - SPEED;1
+#         attributes:
+#           - GENERIC_MAX_HEALTH;ADD_NUMBER;2.0
+#       3:                <-- When player has 3 items:
+#         ...
+#
+# --- LOGIC & RULES ---
+# 1. Cumulative Bonuses:
+#    If a player has 3 pieces, they receive BOTH the '2-piece' and '3-piece' bonuses.
+#    Bonuses stack on top of each other.
+#
+# 2. Equipment Slots:
+#    - Armor (Helmets, Chestplates, Leggings, Boots) ONLY counts if equipped
+#      in their respective armor slots. Holding armor in hand does NOT count.
+#    - Weapons/Tools/Other items count if held in Main Hand or Off-Hand.
+#    - Items just sitting in the inventory (not held/worn) do NOT count.
+#
+# 3. Permissions:
+#    If an item requires a specific permission to use (defined in items.yml),
+#    and the player lacks it, that item will NOT count towards the set bonus.
+# ===================================================================
+
+sets:
+  # Example Set: Warrior's Gear
+  # This set demonstrates how to combine armor and held items.
+  warrior_set:
+    display_name: "&cWarrior Set"
+    items:
+      - elemental_staff
+      - swiftness_boots
+    bonuses:
+      # 2 Piece Bonus
+      2:
+        potion_effects:
+          - INCREASE_DAMAGE;1 # Strength I
+        attributes:
+          - MAX_HEALTH;ADD_NUMBER;2.0 # Add 1 hearth
+      # 3 Piece Bonus (Currently unreachable with 2 items, add more and remove # below to test!)
+      #3:
+        #attributes:
+          #- GENERIC_MAX_HEALTH;ADD_NUMBER;4.0 # +2 Hearts

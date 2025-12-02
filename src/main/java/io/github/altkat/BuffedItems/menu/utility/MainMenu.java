@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
+import io.github.altkat.BuffedItems.menu.set.SetListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
@@ -142,6 +143,9 @@ public class MainMenu extends PaginatedMenu {
             case SMITHING_TABLE:
                 new UpgradeRecipeListMenu(playerMenuUtility, plugin).open();
                 break;
+            case GOLDEN_CHESTPLATE:
+                new SetListMenu(playerMenuUtility, plugin).open();
+                break;
             case BOOK:
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSection("§8§m-------------------------------------------"));
@@ -194,6 +198,11 @@ public class MainMenu extends PaginatedMenu {
         inventory.setItem(45, makeItem(Material.COMPARATOR, "§6General Settings",
                 "§7Configure global plugin settings.",
                 "§7(Debug level, Potion icons, etc.)"));
+        inventory.setItem(46, makeItem(Material.GOLDEN_CHESTPLATE, "§6Item Sets",
+                "§7Create and manage armor sets.",
+                "§7(Bonuses for wearing multiple items)",
+                "",
+                "§eClick to Manage"));
         inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes."));
 
 

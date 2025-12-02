@@ -65,6 +65,7 @@ public class ConfigUpdater {
 
             if (fileName.equals("items.yml") && key.startsWith("items.")) continue;
             if (fileName.equals("upgrades.yml") && key.startsWith("upgrades.")) continue;
+            if(fileName.equals("sets.yml") && key.startsWith("sets.")) continue;
 
             if (!userConfig.contains(key)) {
                 userConfig.set(key, defaultConfig.get(key));

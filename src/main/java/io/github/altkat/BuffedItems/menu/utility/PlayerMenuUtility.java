@@ -17,6 +17,8 @@ public class PlayerMenuUtility {
     private boolean showPreviewDetails = false;
     private String tempId;
     private Material tempMaterial;
+    private String tempSetId;
+    private int tempBonusCount;
     private MaterialSelectionContext materialContext = MaterialSelectionContext.ICON;
 
     public enum MaterialSelectionContext {
@@ -113,4 +115,10 @@ public class PlayerMenuUtility {
     public void setTempId(String tempId) {
         this.tempId = tempId;
     }
+
+    public String getTempSetId() { return tempSetId; }
+    public void setTempSetId(String tempSetId) { this.tempSetId = tempSetId; }
+
+    public int getTempBonusCount() { return tempBonusCount; }
+    public void setTempBonusCount(int tempBonusCount) { this.tempBonusCount = tempBonusCount; }
 }
