@@ -2,9 +2,11 @@ package io.github.altkat.BuffedItems.menu.selector;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
 import io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
+import io.github.altkat.BuffedItems.menu.set.SetItemsMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -29,7 +31,8 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         INGREDIENT,
         BASE,
         RESULT,
-        USAGE_LIMIT
+        USAGE_LIMIT,
+        SET_MEMBER
     }
 
     public BuffedItemSelectorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin, SelectionContext context) {
@@ -114,6 +117,22 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aTransform Target updated to: §e" + itemId));
                 new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
                 break;
+
+            case SET_MEMBER:
+                String setId = playerMenuUtility.getItemToEditId();
+                List<String> items = SetsConfig.get().getStringList("sets." + setId + ".items");
+
+                if (items.contains(itemId)) {
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§cItem already in set."));
+                } else {
+                    items.add(itemId);
+                    SetsConfig.get().set("sets." + setId + ".items", items);
+                    SetsConfig.save();
+                    plugin.getSetManager().loadSets(true);
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aAdded " + itemId + " to set."));
+                }
+                new SetItemsMenu(playerMenuUtility, plugin).open();
+                break;
         }
     }
 
@@ -169,6 +188,10 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
             case USAGE_LIMIT:
                 new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
+                break;
+
+            case SET_MEMBER:
+                new SetItemsMenu(playerMenuUtility, plugin).open();
                 break;
         }
     }

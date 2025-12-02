@@ -364,6 +364,24 @@ public class ConfigManager {
         }
     }
 
+    public static boolean createNewSet(String setId) {
+        synchronized (CONFIG_LOCK) {
+            sendDebugMessage(DEBUG_INFO, () -> "[Config] Creating new set: " + setId);
+
+            if (SetsConfig.get().contains("sets." + setId)) {
+                return false;
+            }
+
+            String path = "sets." + setId;
+            SetsConfig.get().set(path + ".display_name", "&6" + setId);
+            SetsConfig.get().set(path + ".items", new java.util.ArrayList<>());
+
+            SetsConfig.save();
+            plugin.getSetManager().loadSets(true);
+            return true;
+        }
+    }
+
     private static void invalidateAllPlayerCaches() {
         if (plugin.getEffectApplicatorTask() == null) {
             return;

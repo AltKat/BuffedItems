@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.listener.EffectType;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
+import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -61,6 +62,14 @@ public class EffectInputHandler implements ChatInputHandler {
             handleEditEnchantment(player, pmu, input, itemId);
         } else if (path.startsWith("enchantments.add.")) {
             handleAddEnchantment(player, pmu, input, path, itemId);
+        } else if (path.startsWith("set.potion.add.")) {
+            handleAddSetEffect(player, pmu, input, path, EffectType.POTION_EFFECT);
+        } else if (path.equals("set.potion.edit")) {
+            handleEditSetEffect(player, pmu, input, EffectType.POTION_EFFECT);
+        } else if (path.startsWith("set.attribute.add.")) {
+            handleAddSetEffect(player, pmu, input, path, EffectType.ATTRIBUTE);
+        } else if (path.equals("set.attribute.edit")) {
+            handleEditSetEffect(player, pmu, input, EffectType.ATTRIBUTE);
         }
     }
 
@@ -291,6 +300,132 @@ public class EffectInputHandler implements ChatInputHandler {
         new EnchantmentListMenu(pmu, plugin).open();
     }
 
+    private void handleAddSetEffect(Player player, PlayerMenuUtility pmu, String input, String path, EffectType effectType) {
+        String setId = pmu.getTempSetId();
+        int count = pmu.getTempBonusCount();
+        String basePath = "sets." + setId + ".bonuses." + count;
+        String listKey = (effectType == EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
+        String configPath = basePath + "." + listKey;
+
+        String rawName = path.substring(effectType == EffectType.POTION_EFFECT ? 15 : 18);
+
+        List<String> effects = new ArrayList<>(SetsConfig.get().getStringList(configPath));
+
+        try {
+            String finalConfigString;
+
+            if (effectType == EffectType.ATTRIBUTE) {
+                String[] parts = rawName.split("\\.");
+                if (parts.length < 2) {
+                    throw new IllegalArgumentException("Invalid attribute path format");
+                }
+                String attrName = parts[0];
+                String opName = parts[1];
+
+                validateEffectName(EffectType.ATTRIBUTE, attrName);
+                double amount = Double.parseDouble(input);
+
+                String checkStr = attrName + ";" + opName;
+                if (effects.stream().anyMatch(s -> s.toUpperCase().startsWith(checkStr.toUpperCase()))) {
+                    throw new IllegalStateException("Duplicate attribute");
+                }
+
+                finalConfigString = attrName + ";" + opName + ";" + amount;
+
+            } else {
+                String potionName = rawName;
+                validateEffectName(EffectType.POTION_EFFECT, potionName);
+
+                int level = Integer.parseInt(input);
+                if (level <= 0) throw new NumberFormatException();
+
+                if (effectExists(effects, potionName)) {
+                    throw new IllegalStateException("Duplicate effect");
+                }
+
+                finalConfigString = potionName + ";" + level;
+            }
+
+            effects.add(finalConfigString);
+            SetsConfig.get().set(configPath, effects);
+            SetsConfig.save();
+            plugin.getSetManager().loadSets(true);
+
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSet bonus updated!"));
+            closeChatInput(pmu);
+
+            openSetEffectMenu(pmu, effectType);
+
+        } catch (NumberFormatException ex) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number. Please enter a valid number."));
+        } catch (IllegalStateException ex) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: This effect already exists on the set bonus."));
+            closeChatInput(pmu);
+            openSetEffectMenu(pmu, effectType);
+        } catch (Exception ex) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: " + ex.getMessage()));
+            closeChatInput(pmu);
+            openSetEffectMenu(pmu, effectType);
+        }
+    }
+
+    private void handleEditSetEffect(Player player, PlayerMenuUtility pmu, String input, EffectType effectType) {
+        String setId = pmu.getTempSetId();
+        int count = pmu.getTempBonusCount();
+        String basePath = "sets." + setId + ".bonuses." + count;
+        String listKey = (effectType == EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
+        String configPath = basePath + "." + listKey;
+
+        List<String> effects = SetsConfig.get().getStringList(configPath);
+        int index = pmu.getEditIndex();
+
+        if (index == -1 || index >= effects.size()) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid index."));
+            closeChatInput(pmu);
+            openSetEffectMenu(pmu, effectType);
+            return;
+        }
+
+        try {
+            String currentString = effects.get(index);
+            String[] parts = currentString.split(";");
+            String newEffectString;
+
+            if (effectType == EffectType.ATTRIBUTE) {
+                if (parts.length < 3) throw new IllegalStateException("Corrupt attribute data");
+                double newAmount = Double.parseDouble(input);
+                newEffectString = parts[0] + ";" + parts[1] + ";" + newAmount;
+            } else {
+                if (parts.length < 2) throw new IllegalStateException("Corrupt potion data");
+                int newLevel = Integer.parseInt(input);
+                if (newLevel <= 0) throw new NumberFormatException();
+                newEffectString = parts[0] + ";" + newLevel;
+            }
+
+            effects.set(index, newEffectString);
+            SetsConfig.get().set(configPath, effects);
+            SetsConfig.save();
+            plugin.getSetManager().loadSets(true);
+
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSet bonus updated!"));
+            pmu.setEditIndex(-1);
+            closeChatInput(pmu);
+            openSetEffectMenu(pmu, effectType);
+
+        } catch (NumberFormatException ex) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number."));
+        } catch (Exception ex) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError updating effect: " + ex.getMessage()));
+            closeChatInput(pmu);
+            openSetEffectMenu(pmu, effectType);
+        }
+    }
+
+    private void openSetEffectMenu(PlayerMenuUtility pmu, EffectType effectType) {
+        new EffectListMenu(pmu, plugin,
+                effectType == EffectType.POTION_EFFECT ? EffectListMenu.EffectType.POTION_EFFECT : EffectListMenu.EffectType.ATTRIBUTE,
+                "SET_BONUS").open();
+    }
 
 
     private void closeChatInput(PlayerMenuUtility pmu) {

@@ -12,13 +12,16 @@ import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
 import io.github.altkat.BuffedItems.menu.selector.EnchantmentSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
+import io.github.altkat.BuffedItems.menu.set.SetBonusEffectSelectorMenu;
+import io.github.altkat.BuffedItems.menu.set.SetBonusesMenu;
+import io.github.altkat.BuffedItems.menu.set.SetEditorMenu;
+import io.github.altkat.BuffedItems.menu.set.SetListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -36,6 +39,7 @@ public class ChatListener implements Listener {
     private final CreationInputHandler creationInputHandler;
     private final UpgradeInputHandler upgradeInputHandler;
     private final IngredientInputHandler ingredientInputHandler;
+    private final SetInputHandler setInputHandler;
 
     public ChatListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -47,6 +51,7 @@ public class ChatListener implements Listener {
         this.creationInputHandler = new CreationInputHandler(plugin);
         this.upgradeInputHandler = new UpgradeInputHandler(plugin);
         this.ingredientInputHandler = new IngredientInputHandler(plugin);
+        this.setInputHandler = new SetInputHandler(plugin);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -60,7 +65,11 @@ public class ChatListener implements Listener {
 
         e.setCancelled(true);
 
-        String input = PlainTextComponentSerializer.plainText().serialize(e.message());
+        String input = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.builder()
+                .character('&')
+                .hexColors()
+                .build()
+                .serialize(e.message());
         String path = pmu.getChatInputPath();
         String itemId = pmu.getItemToEditId();
 
@@ -105,6 +114,11 @@ public class ChatListener implements Listener {
             return;
         }
 
+        if (path.startsWith("create_set") || path.equals("set_display_name") || path.equals("create_bonus_tier")) {
+            setInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
             creationInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("lore.")) {
@@ -116,7 +130,8 @@ public class ChatListener implements Listener {
                 path.startsWith("active.commands.") || path.startsWith("active.msg.") ||
                 path.startsWith("active.sounds.") || path.startsWith("usage-limit.")) {
             activeSettingsInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")) {
+        } else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")
+                || path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
             effectInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.startsWith("active.costs.")) {
             costInputHandler.handle(player, pmu, input, path, itemId);
@@ -242,6 +257,26 @@ public class ChatListener implements Listener {
         }
         if (path.equals("enchantment_search")) {
             new EnchantmentSelectorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("create_set")) {
+            new SetListMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("set_display_name")) {
+            new SetEditorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("create_bonus_tier")) {
+            new SetBonusesMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
+            new SetBonusEffectSelectorMenu(pmu, plugin).open();
             return;
         }
     }

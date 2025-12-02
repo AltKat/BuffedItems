@@ -44,9 +44,17 @@ public class AttributeOperationSelectorMenu extends Menu {
         playerMenuUtility.setWaitingForChatInput(true);
 
         String targetSlot = playerMenuUtility.getTargetSlot();
-        String prefix = (targetSlot != null && targetSlot.equals("ACTIVE")) ? "active." : "";
+        String prefix;
 
-        playerMenuUtility.setChatInputPath(prefix + "attributes.add." + attributeName + "." + operationName);
+        if ("SET_BONUS".equals(targetSlot)) {
+            prefix = "set.attribute.";
+        } else if ("ACTIVE".equals(targetSlot)) {
+            prefix = "active.attributes.";
+        } else {
+            prefix = "attributes.";
+        }
+
+        playerMenuUtility.setChatInputPath(prefix + "add." + attributeName + "." + operationName);
 
         p.closeInventory();
         p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Amount (e.g., 2.0, -1.5, 0.1) in chat."));

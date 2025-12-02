@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.menu.passive;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
+import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemSettingsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.AttributeSelectorMenu;
@@ -17,14 +18,6 @@ import java.util.List;
 
 /**
  * Generic menu for displaying and managing effects (Potion, Attribute)
- * Replaces: PotionEffectListMenu, ActivePotionEffectListMenu,
- *           AttributeListMenu, ActiveAttributeListMenu
- * <p>
- * Usage:
- *   - Passive Potion Effects: new EffectListMenu(pmu, plugin, EffectType.POTION, "MAIN_HAND").open();
- *   - Active Potion Effects:  new EffectListMenu(pmu, plugin, EffectType.POTION, "ACTIVE").open();
- *   - Passive Attributes:     new EffectListMenu(pmu, plugin, EffectType.ATTRIBUTE, "HELMET").open();
- *   - Active Attributes:      new EffectListMenu(pmu, plugin, EffectType.ATTRIBUTE, "ACTIVE").open();
  */
 public class EffectListMenu extends Menu {
 
@@ -32,6 +25,7 @@ public class EffectListMenu extends Menu {
     private final EffectType effectType;
     private final String context;
     private final boolean isActive;
+    private final boolean isSetBonus;
 
     public enum EffectType {
         POTION_EFFECT(Material.POTION),
@@ -55,10 +49,17 @@ public class EffectListMenu extends Menu {
         this.effectType = effectType;
         this.context = context;
         this.isActive = "ACTIVE".equals(context);
+        this.isSetBonus = "SET_BONUS".equals(context);
+        playerMenuUtility.setTargetSlot(context);
     }
 
     @Override
     public String getMenuName() {
+        if (isSetBonus) {
+            String setName = playerMenuUtility.getTempSetId();
+            int count = playerMenuUtility.getTempBonusCount();
+            return (effectType == EffectType.POTION_EFFECT ? "Potions: " : "Attrs: ") + setName + " (" + count + ")";
+        }
         if (isActive) {
             return effectType == EffectType.POTION_EFFECT ?
                     "Active Potion Effects" : "Active Attributes";
@@ -97,7 +98,13 @@ public class EffectListMenu extends Menu {
         // Effect slots (click to edit/delete)
         if (clickedSlot < 45) {
             String configPath = buildConfigPath(itemId);
-            List<String> effects = ItemsConfig.get().getStringList(configPath);
+            List<String> effects;
+
+            if (isSetBonus) {
+                effects = SetsConfig.get().getStringList(configPath);
+            } else {
+                effects = ItemsConfig.get().getStringList(configPath);
+            }
 
             if (clickedSlot >= effects.size()) return;
 
@@ -105,27 +112,32 @@ public class EffectListMenu extends Menu {
                 // Delete
                 String removedInfo = effects.get(clickedSlot);
                 effects.remove(clickedSlot);
-                ConfigManager.setItemValue(itemId, extractConfigKey(configPath), effects);
+
+                if (isSetBonus) {
+                    SetsConfig.get().set(configPath, effects);
+                    SetsConfig.save();
+                    plugin.getSetManager().loadSets(true);
+                } else {
+                    ConfigManager.setItemValue(itemId, extractConfigKey(configPath), effects);
+                }
+
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aRemoved: §e" + removedInfo));
                 this.open();
             }
-            else if (e.isLeftClick() && clickedType == Material.POTION) {
-                // Edit potion effect
-                playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setEditIndex(clickedSlot);
-                playerMenuUtility.setChatInputPath(buildChatPath("edit"));
-                p.closeInventory();
+            else if (e.isLeftClick()) {
+                // Edit Logic
                 String effectName = effects.get(clickedSlot).split(";")[0];
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new level for '" + effectName + "' in chat."));
-                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
-            }
-            else if (e.isLeftClick() && clickedType == Material.IRON_SWORD) {
-                // Edit attribute
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setEditIndex(clickedSlot);
                 playerMenuUtility.setChatInputPath(buildChatPath("edit"));
+
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new amount for the attribute in chat."));
+
+                if (effectType == EffectType.POTION_EFFECT) {
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new level for '" + effectName + "' in chat."));
+                } else {
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aType new amount for the attribute in chat."));
+                }
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             }
         }
@@ -133,15 +145,27 @@ public class EffectListMenu extends Menu {
 
     @Override
     public void setMenuItems() {
+        String desc;
+        if (isSetBonus) {
+            desc = "to the " + playerMenuUtility.getTempBonusCount() + "-piece bonus of " + playerMenuUtility.getTempSetId();
+        } else {
+            desc = "to the " + (isActive ? "active" : context.toLowerCase()) + " slot.";
+        }
+
         inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd New " + capitalizeEffectType(),
-                "§7Adds a " + effectType.name().toLowerCase().replace("_", " ") +
-                        " to the " + (isActive ? "active" : context.toLowerCase()) + " slot."));
+                "§7Adds a " + effectType.name().toLowerCase().replace("_", " ") + " " + desc));
 
         addBackButton(this);
 
         String itemId = playerMenuUtility.getItemToEditId();
         String configPath = buildConfigPath(itemId);
-        List<String> effectsConfig = ItemsConfig.get().getStringList(configPath);
+
+        List<String> effectsConfig;
+        if (isSetBonus) {
+            effectsConfig = SetsConfig.get().getStringList(configPath);
+        } else {
+            effectsConfig = ItemsConfig.get().getStringList(configPath);
+        }
 
         if (!effectsConfig.isEmpty()) {
             for (int i = 0; i < effectsConfig.size(); i++) {
@@ -165,17 +189,8 @@ public class EffectListMenu extends Menu {
                             displayValue, "", "§aLeft-Click to Edit", "§cRight-Click to Delete"));
                 } else {
                     inventory.setItem(i, makeItem(Material.BARRIER, "§c§lCORRUPT ENTRY",
-                            "§7This line is malformed in config.yml:",
-                            "§e" + effectString,
-                            "",
-                            "§cPossible Errors:",
-                            "§7- Using ':' instead of ';'",
-                            "§7- Missing a value",
-                            "§7- Invalid " + effectType.name().toLowerCase() + " name",
-                            "§7- Amount/level is not a number",
-                            "§7- Accidental spaces",
-                            "",
-                            "§cRight-Click to Delete this entry."));
+                            "§7Malformed: " + effectString,
+                            "§cRight-Click to Delete"));
                 }
             }
         }
@@ -183,27 +198,23 @@ public class EffectListMenu extends Menu {
         setFillerGlass();
     }
 
-    /**
-     * Opens the appropriate back menu based on context
-     */
     private void openBackMenu() {
-        if (isActive) {
-            // Active items go back to settings menu
+        if (isSetBonus) {
+            new io.github.altkat.BuffedItems.menu.set.SetBonusEffectSelectorMenu(playerMenuUtility, plugin).open();
+        } else if (isActive) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
         } else {
-            // Passive items go back to slot selection
-            SlotSelectionMenu.MenuType menuType =
+            io.github.altkat.BuffedItems.menu.passive.SlotSelectionMenu.MenuType menuType =
                     effectType == EffectType.POTION_EFFECT ?
-                            SlotSelectionMenu.MenuType.POTION_EFFECT :
-                            SlotSelectionMenu.MenuType.ATTRIBUTE;
-            new SlotSelectionMenu(playerMenuUtility, plugin, menuType).open();
+                            io.github.altkat.BuffedItems.menu.passive.SlotSelectionMenu.MenuType.POTION_EFFECT :
+                            io.github.altkat.BuffedItems.menu.passive.SlotSelectionMenu.MenuType.ATTRIBUTE;
+            new io.github.altkat.BuffedItems.menu.passive.SlotSelectionMenu(playerMenuUtility, plugin, menuType).open();
         }
     }
 
-    /**
-     * Opens the appropriate selector menu to add new effects
-     */
     private void openSelectorMenu() {
+        playerMenuUtility.setTargetSlot(context);
+
         if (effectType == EffectType.POTION_EFFECT) {
             new PotionEffectSelectorMenu(playerMenuUtility, plugin).open();
         } else {
@@ -211,10 +222,17 @@ public class EffectListMenu extends Menu {
         }
     }
 
-    /**
-     * Builds the full config path for effects
-     */
     private String buildConfigPath(String itemId) {
+        if (isSetBonus) {
+            String setId = playerMenuUtility.getTempSetId();
+            int count = playerMenuUtility.getTempBonusCount();
+            if (effectType == EffectType.POTION_EFFECT) {
+                return "sets." + setId + ".bonuses." + count + ".potion_effects";
+            } else {
+                return "sets." + setId + ".bonuses." + count + ".attributes";
+            }
+        }
+
         if (isActive) {
             if (effectType == EffectType.POTION_EFFECT) {
                 return "items." + itemId + ".active-mode.effects.potion_effects";
@@ -230,19 +248,26 @@ public class EffectListMenu extends Menu {
         }
     }
 
-    /**
-     * Extracts just the config key part (without "items.itemId." prefix)
-     */
     private String extractConfigKey(String fullPath) {
+        if (isSetBonus) {
+            return fullPath;
+        }
         String itemId = playerMenuUtility.getItemToEditId();
         String prefix = "items." + itemId + ".";
-        return fullPath.substring(prefix.length());
+        if (fullPath.startsWith(prefix)) {
+            return fullPath.substring(prefix.length());
+        }
+        return fullPath;
     }
 
-    /**
-     * Builds the chat input path for edit/add operations
-     */
     private String buildChatPath(String operation) {
+        if (isSetBonus) {
+            if (effectType == EffectType.POTION_EFFECT) {
+                return "set.potion." + operation;
+            } else {
+                return "set.attribute." + operation;
+            }
+        }
         if (isActive) {
             if (effectType == EffectType.POTION_EFFECT) {
                 return "active.potion_effects." + operation;
@@ -258,12 +283,8 @@ public class EffectListMenu extends Menu {
         }
     }
 
-    /**
-     * Validates if the effect entry is properly formatted
-     */
     private boolean validateEffect(EffectType type, String[] parts) {
         if (parts.length < 2) return false;
-
         try {
             if (type == EffectType.POTION_EFFECT) {
                 PotionEffectType.getByName(parts[0].toUpperCase());
@@ -281,14 +302,7 @@ public class EffectListMenu extends Menu {
         }
     }
 
-    /**
-     * Capitalizes effect type for display
-     */
     private String capitalizeEffectType() {
-        if (effectType == EffectType.POTION_EFFECT) {
-            return "Potion Effect";
-        } else {
-            return "Attribute";
-        }
+        return effectType == EffectType.POTION_EFFECT ? "Potion Effect" : "Attribute";
     }
 }

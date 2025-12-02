@@ -199,4 +199,8 @@ public class SetManager {
     public String getSetIdByItem(String itemId) {
         return itemToSetMap.get(itemId);
     }
+
+    public Map<String, BuffedSet> getSets() {
+        return Collections.unmodifiableMap(sets);
+    }
 }
