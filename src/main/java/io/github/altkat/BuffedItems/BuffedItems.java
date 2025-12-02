@@ -13,12 +13,14 @@ import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.manager.item.ItemManager;
 import io.github.altkat.BuffedItems.manager.set.SetManager;
 import io.github.altkat.BuffedItems.manager.upgrade.UpgradeManager;
+import io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe;
 import io.github.altkat.BuffedItems.menu.MenuListener;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.task.CooldownVisualsTask;
 import io.github.altkat.BuffedItems.task.EffectApplicatorTask;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemUpdater;
+import io.github.altkat.BuffedItems.utility.set.BuffedSet;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
@@ -217,8 +219,22 @@ public final class BuffedItems extends JavaPlugin {
             ConfigManager.logInfo("&#5FE2C5    • Errors: &c" + invalidItems + " &7(Check console logs)");
         }
 
-        Map<String, io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe> recipes = upgradeManager.getRecipes();
-        long validRecipes = recipes.values().stream().filter(io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe::isValid).count();
+        Map<String, BuffedSet> sets = setManager.getSets();
+        long validSets = sets.values().stream().filter(BuffedSet::isValid).count();
+        long invalidSets = sets.size() - validSets;
+
+        if (!sets.isEmpty()) {
+            ConfigManager.logInfo("");
+            ConfigManager.logInfo("&#FF9F43  Sets:");
+            ConfigManager.logInfo("&#FF9F43    • Total: &f" + sets.size());
+            ConfigManager.logInfo("&#FF9F43    • Valid: &a" + validSets);
+            if (invalidSets > 0) {
+                ConfigManager.logInfo("&#FF9F43    • Errors: &c" + invalidSets + " &7(Check console logs)");
+            }
+        }
+
+        Map<String, UpgradeRecipe> recipes = upgradeManager.getRecipes();
+        long validRecipes = recipes.values().stream().filter(UpgradeRecipe::isValid).count();
         long invalidRecipes = recipes.size() - validRecipes;
 
         if (!recipes.isEmpty()) {
