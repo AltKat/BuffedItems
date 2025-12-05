@@ -337,9 +337,10 @@ public class ConfigManager {
             }
 
             String originalDisplayName = sourceSection.getString("display_name", "&f" + sourceItemId);
-            Map<String, Object> sourceData = sourceSection.getValues(true);
 
-            config.createSection("items." + newItemId, sourceData);
+            ConfigurationSection newSection = config.createSection("items." + newItemId);
+            deepCopySection(sourceSection, newSection);
+
             config.set("items." + newItemId + ".display_name", originalDisplayName + " &7(Copy)");
 
             ItemsConfig.save();
@@ -348,6 +349,39 @@ public class ConfigManager {
 
             sendDebugMessage(DEBUG_INFO, () -> "[Config] Duplicated item '" + sourceItemId + "' to '" + newItemId + "'");
             return newItemId;
+        }
+    }
+
+    private static void deepCopySection(ConfigurationSection source, ConfigurationSection target) {
+        for (String key : source.getKeys(false)) {
+            Object value = source.get(key);
+
+            if (source.isConfigurationSection(key)) {
+                ConfigurationSection newSubSection = target.createSection(key);
+                deepCopySection(source.getConfigurationSection(key), newSubSection);
+            } else {
+                target.set(key, deepCopyObject(value));
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object deepCopyObject(Object object) {
+        if (object instanceof java.util.List) {
+            java.util.List<Object> originalList = (java.util.List<Object>) object;
+            java.util.List<Object> newList = new java.util.ArrayList<>();
+            for (Object item : originalList) {
+                newList.add(deepCopyObject(item));
+            }
+            return newList;
+        } else if (object instanceof Map<?, ?> originalMap) {
+            java.util.Map<Object, Object> newMap = new java.util.LinkedHashMap<>();
+            for (java.util.Map.Entry<?, ?> entry : originalMap.entrySet()) {
+                newMap.put(deepCopyObject(entry.getKey()), deepCopyObject(entry.getValue()));
+            }
+            return newMap;
+        } else {
+            return object;
         }
     }
 
