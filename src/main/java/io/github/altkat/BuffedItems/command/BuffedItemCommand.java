@@ -123,7 +123,7 @@ public class BuffedItemCommand implements CommandExecutor {
             sender.sendMessage(ConfigManager.fromSection("§6/bi give <player> <item_id> [amount]"));
         }
         if (sender.hasPermission("buffeditems.command.reload")) {
-            sender.sendMessage(ConfigManager.fromSection("§6/bi reload (Reloads config.yml and items.yml from disk)"));
+            sender.sendMessage(ConfigManager.fromSection("§6/bi reload (Reloads all config files from disk)"));
         }
         if (sender.hasPermission("buffeditems.command.list")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi list"));
@@ -248,7 +248,7 @@ public class BuffedItemCommand implements CommandExecutor {
 
         ConfigManager.reloadConfig();
 
-        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aConfiguration, items, and upgrades has been reloaded."));
+        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aConfigurations has been reloaded."));
         return true;
     }
 
