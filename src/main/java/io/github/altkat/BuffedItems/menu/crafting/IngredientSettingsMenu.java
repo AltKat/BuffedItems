@@ -15,7 +15,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -204,7 +203,7 @@ public class IngredientSettingsMenu extends Menu {
         inventory.setItem(13, makeItem(Material.NETHER_STAR, "§6Buffed Item", "§7Select custom item."));
         inventory.setItem(14, makeItem(Material.NAME_TAG, "§dExternal Plugin", "§7Enter ItemsAdder/Nexo ID via Chat."));
 
-        inventory.setItem(16, makeItem(Material.GOLD_NUGGET, "§eSet Amount", "§7Current: " + (ing != null ? ing.getAmount() : 1), "§7(Requires special handling!)"));
+        inventory.setItem(16, makeItem(Material.GOLD_NUGGET, "§eSet Amount", "§7Current: " + (ing != null ? ing.getAmount() : 1)));
 
         inventory.setItem(31, makeItem(Material.RED_STAINED_GLASS_PANE, "§cClear Slot"));
         inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));

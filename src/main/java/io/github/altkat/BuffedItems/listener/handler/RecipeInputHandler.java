@@ -90,6 +90,48 @@ public class RecipeInputHandler implements ChatInputHandler {
             }
             closeChat(pmu);
         }
+
+        else if (path.equals("recipe_result_manual")) {
+            if (plugin.getItemManager().getBuffedItem(input) == null) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Item ID '" + input + "' not found."));
+            }
+
+            String recipeId = pmu.getRecipeToEditId();
+            RecipesConfig.get().set("recipes." + recipeId + ".result.item", input);
+            RecipesConfig.save();
+            plugin.getCraftingManager().loadRecipes(true);
+
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe result updated to: §e" + input));
+            new RecipeEditorMenu(pmu, plugin).open();
+            closeChat(pmu);
+        }
+
+        else if (path.equals("recipe_ingredient_buffed_manual")) {
+            if (plugin.getItemManager().getBuffedItem(input) == null) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§eWarning: Item ID '" + input + "' not found."));
+            }
+
+            saveIngredientHelper(pmu, MatchType.BUFFED_ITEM, Material.STONE, input, 1);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aIngredient set to Buffed Item: §e" + input));
+            new IngredientSettingsMenu(pmu, plugin, false).open();
+            closeChat(pmu);
+        }
+
+        else if (path.equals("recipe_ingredient_material_manual")) {
+            String matName = input.toUpperCase().replace(" ", "_");
+            Material mat = Material.matchMaterial(matName);
+
+            if (mat == null) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid Material: " + input));
+                player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                return;
+            }
+
+            saveIngredientHelper(pmu, MatchType.MATERIAL, mat, mat.name(), 1);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aIngredient set to Material: §e" + mat.name()));
+            new IngredientSettingsMenu(pmu, plugin, false).open();
+            closeChat(pmu);
+        }
     }
 
     private boolean updateIngredientAmountHelper(PlayerMenuUtility pmu, int newAmount) {

@@ -187,6 +187,16 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 playerMenuUtility.setChatInputPath("usage-limit.transform-item");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Target Buffed Item ID manually."));
                 break;
+
+            case CRAFTING_RESULT:
+                playerMenuUtility.setChatInputPath("recipe_result_manual");
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Result Buffed Item ID manually."));
+                break;
+
+            case CRAFTING_INGREDIENT:
+                playerMenuUtility.setChatInputPath("recipe_ingredient_buffed_manual");
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
+                break;
         }
         p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
     }
@@ -216,6 +226,10 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
             case CRAFTING_RESULT:
                 new RecipeEditorMenu(playerMenuUtility, plugin).open();
+                break;
+
+            case CRAFTING_INGREDIENT:
+                new IngredientSettingsMenu(playerMenuUtility, plugin, false).open();
                 break;
         }
     }
