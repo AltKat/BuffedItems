@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.listener.handler.*;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.*;
+import io.github.altkat.BuffedItems.menu.crafting.IngredientSettingsMenu;
 import io.github.altkat.BuffedItems.menu.crafting.RecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.crafting.RecipeListMenu;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
@@ -123,7 +124,8 @@ public class ChatListener implements Listener {
             return;
         }
 
-        if (path.equals("create_recipe") || path.equals("recipe_result_amount")) {
+        if (path.equals("create_recipe") || path.equals("recipe_result_amount") ||
+                path.equals("recipe_ingredient_amount") || path.equals("recipe_ingredient_external")) {
             recipeInputHandler.handle(player, pmu, input, path, itemId);
             return;
         }
@@ -296,6 +298,11 @@ public class ChatListener implements Listener {
 
         if (path.equals("recipe_result_amount")) {
             new RecipeEditorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("recipe_ingredient_amount") || path.equals("recipe_ingredient_external")) {
+            new IngredientSettingsMenu(pmu, plugin).open();
             return;
         }
     }
