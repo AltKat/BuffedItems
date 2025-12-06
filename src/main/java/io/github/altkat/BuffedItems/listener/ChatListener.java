@@ -4,6 +4,8 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.listener.handler.*;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.*;
+import io.github.altkat.BuffedItems.menu.crafting.RecipeEditorMenu;
+import io.github.altkat.BuffedItems.menu.crafting.RecipeListMenu;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.editor.LoreEditorMenu;
@@ -40,6 +42,7 @@ public class ChatListener implements Listener {
     private final UpgradeInputHandler upgradeInputHandler;
     private final IngredientInputHandler ingredientInputHandler;
     private final SetInputHandler setInputHandler;
+    private final RecipeInputHandler recipeInputHandler;
 
     public ChatListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -52,6 +55,7 @@ public class ChatListener implements Listener {
         this.upgradeInputHandler = new UpgradeInputHandler(plugin);
         this.ingredientInputHandler = new IngredientInputHandler(plugin);
         this.setInputHandler = new SetInputHandler(plugin);
+        this.recipeInputHandler = new RecipeInputHandler(plugin);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -116,6 +120,11 @@ public class ChatListener implements Listener {
 
         if (path.startsWith("create_set") || path.equals("set_display_name") || path.equals("create_bonus_tier")) {
             setInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+
+        if (path.equals("create_recipe") || path.equals("recipe_result_amount")) {
+            recipeInputHandler.handle(player, pmu, input, path, itemId);
             return;
         }
 
@@ -277,6 +286,16 @@ public class ChatListener implements Listener {
 
         if (path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
             new SetBonusEffectSelectorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("create_recipe")) {
+            new RecipeListMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("recipe_result_amount")) {
+            new RecipeEditorMenu(pmu, plugin).open();
             return;
         }
     }

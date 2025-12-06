@@ -2,10 +2,13 @@ package io.github.altkat.BuffedItems.menu.selector;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.RecipesConfig;
 import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
 import io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
+import io.github.altkat.BuffedItems.menu.crafting.IngredientSettingsMenu;
+import io.github.altkat.BuffedItems.menu.crafting.RecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.set.SetItemsMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
@@ -32,7 +35,9 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         BASE,
         RESULT,
         USAGE_LIMIT,
-        SET_MEMBER
+        SET_MEMBER,
+        CRAFTING_RESULT,
+        CRAFTING_INGREDIENT
     }
 
     public BuffedItemSelectorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin, SelectionContext context) {
@@ -133,6 +138,21 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 }
                 new SetItemsMenu(playerMenuUtility, plugin).open();
                 break;
+
+            case CRAFTING_RESULT:
+                String recipeId = playerMenuUtility.getRecipeToEditId();
+                RecipesConfig.get().set("recipes." + recipeId + ".result.item", itemId);
+                RecipesConfig.save();
+                plugin.getCraftingManager().loadRecipes(true);
+
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe result updated to: §e" + itemId));
+                new RecipeEditorMenu(playerMenuUtility, plugin).open();
+                break;
+
+            case CRAFTING_INGREDIENT:
+                playerMenuUtility.setTempId(itemId);
+                new IngredientSettingsMenu(playerMenuUtility, plugin, true).open();
+                break;
         }
     }
 
@@ -192,6 +212,10 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
             case SET_MEMBER:
                 new SetItemsMenu(playerMenuUtility, plugin).open();
+                break;
+
+            case CRAFTING_RESULT:
+                new RecipeEditorMenu(playerMenuUtility, plugin).open();
                 break;
         }
     }

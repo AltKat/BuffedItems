@@ -20,11 +20,14 @@ public class PlayerMenuUtility {
     private String tempSetId;
     private int tempBonusCount;
     private MaterialSelectionContext materialContext = MaterialSelectionContext.ICON;
+    private String recipeToEditId;
+    private int selectedRecipeSlot = -1;
 
     public enum MaterialSelectionContext {
         ICON,
         COST,
-        INGREDIENT
+        INGREDIENT,
+        CRAFTING_INGREDIENT
     }
 
 
@@ -117,8 +120,26 @@ public class PlayerMenuUtility {
     }
 
     public String getTempSetId() { return tempSetId; }
+
     public void setTempSetId(String tempSetId) { this.tempSetId = tempSetId; }
 
     public int getTempBonusCount() { return tempBonusCount; }
+
     public void setTempBonusCount(int tempBonusCount) { this.tempBonusCount = tempBonusCount; }
+
+    public String getRecipeToEditId() {
+        return recipeToEditId;
+    }
+
+    public void setRecipeToEditId(String recipeToEditId) {
+        this.recipeToEditId = recipeToEditId;
+    }
+
+    public int getSelectedRecipeSlot() {
+        return selectedRecipeSlot;
+    }
+
+    public void setSelectedRecipeSlot(int selectedRecipeSlot) {
+        this.selectedRecipeSlot = selectedRecipeSlot;
+    }
 }

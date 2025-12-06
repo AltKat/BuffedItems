@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.menu.selector;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
+import io.github.altkat.BuffedItems.menu.crafting.IngredientSettingsMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
@@ -89,6 +90,10 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: §e" + material.name()));
             p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
+            playerMenuUtility.setTempMaterial(material);
+            new IngredientSettingsMenu(playerMenuUtility, plugin, true).open();
         }
     }
 

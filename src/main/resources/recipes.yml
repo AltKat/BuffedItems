@@ -1,0 +1,70 @@
+# -------------------------------------------------------------------------------------------
+# Buffed Items v${project.version} by Altkat(StreetMelodeez)
+# Discord: https://discord.gg/nxY3fc7xz9
+# Website: https://altkat.github.io
+# Wiki: https://github.com/AltKat/BuffedItems/wiki
+# -------------------------------------------------------------------------------------------
+
+# ===================================================================
+#                       BUFFED ITEMS - RECIPES.YML
+# ===================================================================
+#
+# This file contains all custom crafting recipes for your BuffedItems.
+#
+# We RECOMMEND using the in-game editor (/bi menu -> Crafting) to create
+# and manage recipes easily without dealing with YAML syntax.
+#
+# If you edit this file manually, use /bi reload to apply changes.
+# This file contains limited information. Please see wiki for more info.
+# ===================================================================
+
+# --- CONFIGURATION GUIDE ---
+#
+# recipes:
+#   unique_recipe_id:           <-- Unique ID for the recipe.
+#     result:
+#       item: "item_id"         <-- The ID of the BuffedItem to craft (must exist in items.yml).
+#       amount: 1               <-- Amount of items to give.
+#
+#     shape:                    <-- The 3x3 crafting grid pattern.
+#       - "ABC"                 <-- Top Row (Use spaces for empty slots).
+#       - "DEF"                 <-- Middle Row.
+#       - "GHI"                 <-- Bottom Row.
+#
+#     ingredients:              <-- Define what each character in the shape represents.
+#       A:
+#         type: MATERIAL        <-- Match Type (See below).
+#         value: DIAMOND        <-- The value depends on the type.
+#
+# --- MATCH TYPES ---
+# 1. MATERIAL: Matches any item of a specific vanilla material (ignores name, lore, etc.).
+#    - value: MATERIAL_NAME (e.g., DIAMOND_SWORD, STONE)
+#
+# 2. BUFFED_ITEM: Matches a specific custom item from this plugin.
+#    - value: buffed_item_id
+#
+# 3. EXTERNAL: Matches an item from another plugin (ItemsAdder / Nexo).
+#    - value: namespace:id (e.g., itemsadder:ruby_sword)
+#
+# 4. EXACT: Strict matching for special vanilla items (Base64 encoded).
+#    - value: <base64_string> (Generated automatically by the in-game editor)
+# ===================================================================
+
+recipes:
+  # Example Recipe: Crafting the Elemental Staff
+  # Pattern: Emerald on top of two Blaze Rods
+  elemental_staff_craft:
+    result:
+      item: "elemental_staff"
+      amount: 1
+    shape:
+      - " E "
+      - " R "
+      - " R "
+    ingredients:
+      E:
+        type: MATERIAL
+        value: EMERALD
+      R:
+        type: MATERIAL
+        value: BLAZE_ROD
