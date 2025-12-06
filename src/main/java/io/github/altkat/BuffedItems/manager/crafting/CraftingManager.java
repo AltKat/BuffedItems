@@ -188,8 +188,26 @@ public class CraftingManager {
         bukkitRecipe.shape(shape.toArray(new String[0]));
 
         for (Map.Entry<Character, RecipeIngredient> entry : charMap.entrySet()) {
-            if (entry.getValue().getMaterial() != null) {
-                bukkitRecipe.setIngredient(entry.getKey(), entry.getValue().getMaterial());
+            char charKey = entry.getKey();
+            RecipeIngredient ingredient = entry.getValue();
+
+            if (ingredient.getMatchType() == MatchType.BUFFED_ITEM) {
+                BuffedItem bi = plugin.getItemManager().getBuffedItem(ingredient.getData());
+                if (bi != null) {
+                    ItemStack exactItem = new ItemBuilder(bi, plugin).build();
+                    exactItem.setAmount(1);
+
+                    bukkitRecipe.setIngredient(charKey, new org.bukkit.inventory.RecipeChoice.ExactChoice(exactItem));
+                } else {
+                    if (ingredient.getMaterial() != null) {
+                        bukkitRecipe.setIngredient(charKey, ingredient.getMaterial());
+                    }
+                }
+            }
+            else {
+                if (ingredient.getMaterial() != null) {
+                    bukkitRecipe.setIngredient(charKey, ingredient.getMaterial());
+                }
             }
         }
 

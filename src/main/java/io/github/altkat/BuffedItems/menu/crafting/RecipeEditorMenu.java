@@ -163,32 +163,47 @@ public class RecipeEditorMenu extends Menu {
             type = MatchType.MATERIAL;
         }
 
-        Material mat = Material.BEDROCK;
-        if (type == MatchType.MATERIAL) {
-            mat = Material.getMaterial(value);
-            if (mat == null) mat = Material.BEDROCK;
-        } else if (type == MatchType.BUFFED_ITEM) {
+        ItemStack stack;
+
+        if (type == MatchType.BUFFED_ITEM) {
             BuffedItem bi = plugin.getItemManager().getBuffedItem(value);
-            if (bi != null) mat = bi.getMaterial();
-        } else {
-            mat = Material.CHEST;
+            if (bi != null) {
+                stack = new ItemBuilder(bi, plugin).build();
+            } else {
+                stack = new ItemStack(Material.BARRIER);
+            }
+        }
+        else {
+            Material mat = Material.BEDROCK;
+            if (type == MatchType.MATERIAL) {
+                mat = Material.getMaterial(value);
+                if (mat == null) mat = Material.BEDROCK;
+            } else if (type == MatchType.EXTERNAL) {
+                mat = Material.CHEST;
+            }
+            stack = new ItemStack(mat);
         }
 
-        ItemStack stack = new ItemStack(mat);
         ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return stack;
 
-        meta.displayName(ConfigManager.fromSection("§f" + formatMaterialName(mat)));
+        if (type != MatchType.BUFFED_ITEM) {
+            meta.displayName(ConfigManager.fromSection("§f" + formatMaterialName(stack.getType())));
+        }
 
-        List<String> loreStrings = new ArrayList<>();
-        loreStrings.add("§7Type: §f" + type.name());
-        loreStrings.add("§7Value: §e" + value);
-        loreStrings.add("§7Amount: §e" + amount);
-        loreStrings.add("");
-        loreStrings.add("§eClick to Edit");
+        List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
-        meta.lore(ConfigManager.loreFromLegacy(loreStrings));
+        lore.add(Component.empty());
+        lore.add(ConfigManager.fromSection("§7Type: §f" + type.name()));
+        lore.add(ConfigManager.fromSection("§7Value: §e" + value));
+        lore.add(ConfigManager.fromSection("§7Amount: §e" + amount));
+        lore.add(Component.empty());
+        lore.add(ConfigManager.fromSection("§eClick to Edit"));
+
+        meta.lore(lore);
         stack.setItemMeta(meta);
         stack.setAmount(Math.max(1, amount));
+
         return stack;
     }
 
