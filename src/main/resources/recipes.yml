@@ -50,6 +50,19 @@
 #    - value: <base64_string> (Generated automatically by the in-game editor)
 # ===================================================================
 
+# ===================================================================
+#                       GLOBAL SETTINGS
+# ===================================================================
+settings:
+  # Should custom recipes be registered to the vanilla Recipe Book (Green Book)?
+  # true:  Recipes are added to the book. Players can click to autofill.
+  #        (Note: Visual limitation causes ingredients to show as '1' amount in book).
+  # false: Recipes are HIDDEN from the book but still work perfectly.
+  #        Useful to avoid visual confusion or for secret recipes.
+  register-to-book: true
+
+# ===================================================================
+
 recipes:
   # Example Recipe: Crafting the Elemental Staff
   # Pattern: Emerald on top of two Blaze Rods

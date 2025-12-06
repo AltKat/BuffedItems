@@ -55,6 +55,18 @@ public class RecipeListMenu extends PaginatedMenu {
             return;
         }
 
+        if (e.getSlot() == 45) {
+            boolean current = RecipesConfig.get().getBoolean("settings.register-to-book", true);
+            RecipesConfig.get().set("settings.register-to-book", !current);
+            RecipesConfig.save();
+
+            plugin.getCraftingManager().loadRecipes(true);
+
+            p.playSound(p.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1, 1);
+            this.open();
+            return;
+        }
+
         if (e.getSlot() == 53) {
             new MainMenu(playerMenuUtility, plugin).open();
             return;
@@ -85,8 +97,22 @@ public class RecipeListMenu extends PaginatedMenu {
         addMenuControls();
         setFillerGlass();
 
+        boolean isEnabled = RecipesConfig.get().getBoolean("settings.register-to-book", true);
+        String status = isEnabled ? "§aEnabled" : "§cDisabled";
+        Material toggleIcon = isEnabled ? Material.KNOWLEDGE_BOOK : Material.BOOK;
+
+        inventory.setItem(45, makeItem(toggleIcon,
+                "§6Recipe Book Registration",
+                "§7Determines if custom recipes are",
+                "§7added to the vanilla Recipe Book.",
+                "",
+                "§7Current: " + status,
+                "",
+                "§eClick to Toggle"));
+
         inventory.setItem(49, makeItem(Material.ANVIL, "§aCreate New Recipe", "§7Click to create a new crafting recipe."));
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Main Menu"));
+
 
         List<CustomRecipe> recipes = getSortedRecipes();
 

@@ -126,7 +126,11 @@ public class CraftingManager {
 
             if (recipe.isValid()) {
                 validCount++;
-                registerBukkitRecipe(recipe, shape, charMap);
+
+                boolean shouldRegister = RecipesConfig.get().getBoolean("settings.register-to-book", true);
+                if (shouldRegister) {
+                    registerBukkitRecipe(recipe, shape, charMap);
+                }
             } else {
                 invalidCount++;
                 recipesWithErrors.add(recipeId);
