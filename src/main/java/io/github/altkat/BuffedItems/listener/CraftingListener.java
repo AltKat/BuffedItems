@@ -10,7 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.Inventory;
@@ -30,8 +31,10 @@ public class CraftingListener implements Listener {
         this.plugin = plugin;
     }
 
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareCraft(PrepareItemCraftEvent e) {
+
         if (e.getView().getPlayer() != null && isCrafting.contains(e.getView().getPlayer().getUniqueId())) {
             return;
         }
@@ -62,71 +65,70 @@ public class CraftingListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onCraftItem(CraftItemEvent e) {
-        CraftingInventory inv = e.getInventory();
+    public void onInventoryClick(InventoryClickEvent e) {
+
+        if (e.getSlotType() != InventoryType.SlotType.RESULT) return;
+        if (!(e.getClickedInventory() instanceof CraftingInventory)) return;
+
+        CraftingInventory inv = (CraftingInventory) e.getClickedInventory();
+        ItemStack result = inv.getResult();
+
+        if (result == null || result.getType() == Material.AIR) return;
+        if (!plugin.getItemManager().isBuffedItem(result)) return;
+
         ItemStack[] matrix = inv.getMatrix();
-
-        if (matrix.length < 9) return;
-
         CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
-        if (match == null) return;
 
-        if (!e.isShiftClick()) {
-            ItemStack cursor = e.getWhoClicked().getItemOnCursor();
-            ItemStack result = inv.getResult();
-
-            if (cursor.getType() != Material.AIR) {
-                if (result == null || !cursor.isSimilar(result) || (cursor.getAmount() + result.getAmount() > cursor.getMaxStackSize())) {
-                    e.setCancelled(true);
-                    return;
-                }
-            }
+        if (match == null) {
+            e.setCancelled(true);
+            e.getWhoClicked().closeInventory();
+            return;
         }
 
-        isCrafting.add(e.getWhoClicked().getUniqueId());
+        e.setCancelled(true);
+        Player player = (Player) e.getWhoClicked();
+
+        isCrafting.add(player.getUniqueId());
 
         try {
             if (e.isShiftClick()) {
-                e.setCancelled(true);
-                handleShiftClick(e, match, matrix, inv);
-                return;
+                handleShiftClick(player, match, matrix, inv);
+            } else {
+                handleNormalClick(player, e, match, matrix, inv);
             }
-
-            boolean matrixChanged = false;
-            for (int i = 0; i < matrix.length; i++) {
-                if (i >= 9) break;
-
-                RecipeIngredient ingredient = match.getIngredient(i);
-                ItemStack itemInSlot = matrix[i];
-
-                if (ingredient != null && itemInSlot != null && itemInSlot.getType() != Material.AIR) {
-                    int required = ingredient.getAmount();
-                    if (required > 1) {
-                        int currentAmount = itemInSlot.getAmount();
-                        int amountToReduceExtra = required - 1;
-
-                        if (currentAmount > amountToReduceExtra) {
-                            itemInSlot.setAmount(currentAmount - amountToReduceExtra);
-                        } else {
-                            itemInSlot.setAmount(0);
-                        }
-                        matrixChanged = true;
-                    }
-                }
-            }
-
-            if (matrixChanged) {
-                inv.setMatrix(matrix);
-            }
-
         } finally {
-            isCrafting.remove(e.getWhoClicked().getUniqueId());
+            isCrafting.remove(player.getUniqueId());
         }
     }
 
-    private void handleShiftClick(CraftItemEvent e, CustomRecipe match, ItemStack[] matrix, CraftingInventory inv) {
-        Player player = (Player) e.getWhoClicked();
+    private void handleNormalClick(Player player, InventoryClickEvent e, CustomRecipe match, ItemStack[] matrix, CraftingInventory inv) {
+        ItemStack cursor = e.getCursor();
 
+        BuffedItem resultBuffedItem = plugin.getItemManager().getBuffedItem(match.getResultItemId());
+        if (resultBuffedItem == null) return;
+
+        ItemStack resultStack = new ItemBuilder(resultBuffedItem, plugin).build();
+        resultStack.setAmount(match.getAmount());
+
+        if (cursor != null && cursor.getType() != Material.AIR) {
+            if (!cursor.isSimilar(resultStack)) return;
+            if (cursor.getAmount() + resultStack.getAmount() > cursor.getMaxStackSize()) return;
+        }
+
+        updateMatrix(inv, matrix, match, 1);
+
+        if (cursor == null || cursor.getType() == Material.AIR) {
+            player.setItemOnCursor(resultStack);
+        } else {
+            cursor.setAmount(cursor.getAmount() + resultStack.getAmount());
+            player.setItemOnCursor(cursor);
+        }
+
+        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
+        player.updateInventory();
+    }
+
+    private void handleShiftClick(Player player, CustomRecipe match, ItemStack[] matrix, CraftingInventory inv) {
         BuffedItem resultBuffedItem = plugin.getItemManager().getBuffedItem(match.getResultItemId());
         if (resultBuffedItem == null) return;
 
@@ -158,37 +160,11 @@ public class CraftingListener implements Listener {
         if (maxCraftsByMaterials <= 0) return;
 
         int maxCraftsByInventory = getSpaceFor(player.getInventory(), resultTemplate) / match.getAmount();
-
         int actualCrafts = Math.min(maxCraftsByMaterials, maxCraftsByInventory);
 
-        if (actualCrafts <= 0) {
-            return;
-        }
+        if (actualCrafts <= 0) return;
 
-
-        for (int i = 0; i < matrix.length; i++) {
-            if (i >= 9) break;
-            RecipeIngredient ingredient = match.getIngredient(i);
-            ItemStack itemInSlot = matrix[i];
-
-            if (ingredient != null && itemInSlot != null) {
-                int requiredTotal = ingredient.getAmount() * actualCrafts;
-                int current = itemInSlot.getAmount();
-
-                if (current > requiredTotal) {
-                    itemInSlot.setAmount(current - requiredTotal);
-                } else {
-                    Material type = itemInSlot.getType();
-                    if (isBucket(type)) {
-                        itemInSlot.setType(Material.BUCKET);
-                        itemInSlot.setAmount(1);
-                    } else {
-                        itemInSlot.setAmount(0);
-                    }
-                }
-            }
-        }
-        inv.setMatrix(matrix);
+        updateMatrix(inv, matrix, match, actualCrafts);
 
         ItemStack toGive = resultTemplate.clone();
         toGive.setAmount(actualCrafts * match.getAmount());
@@ -199,6 +175,33 @@ public class CraftingListener implements Listener {
         }
 
         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
+        player.updateInventory();
+    }
+
+    private void updateMatrix(CraftingInventory inv, ItemStack[] matrix, CustomRecipe match, int multiplier) {
+        for (int i = 0; i < matrix.length; i++) {
+            if (i >= 9) break;
+
+            RecipeIngredient ingredient = match.getIngredient(i);
+            ItemStack itemInSlot = matrix[i];
+
+            if (ingredient != null && itemInSlot != null) {
+                int requiredTotal = ingredient.getAmount() * multiplier;
+
+                if (itemInSlot.getAmount() > requiredTotal) {
+                    itemInSlot.setAmount(itemInSlot.getAmount() - requiredTotal);
+                } else {
+                    if (isBucket(itemInSlot.getType())) {
+                        itemInSlot.setType(Material.BUCKET);
+                        itemInSlot.setAmount(1);
+                    } else {
+                        itemInSlot.setAmount(0);
+                    }
+                }
+
+                inv.setItem(i + 1, itemInSlot);
+            }
+        }
     }
 
     private int getSpaceFor(Inventory inventory, ItemStack item) {
