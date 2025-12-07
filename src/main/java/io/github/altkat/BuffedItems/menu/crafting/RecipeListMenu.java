@@ -9,6 +9,7 @@ import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -121,41 +122,50 @@ public class RecipeListMenu extends PaginatedMenu {
             if (index >= recipes.size()) break;
 
             CustomRecipe recipe = recipes.get(index);
-            ItemStack icon = getResultIcon(recipe);
+            ItemStack icon;
 
-            ItemMeta meta = icon.getItemMeta();
-            List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
-            if (meta.hasLore()) lore.addAll(meta.lore());
-
-            lore.add(net.kyori.adventure.text.Component.empty());
-            lore.add(ConfigManager.fromSection("§8ID: " + recipe.getId()));
-
-            if (!recipe.isValid()) {
-                lore.add(ConfigManager.fromSection("§c⚠ Invalid Config!"));
+            if (recipe.isValid()) {
+                BuffedItem item = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
+                if (item != null) {
+                    icon = new ItemBuilder(item, plugin).build();
+                    icon.setAmount(Math.max(1, recipe.getAmount()));
+                } else {
+                    icon = makeItem(Material.BEDROCK, "§cUnknown Item", "§7ID: " + recipe.getResultItemId());
+                }
+            } else {
+                icon = new ItemStack(Material.BARRIER);
             }
 
-            lore.add(net.kyori.adventure.text.Component.empty());
-            lore.add(ConfigManager.fromSection("§eLeft-Click to Edit"));
-            lore.add(ConfigManager.fromSection("§cRight-Click to Delete"));
+            ItemMeta meta = icon.getItemMeta();
+            if (meta != null) {
+                String colorCode = recipe.isValid() ? "§a" : "§c";
+                meta.displayName(ConfigManager.fromSection(colorCode + recipe.getId()));
 
-            meta.lore(lore);
-            icon.setItemMeta(meta);
+                List<Component> lore = new ArrayList<>();
+                lore.add(Component.empty());
+
+                if (recipe.isValid()) {
+                    lore.add(ConfigManager.fromSection("§7Result: §f" + recipe.getResultItemId()));
+                    lore.add(ConfigManager.fromSection("§7Amount: §e" + recipe.getAmount()));
+                } else {
+                    lore.add(ConfigManager.fromSection("§c§lCONFIGURATION ERRORS:"));
+                    for (String err : recipe.getErrorMessages()) {
+                        lore.add(ConfigManager.fromSection("§c- " + err));
+                    }
+                }
+
+                lore.add(Component.empty());
+                lore.add(ConfigManager.fromSection("§eLeft-Click to Edit"));
+                lore.add(ConfigManager.fromSection("§cRight-Click to Delete"));
+
+                meta.lore(lore);
+                icon.setItemMeta(meta);
+            }
+
+            icon.setAmount(1);
 
             inventory.setItem(i, icon);
         }
-    }
-
-    private ItemStack getResultIcon(CustomRecipe recipe) {
-        String itemId = recipe.getResultItemId();
-        BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
-
-        if (item != null) {
-            ItemStack stack = new ItemBuilder(item, plugin).build();
-            stack.setAmount(Math.max(1, recipe.getAmount()));
-            return stack;
-        }
-
-        return makeItem(Material.BARRIER, "§cUnknown Result", "§7ID: " + itemId);
     }
 
     private List<CustomRecipe> getSortedRecipes() {
