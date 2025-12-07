@@ -31,10 +31,8 @@ public class CraftingListener implements Listener {
         this.plugin = plugin;
     }
 
-
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPrepareCraft(PrepareItemCraftEvent e) {
-
         if (e.getView().getPlayer() != null && isCrafting.contains(e.getView().getPlayer().getUniqueId())) {
             return;
         }
@@ -66,7 +64,6 @@ public class CraftingListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
-
         if (e.getSlotType() != InventoryType.SlotType.RESULT) return;
         if (!(e.getClickedInventory() instanceof CraftingInventory)) return;
 
@@ -137,17 +134,13 @@ public class CraftingListener implements Listener {
 
         int maxCraftsByMaterials = 64 * 9;
 
-        for (int i = 0; i < matrix.length; i++) {
-            if (i >= 9) break;
-            RecipeIngredient ingredient = match.getIngredient(i);
-            ItemStack itemInSlot = matrix[i];
+        for (ItemStack itemInSlot : matrix) {
+            if (itemInSlot == null || itemInSlot.getType() == Material.AIR) continue;
 
-            if (ingredient != null) {
-                if (itemInSlot == null || itemInSlot.getType() == Material.AIR) {
-                    maxCraftsByMaterials = 0;
-                    break;
-                }
-                int required = ingredient.getAmount();
+            RecipeIngredient matchingIngredient = findMatchingIngredient(itemInSlot, match);
+
+            if (matchingIngredient != null) {
+                int required = matchingIngredient.getAmount();
                 int available = itemInSlot.getAmount();
                 int canCraft = available / required;
 
@@ -180,13 +173,14 @@ public class CraftingListener implements Listener {
 
     private void updateMatrix(CraftingInventory inv, ItemStack[] matrix, CustomRecipe match, int multiplier) {
         for (int i = 0; i < matrix.length; i++) {
-            if (i >= 9) break;
-
-            RecipeIngredient ingredient = match.getIngredient(i);
             ItemStack itemInSlot = matrix[i];
 
-            if (ingredient != null && itemInSlot != null) {
-                int requiredTotal = ingredient.getAmount() * multiplier;
+            if (itemInSlot == null || itemInSlot.getType() == Material.AIR) continue;
+
+            RecipeIngredient matchingIngredient = findMatchingIngredient(itemInSlot, match);
+
+            if (matchingIngredient != null) {
+                int requiredTotal = matchingIngredient.getAmount() * multiplier;
 
                 if (itemInSlot.getAmount() > requiredTotal) {
                     itemInSlot.setAmount(itemInSlot.getAmount() - requiredTotal);
@@ -198,10 +192,18 @@ public class CraftingListener implements Listener {
                         itemInSlot.setAmount(0);
                     }
                 }
-
                 inv.setItem(i + 1, itemInSlot);
             }
         }
+    }
+
+    private RecipeIngredient findMatchingIngredient(ItemStack item, CustomRecipe recipe) {
+        for (RecipeIngredient ing : recipe.getIngredients().values()) {
+            if (plugin.getCraftingManager().getItemMatcher().matches(item, ing)) {
+                return ing;
+            }
+        }
+        return null;
     }
 
     private int getSpaceFor(Inventory inventory, ItemStack item) {

@@ -189,15 +189,20 @@ public class RecipeEditorMenu extends Menu {
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) return stack;
 
-        if (type != MatchType.BUFFED_ITEM) {
+        if (type == MatchType.MATERIAL) {
             meta.displayName(ConfigManager.fromSection("§f" + formatMaterialName(stack.getType())));
         }
 
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
-        lore.add(Component.empty());
+        if (!lore.isEmpty()) lore.add(Component.empty());
+        lore.add(ConfigManager.fromSection("§8----------------"));
         lore.add(ConfigManager.fromSection("§7Type: §f" + type.name()));
-        lore.add(ConfigManager.fromSection("§7Value: §e" + value));
+        if (type == MatchType.MATERIAL || type == MatchType.BUFFED_ITEM) {
+            lore.add(ConfigManager.fromSection("§7Value: §e" + value));
+        } else {
+            lore.add(ConfigManager.fromSection("§7Value: §e(Base64 Data)"));
+        }
         lore.add(ConfigManager.fromSection("§7Amount: §e" + amount));
         lore.add(Component.empty());
         lore.add(ConfigManager.fromSection("§eClick to Edit"));
