@@ -61,14 +61,6 @@ public class RecipeInputHandler implements ChatInputHandler {
             closeChat(pmu);
         }
 
-        else if (path.equals("recipe_ingredient_external")) {
-            saveIngredientHelper(pmu, MatchType.EXTERNAL, Material.STONE, input, 1);
-
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aExternal ID set: §e" + input));
-            new IngredientSettingsMenu(pmu, plugin).open();
-            closeChat(pmu);
-        }
-
         else if (path.equals("recipe_ingredient_amount")) {
             try {
                 int amount = Integer.parseInt(input);

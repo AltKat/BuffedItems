@@ -74,19 +74,24 @@ public class IngredientSettingsMenu extends Menu {
 
         if (e.getSlot() == 10) {
             handleScanHand(p);
+        } else if (e.getSlot() == 11) {
+            ItemStack hand = p.getInventory().getItemInMainHand();
+            if (hand == null || hand.getType().isAir()) {
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cHand is empty!"));
+            } else {
+                String base64 = io.github.altkat.BuffedItems.utility.Serializer.toBase64(hand);
+                saveIngredient(MatchType.EXACT, hand.getType(), base64, hand.getAmount());
+                p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1, 1);
+                new RecipeEditorMenu(playerMenuUtility, plugin).open();
+            }
         }
+
         else if (e.getSlot() == 12) {
             playerMenuUtility.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT);
             new MaterialSelectorMenu(playerMenuUtility, plugin).open();
         }
         else if (e.getSlot() == 13) {
             new BuffedItemSelectorMenu(playerMenuUtility, plugin, BuffedItemSelectorMenu.SelectionContext.CRAFTING_INGREDIENT).open();
-        }
-        else if (e.getSlot() == 14) {
-            playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("recipe_ingredient_external");
-            p.closeInventory();
-            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the External ID (e.g. itemsadder:ruby)."));
         }
         else if (e.getSlot() == 16) {
             playerMenuUtility.setWaitingForChatInput(true);
@@ -114,18 +119,12 @@ public class IngredientSettingsMenu extends Menu {
         String detectedValue;
         MatchType detectedType;
         Material displayMat = item.getType();
-        int amount = item.getAmount();
+        int amount = 1;
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
         if (item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
             detectedValue = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.STRING);
             detectedType = MatchType.BUFFED_ITEM;
-        } else if (plugin.getHookManager().isItemsAdderLoaded() && dev.lone.itemsadder.api.CustomStack.byItemStack(item) != null) {
-            detectedValue = dev.lone.itemsadder.api.CustomStack.byItemStack(item).getNamespacedID();
-            detectedType = MatchType.EXTERNAL;
-        } else if (plugin.getHookManager().isNexoLoaded() && com.nexomc.nexo.api.NexoItems.idFromItem(item) != null) {
-            detectedValue = "nexo:" + com.nexomc.nexo.api.NexoItems.idFromItem(item);
-            detectedType = MatchType.EXTERNAL;
         } else {
             detectedValue = item.getType().name();
             detectedType = MatchType.MATERIAL;
@@ -199,9 +198,14 @@ public class IngredientSettingsMenu extends Menu {
         inventory.setItem(4, currentIcon);
 
         inventory.setItem(10, makeItem(Material.HOPPER, "§bScan Hand", "§7Detect item from hand."));
+
+        inventory.setItem(11, makeItem(Material.ENDER_EYE, "§5Scan as EXACT",
+                "§7Saves the item in your hand",
+                "§7with ALL metadata (Name, Lore, NBT).",
+                "§7Useful for special vanilla items."));
+
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aVanilla Material", "§7Select from list."));
         inventory.setItem(13, makeItem(Material.NETHER_STAR, "§6Buffed Item", "§7Select custom item."));
-        inventory.setItem(14, makeItem(Material.NAME_TAG, "§dExternal Plugin", "§7Enter ItemsAdder/Nexo ID via Chat."));
 
         inventory.setItem(16, makeItem(Material.GOLD_NUGGET, "§eSet Amount", "§7Current: " + (ing != null ? ing.getAmount() : 1)));
 

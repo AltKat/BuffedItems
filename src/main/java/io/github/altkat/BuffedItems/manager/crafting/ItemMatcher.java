@@ -41,11 +41,10 @@ public class ItemMatcher {
                 String inputId = inputItem.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
                 return ingredient.getData().equals(inputId);
 
-            case EXTERNAL:
-                return false;
-
             case EXACT:
-                return true;
+                ItemStack ref = ingredient.getExactReferenceItem();
+                if (ref == null) return false;
+                return inputItem.isSimilar(ref);
 
             default:
                 return false;

@@ -9,6 +9,7 @@ public class RecipeIngredient {
     private final String data;
     private final int amount;
     private ItemStack cachedPreviewItem;
+    private ItemStack exactReferenceItem;
 
 
     public RecipeIngredient(MatchType matchType, Material material, String data, int amount) {
@@ -22,6 +23,12 @@ public class RecipeIngredient {
     public Material getMaterial() { return material; }
     public String getData() { return data; }
     public int getAmount() { return amount; }
+    public void setExactReferenceItem(ItemStack item) {
+        this.exactReferenceItem = item;
+    }
+    public ItemStack getExactReferenceItem() {
+        return exactReferenceItem;
+    }
 
     public void setCachedPreviewItem(ItemStack item) {
         this.cachedPreviewItem = item;

@@ -173,13 +173,15 @@ public class RecipeEditorMenu extends Menu {
                 stack = new ItemStack(Material.BARRIER);
             }
         }
+        else if (type == MatchType.EXACT) {
+            stack = io.github.altkat.BuffedItems.utility.Serializer.fromBase64(value);
+            if (stack == null) stack = new ItemStack(Material.BARRIER);
+        }
         else {
             Material mat = Material.BEDROCK;
             if (type == MatchType.MATERIAL) {
                 mat = Material.getMaterial(value);
                 if (mat == null) mat = Material.BEDROCK;
-            } else if (type == MatchType.EXTERNAL) {
-                mat = Material.CHEST;
             }
             stack = new ItemStack(mat);
         }

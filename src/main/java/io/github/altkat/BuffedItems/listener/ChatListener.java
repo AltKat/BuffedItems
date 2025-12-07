@@ -125,8 +125,8 @@ public class ChatListener implements Listener {
         }
 
         if (path.equals("create_recipe") || path.equals("recipe_result_amount") ||
-                path.equals("recipe_ingredient_amount") || path.equals("recipe_ingredient_external") ||
-                path.equals("recipe_result_manual") || path.equals("recipe_ingredient_buffed_manual") ||
+                path.equals("recipe_ingredient_amount") || path.equals("recipe_result_manual") ||
+                path.equals("recipe_ingredient_buffed_manual") ||
                 path.equals("recipe_ingredient_material_manual")) {
 
             recipeInputHandler.handle(player, pmu, input, path, itemId);
@@ -304,8 +304,8 @@ public class ChatListener implements Listener {
             return;
         }
 
-        if (path.equals("recipe_ingredient_amount") || path.equals("recipe_ingredient_external") ||
-                path.equals("recipe_ingredient_buffed_manual") || path.equals("recipe_ingredient_material_manual")) {
+        if (path.equals("recipe_ingredient_amount") || path.equals("recipe_ingredient_buffed_manual")
+                || path.equals("recipe_ingredient_material_manual")) {
 
             new IngredientSettingsMenu(pmu, plugin, false).open();
             return;

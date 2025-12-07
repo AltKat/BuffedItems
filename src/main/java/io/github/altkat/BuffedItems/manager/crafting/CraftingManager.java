@@ -85,6 +85,7 @@ public class CraftingManager {
                     }
 
                     Material mat = Material.STONE;
+                    ItemStack exactStack = null;
 
                     if (type == MatchType.MATERIAL) {
                         mat = Material.matchMaterial(value);
@@ -98,9 +99,20 @@ public class CraftingManager {
                         } else {
                             recipe.addErrorMessage("Ingredient '" + c + "' references unknown BuffedItem: " + value);
                         }
+                    }else if (type == MatchType.EXACT) {
+                        exactStack = io.github.altkat.BuffedItems.utility.Serializer.fromBase64(value);
+                        if (exactStack != null) {
+                            mat = exactStack.getType();
+                        } else {
+                            recipe.addErrorMessage("Invalid Base64 for EXACT ingredient '" + c + "'");
+                        }
                     }
 
-                    charMap.put(c, new RecipeIngredient(type, mat, value, amount));
+                    RecipeIngredient ingredient = new RecipeIngredient(type, mat, value, amount);
+                    if (exactStack != null) {
+                        ingredient.setExactReferenceItem(exactStack);
+                    }
+                    charMap.put(c, ingredient);
                 }
             }
 
