@@ -77,15 +77,16 @@ public class BuffedItemCommand implements CommandExecutor {
                 }
                 return true;
             case "upgrade":
+                if (!sender.hasPermission("buffeditems.command.upgrade")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+
                 if (!UpgradesConfig.get().getBoolean("settings.enabled", true)) {
                     sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Upgrade system is currently disabled."));
                     return true;
                 }
 
-                if (!sender.hasPermission("buffeditems.command.upgrade")) {
-                    sender.sendMessage(noPermissionMessage);
-                    return true;
-                }
                 if (sender instanceof Player) {
                     Player p = (Player) sender;
                     new io.github.altkat.BuffedItems.menu.upgrade.UpgradeMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
@@ -102,15 +103,16 @@ public class BuffedItemCommand implements CommandExecutor {
                 return true;
 
             case "recipes":
+                if (!sender.hasPermission("buffeditems.command.recipes")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+
                 if (!RecipesConfig.get().getBoolean("settings.enabled", true)) {
                     sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Crafting system is currently disabled."));
                     return true;
                 }
 
-                if (!sender.hasPermission("buffeditems.command.recipes")) {
-                    sender.sendMessage(noPermissionMessage);
-                    return true;
-                }
                 if (sender instanceof Player p) {
                     new PublicRecipeListMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {
@@ -119,15 +121,16 @@ public class BuffedItemCommand implements CommandExecutor {
                 return true;
 
             case "sets":
+                if (!sender.hasPermission("buffeditems.command.sets")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+
                 if (!SetsConfig.get().getBoolean("settings.enabled", true)) {
                     sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Item Set system is currently disabled."));
                     return true;
                 }
 
-                if (!sender.hasPermission("buffeditems.command.sets")) {
-                    sender.sendMessage(noPermissionMessage);
-                    return true;
-                }
                 if (sender instanceof Player p) {
                     new PublicSetListMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {

@@ -35,14 +35,20 @@ public class TabCompleteHandler implements TabCompleter {
             if (sender.hasPermission("buffeditems.command.menu")) {subcommands.add("menu");}
             if (sender.hasPermission("buffeditems.command.wiki")) subcommands.add("wiki");
             if (sender.hasPermission("buffeditems.command.update")) subcommands.add("update");
-            if (UpgradesConfig.get().getBoolean("settings.enabled", true)) {
-                if (sender.hasPermission("buffeditems.command.upgrade")) {subcommands.add("upgrade");}
+            if (sender.hasPermission("buffeditems.command.upgrade")) {
+                if (UpgradesConfig.get().getBoolean("settings.enabled", true)) {
+                    subcommands.add("upgrade");
+                }
             }
-            if (RecipesConfig.get().getBoolean("settings.enabled", true)) {
-                if (sender.hasPermission("buffeditems.command.recipes")) subcommands.add("recipes");
+            if (sender.hasPermission("buffeditems.command.recipes")) {
+                if (RecipesConfig.get().getBoolean("settings.enabled", true)) {
+                    subcommands.add("recipes");
+                }
             }
-            if (SetsConfig.get().getBoolean("settings.enabled", true)) {
-                if (sender.hasPermission("buffeditems.command.sets")) subcommands.add("sets");
+            if (sender.hasPermission("buffeditems.command.sets")) {
+                if (SetsConfig.get().getBoolean("settings.enabled", true)) {
+                    subcommands.add("sets");
+                }
             }
 
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
