@@ -1,6 +1,9 @@
 package io.github.altkat.BuffedItems.command;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.manager.config.RecipesConfig;
+import io.github.altkat.BuffedItems.manager.config.SetsConfig;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,11 +33,17 @@ public class TabCompleteHandler implements TabCompleter {
             if (sender.hasPermission("buffeditems.command.reload")) {subcommands.add("reload");}
             if (sender.hasPermission("buffeditems.command.list")) {subcommands.add("list");}
             if (sender.hasPermission("buffeditems.command.menu")) {subcommands.add("menu");}
-            if (sender.hasPermission("buffeditems.command.upgrade")) {subcommands.add("upgrade");}
             if (sender.hasPermission("buffeditems.command.wiki")) subcommands.add("wiki");
             if (sender.hasPermission("buffeditems.command.update")) subcommands.add("update");
-            if (sender.hasPermission("buffeditems.command.recipes")) subcommands.add("recipes");
-            if (sender.hasPermission("buffeditems.command.sets")) subcommands.add("sets");
+            if (UpgradesConfig.get().getBoolean("settings.enabled", true)) {
+                if (sender.hasPermission("buffeditems.command.upgrade")) {subcommands.add("upgrade");}
+            }
+            if (RecipesConfig.get().getBoolean("settings.enabled", true)) {
+                if (sender.hasPermission("buffeditems.command.recipes")) subcommands.add("recipes");
+            }
+            if (SetsConfig.get().getBoolean("settings.enabled", true)) {
+                if (sender.hasPermission("buffeditems.command.sets")) subcommands.add("sets");
+            }
 
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
 

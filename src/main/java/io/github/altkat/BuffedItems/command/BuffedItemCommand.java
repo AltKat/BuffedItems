@@ -3,6 +3,9 @@ package io.github.altkat.BuffedItems.command;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.RecipesConfig;
+import io.github.altkat.BuffedItems.manager.config.SetsConfig;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.menu.crafting.PublicRecipeListMenu;
 import io.github.altkat.BuffedItems.menu.set.PublicSetListMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
@@ -74,6 +77,11 @@ public class BuffedItemCommand implements CommandExecutor {
                 }
                 return true;
             case "upgrade":
+                if (!UpgradesConfig.get().getBoolean("settings.enabled", true)) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Upgrade system is currently disabled."));
+                    return true;
+                }
+
                 if (!sender.hasPermission("buffeditems.command.upgrade")) {
                     sender.sendMessage(noPermissionMessage);
                     return true;
@@ -94,6 +102,11 @@ public class BuffedItemCommand implements CommandExecutor {
                 return true;
 
             case "recipes":
+                if (!RecipesConfig.get().getBoolean("settings.enabled", true)) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Crafting system is currently disabled."));
+                    return true;
+                }
+
                 if (!sender.hasPermission("buffeditems.command.recipes")) {
                     sender.sendMessage(noPermissionMessage);
                     return true;
@@ -106,6 +119,11 @@ public class BuffedItemCommand implements CommandExecutor {
                 return true;
 
             case "sets":
+                if (!SetsConfig.get().getBoolean("settings.enabled", true)) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Item Set system is currently disabled."));
+                    return true;
+                }
+
                 if (!sender.hasPermission("buffeditems.command.sets")) {
                     sender.sendMessage(noPermissionMessage);
                     return true;
