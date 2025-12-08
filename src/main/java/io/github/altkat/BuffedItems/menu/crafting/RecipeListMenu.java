@@ -123,12 +123,13 @@ public class RecipeListMenu extends PaginatedMenu {
 
             CustomRecipe recipe = recipes.get(index);
             ItemStack icon;
+            boolean isItemValid = false;
 
             if (recipe.isValid()) {
                 BuffedItem item = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
                 if (item != null) {
                     icon = new ItemBuilder(item, plugin).build();
-                    icon.setAmount(Math.max(1, recipe.getAmount()));
+                    isItemValid = true;
                 } else {
                     icon = makeItem(Material.BEDROCK, "§cUnknown Item", "§7ID: " + recipe.getResultItemId());
                 }
@@ -138,11 +139,14 @@ public class RecipeListMenu extends PaginatedMenu {
 
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
-                String colorCode = recipe.isValid() ? "§a" : "§c";
-                meta.displayName(ConfigManager.fromSection(colorCode + recipe.getId()));
+                if (!isItemValid) {
+                    String name = recipe.isValid() ? "§cUnknown Item" : "§c" + recipe.getId();
+                    meta.displayName(ConfigManager.fromSection(name));
+                }
 
                 List<Component> lore = new ArrayList<>();
                 lore.add(Component.empty());
+                lore.add(ConfigManager.fromSection("§8ID: " + recipe.getId()));
 
                 if (recipe.isValid()) {
                     lore.add(ConfigManager.fromSection("§7Result: §f" + recipe.getResultItemId()));
