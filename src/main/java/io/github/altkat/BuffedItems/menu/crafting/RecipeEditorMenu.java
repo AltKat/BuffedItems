@@ -129,7 +129,7 @@ public class RecipeEditorMenu extends Menu {
 
         if (resultStack.getType().getMaxStackSize() == 1 && amount > 1) {
             String originalName = (meta.hasDisplayName()) ? meta.getDisplayName() : formatMaterialName(resultStack.getType());
-            meta.displayName(ConfigManager.fromSection("§b" + amount + "x " + originalName));
+            meta.displayName(ConfigManager.fromSection("§e" + amount + "x " + originalName));
         }
 
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
@@ -189,8 +189,20 @@ public class RecipeEditorMenu extends Menu {
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) return stack;
 
-        if (type == MatchType.MATERIAL) {
-            meta.displayName(ConfigManager.fromSection("§f" + formatMaterialName(stack.getType())));
+        String originalName;
+        if (meta.hasDisplayName()) {
+            originalName = meta.getDisplayName();
+        } else {
+            originalName = "§f" + formatMaterialName(stack.getType());
+        }
+
+
+        if (amount > 1) {
+            meta.displayName(ConfigManager.fromSection("§e" + amount + "x " + originalName));
+        } else {
+            if (type == MatchType.MATERIAL) {
+                meta.displayName(ConfigManager.fromSection(originalName));
+            }
         }
 
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();

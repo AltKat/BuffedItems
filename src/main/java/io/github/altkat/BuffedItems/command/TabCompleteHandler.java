@@ -33,6 +33,7 @@ public class TabCompleteHandler implements TabCompleter {
             if (sender.hasPermission("buffeditems.command.upgrade")) {subcommands.add("upgrade");}
             if (sender.hasPermission("buffeditems.command.wiki")) subcommands.add("wiki");
             if (sender.hasPermission("buffeditems.command.update")) subcommands.add("update");
+            if (sender.hasPermission("buffeditems.command.recipes")) subcommands.add("recipes");
 
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
 
