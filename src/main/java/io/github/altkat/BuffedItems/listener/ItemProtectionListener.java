@@ -24,7 +24,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.SmithingTrimRecipe;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
