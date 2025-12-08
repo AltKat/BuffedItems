@@ -3,7 +3,7 @@ package io.github.altkat.BuffedItems.menu.editor;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
@@ -110,7 +110,7 @@ public class ItemFlagsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) {
             playerMenuUtility.getOwner().sendMessage("§cError: Item not found.");
-            new MainMenu(playerMenuUtility, plugin).open();
+            new ItemListMenu(playerMenuUtility, plugin).open();
             return;
         }
 

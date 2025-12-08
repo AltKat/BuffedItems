@@ -3,7 +3,7 @@ package io.github.altkat.BuffedItems.listener.handler;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.entity.Player;
 
@@ -37,7 +37,7 @@ public class CreationInputHandler implements ChatInputHandler {
         } else {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: An item with the ID '" + newItemId + "' already exists."));
             closeChatInput(pmu);
-            new MainMenu(pmu, plugin).open();
+            new ItemListMenu(pmu, plugin).open();
         }
     }
 
@@ -61,7 +61,7 @@ public class CreationInputHandler implements ChatInputHandler {
         if (createdId != null) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aItem '§e" + sourceItemId + "§a' successfully duplicated as '§e" + createdId + "§a'."));
             closeChatInput(pmu);
-            new MainMenu(pmu, plugin).open();
+            new ItemListMenu(pmu, plugin).open();
         } else {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: An item with the ID '§e" + newItemId + "§c' already exists."));
             player.sendMessage(ConfigManager.fromSection("§aPlease try a different ID."));

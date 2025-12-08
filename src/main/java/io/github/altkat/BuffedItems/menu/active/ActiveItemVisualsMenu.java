@@ -5,7 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BossBarColorMenu;
 import io.github.altkat.BuffedItems.menu.selector.BossBarStyleMenu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
@@ -48,7 +48,7 @@ public class ActiveItemVisualsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
 
         if (item == null) {
-            new MainMenu(playerMenuUtility, plugin).open();
+            new ItemListMenu(playerMenuUtility, plugin).open();
             return;
         }
 

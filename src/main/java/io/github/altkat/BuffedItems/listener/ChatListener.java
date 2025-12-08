@@ -22,7 +22,7 @@ import io.github.altkat.BuffedItems.menu.set.SetListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.Bukkit;
@@ -182,7 +182,7 @@ public class ChatListener implements Listener {
         }
 
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
-            new MainMenu(pmu, plugin).open();
+            new ItemListMenu(pmu, plugin).open();
             return;
         }
 
