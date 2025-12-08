@@ -24,6 +24,12 @@ public class UpgradeManager {
     public void loadRecipes(boolean silent) {
         long startTime = System.currentTimeMillis();
         recipes.clear();
+
+        if (!UpgradesConfig.get().getBoolean("settings.enabled", true)) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "Upgrade system is disabled in upgrades.yml");
+            return;
+        }
+
         ConfigurationSection section = UpgradesConfig.get().getConfigurationSection("upgrades");
 
         if (section == null) {

@@ -29,6 +29,11 @@ public class SetManager {
         sets.clear();
         itemToSetMap.clear();
 
+        if (!SetsConfig.get().getBoolean("settings.enabled", true)) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "Item Sets system is disabled in sets.yml");
+            return;
+        }
+
         ConfigurationSection section = SetsConfig.get().getConfigurationSection("sets");
         if (section == null) {
             if (!silent) ConfigManager.logInfo("&eNo item sets found in sets.yml.");

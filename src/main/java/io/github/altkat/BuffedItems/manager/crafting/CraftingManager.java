@@ -36,6 +36,11 @@ public class CraftingManager {
         unloadRecipes();
         recipes.clear();
 
+        if (!RecipesConfig.get().getBoolean("settings.enabled", true)) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "Custom Crafting system is disabled in recipes.yml");
+            return;
+        }
+
         ConfigurationSection section = RecipesConfig.get().getConfigurationSection("recipes");
         if (section == null) {
             if (!silent) ConfigManager.logInfo("&eNo custom recipes found in recipes.yml.");

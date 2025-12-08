@@ -54,6 +54,11 @@
 #    and the player lacks it, that item will NOT count towards the set bonus.
 # ===================================================================
 
+settings:
+  # Enable or disable the entire Item Set system.
+  # If false, set bonuses will not be calculated and the menu will be inaccessible.
+  enabled: true
+
 sets:
   # Example Set: Warrior's Gear
   # This set demonstrates how to combine armor and held items.
@@ -69,7 +74,3 @@ sets:
           - INCREASE_DAMAGE;1 # Strength I
         attributes:
           - MAX_HEALTH;ADD_NUMBER;2.0 # Add 1 hearth
-      # 3 Piece Bonus (Currently unreachable with 2 items, add more and remove # below to test!)
-      #3:
-        #attributes:
-          #- GENERIC_MAX_HEALTH;ADD_NUMBER;4.0 # +2 Hearts

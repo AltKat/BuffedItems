@@ -227,45 +227,60 @@ public final class BuffedItems extends JavaPlugin {
             ConfigManager.logInfo("&#5FE2C5    • Errors: &c" + invalidItems + " &7(Check console logs)");
         }
 
-        Map<String, BuffedSet> sets = setManager.getSets();
-        long validSets = sets.values().stream().filter(BuffedSet::isValid).count();
-        long invalidSets = sets.size() - validSets;
-
-        if (!sets.isEmpty()) {
-            ConfigManager.logInfo("");
-            ConfigManager.logInfo("&#FF9F43  Sets:");
-            ConfigManager.logInfo("&#FF9F43    • Total: &f" + sets.size());
-            ConfigManager.logInfo("&#FF9F43    • Valid: &a" + validSets);
-            if (invalidSets > 0) {
-                ConfigManager.logInfo("&#FF9F43    • Errors: &c" + invalidSets + " &7(Check console logs)");
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#FF9F43  Sets:");
+        if (!SetsConfig.get().getBoolean("settings.enabled", true)) {
+            ConfigManager.logInfo("&#FF9F43    • Status: &cDisabled");
+        } else {
+            Map<String, BuffedSet> sets = setManager.getSets();
+            if (sets.isEmpty()) {
+                ConfigManager.logInfo("&#FF9F43    • Total: &f0");
+            } else {
+                long validSets = sets.values().stream().filter(BuffedSet::isValid).count();
+                long invalidSets = sets.size() - validSets;
+                ConfigManager.logInfo("&#FF9F43    • Total: &f" + sets.size());
+                ConfigManager.logInfo("&#FF9F43    • Valid: &a" + validSets);
+                if (invalidSets > 0) {
+                    ConfigManager.logInfo("&#FF9F43    • Errors: &c" + invalidSets + " &7(Check console logs)");
+                }
             }
         }
 
-        Map<String, UpgradeRecipe> recipes = upgradeManager.getRecipes();
-        long validRecipes = recipes.values().stream().filter(UpgradeRecipe::isValid).count();
-        long invalidRecipes = recipes.size() - validRecipes;
-
-        if (!recipes.isEmpty()) {
-            ConfigManager.logInfo("");
-            ConfigManager.logInfo("&#F5CD66  Upgrades:");
-            ConfigManager.logInfo("&#F5CD66    • Total: &f" + recipes.size());
-            ConfigManager.logInfo("&#F5CD66    • Valid: &a" + validRecipes);
-            if (invalidRecipes > 0) {
-                ConfigManager.logInfo("&#F5CD66    • Errors: &c" + invalidRecipes + " &7(Check console logs)");
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#F5CD66  Upgrades:");
+        if (!UpgradesConfig.get().getBoolean("settings.enabled", true)) {
+            ConfigManager.logInfo("&#F5CD66    • Status: &cDisabled");
+        } else {
+            Map<String, UpgradeRecipe> recipes = upgradeManager.getRecipes();
+            if (recipes.isEmpty()) {
+                ConfigManager.logInfo("&#F5CD66    • Total: &f0");
+            } else {
+                long validRecipes = recipes.values().stream().filter(UpgradeRecipe::isValid).count();
+                long invalidRecipes = recipes.size() - validRecipes;
+                ConfigManager.logInfo("&#F5CD66    • Total: &f" + recipes.size());
+                ConfigManager.logInfo("&#F5CD66    • Valid: &a" + validRecipes);
+                if (invalidRecipes > 0) {
+                    ConfigManager.logInfo("&#F5CD66    • Errors: &c" + invalidRecipes + " &7(Check console logs)");
+                }
             }
         }
 
-        Map<String, CustomRecipe> craftingRecipes = craftingManager.getRecipes();
-        long validCrafting = craftingRecipes.values().stream().filter(CustomRecipe::isValid).count();
-        long invalidCrafting = craftingRecipes.size() - validCrafting;
-
-        if (!craftingRecipes.isEmpty()) {
-            ConfigManager.logInfo("");
-            ConfigManager.logInfo("&#82E0AA  Crafting:");
-            ConfigManager.logInfo("&#82E0AA    • Total: &f" + craftingRecipes.size());
-            ConfigManager.logInfo("&#82E0AA    • Valid: &a" + validCrafting);
-            if (invalidCrafting > 0) {
-                ConfigManager.logInfo("&#82E0AA    • Errors: &c" + invalidCrafting + " &7(Check console logs)");
+        ConfigManager.logInfo("");
+        ConfigManager.logInfo("&#82E0AA  Crafting:");
+        if (!RecipesConfig.get().getBoolean("settings.enabled", true)) {
+            ConfigManager.logInfo("&#82E0AA    • Status: &cDisabled");
+        } else {
+            Map<String, CustomRecipe> craftingRecipes = craftingManager.getRecipes();
+            if (craftingRecipes.isEmpty()) {
+                ConfigManager.logInfo("&#82E0AA    • Total: &f0");
+            } else {
+                long validCrafting = craftingRecipes.values().stream().filter(CustomRecipe::isValid).count();
+                long invalidCrafting = craftingRecipes.size() - validCrafting;
+                ConfigManager.logInfo("&#82E0AA    • Total: &f" + craftingRecipes.size());
+                ConfigManager.logInfo("&#82E0AA    • Valid: &a" + validCrafting);
+                if (invalidCrafting > 0) {
+                    ConfigManager.logInfo("&#82E0AA    • Errors: &c" + invalidCrafting + " &7(Check console logs)");
+                }
             }
         }
 

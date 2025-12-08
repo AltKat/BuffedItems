@@ -3,6 +3,9 @@ package io.github.altkat.BuffedItems.command;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.RecipesConfig;
+import io.github.altkat.BuffedItems.manager.config.SetsConfig;
+import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.menu.crafting.PublicRecipeListMenu;
 import io.github.altkat.BuffedItems.menu.set.PublicSetListMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
@@ -78,6 +81,12 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(noPermissionMessage);
                     return true;
                 }
+
+                if (!UpgradesConfig.get().getBoolean("settings.enabled", true)) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Upgrade system is currently disabled."));
+                    return true;
+                }
+
                 if (sender instanceof Player) {
                     Player p = (Player) sender;
                     new io.github.altkat.BuffedItems.menu.upgrade.UpgradeMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
@@ -98,6 +107,12 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(noPermissionMessage);
                     return true;
                 }
+
+                if (!RecipesConfig.get().getBoolean("settings.enabled", true)) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Crafting system is currently disabled."));
+                    return true;
+                }
+
                 if (sender instanceof Player p) {
                     new PublicRecipeListMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {
@@ -110,6 +125,12 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(noPermissionMessage);
                     return true;
                 }
+
+                if (!SetsConfig.get().getBoolean("settings.enabled", true)) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThe Item Set system is currently disabled."));
+                    return true;
+                }
+
                 if (sender instanceof Player p) {
                     new PublicSetListMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {

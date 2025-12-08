@@ -84,6 +84,8 @@
 #                       GLOBAL SETTINGS
 # ===================================================================
 settings:
+  # Enable or disable the Upgrade system.
+  enabled: true
   # Should the "Browse All Recipes" button appear in the Upgrade Station?
   # Players can click this to see a list of all available upgrades.
   browser-button: true
