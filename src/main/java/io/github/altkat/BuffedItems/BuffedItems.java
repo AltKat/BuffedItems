@@ -9,6 +9,8 @@ import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.manager.config.*;
 import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
 import io.github.altkat.BuffedItems.manager.cost.CostManager;
+import io.github.altkat.BuffedItems.manager.crafting.CraftingManager;
+import io.github.altkat.BuffedItems.manager.crafting.CustomRecipe;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
 import io.github.altkat.BuffedItems.manager.item.ItemManager;
 import io.github.altkat.BuffedItems.manager.set.SetManager;
@@ -50,6 +52,7 @@ public final class BuffedItems extends JavaPlugin {
     private HookManager hookManager;
     private ItemUpdater itemUpdater;
     private SetManager setManager;
+    private CraftingManager craftingManager;
 
     @Override
     public void onEnable() {
@@ -79,6 +82,7 @@ public final class BuffedItems extends JavaPlugin {
         ItemsConfig.setup(this);
         UpgradesConfig.setup(this);
         SetsConfig.setup(this);
+        RecipesConfig.setup(this);
         initializeManagers();
 
         try {
@@ -86,6 +90,7 @@ public final class BuffedItems extends JavaPlugin {
             ConfigUpdater.update(this, "items.yml");
             ConfigUpdater.update(this, "upgrades.yml");
             ConfigUpdater.update(this, "sets.yml");
+            ConfigUpdater.update(this, "recipes.yml");
         } catch (Exception e) {
             getLogger().severe("WARNING: Failed to run file updater tasks.");
             e.printStackTrace();
@@ -108,6 +113,7 @@ public final class BuffedItems extends JavaPlugin {
                 itemManager.loadItems(false);
                 upgradeManager.loadRecipes(false);
                 setManager.loadSets(false);
+                craftingManager.loadRecipes(false);
                 printStartupSummary();
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Startup] Delayed item loading complete.");
             }
@@ -163,6 +169,7 @@ public final class BuffedItems extends JavaPlugin {
         upgradeManager = new UpgradeManager(this);
         itemUpdater = new ItemUpdater(this);
         setManager = new SetManager(this);
+        craftingManager = new CraftingManager(this);
     }
 
     private void registerListenersAndCommands() {
@@ -178,6 +185,7 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ItemInteractListener(this), this);
         inventoryListener = new InventoryListener(this);
         getServer().getPluginManager().registerEvents(inventoryListener, this);
+        getServer().getPluginManager().registerEvents(new CraftingListener(this), this);
     }
 
     private void startEffectTask() {
@@ -244,6 +252,20 @@ public final class BuffedItems extends JavaPlugin {
             ConfigManager.logInfo("&#F5CD66    • Valid: &a" + validRecipes);
             if (invalidRecipes > 0) {
                 ConfigManager.logInfo("&#F5CD66    • Errors: &c" + invalidRecipes + " &7(Check console logs)");
+            }
+        }
+
+        Map<String, CustomRecipe> craftingRecipes = craftingManager.getRecipes();
+        long validCrafting = craftingRecipes.values().stream().filter(CustomRecipe::isValid).count();
+        long invalidCrafting = craftingRecipes.size() - validCrafting;
+
+        if (!craftingRecipes.isEmpty()) {
+            ConfigManager.logInfo("");
+            ConfigManager.logInfo("&#82E0AA  Crafting:");
+            ConfigManager.logInfo("&#82E0AA    • Total: &f" + craftingRecipes.size());
+            ConfigManager.logInfo("&#82E0AA    • Valid: &a" + validCrafting);
+            if (invalidCrafting > 0) {
+                ConfigManager.logInfo("&#82E0AA    • Errors: &c" + invalidCrafting + " &7(Check console logs)");
             }
         }
 
@@ -321,6 +343,7 @@ public final class BuffedItems extends JavaPlugin {
     }
     public ItemUpdater getItemUpdater() { return itemUpdater;}
     public SetManager getSetManager() {return setManager;}
+    public CraftingManager getCraftingManager() {return craftingManager;}
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");

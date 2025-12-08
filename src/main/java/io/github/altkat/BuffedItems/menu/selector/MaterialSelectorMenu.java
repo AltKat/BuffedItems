@@ -3,6 +3,7 @@ package io.github.altkat.BuffedItems.menu.selector;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
+import io.github.altkat.BuffedItems.menu.crafting.IngredientSettingsMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
@@ -90,6 +91,10 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
+            playerMenuUtility.setTempMaterial(material);
+            new IngredientSettingsMenu(playerMenuUtility, plugin, true).open();
+        }
     }
 
     private void handleManualInput(Player p) {
@@ -110,6 +115,10 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setChatInputPath("upgrade.ingredients.add.ITEM");
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§eFormat: AMOUNT;MATERIAL (e.g. 10;DIAMOND)"));
         }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
+            playerMenuUtility.setChatInputPath("recipe_ingredient_material_manual");
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'IRON_INGOT')."));
+        }
 
         p.sendMessage(ConfigManager.fromSectionWithPrefix("§7(Type 'cancel' to exit)"));
     }
@@ -118,9 +127,14 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         PlayerMenuUtility.MaterialSelectionContext context = playerMenuUtility.getMaterialContext();
         if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
             new TypeSelectorMenu(playerMenuUtility, plugin, context).open();
-        } else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
             new TypeSelectorMenu(playerMenuUtility, plugin, context).open();
-        } else {
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
+            new IngredientSettingsMenu(playerMenuUtility, plugin, false).open();
+        }
+        else {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
         }
 

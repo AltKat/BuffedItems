@@ -2,6 +2,8 @@ package io.github.altkat.BuffedItems.listener;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.RecipesConfig;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -51,6 +53,15 @@ public class PlayerJoinListener implements Listener {
         }
 
         updateArmorSlots(player);
+
+        if (RecipesConfig.get().getBoolean("settings.register-to-book", true)) {
+            for (String recipeId : plugin.getCraftingManager().getRecipes().keySet()) {
+                NamespacedKey key = new NamespacedKey(plugin, recipeId);
+                try {
+                    player.discoverRecipe(key);
+                } catch (Exception ignored) {}
+            }
+        }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Join] Attribute cleanup check finished for " + player.getName());
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());

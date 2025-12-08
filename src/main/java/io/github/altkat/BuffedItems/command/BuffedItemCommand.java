@@ -3,6 +3,8 @@ package io.github.altkat.BuffedItems.command;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.menu.crafting.PublicRecipeListMenu;
+import io.github.altkat.BuffedItems.menu.set.PublicSetListMenu;
 import io.github.altkat.BuffedItems.menu.utility.MainMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
@@ -91,6 +93,30 @@ public class BuffedItemCommand implements CommandExecutor {
                 handleWikiCommand(sender);
                 return true;
 
+            case "recipes":
+                if (!sender.hasPermission("buffeditems.command.recipes")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                if (sender instanceof Player p) {
+                    new PublicRecipeListMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
+                } else {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cOnly players can use this command."));
+                }
+                return true;
+
+            case "sets":
+                if (!sender.hasPermission("buffeditems.command.sets")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                if (sender instanceof Player p) {
+                    new PublicSetListMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
+                } else {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cOnly players can use this command."));
+                }
+                return true;
+
             case "update":
                 if (!sender.hasPermission("buffeditems.command.update")) {
                     sender.sendMessage(noPermissionMessage);
@@ -133,6 +159,12 @@ public class BuffedItemCommand implements CommandExecutor {
         }
         if (sender.hasPermission("buffeditems.command.upgrade")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi upgrade §7(Upgrade Station)"));
+        }
+        if (sender.hasPermission("buffeditems.command.recipes")) {
+            sender.sendMessage(ConfigManager.fromSection("§6/bi recipes §7(View Crafting Recipes)"));
+        }
+        if (sender.hasPermission("buffeditems.command.sets")) {
+            sender.sendMessage(ConfigManager.fromSection("§6/bi sets §7(View Item Sets)"));
         }
         if (sender.hasPermission("buffeditems.command.wiki")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi wiki §7(Get Wiki Link)"));

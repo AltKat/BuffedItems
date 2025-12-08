@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.hooks.HookManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
+import io.github.altkat.BuffedItems.menu.crafting.RecipeListMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
 import io.github.altkat.BuffedItems.menu.set.SetListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeListMenu;
@@ -146,6 +147,9 @@ public class MainMenu extends PaginatedMenu {
             case GOLDEN_CHESTPLATE:
                 new SetListMenu(playerMenuUtility, plugin).open();
                 break;
+            case CRAFTING_TABLE:
+                new RecipeListMenu(playerMenuUtility, plugin).open();
+                break;
             case BOOK:
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSection("§8§m-------------------------------------------"));
@@ -204,6 +208,11 @@ public class MainMenu extends PaginatedMenu {
                 "",
                 "§eClick to Manage"));
         inventory.setItem(47, makeItem(Material.SMITHING_TABLE, "§6Configure Upgrades", "§7Create and edit upgrade recipes."));
+        inventory.setItem(51, makeItem(Material.CRAFTING_TABLE, "§6Custom Crafting",
+                "§7Create custom recipes for",
+                "§7your BuffedItems.",
+                "",
+                "§eClick to Manage"));
 
 
         List<BuffedItem> items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());

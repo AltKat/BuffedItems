@@ -13,11 +13,13 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
@@ -631,6 +633,11 @@ public class ItemManager {
         }
 
         return soundString;
+    }
+
+    public boolean isBuffedItem(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return item.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "buffeditem_id"), PersistentDataType.STRING);
     }
 
     public BuffedItem getBuffedItem(String itemId) {

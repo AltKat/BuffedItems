@@ -169,6 +169,18 @@ public class ConfigManager {
                 plugin.getLogger().warning("Could not create sets.yml backup: " + e.getMessage());
             }
         }
+
+        File recipesFile = new File(plugin.getDataFolder(), "recipes.yml");
+        File recipesBackup = new File(backupDir, "recipes.yml.backup");
+
+        if (recipesFile.exists()) {
+            try {
+                Files.copy(recipesFile.toPath(), recipesBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                sendDebugMessage(DEBUG_INFO, () -> "[Backup] recipes.yml backed up to backups/ folder.");
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not create recipes.yml backup: " + e.getMessage());
+            }
+        }
     }
 
     public static void reloadConfig() {
@@ -187,10 +199,12 @@ public class ConfigManager {
             ItemsConfig.reload();
             UpgradesConfig.reload();
             SetsConfig.reload();
+            RecipesConfig.reload();
 
             plugin.getItemManager().loadItems(silent);
             plugin.getUpgradeManager().loadRecipes(silent);
             plugin.getSetManager().loadSets(silent);
+            plugin.getCraftingManager().loadRecipes(silent);
 
             loadGlobalSettings();
             invalidateAllPlayerCaches();
