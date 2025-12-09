@@ -90,37 +90,6 @@ public class ItemUpdater {
             }
         }
 
-        for (Map.Entry<String, BuffedItemEffect> effectEntry : template.getEffects().entrySet()) {
-            String slotKey = effectEntry.getKey().toUpperCase();
-            BuffedItemEffect itemEffect = effectEntry.getValue();
-            EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
-
-            if (equipmentSlot != null) {
-                for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
-
-                    if (meta.hasAttributeModifiers()) {
-                        Collection<AttributeModifier> existingMods = meta.getAttributeModifiers(parsedAttr.getAttribute());
-                        if (existingMods != null) {
-                            for (AttributeModifier existing : new ArrayList<>(existingMods)) {
-                                if (existing.getUniqueId().equals(parsedAttr.getUuid())) {
-                                    meta.removeAttributeModifier(parsedAttr.getAttribute(), existing);
-                                }
-                            }
-                        }
-                    }
-
-                    AttributeModifier modifier = new AttributeModifier(
-                            parsedAttr.getUuid(),
-                            "buffeditems." + template.getId() + "." + slotKey,
-                            parsedAttr.getAmount(),
-                            parsedAttr.getOperation(),
-                            equipmentSlot
-                    );
-                    meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
-                }
-            }
-        }
-
         boolean hasRealEnchants = meta.hasEnchants();
         if (template.hasGlow()) {
             if (!hasRealEnchants || template.getFlag("HIDE_ENCHANTS")) {
@@ -181,18 +150,5 @@ public class ItemUpdater {
         }
 
         meta.lore(lore);
-    }
-
-    private EquipmentSlot getEquipmentSlot(String slot) {
-        switch (slot.toUpperCase()) {
-            case "MAIN_HAND": return EquipmentSlot.HAND;
-            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
-            case "HELMET": return EquipmentSlot.HEAD;
-            case "CHESTPLATE": return EquipmentSlot.CHEST;
-            case "LEGGINGS": return EquipmentSlot.LEGS;
-            case "BOOTS": return EquipmentSlot.FEET;
-            case "INVENTORY":
-            default: return null;
-        }
     }
 }
