@@ -15,11 +15,14 @@ import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -247,6 +250,20 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
             BuffedItem item = items.get(index);
             ItemStack stack = new ItemBuilder(item, plugin).build();
+
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                List<Component> lore = meta.lore();
+                if (lore == null) {
+                    lore = new ArrayList<>();
+                }
+                lore.add(Component.empty());
+                lore.add(ConfigManager.fromSection("§7ID: §f" + item.getId()));
+                lore.add(Component.empty());
+                lore.add(ConfigManager.fromSection("§eClick to select"));
+                meta.lore(lore);
+                stack.setItemMeta(meta);
+            }
 
             inventory.setItem(i, stack);
         }

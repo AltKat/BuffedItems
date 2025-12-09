@@ -8,6 +8,7 @@ import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -97,6 +98,8 @@ public class SetItemsMenu extends PaginatedMenu {
             ItemMeta meta = icon.getItemMeta();
             List<net.kyori.adventure.text.Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
             lore.add(net.kyori.adventure.text.Component.empty());
+            lore.add(ConfigManager.fromSection("§7ID: §f" + itemId));
+            lore.add(Component.empty());
             lore.add(ConfigManager.fromSection("§cRight-Click to Remove"));
             meta.lore(lore);
             icon.setItemMeta(meta);
