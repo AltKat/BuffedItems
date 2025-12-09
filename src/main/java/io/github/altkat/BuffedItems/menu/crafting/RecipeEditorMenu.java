@@ -75,6 +75,15 @@ public class RecipeEditorMenu extends Menu {
             return;
         }
 
+        if (e.getSlot() == 16) {
+            playerMenuUtility.setWaitingForChatInput(true);
+            playerMenuUtility.setChatInputPath("recipe_permission");
+            p.closeInventory();
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter permission node (or 'none' to remove)."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            return;
+        }
+
         if (e.getSlot() == 44) {
             new RecipeListMenu(playerMenuUtility, plugin).open();
         }
@@ -92,12 +101,23 @@ public class RecipeEditorMenu extends Menu {
         }
 
         ConfigurationSection ingredientsSec = section.getConfigurationSection("ingredients");
+        List<String> shape = section.getStringList("shape");
 
         for (int i = 0; i < 9; i++) {
             int slot = gridSlots[i];
-            char key = (char) ('A' + i);
 
-            if (ingredientsSec != null && ingredientsSec.contains(String.valueOf(key))) {
+            int row = i / 3;
+            int col = i % 3;
+            char key = ' ';
+
+            if (shape != null && row < shape.size()) {
+                String line = shape.get(row);
+                if (col < line.length()) {
+                    key = line.charAt(col);
+                }
+            }
+
+            if (key != ' ' && ingredientsSec != null && ingredientsSec.contains(String.valueOf(key))) {
                 ConfigurationSection ingSec = ingredientsSec.getConfigurationSection(String.valueOf(key));
                 if (ingSec != null) {
                     ItemStack icon = getIngredientIconFromConfig(ingSec);
@@ -112,6 +132,7 @@ public class RecipeEditorMenu extends Menu {
 
         String resultId = section.getString("result.item");
         int amount = section.getInt("result.amount", 1);
+        String permission = section.getString("permission", "None");
 
         ItemStack resultStack;
         if (resultId != null) {
@@ -145,6 +166,8 @@ public class RecipeEditorMenu extends Menu {
         inventory.setItem(RESULT_SLOT, resultStack);
 
         inventory.setItem(RESULT_SLOT + 9, makeItem(Material.GOLD_NUGGET, "§6Result Amount", "§7Current: §e" + amount, "", "§aClick to Edit"));
+
+        inventory.setItem(16, makeItem(Material.PAPER, "§eRecipe Permission", "§7Current: §f" + (permission == null ? "None" : permission), "", "§aClick to Edit"));
 
         inventory.setItem(22, makeItem(Material.CRAFTING_TABLE, "§eCrafting Grid", "§7Configure the 3x3 pattern."));
         inventory.setItem(23, makeItem(Material.ARROW, "§7->"));

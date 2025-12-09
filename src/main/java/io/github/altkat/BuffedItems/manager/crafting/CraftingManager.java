@@ -61,8 +61,9 @@ public class CraftingManager {
             String resultItemId = rSection.getString("result.item");
             int resultAmount = rSection.getInt("result.amount", 1);
             List<String> shape = rSection.getStringList("shape");
+            String permission = rSection.getString("permission");
 
-            CustomRecipe recipe = new CustomRecipe(recipeId, resultItemId, resultAmount, shape);
+            CustomRecipe recipe = new CustomRecipe(recipeId, resultItemId, resultAmount, shape, permission);
 
             if (resultItemId == null || plugin.getItemManager().getBuffedItem(resultItemId) == null) {
                 recipe.addErrorMessage("Invalid Result Item: " + (resultItemId == null ? "NULL" : resultItemId));
@@ -74,6 +75,17 @@ public class CraftingManager {
 
             if (shape.isEmpty() || shape.size() > 3) {
                 recipe.addErrorMessage("Invalid Shape Size (Must be 1-3 lines).");
+            } else {
+                boolean isEmptyShape = true;
+                for (String line : shape) {
+                    if (!line.trim().isEmpty()) {
+                        isEmptyShape = false;
+                        break;
+                    }
+                }
+                if (isEmptyShape) {
+                    recipe.addErrorMessage("Recipe shape cannot be completely empty.");
+                }
             }
 
             ConfigurationSection ingSection = rSection.getConfigurationSection("ingredients");
@@ -245,6 +257,8 @@ public class CraftingManager {
         }
 
         for (CustomRecipe recipe : recipes.values()) {
+            if (!recipe.isValid()) continue;
+
             if (matchesShaped(matrix, recipe)) {
                 return recipe;
             }
@@ -266,6 +280,7 @@ public class CraftingManager {
         if (shape == null || shape.isEmpty()) return false;
 
         char[][] recipeGrid = parseShape(shape);
+        if (recipeGrid.length == 0) return false;
         int recipeHeight = recipeGrid.length;
         int recipeWidth = recipeGrid[0].length;
 

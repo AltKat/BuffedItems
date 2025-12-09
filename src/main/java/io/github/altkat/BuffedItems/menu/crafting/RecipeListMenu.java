@@ -149,7 +149,9 @@ public class RecipeListMenu extends PaginatedMenu {
                 lore.add(ConfigManager.fromSection("§8ID: " + recipe.getId()));
 
                 if (recipe.isValid()) {
+                    String permission = RecipesConfig.get().getString("recipes." + recipe.getId() +".permission");
                     lore.add(ConfigManager.fromSection("§7Result: §f" + recipe.getResultItemId()));
+                    lore.add(ConfigManager.fromSection("§7Permission: §f" + (permission == null ? "None" : permission)));
                     lore.add(ConfigManager.fromSection("§7Amount: §e" + recipe.getAmount()));
                 } else {
                     lore.add(ConfigManager.fromSection("§c§lCONFIGURATION ERRORS:"));

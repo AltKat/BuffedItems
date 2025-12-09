@@ -61,6 +61,20 @@ public class RecipeInputHandler implements ChatInputHandler {
             closeChat(pmu);
         }
 
+        else if (path.equals("recipe_permission")) {
+            String perm = input.trim();
+            if (perm.equalsIgnoreCase("none") || perm.equalsIgnoreCase("null")) perm = null;
+
+            String recipeId = pmu.getRecipeToEditId();
+            RecipesConfig.get().set("recipes." + recipeId + ".permission", perm);
+            RecipesConfig.save();
+            plugin.getCraftingManager().loadRecipes(true);
+
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe permission updated: " + (perm == null ? "None" : perm)));
+            new RecipeEditorMenu(pmu, plugin).open();
+            closeChat(pmu);
+        }
+
         else if (path.equals("recipe_ingredient_amount")) {
             try {
                 int amount = Integer.parseInt(input);

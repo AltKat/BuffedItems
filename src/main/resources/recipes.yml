@@ -43,10 +43,7 @@
 # 2. BUFFED_ITEM: Matches a specific custom item from this plugin.
 #    - value: buffed_item_id
 #
-# 3. EXTERNAL: Matches an item from another plugin (ItemsAdder / Nexo).
-#    - value: namespace:id (e.g., itemsadder:ruby_sword)
-#
-# 4. EXACT: Strict matching for special vanilla items (Base64 encoded).
+# 3. EXACT: Strict matching for special vanilla items (Base64 encoded).
 #    - value: <base64_string> (Generated automatically by the in-game editor)
 # ===================================================================
 
@@ -73,13 +70,16 @@ recipes:
       item: "elemental_staff"
       amount: 1
     shape:
-      - " E "
-      - " R "
-      - " R "
+      - ' B '
+      - ' E '
+      - ' H '
     ingredients:
-      E:
+      B:
         type: MATERIAL
         value: EMERALD
-      R:
+      E:
+        type: MATERIAL
+        value: BLAZE_ROD
+      H:
         type: MATERIAL
         value: BLAZE_ROD

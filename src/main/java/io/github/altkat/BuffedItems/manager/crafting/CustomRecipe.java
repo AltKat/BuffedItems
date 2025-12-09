@@ -10,16 +10,18 @@ public class CustomRecipe {
     private final String resultItemId;
     private final int amount;
     private final List<String> shape;
+    private final String permission;
     private final Map<Integer, RecipeIngredient> ingredients;
 
     private boolean valid;
     private final List<String> errorMessages;
 
-    public CustomRecipe(String id, String resultItemId, int amount, List<String> shape) {
+    public CustomRecipe(String id, String resultItemId, int amount, List<String> shape, String permission) {
         this.id = id;
         this.resultItemId = resultItemId;
         this.amount = amount;
         this.shape = shape;
+        this.permission = permission;
         this.ingredients = new HashMap<>();
         this.valid = true;
         this.errorMessages = new ArrayList<>();
@@ -40,6 +42,7 @@ public class CustomRecipe {
     public List<String> getShape() {
         return shape;
     }
+    public String getPermission() { return permission; }
     public boolean isValid() { return valid; }
     public void setValid(boolean valid) { this.valid = valid; }
     public List<String> getErrorMessages() { return errorMessages; }

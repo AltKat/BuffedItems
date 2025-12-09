@@ -1,6 +1,7 @@
 package io.github.altkat.BuffedItems.listener;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.crafting.CustomRecipe;
 import io.github.altkat.BuffedItems.manager.crafting.RecipeIngredient;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
@@ -43,6 +44,12 @@ public class CraftingListener implements Listener {
         CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
 
         if (match != null) {
+            Player p = (Player) e.getView().getPlayer();
+            if (match.getPermission() != null && !match.getPermission().isEmpty() && !p.hasPermission(match.getPermission())) {
+                inv.setResult(null);
+                return;
+            }
+
             BuffedItem resultItem = plugin.getItemManager().getBuffedItem(match.getResultItemId());
             if (resultItem != null) {
                 ItemStack resultStack = new ItemBuilder(resultItem, plugin).build();
@@ -82,8 +89,16 @@ public class CraftingListener implements Listener {
             return;
         }
 
-        e.setCancelled(true);
+
         Player player = (Player) e.getWhoClicked();
+
+        if (match.getPermission() != null && !match.getPermission().isEmpty() && !player.hasPermission(match.getPermission())) {
+            e.setCancelled(true);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cYou do not have permission to craft this."));
+            return;
+        }
+
+        e.setCancelled(true);
 
         isCrafting.add(player.getUniqueId());
 
