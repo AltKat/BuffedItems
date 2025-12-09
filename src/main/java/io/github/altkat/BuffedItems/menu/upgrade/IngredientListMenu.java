@@ -44,12 +44,12 @@ public class IngredientListMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
 
-        if (e.getSlot() == 49) {
+        if (e.getSlot() == 53) {
             new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getSlot() == 51) {
+        if (e.getSlot() == 49) {
             new TypeSelectorMenu(playerMenuUtility, plugin, PlayerMenuUtility.MaterialSelectionContext.INGREDIENT).open();
             return;
         }
@@ -77,8 +77,8 @@ public class IngredientListMenu extends Menu {
     @Override
     public void setMenuItems() {
         setFillerGlass();
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
-        inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd Ingredient", "§7Add a cost requirement."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd Ingredient", "§7Add a cost requirement."));
 
         List<Map<?, ?>> list = UpgradesConfig.get().getMapList("upgrades." + recipeId + ".ingredients");
 

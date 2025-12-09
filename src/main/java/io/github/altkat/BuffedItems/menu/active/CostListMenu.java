@@ -48,12 +48,12 @@ public class CostListMenu extends Menu {
         if (e.getCurrentItem() == null) return;
         Player p = (Player) e.getWhoClicked();
 
-        if (e.getCurrentItem().getType() == Material.BARRIER && e.getSlot() == 49) {
+        if (e.getCurrentItem().getType() == Material.BARRIER && e.getSlot() == 53) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getCurrentItem().getType() == Material.ANVIL && e.getSlot() == 51) {
+        if (e.getCurrentItem().getType() == Material.ANVIL && e.getSlot() == 49) {
             new TypeSelectorMenu(playerMenuUtility, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
             return;
         }
@@ -116,8 +116,8 @@ public class CostListMenu extends Menu {
     @Override
     public void setMenuItems() {
         setFillerGlass();
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
-        inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd New Cost", "§7Add a requirement to use this item."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd New Cost", "§7Add a requirement to use this item."));
 
         List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
         int index = 0;

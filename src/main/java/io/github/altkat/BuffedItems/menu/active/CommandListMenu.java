@@ -77,7 +77,7 @@ public class CommandListMenu extends PaginatedMenu {
         if (e.getCurrentItem() == null) return;
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 49) {
+        if (type == Material.BARRIER && e.getSlot() == 53) {
             if (context == CommandContext.ACTIVE) {
                 new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             } else {
@@ -86,7 +86,7 @@ public class CommandListMenu extends PaginatedMenu {
             return;
         }
 
-        if (type == Material.ANVIL && e.getSlot() == 51) {
+        if (type == Material.ANVIL && e.getSlot() == 49) {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath(context.chatPrefix + "add");
             p.closeInventory();
@@ -132,8 +132,8 @@ public class CommandListMenu extends PaginatedMenu {
     public void setMenuItems() {
         addMenuControls();
 
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Settings"));
-        inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd New Command", "§7Click to add a command via chat."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Settings"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd New Command", "§7Click to add a command via chat."));
 
         inventory.setItem(4, makeItem(Material.BOOK, "§eCommand Info & Help",
                 "§7Mode: §6" + context.description,

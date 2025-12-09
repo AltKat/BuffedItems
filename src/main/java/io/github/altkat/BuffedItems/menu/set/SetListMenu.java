@@ -44,12 +44,12 @@ public class SetListMenu extends PaginatedMenu {
         if (e.getCurrentItem() == null) return;
         if (handlePageChange(e, sets.size())) return;
 
-        if (e.getSlot() == 49) {
+        if (e.getSlot() == 53) {
             new MainMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getSlot() == 51) {
+        if (e.getSlot() == 49) {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("create_set");
             p.closeInventory();
@@ -85,8 +85,8 @@ public class SetListMenu extends PaginatedMenu {
         addMenuControls();
         setFillerGlass();
 
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Main Menu"));
-        inventory.setItem(51, makeItem(Material.ANVIL, "§aCreate New Set", "§7Click to create a new item set."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Main Menu"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aCreate New Set", "§7Click to create a new item set."));
 
         List<BuffedSet> sets = getSortedSets();
 
