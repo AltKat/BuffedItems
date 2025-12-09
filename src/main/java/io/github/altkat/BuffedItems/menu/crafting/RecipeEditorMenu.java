@@ -101,23 +101,12 @@ public class RecipeEditorMenu extends Menu {
         }
 
         ConfigurationSection ingredientsSec = section.getConfigurationSection("ingredients");
-        List<String> shape = section.getStringList("shape");
 
         for (int i = 0; i < 9; i++) {
             int slot = gridSlots[i];
+            char key = (char) ('A' + i);
 
-            int row = i / 3;
-            int col = i % 3;
-            char key = ' ';
-
-            if (shape != null && row < shape.size()) {
-                String line = shape.get(row);
-                if (col < line.length()) {
-                    key = line.charAt(col);
-                }
-            }
-
-            if (key != ' ' && ingredientsSec != null && ingredientsSec.contains(String.valueOf(key))) {
+            if (ingredientsSec != null && ingredientsSec.contains(String.valueOf(key))) {
                 ConfigurationSection ingSec = ingredientsSec.getConfigurationSection(String.valueOf(key));
                 if (ingSec != null) {
                     ItemStack icon = getIngredientIconFromConfig(ingSec);
