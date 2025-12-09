@@ -7,7 +7,7 @@ import io.github.altkat.BuffedItems.menu.active.ActiveItemSettingsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.passive.PassiveItemSettingsMenu;
 import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
@@ -73,7 +73,7 @@ public class ItemEditorMenu extends Menu {
 
         switch (e.getCurrentItem().getType()) {
             case BARRIER:
-                new MainMenu(playerMenuUtility, plugin).open();
+                new ItemListMenu(playerMenuUtility, plugin).open();
                 break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);
@@ -130,7 +130,7 @@ public class ItemEditorMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
         if (item == null) {
             playerMenuUtility.getOwner().sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Item could not be found. Returning to main menu."));
-            new MainMenu(playerMenuUtility, plugin).open();
+            new ItemListMenu(playerMenuUtility, plugin).open();
             return;
         }
 
@@ -214,7 +214,7 @@ public class ItemEditorMenu extends Menu {
                 "",
                 "§eClick to Manage"));
 
-        addBackButton(new MainMenu(playerMenuUtility, plugin));
+        addBackButton(new ItemListMenu(playerMenuUtility, plugin));
         setFillerGlass();
     }
 

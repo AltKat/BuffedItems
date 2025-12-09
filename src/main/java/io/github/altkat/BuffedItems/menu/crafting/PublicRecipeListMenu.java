@@ -9,7 +9,6 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;

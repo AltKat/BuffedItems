@@ -3,7 +3,7 @@ package io.github.altkat.BuffedItems.listener.handler;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.editor.LoreEditorMenu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.entity.Player;
@@ -25,7 +25,7 @@ public class LoreInputHandler implements ChatInputHandler {
         if (item == null) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Item '" + itemId + "' not found in memory."));
             closeChatInput(pmu);
-            new MainMenu(pmu, plugin).open();
+            new ItemListMenu(pmu, plugin).open();
             return;
         }
 

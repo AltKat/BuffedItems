@@ -5,7 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BossBarColorMenu;
 import io.github.altkat.BuffedItems.menu.selector.BossBarStyleMenu;
-import io.github.altkat.BuffedItems.menu.utility.MainMenu;
+import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
@@ -48,11 +48,11 @@ public class ActiveItemVisualsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
 
         if (item == null) {
-            new MainMenu(playerMenuUtility, plugin).open();
+            new ItemListMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (type == Material.BARRIER && e.getSlot() == 49) {
+        if (type == Material.BARRIER && e.getSlot() == 53) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -168,7 +168,7 @@ public class ActiveItemVisualsMenu extends Menu {
         inventory.setItem(34, makeItem(Material.PAINTING, "§dBossBar Style", "§7Current: §e" + item.getBossBarStyle(), "§eClick to Change"));
         inventory.setItem(43, makeItem(Material.GLOW_INK_SAC, "§dBossBar Color", "§7Current: §e" + item.getBossBarColor(), "§eClick to Change"));
 
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
     }
 
     private ItemStack createVisualToggle(Material mat, String name, boolean state) {

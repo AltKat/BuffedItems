@@ -45,12 +45,12 @@ public class SetItemsMenu extends PaginatedMenu {
         List<String> items = SetsConfig.get().getStringList("sets." + setId + ".items");
         if (handlePageChange(e, items.size())) return;
 
-        if (e.getSlot() == 49) {
+        if (e.getSlot() == 53) {
             new SetEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getSlot() == 51) {
+        if (e.getSlot() == 49) {
             new BuffedItemSelectorMenu(playerMenuUtility, plugin, BuffedItemSelectorMenu.SelectionContext.SET_MEMBER).open();
             return;
         }
@@ -75,8 +75,8 @@ public class SetItemsMenu extends PaginatedMenu {
         addMenuControls();
         setFillerGlass();
 
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
-        inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd Item", "§7Add a BuffedItem to this set."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd Item", "§7Add a BuffedItem to this set."));
 
         List<String> items = SetsConfig.get().getStringList("sets." + setId + ".items");
 

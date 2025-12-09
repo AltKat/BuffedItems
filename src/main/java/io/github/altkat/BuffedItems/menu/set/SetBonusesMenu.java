@@ -12,7 +12,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class SetBonusesMenu extends PaginatedMenu {
@@ -44,12 +43,12 @@ public class SetBonusesMenu extends PaginatedMenu {
         List<String> bonusKeys = getBonusKeys();
         if (handlePageChange(e, bonusKeys.size())) return;
 
-        if (e.getSlot() == 49) {
+        if (e.getSlot() == 53) {
             new SetEditorMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getSlot() == 51) {
+        if (e.getSlot() == 49) {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("create_bonus_tier");
             p.closeInventory();
@@ -84,8 +83,8 @@ public class SetBonusesMenu extends PaginatedMenu {
         addMenuControls();
         setFillerGlass();
 
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack"));
-        inventory.setItem(51, makeItem(Material.ANVIL, "§aAdd Bonus Tier", "§7Create a new bonus level (e.g. 3 pieces)."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd Bonus Tier", "§7Create a new bonus level (e.g. 3 pieces)."));
 
         List<String> bonusKeys = getBonusKeys();
 

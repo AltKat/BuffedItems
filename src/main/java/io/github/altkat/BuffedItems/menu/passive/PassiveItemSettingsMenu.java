@@ -66,6 +66,6 @@ public class PassiveItemSettingsMenu extends Menu {
                 "§7(Requires selecting a slot)",
                 "§eClick to Edit"));
 
-        inventory.setItem(22, makeItem(Material.BARRIER, "§cBack to Main Editor"));
+        inventory.setItem(26, makeItem(Material.BARRIER, "§cBack to Main Editor"));
     }
 }

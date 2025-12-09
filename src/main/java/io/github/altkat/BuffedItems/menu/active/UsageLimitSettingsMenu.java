@@ -40,7 +40,7 @@ public class UsageLimitSettingsMenu extends Menu {
         if (e.getCurrentItem() == null) return;
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 40) {
+        if (type == Material.BARRIER && e.getSlot() == 44) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -191,7 +191,7 @@ public class UsageLimitSettingsMenu extends Menu {
         inventory.setItem(32, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", item.getDepletedMessage(), "usage-limit-depleted-message"));
         inventory.setItem(34, makeMessageItem(Material.BELL, "Break Notification", item.getDepletionNotification(), "usage-limit-break-notification"));
 
-        inventory.setItem(40, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
     }
 
     private org.bukkit.inventory.ItemStack makeMessageItem(Material mat, String title, String currentVal, String defaultKey) {
