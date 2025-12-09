@@ -137,15 +137,14 @@ public class EffectApplicatorTask extends BukkitRunnable {
                     itemEffects.getPotionEffects().forEach((type, level) ->
                             desiredPotionEffects.merge(type, level, Integer::max));
 
-                    if (slot.equals("INVENTORY")) {
-                        for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
-                            desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
+                    for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
+                        desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
 
-                            if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
-                                effectManager.applySingleAttribute(player, parsedAttr, slot);
-                            }
+                        if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
+                            effectManager.applySingleAttribute(player, parsedAttr, slot);
                         }
                     }
+
                 }
             }
 

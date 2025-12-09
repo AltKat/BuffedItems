@@ -82,33 +82,6 @@ public class ItemBuilder {
             }
         }
 
-
-        for (Map.Entry<String, BuffedItemEffect> effectEntry : buffedItem.getEffects().entrySet()) {
-            String slotKey = effectEntry.getKey().toUpperCase();
-            BuffedItemEffect itemEffect = effectEntry.getValue();
-
-            EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
-
-            if (equipmentSlot != null) {
-                for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
-
-                    AttributeModifier modifier = new AttributeModifier(
-                            parsedAttr.getUuid(),
-                            "buffeditems." + buffedItem.getId() + "." + slotKey,
-                            parsedAttr.getAmount(),
-                            parsedAttr.getOperation(),
-                            equipmentSlot
-                    );
-
-                    meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
-                            "[ItemBuilder] Natively applying attribute to " + buffedItem.getId() +
-                                    " for slot " + slotKey + ": " + parsedAttr.getAttribute().name());
-                }
-            }
-
-        }
-
         if (buffedItem.getFlag("UNBREAKABLE")) {
             meta.setUnbreakable(true);
         }
