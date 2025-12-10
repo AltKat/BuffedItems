@@ -173,7 +173,7 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
         String permDisplay = (item.getPermission() != null) ? item.getPermission() : "§cNone";
-        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings", "§7Current: " + permDisplay));
+        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings"));
 
         String cmdDisplay;
         if (item.getCustomModelData().isPresent()) {

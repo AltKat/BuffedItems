@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -17,6 +18,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class ItemBuilder {
 
@@ -24,6 +26,11 @@ public class ItemBuilder {
     private final ItemStack itemStack;
     private final Plugin plugin;
     private final int serverVersion;
+
+    protected static final EquipmentSlot[] VALID_SLOTS = {
+            EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
+            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+    };
 
     public ItemBuilder(BuffedItem buffedItem, Plugin plugin) {
         this.buffedItem = buffedItem;
@@ -50,9 +57,7 @@ public class ItemBuilder {
 
     public ItemStack build() {
         ItemMeta meta = itemStack.getItemMeta();
-        if (meta == null) {
-            return itemStack;
-        }
+        if (meta == null) {return itemStack;}
 
         meta.displayName(ConfigManager.fromLegacy(buffedItem.getDisplayName()));
         List<Component> coloredLore = ConfigManager.loreFromLegacy(buffedItem.getLore());
@@ -111,10 +116,69 @@ public class ItemBuilder {
             }
         }
 
+        meta.setAttributeModifiers(null);
+
+        boolean forceHideAttributes = false;
+
+        if (buffedItem.getAttributeMode() == BuffedItem.AttributeMode.STATIC) {
+
+            boolean hasAnyAttribute = false;
+
+            for (Map.Entry<String, BuffedItemEffect> effectEntry : buffedItem.getEffects().entrySet()) {
+                String slotKey = effectEntry.getKey().toUpperCase();
+                BuffedItemEffect itemEffect = effectEntry.getValue();
+
+                EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
+
+                if (equipmentSlot != null) {
+                    for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
+                        AttributeModifier modifier = new AttributeModifier(
+                                parsedAttr.getUuid(),
+                                "buffeditems." + buffedItem.getId() + "." + slotKey,
+                                parsedAttr.getAmount(),
+                                parsedAttr.getOperation(),
+                                equipmentSlot
+                        );
+                        meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
+                        hasAnyAttribute = true;
+                    }
+                }
+            }
+
+            if (!hasAnyAttribute) {
+                Attribute dummyAttr = Attribute.GENERIC_LUCK;
+                for (EquipmentSlot slot : VALID_SLOTS) {
+                    AttributeModifier dummyMod = new AttributeModifier(
+                            UUID.randomUUID(),
+                            "buffeditems.dummy.static." + slot.name(),
+                            0,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            slot
+                    );
+                    meta.addAttributeModifier(dummyAttr, dummyMod);
+                }
+                forceHideAttributes = true;
+            }
+
+        } else {
+            Attribute dummyAttr = Attribute.GENERIC_LUCK;
+            for (EquipmentSlot slot : VALID_SLOTS) {
+                AttributeModifier dummyMod = new AttributeModifier(
+                        UUID.randomUUID(),
+                        "buffeditems.dummy." + slot.name(),
+                        0,
+                        AttributeModifier.Operation.ADD_NUMBER,
+                        slot
+                );
+                meta.addAttributeModifier(dummyAttr, dummyMod);
+            }
+            forceHideAttributes = true;
+        }
+
         if (buffedItem.getFlag("HIDE_ENCHANTS")) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
-        if (buffedItem.getFlag("HIDE_ATTRIBUTES")) {
+        if (buffedItem.getFlag("HIDE_ATTRIBUTES") || forceHideAttributes) {
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         }
         if (buffedItem.getFlag("HIDE_UNBREAKABLE")) {

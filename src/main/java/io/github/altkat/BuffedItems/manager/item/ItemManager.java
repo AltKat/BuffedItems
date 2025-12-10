@@ -533,6 +533,19 @@ public class ItemManager {
             activeEffectsObj = new BuffedItemEffect(new HashMap<>(), new ArrayList<>());
         }
 
+        String attrModeStr = itemSection.getString("attribute_mode", "STATIC").toUpperCase();
+        BuffedItem.AttributeMode attributeMode;
+        try {
+            attributeMode = BuffedItem.AttributeMode.valueOf(attrModeStr);
+        } catch (IllegalArgumentException e) {
+            attributeMode = BuffedItem.AttributeMode.STATIC;
+            errorMessages.add("§cInvalid attribute_mode '" + attrModeStr + "'. Defaulting to STATIC.");
+        }
+
+        if (attributeMode == BuffedItem.AttributeMode.DYNAMIC) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is set to DYNAMIC attribute mode.");
+        }
+
         BuffedItem finalBuffedItem = new BuffedItem(
                 itemId,
                 displayName,
@@ -576,6 +589,7 @@ public class ItemManager {
                 depletionAction,
                 depletionTransformId,
                 depletionCommands,
+                attributeMode,
                 costs
         );
 
