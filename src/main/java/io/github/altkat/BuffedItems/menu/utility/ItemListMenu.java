@@ -150,6 +150,7 @@ public class ItemListMenu extends PaginatedMenu {
                     newLore.add("§aShift + Left-Click to Get");
                     newLore.add("§cRight-Click to Delete");
                     newLore.add("§bShift + Right Click to Duplicate");
+                    newLore.add("§8§m------------------");
                     meta.setLore(newLore);
                     itemStack.setItemMeta(meta);
                 } else {
@@ -166,6 +167,7 @@ public class ItemListMenu extends PaginatedMenu {
                     errorLore.add("§aShift + Left-Click to Get (as-is)");
                     errorLore.add("§cRight-Click to Delete");
                     errorLore.add("§bShift + Right Click to Duplicate (as-is)");
+                    errorLore.add("§8§m------------------");
                     meta.setLore(errorLore);
 
                     NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");

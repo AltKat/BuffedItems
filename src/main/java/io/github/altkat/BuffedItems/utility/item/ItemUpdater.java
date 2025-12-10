@@ -1,5 +1,6 @@
 package io.github.altkat.BuffedItems.utility.item;
 
+import com.google.common.collect.Multimap;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
@@ -16,6 +17,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
+
+import static io.github.altkat.BuffedItems.utility.item.ItemBuilder.VALID_SLOTS;
 
 public class ItemUpdater {
 
@@ -63,38 +66,80 @@ public class ItemUpdater {
             meta.setCustomModelData(null);
         }
 
-        meta.removeItemFlags(ItemFlag.values());
-        if (template.getFlag("HIDE_ENCHANTS")) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        if (template.getFlag("HIDE_ATTRIBUTES")) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        if (template.getFlag("HIDE_UNBREAKABLE")) meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
-        if (template.getFlag("HIDE_DESTROYS")) meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-        if (template.getFlag("HIDE_PLACED_ON")) meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
-        if (template.getFlag("HIDE_ADDITIONAL_TOOLTIP")) meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
-        if (template.getFlag("HIDE_ARMOR_TRIM")) meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
-
-        meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
-
         for (Map.Entry<Enchantment, Integer> entry : template.getEnchantments().entrySet()) {
             meta.addEnchant(entry.getKey(), entry.getValue(), true);
         }
 
-        if (meta.hasAttributeModifiers()) {
-            List<Map.Entry<Attribute, AttributeModifier>> toRemove = new ArrayList<>();
-            meta.getAttributeModifiers().forEach((attr, mod) -> {
-                if (mod.getName().startsWith("buffeditems.")) {
-                    toRemove.add(new AbstractMap.SimpleEntry<>(attr, mod));
-                }
-            });
-            for (Map.Entry<Attribute, AttributeModifier> entry : toRemove) {
-                meta.removeAttributeModifier(entry.getKey(), entry.getValue());
-            }
-        }
+        meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
 
-        boolean hasRealEnchants = meta.hasEnchants();
-        if (template.hasGlow()) {
-            if (!hasRealEnchants || template.getFlag("HIDE_ENCHANTS")) {
-                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
+        meta.setAttributeModifiers(null);
+
+        boolean forceHideAttributes = false;
+
+        if (template.getAttributeMode() == BuffedItem.AttributeMode.STATIC) {
+
+            boolean hasAnyAttribute = false;
+
+            for (Map.Entry<String, BuffedItemEffect> effectEntry : template.getEffects().entrySet()) {
+                String slotKey = effectEntry.getKey().toUpperCase();
+                BuffedItemEffect itemEffect = effectEntry.getValue();
+                EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
+
+                if (equipmentSlot != null) {
+                    for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
+
+                        if (meta.hasAttributeModifiers()) {
+                            Collection<AttributeModifier> mods = meta.getAttributeModifiers(parsedAttr.getAttribute());
+                            if (mods != null) {
+                                for (AttributeModifier existing : new ArrayList<>(mods)) {
+                                    if (existing.getUniqueId().equals(parsedAttr.getUuid())) {
+                                        meta.removeAttributeModifier(parsedAttr.getAttribute(), existing);
+                                    }
+                                }
+                            }
+                        }
+
+                        AttributeModifier modifier = new AttributeModifier(
+                                parsedAttr.getUuid(),
+                                "buffeditems." + template.getId() + "." + slotKey,
+                                parsedAttr.getAmount(),
+                                parsedAttr.getOperation(),
+                                equipmentSlot
+                        );
+                        meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
+                        hasAnyAttribute = true;
+                    }
+                }
             }
+
+            if (!hasAnyAttribute) {
+                Attribute dummyAttr = Attribute.GENERIC_LUCK;
+                for (EquipmentSlot slot : VALID_SLOTS) {
+                    AttributeModifier dummyMod = new AttributeModifier(
+                            UUID.randomUUID(),
+                            "buffeditems.dummy.static." + slot.name(),
+                            0,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            slot
+                    );
+                    meta.addAttributeModifier(dummyAttr, dummyMod);
+                }
+                forceHideAttributes = true;
+            }
+
+        } else {
+            Attribute dummyAttr = Attribute.GENERIC_LUCK;
+            for (EquipmentSlot slot : VALID_SLOTS) {
+                AttributeModifier dummyMod = new AttributeModifier(
+                        UUID.randomUUID(),
+                        "buffeditems.dummy." + slot.name(),
+                        0,
+                        AttributeModifier.Operation.ADD_NUMBER,
+                        slot
+                );
+                meta.addAttributeModifier(dummyAttr, dummyMod);
+            }
+            forceHideAttributes = true;
         }
 
         if (template.isActiveMode() && template.getMaxUses() > 0) {
@@ -108,6 +153,27 @@ public class ItemUpdater {
             updateLoreWithCurrentUses(meta, template, usesToSet, player);
         } else {
             meta.getPersistentDataContainer().remove(usesKey);
+        }
+
+        meta.removeItemFlags(ItemFlag.values());
+
+        if (template.getFlag("HIDE_ENCHANTS")) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        if (template.getFlag("HIDE_ATTRIBUTES") || forceHideAttributes) {
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        }
+        if (template.getFlag("HIDE_UNBREAKABLE")) meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+        if (template.getFlag("HIDE_DESTROYS")) meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+        if (template.getFlag("HIDE_PLACED_ON")) meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
+        if (template.getFlag("HIDE_ADDITIONAL_TOOLTIP")) meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        if (template.getFlag("HIDE_ARMOR_TRIM")) meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+
+        if (template.hasGlow() && !meta.hasEnchants()) {
+            meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        if (template.getAttributeMode() == BuffedItem.AttributeMode.DYNAMIC) {
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         }
 
         newItem.setItemMeta(meta);
@@ -150,5 +216,17 @@ public class ItemUpdater {
         }
 
         meta.lore(lore);
+    }
+
+    private EquipmentSlot getEquipmentSlot(String slot) {
+        switch (slot.toUpperCase()) {
+            case "MAIN_HAND": return EquipmentSlot.HAND;
+            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
+            case "HELMET": return EquipmentSlot.HEAD;
+            case "CHESTPLATE": return EquipmentSlot.CHEST;
+            case "LEGGINGS": return EquipmentSlot.LEGS;
+            case "BOOTS": return EquipmentSlot.FEET;
+            default: return null;
+        }
     }
 }

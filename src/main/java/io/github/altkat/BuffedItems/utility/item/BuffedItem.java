@@ -53,6 +53,8 @@ public class BuffedItem {
     private final String depletionTransformId;
     private final List<String> depletionCommands;
     private final List<ICost> costs;
+    public enum AttributeMode { STATIC, DYNAMIC }
+    private final AttributeMode attributeMode;
 
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
@@ -69,7 +71,7 @@ public class BuffedItem {
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
                       String customCooldownSound, String customCostFailSound, String customDepletionSound, String customDepletedTrySound,
-                      DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, List<ICost> costs) {
+                      DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, AttributeMode attributeMode, List<ICost> costs) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -112,6 +114,7 @@ public class BuffedItem {
         this.depletionAction = depletionAction;
         this.depletionTransformId = depletionTransformId;
         this.depletionCommands = (depletionCommands != null) ? depletionCommands : new ArrayList<>();
+        this.attributeMode = attributeMode;
         this.costs = (costs != null) ? costs : new ArrayList<>();
     }
 
@@ -281,7 +284,9 @@ public class BuffedItem {
     public DepletionAction getDepletionAction() { return depletionAction; }
     public String getDepletionTransformId() { return depletionTransformId; }
     public List<String> getDepletionCommands() { return depletionCommands; }
-
+    public AttributeMode getAttributeMode() {
+        return attributeMode;
+    }
     public List<ICost> getCosts() {
         return costs;
     }

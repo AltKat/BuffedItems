@@ -121,7 +121,7 @@ public class PermissionSettingsMenu extends Menu {
 
         // 3. PASSIVE PERMISSION
         List<String> passiveLore = new ArrayList<>();
-        passiveLore.add("§7Required for passive stats/effects.");
+        passiveLore.add("§7Required for passive attributes/effects.");
         if (passivePerm == null) {
             passiveLore.add("§7Current: §8(Inherits Main)");
             passiveLore.add("§7Effective: §f" + mainPerm);
@@ -129,6 +129,14 @@ public class PermissionSettingsMenu extends Menu {
             passiveLore.add("§7Current: §d" + passivePerm);
             passiveLore.add("§7(Overrides Main)");
         }
+
+        passiveLore.add("");
+        passiveLore.add("§e⚠ Attribute Mode Warning:");
+        passiveLore.add("§7Attribute restrictions ONLY");
+        passiveLore.add("§7work in §bDYNAMIC §7mode.");
+        passiveLore.add("§7In §fSTATIC §7mode, attributes");
+        passiveLore.add("§7are always active (NBT).");
+
         passiveLore.add("");
         passiveLore.add("§aClick to Edit");
         inventory.setItem(15, makeItem(Material.SHIELD, "§dPassive Permission (Override)", passiveLore.toArray(new String[0])));
