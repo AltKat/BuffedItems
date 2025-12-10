@@ -136,6 +136,10 @@ public class PermissionSettingsMenu extends Menu {
         passiveLore.add("§7work in §bDYNAMIC §7mode.");
         passiveLore.add("§7In §fSTATIC §7mode, attributes");
         passiveLore.add("§7are always active (NBT).");
+        passiveLore.add("");
+        passiveLore.add("§7*Except §eINVENTORY §7slot:");
+        passiveLore.add("§7 Attributes in inventory always");
+        passiveLore.add("§7 §aRESPECT §7permission even in §fSTATIC §7mode.");
 
         passiveLore.add("");
         passiveLore.add("§aClick to Edit");
