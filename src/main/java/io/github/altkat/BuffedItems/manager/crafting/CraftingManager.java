@@ -19,6 +19,7 @@ public class CraftingManager {
     private final BuffedItems plugin;
     private final Map<String, CustomRecipe> recipes;
     private final ItemMatcher itemMatcher;
+    private final Set<NamespacedKey> trackedKeys = new HashSet<>();
 
     public CraftingManager(BuffedItems plugin) {
         this.plugin = plugin;
@@ -194,20 +195,17 @@ public class CraftingManager {
     }
 
     public void unloadRecipes() {
-        Iterator<org.bukkit.inventory.Recipe> it = Bukkit.recipeIterator();
-        while (it.hasNext()) {
-            org.bukkit.inventory.Recipe recipe = it.next();
-            if (recipe instanceof ShapedRecipe) {
-                NamespacedKey key = ((ShapedRecipe) recipe).getKey();
-                if (key.getNamespace().equals(plugin.getName().toLowerCase())) {
-                    Bukkit.removeRecipe(key);
-                }
+        if (!trackedKeys.isEmpty()) {
+            for (NamespacedKey key : trackedKeys) {
+                Bukkit.removeRecipe(key);
             }
+            trackedKeys.clear();
         }
     }
 
     private void registerBukkitRecipe(CustomRecipe recipe, List<String> shape, Map<Character, RecipeIngredient> charMap) {
         NamespacedKey key = new NamespacedKey(plugin, recipe.getId());
+        trackedKeys.add(key);
         ItemStack resultStack;
         BuffedItem item = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
 

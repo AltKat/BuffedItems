@@ -96,7 +96,8 @@ public final class BuffedItems extends JavaPlugin {
             e.printStackTrace();
         }
 
-        ConfigManager.reloadConfig(true);
+        reloadConfig();
+        ConfigManager.loadGlobalSettings();
 
         registerListenersAndCommands();
         startEffectTask();
@@ -143,6 +144,11 @@ public final class BuffedItems extends JavaPlugin {
                 failCount++;
                 getLogger().warning("Failed to clear effects for player " + player.getName() + ": " + e.getMessage());
             }
+        }
+
+        if (craftingManager != null) {
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Unloading custom recipes...");
+            craftingManager.unloadRecipes();
         }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Saving final config...");
