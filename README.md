@@ -35,32 +35,37 @@
 * **🛡️ Passive Effects:** Grant permanent stats based on where the item is held/worn (`MAIN_HAND`, `OFF_HAND`, `ARMOR`, `INVENTORY`).
     * **Potions:** Speed, Night Vision, Jump Boost, etc.
     * **Attributes:** +Max Health, +Attack Damage, +Movement Speed, +Armor Toughness, etc.
-<br><br>
+---
 * **⚡ Active Abilities & Scripting:**
     * Trigger complex command chains with a **Right-Click**.
     * **Logic System:** Use prefixes like `[chance:50]`, `[delay:20]`, and `[else]` to create RNG-based mechanics.
     * **Actions:** Send messages, titles, play sounds, or execute console commands.
-<br><br>
+---
 * **🔄 Live Item Updates:** Change an item's damage, lore, or name in the config, and players' existing items will **automatically update** the moment they are used or clicked.
     * *Data Safety:* Custom Enchants, Anvil Names, and Usage Stats are **preserved** during updates.
-<br><br>
+---
 * **🔋 Usage Limits (Custom Durability):** Create items with a specific number of uses (independent of vanilla durability).
     * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
     * **Feedback:** Custom sounds and messages for depletion events.
-<br><br>
+---
 * **🆕 Item Set Bonuses:** Create RPG-style armor sets!
     * Combine specific items (Helmet, Chestplate, Sword, etc.) to unlock **Tiered Bonuses**.
     * **Example:** "Wear 2 pieces for Speed I, wear 4 pieces for +10 Health."
     * Manage sets entirely via the **In-Game GUI** (`/bi menu` -> Item Sets).
-<br><br>
+---
+* **🔨 Custom Crafting System:** 
+  * Create custom shaped recipes (3x3) for your items directly in-game.
+  * **Advanced Ingredients:** Supports Vanilla materials, other BuffedItems, and **Exact NBT** items (Base64).
+  * **Recipe Book:** Automatically registers your custom recipes to the vanilla green Recipe Book for easy crafting.
+---
 * **💎 Advanced Cost System:**
     * Set requirements for using items or upgrading them.
     * **Supports:** Money (Vault), CoinsEngine, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
-<br><br>
+---
 * **🆙 Upgrade Station:**
     * Allow players to evolve their items (e.g., *Rusty Sword* -> *Excalibur*).
     * Configure **Success Rates**, **Risk Factors** (Lose item on fail?), and **Failure Actions**.
-<br><br>
+---
 * **🚩 Item Flags & Protections**:
     * **PREVENT_DEATH_DROP (Soulbound):** Item stays with player on death.
     * **PREVENT_DROP:** Prevents dropping, storing in chests, or placing in item frames.
@@ -68,14 +73,14 @@
     * **PREVENT_ANVIL_USE / PREVENT_SMITHING_USE:** Restricts item usage in various crafting tables.
     * **PREVENT_CONSUME / PREVENT_INTERACT:** Blocks eating/drinking or general right-click actions.
     * and many more...
-<br><br>
+---
   
 * **🎨 Visuals & Customization:**
     * Full **HEX Color** support (`&#RRGGBB`).
     * **Custom Model Data** support for resource packs (ItemsAdder/Nexo friendly).
     * **Cooldown Visuals:** BossBar, ActionBar, and Title countdowns.
     * **PAPI Placeholders:** Placeholders are accepted everywhere.
-<br><br>
+---
 * 📚 For detailed guides on all features, visit the [BuffedItems Wiki](https://github.com/AltKat/BuffedItems/wiki).
 ***
 
@@ -147,15 +152,17 @@ The plugin operates on a **dynamic, event-driven** architecture designed for per
 
 The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 
-| Command                                | Permission                    | Description                                                             |
-|:---------------------------------------|:------------------------------|:------------------------------------------------------------------------|
-| `/bi menu`                             | `buffeditems.command.menu`    | Opens the main GUI editor to create, edit, and delete items.            |
-| `/bi upgrade`                          | `buffeditems.command.upgrade` | Opens the Item Upgrade Station.                                         |
-| `/bi give <player> <item_id> [amount]` | `buffeditems.command.give`    | Gives a player the specified custom item.                               |
-| `/bi reload`                           | `buffeditems.command.reload`  | Safely reloads `config.yml`, `items.yml`, and `upgrades.yml` from disk. |
-| `/bi list`                             | `buffeditems.command.list`    | Lists all created items and shows if any have configuration errors.     |
-| `/bi wiki`                             | `buffeditems.command.wiki`    | Opens wiki page.                                                        |
-| `/bi update`                           | `buffeditems.command.update`  | Checks for the latest update.                                           |
+| Command                                | Permission                    | Description                                                         |
+|:---------------------------------------|:------------------------------|:--------------------------------------------------------------------|
+| `/bi menu`                             | `buffeditems.command.menu`    | Opens the main GUI editor to create, edit, and delete items.        |
+| `/bi upgrade`                          | `buffeditems.command.upgrade` | Opens the Item Upgrade Station.                                     |
+| `/bi recipes`                          | `buffeditems.command.recipes` | Opens a menu showing all custom crafting recipes.                   |
+| `/bi sets`                             | `buffeditems.command.sets`    | Opens a menu listing all Item Sets and their bonuses.               |                                                                        |
+| `/bi give <player> <item_id> [amount]` | `buffeditems.command.give`    | Gives a player the specified custom item.                           |
+| `/bi reload`                           | `buffeditems.command.reload`  | Safely reloads all configuration files from disk.                   |
+| `/bi list`                             | `buffeditems.command.list`    | Lists all created items and shows if any have configuration errors. |
+| `/bi wiki`                             | `buffeditems.command.wiki`    | Opens wiki page.                                                    |
+| `/bi update`                           | `buffeditems.command.update`  | Checks for the latest update.                                       |
 
 **Admin Permission:**
 * `buffeditems.admin`: Grants access to all BuffedItems commands.
