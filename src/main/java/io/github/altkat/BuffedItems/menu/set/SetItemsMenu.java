@@ -27,6 +27,7 @@ public class SetItemsMenu extends PaginatedMenu {
         super(playerMenuUtility);
         this.plugin = plugin;
         this.setId = playerMenuUtility.getItemToEditId();
+        this.maxItemsPerPage = 36;
     }
 
     @Override
@@ -56,8 +57,8 @@ public class SetItemsMenu extends PaginatedMenu {
             return;
         }
 
-        if (e.getSlot() < 45) {
-            int index = maxItemsPerPage * page + e.getSlot();
+        if (e.getSlot() >= 9 && e.getSlot() < 45) {
+            int index = maxItemsPerPage * page + (e.getSlot() - 9);
             if (index >= items.size()) return;
 
             if (e.getClick() == ClickType.RIGHT) {
@@ -73,8 +74,11 @@ public class SetItemsMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
-        setFillerGlass();
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
         inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd Item", "§7Add a BuffedItem to this set."));
@@ -96,15 +100,15 @@ public class SetItemsMenu extends PaginatedMenu {
             }
 
             ItemMeta meta = icon.getItemMeta();
-            List<net.kyori.adventure.text.Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
-            lore.add(net.kyori.adventure.text.Component.empty());
+            List<Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
+            lore.add(Component.empty());
             lore.add(ConfigManager.fromSection("§7ID: §f" + itemId));
             lore.add(Component.empty());
             lore.add(ConfigManager.fromSection("§cRight-Click to Remove"));
             meta.lore(lore);
             icon.setItemMeta(meta);
 
-            inventory.setItem(i, icon);
+            inventory.setItem(9 + i, icon);
         }
     }
 }

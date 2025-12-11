@@ -28,6 +28,7 @@ public class RecipeListMenu extends PaginatedMenu {
     public RecipeListMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.maxItemsPerPage = 36;
     }
 
     @Override
@@ -73,8 +74,8 @@ public class RecipeListMenu extends PaginatedMenu {
             return;
         }
 
-        if (e.getSlot() < 45) {
-            int index = maxItemsPerPage * page + e.getSlot();
+        if (e.getSlot() >= 9 && e.getSlot() < 45) {
+            int index = maxItemsPerPage * page + (e.getSlot() - 9);
             if (index >= recipes.size()) return;
 
             CustomRecipe recipe = recipes.get(index);
@@ -95,8 +96,11 @@ public class RecipeListMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
-        setFillerGlass();
 
         boolean isEnabled = RecipesConfig.get().getBoolean("settings.register-to-book", true);
         String status = isEnabled ? "§aEnabled" : "§cDisabled";
@@ -170,7 +174,7 @@ public class RecipeListMenu extends PaginatedMenu {
 
             icon.setAmount(1);
 
-            inventory.setItem(i, icon);
+            inventory.setItem(9 + i, icon);
         }
     }
 

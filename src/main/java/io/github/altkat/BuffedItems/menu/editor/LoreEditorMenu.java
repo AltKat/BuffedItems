@@ -9,18 +9,19 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class LoreEditorMenu extends PaginatedMenu {
     private final BuffedItems plugin;
-    private final int maxLinesPerPage = 36;
     private final int MAX_TOTAL_LORE_LINES = 100;
 
     public LoreEditorMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.maxItemsPerPage = 36;
     }
 
     @Override
@@ -37,109 +38,109 @@ public class LoreEditorMenu extends PaginatedMenu {
     public void handleMenu(InventoryClickEvent e) {
         Player p = (Player) e.getWhoClicked();
         BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
+
+        if (item == null) {
+            new ItemListMenu(playerMenuUtility, plugin).open();
+            return;
+        }
+
         List<String> lore = new ArrayList<>(item.getLore());
 
         if (handlePageChange(e, lore.size())) return;
 
         if (e.getCurrentItem() == null) return;
 
-        switch (e.getCurrentItem().getType()) {
-            case BARRIER:
-                new ItemEditorMenu(playerMenuUtility, plugin).open();
-                break;
-            case ANVIL:
-                if (lore.size() >= MAX_TOTAL_LORE_LINES) {
-                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
-                    p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-                    return;
-                }
+        if (e.getSlot() == 53) {
+            new ItemEditorMenu(playerMenuUtility, plugin).open();
+            return;
+        }
+
+        if (e.getSlot() == 49) {
+            if (lore.size() >= MAX_TOTAL_LORE_LINES) {
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
+                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                return;
+            }
+            playerMenuUtility.setWaitingForChatInput(true);
+            playerMenuUtility.setChatInputPath("lore.add");
+            p.closeInventory();
+            p.sendMessage(ConfigManager.fromLegacyWithPrefix("§aPlease type the new lore line in chat. Use '&' for color codes."));
+            p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            return;
+        }
+
+        if (e.getSlot() == 51) {
+            if (lore.size() >= MAX_TOTAL_LORE_LINES) {
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
+                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                return;
+            }
+            lore.add("");
+            ConfigManager.setItemValue(item.getId(), "lore", lore);
+            this.open();
+            return;
+        }
+
+        if (e.getSlot() >= 9 && e.getSlot() < 45) {
+            int slotIndex = e.getSlot() - 9;
+            int loreIndex = maxItemsPerPage * page + slotIndex;
+
+            if (loreIndex >= lore.size()) return;
+
+            if (e.isLeftClick()) {
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("lore.add");
+                playerMenuUtility.setChatInputPath("lore." + loreIndex);
                 p.closeInventory();
-                p.sendMessage(ConfigManager.fromLegacyWithPrefix("§aPlease type the new lore line in chat. Use '&' for color codes.  &7[ &#E12B5DH&#E12B5De&#E12B5Dx &#E12B5Dc&#E12B5Do&#DD3266l&#D83870o&#D43F79r&#D04583s &#C75295s&#C3599Fu&#BF5FA8p&#BB66B2p&#B66CBBo&#B273C4r&#AE79CEt&#AA80D7e&#A586E1d&#A18DEA! &7]"));
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the edited lore line in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
-                break;
-            case PAPER:
-                if (lore.size() >= MAX_TOTAL_LORE_LINES) {
-                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: You cannot add more than " + MAX_TOTAL_LORE_LINES + " lines of lore."));
-                    p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-                    return;
-                }
-                lore.add("");
+            } else if (e.isRightClick()) {
+                lore.remove(loreIndex);
                 ConfigManager.setItemValue(item.getId(), "lore", lore);
                 this.open();
-                break;
-            case BOOK:
-                int slotIndex = e.getSlot();
-                int loreIndex = maxLinesPerPage * page + slotIndex;
-
-                if (loreIndex >= lore.size()) return;
-
-                if (e.isLeftClick()) {
-                    playerMenuUtility.setWaitingForChatInput(true);
-                    playerMenuUtility.setChatInputPath("lore." + loreIndex);
-                    p.closeInventory();
-                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the edited lore line in chat."));
-                    p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
-                } else if (e.isRightClick()) {
-                    lore.remove(loreIndex);
-                    ConfigManager.setItemValue(item.getId(), "lore", lore);
-                    this.open();
-                }
-                break;
+            }
         }
     }
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
 
-        BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
-        List<String> lore = item.getLore();
+        inventory.setItem(49, makeItem(Material.ANVIL, "§bAdd New Line (Chat)", "§7Click to add a new line of text via chat."));
+        inventory.setItem(51, makeItem(Material.PAPER, "§eAdd Blank Line", "§7Click to insert an empty line."));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
 
+        BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
         if (item == null) {
             new ItemListMenu(playerMenuUtility, plugin).open();
             return;
         }
-        addMenuControls();
+
+        List<String> lore = item.getLore();
 
         if (!lore.isEmpty()) {
-            for (int i = 0; i < maxLinesPerPage; i++) {
-                int index = maxLinesPerPage * page + i;
+            for (int i = 0; i < maxItemsPerPage; i++) {
+                int index = maxItemsPerPage * page + i;
                 if (index >= lore.size()) break;
 
                 String line = lore.get(index);
-
                 String formattedLine = ConfigManager.toSection(ConfigManager.fromLegacy(line));
-
-
                 String displayName = line.isEmpty() ? "§7(Empty Line)" : formattedLine;
 
                 List<String> itemLore = new ArrayList<>();
-
                 if (line.isEmpty()) {
                     itemLore.add("§8(This is a blank line)");
                 }
-
                 itemLore.add(" ");
                 itemLore.add("§aLeft-Click to Edit");
                 itemLore.add("§cRight-Click to Delete");
                 itemLore.add("§8(Line " + (index + 1) + ")");
 
-                inventory.setItem(i, makeItem(Material.BOOK, displayName, itemLore.toArray(new String[0])));
+                inventory.setItem(9 + i, makeItem(Material.BOOK, displayName, itemLore.toArray(new String[0])));
             }
         }
-    }
-    @Override
-    public void addMenuControls() {
-
-        inventory.setItem(45, makeItem(Material.ARROW, "§aPrevious Page"));
-        inventory.setItem(53, makeItem(Material.ARROW, "§aNext Page"));
-
-        inventory.setItem(48, makeItem(Material.PAPER, "§bAdd Blank Line", "§7Click to add an empty line."));
-        inventory.setItem(49, makeItem(Material.ANVIL, "§bAdd New Line (Chat)", "§7Click to add a new line of text."));
-
-
-        inventory.setItem(52, makeItem(Material.BARRIER, "§cBack"));
     }
 }

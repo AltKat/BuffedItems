@@ -8,6 +8,7 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class CommandListMenu extends PaginatedMenu {
         this.plugin = plugin;
         this.itemId = playerMenuUtility.getItemToEditId();
         this.context = context;
+        this.maxItemsPerPage = 36;
     }
 
     @Override
@@ -107,7 +109,7 @@ public class CommandListMenu extends PaginatedMenu {
             return;
         }
 
-        if (e.getSlot() < 45 && e.getSlot() >= 9) {
+        if (e.getSlot() >= 9 && e.getSlot() < 45) {
             int slotIndex = e.getSlot() - 9;
             int commandIndex = maxItemsPerPage * page + slotIndex;
 
@@ -130,6 +132,10 @@ public class CommandListMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Settings"));
@@ -203,10 +209,9 @@ public class CommandListMenu extends PaginatedMenu {
                 formattedLore.add("§eLeft-Click to Edit");
                 formattedLore.add("§cRight-Click to Remove");
 
-                inventory.setItem(i + 9, makeItem(icon, title, formattedLore.toArray(new String[0])));
+                inventory.setItem(9 + i, makeItem(icon, title, formattedLore.toArray(new String[0])));
             }
         }
-        setFillerGlass();
     }
 
     private List<String> formatCommandForDisplay(String rawCmd) {

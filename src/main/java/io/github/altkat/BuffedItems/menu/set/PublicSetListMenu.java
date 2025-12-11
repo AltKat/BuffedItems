@@ -27,11 +27,12 @@ public class PublicSetListMenu extends PaginatedMenu {
     public PublicSetListMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.maxItemsPerPage = 36;
     }
 
     @Override
     public String getMenuName() {
-        return "Item Sets";
+        return "Item Sets (Page " + (page + 1) + ")";
     }
 
     @Override
@@ -51,8 +52,11 @@ public class PublicSetListMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
-        setFillerGlass();
 
         inventory.setItem(49, makeItem(Material.BARRIER, "§cClose Menu"));
 
@@ -63,7 +67,7 @@ public class PublicSetListMenu extends PaginatedMenu {
             if (index >= sets.size()) break;
 
             BuffedSet set = sets.get(index);
-            inventory.setItem(i, createSetIcon(set));
+            inventory.setItem(9 + i, createSetIcon(set));
         }
     }
 
