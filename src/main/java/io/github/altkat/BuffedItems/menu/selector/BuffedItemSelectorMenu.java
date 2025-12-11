@@ -22,8 +22,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.awt.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class BuffedItemSelectorMenu extends PaginatedMenu {
@@ -48,6 +48,8 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         this.plugin = plugin;
         this.context = context;
         this.items = new ArrayList<>(plugin.getItemManager().getLoadedItems().values());
+        this.items.sort(Comparator.comparing(BuffedItem::getId));
+        this.maxItemsPerPage = 36;
     }
 
     @Override
@@ -77,8 +79,8 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
             return;
         }
 
-        if (e.getSlot() < 45) {
-            int index = maxItemsPerPage * page + e.getSlot();
+        if (e.getSlot() >= 9 && e.getSlot() < 45) {
+            int index = maxItemsPerPage * page + (e.getSlot() - 9);
             if (index >= items.size()) return;
 
             BuffedItem selectedItem = items.get(index);
@@ -239,6 +241,10 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
 
         inventory.setItem(49, makeItem(Material.PAPER, "§eManual Input", "§7Click to type ID in chat manually."));
@@ -265,7 +271,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 stack.setItemMeta(meta);
             }
 
-            inventory.setItem(i, stack);
+            inventory.setItem(9 + i, stack);
         }
     }
 }

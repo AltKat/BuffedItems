@@ -158,5 +158,6 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             ItemStack itemStack = new ItemStack(currentMaterial);
             inventory.setItem(i, itemStack);
         }
+        setFillerGlass();
     }
 }

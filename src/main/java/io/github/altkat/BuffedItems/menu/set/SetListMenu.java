@@ -12,6 +12,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,6 +25,7 @@ public class SetListMenu extends PaginatedMenu {
     public SetListMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.maxItemsPerPage = 36;
     }
 
     @Override
@@ -58,8 +60,8 @@ public class SetListMenu extends PaginatedMenu {
             return;
         }
 
-        if (e.getSlot() < 45) {
-            int index = maxItemsPerPage * page + e.getSlot();
+        if (e.getSlot() >= 9 && e.getSlot() < 45) {
+            int index = maxItemsPerPage * page + (e.getSlot() - 9);
             if (index >= sets.size()) return;
 
             BuffedSet set = sets.get(index);
@@ -82,8 +84,11 @@ public class SetListMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
-        setFillerGlass();
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Main Menu"));
         inventory.setItem(49, makeItem(Material.ANVIL, "§aCreate New Set", "§7Click to create a new item set."));
@@ -122,7 +127,7 @@ public class SetListMenu extends PaginatedMenu {
             lore.add("§eLeft-Click to Edit");
             lore.add("§cRight-Click to Delete");
 
-            inventory.setItem(i, makeItem(iconMat, "§6" + set.getId(), lore.toArray(new String[0])));
+            inventory.setItem(9 + i, makeItem(iconMat, "§6" + set.getId(), lore.toArray(new String[0])));
         }
     }
 

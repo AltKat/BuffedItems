@@ -11,7 +11,6 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -21,18 +20,19 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class RecipeBrowserMenu extends PaginatedMenu {
+public class UpgradeRecipeBrowserMenu extends PaginatedMenu {
 
     private final BuffedItems plugin;
 
-    public RecipeBrowserMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
+    public UpgradeRecipeBrowserMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        this.maxItemsPerPage = 36;
     }
 
     @Override
     public String getMenuName() {
-        return "Available Upgrades";
+        return "Available Upgrades (Page " + (page + 1) + ")";
     }
 
     @Override
@@ -51,16 +51,15 @@ public class RecipeBrowserMenu extends PaginatedMenu {
             new UpgradeMenu(playerMenuUtility, plugin).open();
             return;
         }
-
-        if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.BLACK_STAINED_GLASS_PANE) {
-            playerMenuUtility.getOwner().playSound(playerMenuUtility.getOwner().getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-        }
     }
 
     @Override
     public void setMenuItems() {
+        ItemStack filler = makeItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inventory.setItem(i, filler);
+        for (int i = 45; i < 54; i++) inventory.setItem(i, filler);
+
         addMenuControls();
-        setFillerGlass();
 
         inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Station"));
 
@@ -71,7 +70,7 @@ public class RecipeBrowserMenu extends PaginatedMenu {
             if (index >= recipes.size()) break;
 
             UpgradeRecipe recipe = recipes.get(index);
-            inventory.setItem(i, createRecipeIcon(recipe));
+            inventory.setItem(9 + i, createRecipeIcon(recipe));
         }
     }
 

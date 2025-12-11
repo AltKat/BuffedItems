@@ -100,7 +100,7 @@ public class UpgradeMenu extends Menu {
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             }
             else if (e.getSlot() == 22 && e.getCurrentItem().getType() == Material.BOOK) {
-                new RecipeBrowserMenu(playerMenuUtility, plugin).open();
+                new UpgradeRecipeBrowserMenu(playerMenuUtility, plugin).open();
                 return;
             }
         }

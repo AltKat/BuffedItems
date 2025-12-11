@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -148,9 +149,13 @@ public class ItemBuilder {
             if (!hasAnyAttribute) {
                 Attribute dummyAttr = Attribute.GENERIC_LUCK;
                 for (EquipmentSlot slot : VALID_SLOTS) {
+                    UUID dummyUUID = UUID.nameUUIDFromBytes(
+                            ("buffeditems.dummy.static." + buffedItem.getId() + "." + slot.name()).getBytes(StandardCharsets.UTF_8)
+                    );
+
                     AttributeModifier dummyMod = new AttributeModifier(
-                            UUID.randomUUID(),
-                            "buffeditems.dummy.static." + slot.name(),
+                            dummyUUID,
+                            "buffeditems.dummy." + slot.name(),
                             0,
                             AttributeModifier.Operation.ADD_NUMBER,
                             slot
@@ -163,8 +168,12 @@ public class ItemBuilder {
         } else {
             Attribute dummyAttr = Attribute.GENERIC_LUCK;
             for (EquipmentSlot slot : VALID_SLOTS) {
+                UUID dummyUUID = UUID.nameUUIDFromBytes(
+                        ("buffeditems.dummy.dynamic." + buffedItem.getId() + "." + slot.name()).getBytes(StandardCharsets.UTF_8)
+                );
+
                 AttributeModifier dummyMod = new AttributeModifier(
-                        UUID.randomUUID(),
+                        dummyUUID,
                         "buffeditems.dummy." + slot.name(),
                         0,
                         AttributeModifier.Operation.ADD_NUMBER,

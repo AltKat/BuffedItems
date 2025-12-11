@@ -61,6 +61,7 @@ public class ItemInteractListener implements Listener {
             return;
         }
 
+        // Live Update Check
         ItemStack updatedItem = plugin.getItemUpdater().updateItem(item, player);
 
         if (updatedItem != null && !updatedItem.isSimilar(item)) {
@@ -69,8 +70,7 @@ public class ItemInteractListener implements Listener {
             } else {
                 player.getInventory().setItemInOffHand(updatedItem);
             }
-            item = updatedItem;
-
+            item = updatedItem; // Update reference
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Item updated in hand.");
         }
 
@@ -111,7 +111,7 @@ public class ItemInteractListener implements Listener {
             }
         }
 
-
+        // Cost Checks
         List<ICost> costs = buffedItem.getCosts();
         if (costs != null && !costs.isEmpty()) {
             List<String> missingRequirements = new ArrayList<>();
@@ -126,14 +126,13 @@ public class ItemInteractListener implements Listener {
                 for (String msg : missingRequirements) {
                     player.sendMessage(ConfigManager.fromLegacy(msg));
                 }
-
                 playConfiguredSound(player, buffedItem.getCustomCostFailSound(), ConfigManager.getGlobalCostFailSound());
-
                 event.setCancelled(true);
                 return;
             }
         }
 
+        // Deduct Costs
         if (costs != null && !costs.isEmpty()) {
             for (ICost cost : costs) {
                 cost.deduct(player);
@@ -152,59 +151,20 @@ public class ItemInteractListener implements Listener {
 
         if (currentUses != null && currentUses > 0) {
             int newUses = currentUses - 1;
-            ItemStack itemToUpdate;
-            boolean isStackSplit = false;
-
-            if (item.getAmount() > 1) {
-                item.setAmount(item.getAmount() - 1);
-                itemToUpdate = item.clone();
-                itemToUpdate.setAmount(1);
-                isStackSplit = true;
-            } else {
-                itemToUpdate = item;
-            }
-
-            ItemMeta meta = itemToUpdate.getItemMeta();
-            meta.getPersistentDataContainer().set(durabilityKey, PersistentDataType.INTEGER, newUses);
-
-            List<Component> lore = meta.lore();
-            if (lore != null) {
-                String rawExpectedLine = buffedItem.getUsageLore(currentUses);
-                String parsedExpectedLine = hooks.processPlaceholders(player, rawExpectedLine);
-                String cleanOldLine = ConfigManager.toPlainText(ConfigManager.fromLegacy(parsedExpectedLine));
-
-                for (int i = 0; i < lore.size(); i++) {
-                    String cleanCurrentLine = ConfigManager.toPlainText(lore.get(i));
-
-                    if (cleanCurrentLine.equals(cleanOldLine)) {
-                        if (newUses > 0) {
-                            String rawNewLine = buffedItem.getUsageLore(newUses);
-                            String parsedNewLine = hooks.processPlaceholders(player, rawNewLine);
-                            lore.set(i, ConfigManager.fromLegacy(parsedNewLine));
-                        } else {
-                            String rawBrokenLore = buffedItem.getDepletedLore();
-                            String parsedBrokenLore = hooks.processPlaceholders(player, rawBrokenLore);
-                            lore.set(i, ConfigManager.fromLegacy(parsedBrokenLore));
-                        }
-                        break;
-                    }
-                }
-                meta.lore(lore);
-            }
-            itemToUpdate.setItemMeta(meta);
 
             if (newUses == 0) {
-                handleDepletion(player, buffedItem, itemToUpdate, isStackSplit);
-                return;
-            }
-
-            if (isStackSplit) {
-                giveItemToPlayer(player, itemToUpdate);
+                handleDepletion(player, buffedItem, item, event.getHand());
             } else {
-                if (event.getHand() == EquipmentSlot.HAND) {
-                    player.getInventory().setItemInMainHand(itemToUpdate);
+                if (item.getAmount() > 1) {
+                    item.setAmount(item.getAmount() - 1);
+
+                    ItemStack processedItem = item.clone();
+                    processedItem.setAmount(1);
+                    updateUsesNBT(processedItem, newUses, buffedItem, player);
+
+                    giveItemToPlayer(player, processedItem);
                 } else {
-                    player.getInventory().setItemInOffHand(itemToUpdate);
+                    updateUsesNBT(item, newUses, buffedItem, player);
                 }
             }
         }
@@ -212,7 +172,19 @@ public class ItemInteractListener implements Listener {
         event.setCancelled(true);
     }
 
-    private void handleDepletion(Player player, BuffedItem buffedItem, ItemStack itemToUpdate, boolean isStackSplit) {
+    private void updateUsesNBT(ItemStack item, int uses, BuffedItem buffedItem, Player player) {
+        ItemMeta meta = item.getItemMeta();
+        NamespacedKey durabilityKey = new NamespacedKey(plugin, "remaining_active_uses");
+        meta.getPersistentDataContainer().set(durabilityKey, PersistentDataType.INTEGER, uses);
+        item.setItemMeta(meta);
+
+        ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+        if (updated != null) {
+            item.setItemMeta(updated.getItemMeta());
+        }
+    }
+
+    private void handleDepletion(Player player, BuffedItem buffedItem, ItemStack originalItem, EquipmentSlot hand) {
         String rawDepleteMsg = buffedItem.getDepletionNotification();
         String parsedDepleteMsg = hooks.processPlaceholders(player, rawDepleteMsg);
         player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepleteMsg));
@@ -226,62 +198,93 @@ public class ItemInteractListener implements Listener {
         DepletionAction action = buffedItem.getDepletionAction();
 
         if (action == DepletionAction.DESTROY) {
-            if (!isStackSplit) {
-                itemToUpdate.setAmount(0);
+            if (originalItem.getAmount() > 1) {
+                originalItem.setAmount(originalItem.getAmount() - 1);
+            } else {
+                originalItem.setAmount(0);
+                if (hand == EquipmentSlot.HAND) {
+                    player.getInventory().setItemInMainHand(null);
+                } else {
+                    player.getInventory().setItemInOffHand(null);
+                }
             }
         }
         else if (action == DepletionAction.TRANSFORM) {
-            performTransformation(player, buffedItem, itemToUpdate, isStackSplit);
+            if (originalItem.getAmount() > 1) {
+                originalItem.setAmount(originalItem.getAmount() - 1);
+                giveTransformedItem(player, buffedItem);
+            } else {
+                setTransformedItemInHand(player, buffedItem, hand);
+            }
         }
         else {
-            if (isStackSplit) {
-                giveItemToPlayer(player, itemToUpdate);
+            if (originalItem.getAmount() > 1) {
+                originalItem.setAmount(originalItem.getAmount() - 1);
+
+                ItemStack disabledItem = originalItem.clone();
+                disabledItem.setAmount(1);
+                updateUsesNBT(disabledItem, 0, buffedItem, player);
+                giveItemToPlayer(player, disabledItem);
+            } else {
+                updateUsesNBT(originalItem, 0, buffedItem, player);
             }
         }
     }
 
-    private void performTransformation(Player player, BuffedItem buffedItem, ItemStack originalDepletedItem, boolean isStackSplit) {
+    private void setTransformedItemInHand(Player player, BuffedItem buffedItem, EquipmentSlot hand) {
         String targetId = buffedItem.getDepletionTransformId();
-        ItemStack resultItem = null;
 
-        if (targetId != null) {
-            BuffedItem targetItem = plugin.getItemManager().getBuffedItem(targetId);
-            if (targetItem != null) {
-                resultItem = new ItemBuilder(targetItem, plugin).build();
-
-                ItemMeta newMeta = resultItem.getItemMeta();
-                if (newMeta != null) {
-                    if (newMeta.hasDisplayName()) {
-                        String rawName = ConfigManager.toSection(newMeta.displayName());
-                        newMeta.displayName(ConfigManager.fromSection(hooks.processPlaceholders(player, rawName)));
-                    }
-                    if (newMeta.hasLore()) {
-                        List<Component> parsedLore = new ArrayList<>();
-                        for (Component line : newMeta.lore()) {
-                            String rawLine = ConfigManager.toSection(line);
-                            parsedLore.add(ConfigManager.fromSection(hooks.processPlaceholders(player, rawLine)));
-                        }
-                        newMeta.lore(parsedLore);
-                    }
-                    resultItem.setItemMeta(newMeta);
-                }
-                player.sendMessage(ConfigManager.fromLegacyWithPrefix("&aItem transformed!"));
-            } else {
-                plugin.getLogger().warning("[BuffedItems] Transform failed. Target '" + targetId + "' not found.");
-            }
+        if (targetId == null) {
+            if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(null);
+            else player.getInventory().setItemInOffHand(null);
+            return;
         }
 
-        if (resultItem != null) {
-            if (!isStackSplit) {
-                player.getInventory().setItemInMainHand(resultItem);
-            } else {
-                giveItemToPlayer(player, resultItem);
-            }
+        BuffedItem targetItem = plugin.getItemManager().getBuffedItem(targetId);
+        if (targetItem != null) {
+            ItemStack resultItem = new ItemBuilder(targetItem, plugin).build();
+            processMetaPlaceholders(player, resultItem);
+
+            if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(resultItem);
+            else player.getInventory().setItemInOffHand(resultItem);
+
+            player.sendMessage(ConfigManager.fromLegacyWithPrefix("&aItem transformed!"));
         } else {
-            player.sendMessage(ConfigManager.fromLegacyWithPrefix("&cTransform failed. Item depleted. Contact an admin!"));
-            if (isStackSplit) {
-                giveItemToPlayer(player, originalDepletedItem);
+            plugin.getLogger().warning("[BuffedItems] Transform failed. Target '" + targetId + "' not found.");
+            if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(null);
+            else player.getInventory().setItemInOffHand(null);
+        }
+    }
+
+    private void giveTransformedItem(Player player, BuffedItem buffedItem) {
+        String targetId = buffedItem.getDepletionTransformId();
+        if (targetId == null) return;
+
+        BuffedItem targetItem = plugin.getItemManager().getBuffedItem(targetId);
+        if (targetItem != null) {
+            ItemStack resultItem = new ItemBuilder(targetItem, plugin).build();
+            processMetaPlaceholders(player, resultItem);
+            giveItemToPlayer(player, resultItem);
+            player.sendMessage(ConfigManager.fromLegacyWithPrefix("&aItem transformed!"));
+        }
+    }
+
+    private void processMetaPlaceholders(Player player, ItemStack item) {
+        ItemMeta newMeta = item.getItemMeta();
+        if (newMeta != null) {
+            if (newMeta.hasDisplayName()) {
+                String rawName = ConfigManager.toSection(newMeta.displayName());
+                newMeta.displayName(ConfigManager.fromSection(hooks.processPlaceholders(player, rawName)));
             }
+            if (newMeta.hasLore()) {
+                List<Component> parsedLore = new ArrayList<>();
+                for (Component line : newMeta.lore()) {
+                    String rawLine = ConfigManager.toSection(line);
+                    parsedLore.add(ConfigManager.fromSection(hooks.processPlaceholders(player, rawLine)));
+                }
+                newMeta.lore(parsedLore);
+            }
+            item.setItemMeta(newMeta);
         }
     }
 
@@ -423,10 +426,6 @@ public class ItemInteractListener implements Listener {
         }
     }
 
-    /**
-     * Helper for processing sub-commands (split by ;;) recursively or linearly.
-     * This handles nested [delay] tags inside a chain string.
-     */
     private void processSubCommand(Player player, String commandPart, long delayOffset, boolean inheritedConsole) {
         String cmdToProcess = commandPart.trim();
         long localDelay = 0;
