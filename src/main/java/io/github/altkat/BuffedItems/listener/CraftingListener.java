@@ -32,7 +32,7 @@ public class CraftingListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareCraft(PrepareItemCraftEvent e) {
         if (e.getView().getPlayer() != null && isCrafting.contains(e.getView().getPlayer().getUniqueId())) {
             return;
