@@ -153,20 +153,6 @@ public class InventoryListener implements Listener {
         scheduleInventoryCheckWithDebounce(player);
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player player) {
-            ItemStack item = player.getInventory().getItemInMainHand();
-
-            if (isBuffedItem(item)) {
-                ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
-                if (updated != null && !updated.isSimilar(item)) {
-                    player.getInventory().setItemInMainHand(updated);
-                }
-            }
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemBreak(PlayerItemBreakEvent e) {
         if (isBuffedItem(e.getBrokenItem())) {
