@@ -2,27 +2,21 @@ package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
+import io.github.altkat.BuffedItems.utility.ItemUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static io.github.altkat.BuffedItems.utility.item.ItemBuilder.VALID_SLOTS;
 
 public class ItemUpdater {
 
@@ -145,75 +139,14 @@ public class ItemUpdater {
         // 5. Unbreakable
         meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
 
+        meta.removeItemFlags(ItemFlag.values());
+
         // 6. Attributes
-        meta.setAttributeModifiers(null);
-        boolean forceHideAttributes = false;
-
-        if (template.getAttributeMode() == BuffedItem.AttributeMode.STATIC) {
-            boolean hasAnyAttribute = false;
-
-            for (Map.Entry<String, BuffedItemEffect> effectEntry : template.getEffects().entrySet()) {
-                String slotKey = effectEntry.getKey().toUpperCase();
-                BuffedItemEffect itemEffect = effectEntry.getValue();
-                EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
-
-                if (equipmentSlot != null) {
-                    for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
-                        AttributeModifier modifier = new AttributeModifier(
-                                parsedAttr.getUuid(),
-                                "buffeditems." + template.getId() + "." + slotKey,
-                                parsedAttr.getAmount(),
-                                parsedAttr.getOperation(),
-                                equipmentSlot
-                        );
-                        meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
-                        hasAnyAttribute = true;
-                    }
-                }
-            }
-
-            if (!hasAnyAttribute) {
-                Attribute dummyAttr = Attribute.GENERIC_LUCK;
-                for (EquipmentSlot slot : VALID_SLOTS) {
-                    UUID dummyUUID = UUID.nameUUIDFromBytes(
-                            ("buffeditems.dummy.static." + template.getId() + "." + slot.name()).getBytes(StandardCharsets.UTF_8)
-                    );
-
-                    AttributeModifier dummyMod = new AttributeModifier(
-                            dummyUUID,
-                            "buffeditems.dummy." + slot.name(),
-                            0,
-                            AttributeModifier.Operation.ADD_NUMBER,
-                            slot
-                    );
-                    meta.addAttributeModifier(dummyAttr, dummyMod);
-                }
-                forceHideAttributes = true;
-            }
-
-        } else {
-            Attribute dummyAttr = Attribute.GENERIC_LUCK;
-            for (EquipmentSlot slot : VALID_SLOTS) {
-                UUID dummyUUID = UUID.nameUUIDFromBytes(
-                        ("buffeditems.dummy.dynamic." + template.getId() + "." + slot.name()).getBytes(StandardCharsets.UTF_8)
-                );
-
-                AttributeModifier dummyMod = new AttributeModifier(
-                        dummyUUID,
-                        "buffeditems.dummy." + slot.name(),
-                        0,
-                        AttributeModifier.Operation.ADD_NUMBER,
-                        slot
-                );
-                meta.addAttributeModifier(dummyAttr, dummyMod);
-            }
-            forceHideAttributes = true;
-        }
+        ItemUtils.applyAttributes(template, meta);
 
         // 7. Flags
-        meta.removeItemFlags(ItemFlag.values());
         if (template.getFlag("HIDE_ENCHANTS")) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        if (template.getFlag("HIDE_ATTRIBUTES") || forceHideAttributes) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        if (template.getFlag("HIDE_ATTRIBUTES")) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         if (template.getFlag("HIDE_UNBREAKABLE")) meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         if (template.getFlag("HIDE_DESTROYS")) meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
         if (template.getFlag("HIDE_PLACED_ON")) meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
@@ -241,17 +174,5 @@ public class ItemUpdater {
                                 : "NOT_SET"));
 
         return newItem;
-    }
-
-    private EquipmentSlot getEquipmentSlot(String slot) {
-        switch (slot.toUpperCase()) {
-            case "MAIN_HAND": return EquipmentSlot.HAND;
-            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
-            case "HELMET": return EquipmentSlot.HEAD;
-            case "CHESTPLATE": return EquipmentSlot.CHEST;
-            case "LEGGINGS": return EquipmentSlot.LEGS;
-            case "BOOTS": return EquipmentSlot.FEET;
-            default: return null;
-        }
     }
 }
