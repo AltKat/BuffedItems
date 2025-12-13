@@ -55,6 +55,8 @@ public class BuffedItem {
     private final List<ICost> costs;
     public enum AttributeMode { STATIC, DYNAMIC }
     private final AttributeMode attributeMode;
+    private final int updateHash;
+    private final boolean hasPlaceholders;
 
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
@@ -71,7 +73,7 @@ public class BuffedItem {
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
                       String customCooldownSound, String customCostFailSound, String customDepletionSound, String customDepletedTrySound,
-                      DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, AttributeMode attributeMode, List<ICost> costs) {
+                      DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, AttributeMode attributeMode, List<ICost> costs, int updateHash, boolean hasPlaceholders) {
         this.id = id;
         this.displayName = displayName;
         this.lore = lore;
@@ -116,6 +118,8 @@ public class BuffedItem {
         this.depletionCommands = (depletionCommands != null) ? depletionCommands : new ArrayList<>();
         this.attributeMode = attributeMode;
         this.costs = (costs != null) ? costs : new ArrayList<>();
+        this.updateHash = updateHash;
+        this.hasPlaceholders = hasPlaceholders;
     }
 
 
@@ -289,6 +293,12 @@ public class BuffedItem {
     }
     public List<ICost> getCosts() {
         return costs;
+    }
+    public int getUpdateHash() {
+        return updateHash;
+    }
+    public boolean hasPlaceholders() {
+        return hasPlaceholders;
     }
 
     public void setCachedItem(ItemStack cachedItem) {

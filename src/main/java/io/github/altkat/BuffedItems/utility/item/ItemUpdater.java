@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.github.altkat.BuffedItems.utility.item.ItemBuilder.VALID_SLOTS;
 
@@ -28,21 +29,43 @@ public class ItemUpdater {
     private final BuffedItems plugin;
     private final NamespacedKey idKey;
     private final NamespacedKey usesKey;
+    private final NamespacedKey versionKey;
+    private final Map<UUID, Map<String, Long>> updateCooldowns = new ConcurrentHashMap<>();
 
     public ItemUpdater(BuffedItems plugin) {
         this.plugin = plugin;
         this.idKey = new NamespacedKey(plugin, "buffeditem_id");
         this.usesKey = new NamespacedKey(plugin, "remaining_active_uses");
+        this.versionKey = new NamespacedKey(plugin, "buffeditem_version");
     }
 
     public ItemStack updateItem(ItemStack oldItem, Player player) {
         if (oldItem == null || !oldItem.hasItemMeta()) return null;
 
-        String itemId = oldItem.getItemMeta().getPersistentDataContainer().get(idKey, PersistentDataType.STRING);
+        ItemMeta oldMeta = oldItem.getItemMeta();
+        String itemId = oldMeta.getPersistentDataContainer().get(idKey, PersistentDataType.STRING);
         if (itemId == null) return null;
 
         BuffedItem template = plugin.getItemManager().getBuffedItem(itemId);
         if (template == null) return null;
+
+        if (template.hasPlaceholders()) {
+            long now = System.currentTimeMillis();
+            Map<String, Long> playerCooldowns = updateCooldowns.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
+            long lastUpdate = playerCooldowns.getOrDefault(itemId, 0L);
+
+            if (now - lastUpdate < 3000) {
+                return null;
+            }
+
+            playerCooldowns.put(itemId, now);
+        }else {
+            Integer currentHash = oldMeta.getPersistentDataContainer().get(versionKey, PersistentDataType.INTEGER);
+
+            if (currentHash != null && currentHash == template.getUpdateHash()) {
+                return null;
+            }
+        }
 
         ItemStack newItem = oldItem.clone();
 
@@ -54,13 +77,17 @@ public class ItemUpdater {
 
         // 1. Display Name Update
         String rawName = template.getDisplayName();
-        String parsedName = plugin.getHookManager().processPlaceholders(player, rawName);
+        String parsedName = template.hasPlaceholders()
+                ? plugin.getHookManager().processPlaceholders(player, rawName)
+                : rawName;
         meta.displayName(ConfigManager.fromLegacy(parsedName));
 
         // 2. Base Lore Update
         List<Component> baseLore = new ArrayList<>();
         for (String line : template.getLore()) {
-            String parsedLine = plugin.getHookManager().processPlaceholders(player, line);
+            String parsedLine = template.hasPlaceholders()
+                    ? plugin.getHookManager().processPlaceholders(player, line)
+                    : line;
             baseLore.add(ConfigManager.fromLegacy(parsedLine));
         }
 
@@ -76,7 +103,9 @@ public class ItemUpdater {
                     ? template.getUsageLore(currentUses)
                     : template.getDepletedLore();
 
-            String parsedUsageLine = plugin.getHookManager().processPlaceholders(player, usageLineRaw);
+            String parsedUsageLine = template.hasPlaceholders()
+                    ? plugin.getHookManager().processPlaceholders(player, usageLineRaw)
+                    : usageLineRaw;
             baseLore.add(ConfigManager.fromLegacy(parsedUsageLine));
         } else {
             meta.getPersistentDataContainer().remove(usesKey);
@@ -178,6 +207,8 @@ public class ItemUpdater {
             meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
+
+        meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, template.getUpdateHash());
 
         newItem.setItemMeta(meta);
         return newItem;

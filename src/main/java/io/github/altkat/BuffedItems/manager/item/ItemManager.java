@@ -198,6 +198,8 @@ public class ItemManager {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
         }
 
+        int passiveEffectsHash = 0;
+
         Map<String, BuffedItemEffect> effects = new HashMap<>();
         ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
 
@@ -268,6 +270,8 @@ public class ItemManager {
                 }
 
                 effects.put(slot.toUpperCase(), new BuffedItemEffect(potionEffects, parsedAttributes));
+
+                passiveEffectsHash = Objects.hash(passiveEffectsHash, slot, potionEffectStrings, originalAttributeStrings);
             }
         }
 
@@ -546,6 +550,24 @@ public class ItemManager {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is set to DYNAMIC attribute mode.");
         }
 
+        boolean hasPlaceholders = (displayName + lore.toString()).contains("%");
+
+        int updateHash = Objects.hash(
+                displayName,
+                lore,
+                material,
+                glow,
+                customModelData,
+                flags,
+                enchantments,
+                attributeMode,
+                passiveEffectsHash,
+                activeMode,
+                maxUses,
+                durabilityLore,
+                depletedLore
+        );
+
         BuffedItem finalBuffedItem = new BuffedItem(
                 itemId,
                 displayName,
@@ -590,7 +612,9 @@ public class ItemManager {
                 depletionTransformId,
                 depletionCommands,
                 attributeMode,
-                costs
+                costs,
+                updateHash,
+                hasPlaceholders
         );
 
         for (String errorMsg : errorMessages) {

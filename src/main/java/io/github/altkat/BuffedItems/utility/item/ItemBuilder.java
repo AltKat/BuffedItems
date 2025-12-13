@@ -209,6 +209,9 @@ public class ItemBuilder {
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, buffedItem.getId());
 
+        NamespacedKey versionKey = new NamespacedKey(plugin, "buffeditem_version");
+        meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, buffedItem.getUpdateHash());
+
         if(buffedItem.isActiveMode() && buffedItem.getMaxUses() > 0){
             NamespacedKey maxKey = new NamespacedKey(plugin, "remaining_active_uses");
             meta.getPersistentDataContainer().set(maxKey, PersistentDataType.INTEGER, buffedItem.getMaxUses());

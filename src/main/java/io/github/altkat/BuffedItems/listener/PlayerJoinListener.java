@@ -52,7 +52,11 @@ public class PlayerJoinListener implements Listener {
                     () -> "[Join] Error while clearing stale potion effects for " + player.getName() + ": " + e.getMessage());
         }
 
-        updateArmorSlots(player);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (player.isOnline()) {
+                updateAllItems(player);
+            }
+        }, 40L);
 
         if (RecipesConfig.get().getBoolean("settings.register-to-book", true)) {
             for (String recipeId : plugin.getCraftingManager().getRecipes().keySet()) {
@@ -67,24 +71,26 @@ public class PlayerJoinListener implements Listener {
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
     }
 
-    private void updateArmorSlots(Player player) {
-        ItemStack[] armorContents = player.getInventory().getArmorContents();
+    private void updateAllItems(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
         boolean changed = false;
 
-        for (int i = 0; i < armorContents.length; i++) {
-            ItemStack item = armorContents[i];
-            if (item != null && !item.getType().isAir()) {
-                ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
-                if (updated != null && !updated.isSimilar(item)) {
-                    armorContents[i] = updated;
-                    changed = true;
-                }
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (item == null || item.getType().isAir()) continue;
+
+            ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+
+            if (updated != null && !updated.isSimilar(item)) {
+                contents[i] = updated;
+                changed = true;
             }
+
         }
 
         if (changed) {
-            player.getInventory().setArmorContents(armorContents);
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Updated armor for " + player.getName() + " on join.");
+            player.getInventory().setContents(contents);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Full inventory update for " + player.getName() + " on join (delayed).");
         }
     }
 }
