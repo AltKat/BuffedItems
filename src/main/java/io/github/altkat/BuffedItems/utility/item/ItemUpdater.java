@@ -30,6 +30,7 @@ public class ItemUpdater {
     private final NamespacedKey idKey;
     private final NamespacedKey usesKey;
     private final NamespacedKey versionKey;
+    private final NamespacedKey updateFlagKey;
     private final Map<UUID, Map<String, Long>> updateCooldowns = new ConcurrentHashMap<>();
 
     public ItemUpdater(BuffedItems plugin) {
@@ -37,6 +38,7 @@ public class ItemUpdater {
         this.idKey = new NamespacedKey(plugin, "buffeditem_id");
         this.usesKey = new NamespacedKey(plugin, "remaining_active_uses");
         this.versionKey = new NamespacedKey(plugin, "buffeditem_version");
+        this.updateFlagKey = new NamespacedKey(plugin, "needs_lore_update");
     }
 
     public ItemStack updateItem(ItemStack oldItem, Player player) {
@@ -49,22 +51,37 @@ public class ItemUpdater {
         BuffedItem template = plugin.getItemManager().getBuffedItem(itemId);
         if (template == null) return null;
 
+        boolean hasUsageLimit = template.isActiveMode() && template.getMaxUses() > 0;
+
+        Integer currentHash = oldMeta.getPersistentDataContainer().get(versionKey, PersistentDataType.INTEGER);
+        boolean hasUpdateFlag = oldMeta.getPersistentDataContainer().has(updateFlagKey, PersistentDataType.BYTE);
+
+        // 1. Hash Check
+        boolean needsUpdate = currentHash == null || currentHash != template.getUpdateHash();
+
+        // 2. Placeholder Check
         if (template.hasPlaceholders()) {
             long now = System.currentTimeMillis();
             Map<String, Long> playerCooldowns = updateCooldowns.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
             long lastUpdate = playerCooldowns.getOrDefault(itemId, 0L);
 
-            if (now - lastUpdate < 3000) {
-                return null;
+            if (now - lastUpdate >= 3000) {
+                needsUpdate = true;
+                playerCooldowns.put(itemId, now);
             }
+        }
 
-            playerCooldowns.put(itemId, now);
-        }else {
-            Integer currentHash = oldMeta.getPersistentDataContainer().get(versionKey, PersistentDataType.INTEGER);
+        // 3. Usage Check
+        if (hasUsageLimit && hasUpdateFlag) {
+            needsUpdate = true;
+        }
 
-            if (currentHash != null && currentHash == template.getUpdateHash()) {
-                return null;
-            }
+        if (hasUsageLimit && !hasUpdateFlag && currentHash != null && currentHash == template.getUpdateHash()) {
+            needsUpdate = false;
+        }
+
+        if (!needsUpdate) {
+            return null;
         }
 
         ItemStack newItem = oldItem.clone();
@@ -209,8 +226,20 @@ public class ItemUpdater {
         }
 
         meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, template.getUpdateHash());
+        meta.getPersistentDataContainer().remove(updateFlagKey);
 
         newItem.setItemMeta(meta);
+
+        boolean flagStillExists = meta.getPersistentDataContainer().has(updateFlagKey, PersistentDataType.BYTE);
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                "[ItemUpdater] Flag cleanup: " + (flagStillExists ? "FAILED ❌" : "SUCCESS ✅"));
+
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                "[ItemUpdater] Lore updated for item: " + itemId + " | Current uses in NBT: " +
+                        (newItem.getItemMeta().getPersistentDataContainer().has(usesKey, PersistentDataType.INTEGER)
+                                ? newItem.getItemMeta().getPersistentDataContainer().get(usesKey, PersistentDataType.INTEGER)
+                                : "NOT_SET"));
+
         return newItem;
     }
 

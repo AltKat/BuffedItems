@@ -70,7 +70,7 @@ public class ItemInteractListener implements Listener {
             } else {
                 player.getInventory().setItemInOffHand(updatedItem);
             }
-            item = updatedItem; // Update reference
+            item = updatedItem;
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Item updated in hand.");
         }
 
@@ -175,7 +175,11 @@ public class ItemInteractListener implements Listener {
     private void updateUsesNBT(ItemStack item, int uses, BuffedItem buffedItem, Player player) {
         ItemMeta meta = item.getItemMeta();
         NamespacedKey durabilityKey = new NamespacedKey(plugin, "remaining_active_uses");
+        NamespacedKey updateFlagKey = new NamespacedKey(plugin, "needs_lore_update");
+
         meta.getPersistentDataContainer().set(durabilityKey, PersistentDataType.INTEGER, uses);
+        meta.getPersistentDataContainer().set(updateFlagKey, PersistentDataType.BYTE, (byte) 1);
+
         item.setItemMeta(meta);
 
         ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
