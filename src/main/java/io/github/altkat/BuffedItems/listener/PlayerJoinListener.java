@@ -10,8 +10,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +23,7 @@ public class PlayerJoinListener implements Listener {
 
     private final BuffedItems plugin;
     private static final int MAX_MANAGED_DURATION = 600;
+    private static final int SLOTS_PER_TICK = 3;
 
     public PlayerJoinListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -52,7 +55,7 @@ public class PlayerJoinListener implements Listener {
                     () -> "[Join] Error while clearing stale potion effects for " + player.getName() + ": " + e.getMessage());
         }
 
-        updateArmorSlots(player);
+        startDistributedUpdate(player);
 
         if (RecipesConfig.get().getBoolean("settings.register-to-book", true)) {
             for (String recipeId : plugin.getCraftingManager().getRecipes().keySet()) {
@@ -67,24 +70,47 @@ public class PlayerJoinListener implements Listener {
         plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
     }
 
-    private void updateArmorSlots(Player player) {
-        ItemStack[] armorContents = player.getInventory().getArmorContents();
-        boolean changed = false;
+    private void startDistributedUpdate(Player player) {
+        new BukkitRunnable() {
+            final int totalSlots = player.getInventory().getSize();
+            int currentSlot = 0;
 
-        for (int i = 0; i < armorContents.length; i++) {
-            ItemStack item = armorContents[i];
-            if (item != null && !item.getType().isAir()) {
-                ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
-                if (updated != null && !updated.isSimilar(item)) {
-                    armorContents[i] = updated;
-                    changed = true;
+            @Override
+            public void run() {
+                if (!player.isOnline()) {
+                    this.cancel();
+                    return;
+                }
+
+                int processedThisTick = 0;
+                boolean updatedAny = false;
+                PlayerInventory inv = player.getInventory();
+
+                while (currentSlot < totalSlots && processedThisTick < SLOTS_PER_TICK) {
+                    ItemStack item = inv.getItem(currentSlot);
+
+                    if (item != null && !item.getType().isAir()) {
+                        ItemStack updated = plugin.getItemUpdater().updateItem(item, player);
+
+                        if (updated != null && !updated.isSimilar(item)) {
+                            inv.setItem(currentSlot, updated);
+                            updatedAny = true;
+                        }
+                    }
+                    currentSlot++;
+                    processedThisTick++;
+                }
+
+                if (updatedAny) {
+                    plugin.getEffectApplicatorTask().markPlayerForUpdate(player.getUniqueId());
+                }
+
+                if (currentSlot >= totalSlots) {
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
+                            () -> "[LiveUpdate] Finished distributed inventory scan for " + player.getName());
+                    this.cancel();
                 }
             }
-        }
-
-        if (changed) {
-            player.getInventory().setArmorContents(armorContents);
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[LiveUpdate] Updated armor for " + player.getName() + " on join.");
-        }
+        }.runTaskTimer(plugin, 40L, 1L);
     }
 }

@@ -2,47 +2,81 @@ package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
+import io.github.altkat.BuffedItems.utility.ItemUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static io.github.altkat.BuffedItems.utility.item.ItemBuilder.VALID_SLOTS;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ItemUpdater {
 
     private final BuffedItems plugin;
     private final NamespacedKey idKey;
     private final NamespacedKey usesKey;
+    private final NamespacedKey versionKey;
+    private final NamespacedKey updateFlagKey;
+    private final Map<UUID, Map<String, Long>> updateCooldowns = new ConcurrentHashMap<>();
 
     public ItemUpdater(BuffedItems plugin) {
         this.plugin = plugin;
         this.idKey = new NamespacedKey(plugin, "buffeditem_id");
         this.usesKey = new NamespacedKey(plugin, "remaining_active_uses");
+        this.versionKey = new NamespacedKey(plugin, "buffeditem_version");
+        this.updateFlagKey = new NamespacedKey(plugin, "needs_lore_update");
     }
 
     public ItemStack updateItem(ItemStack oldItem, Player player) {
         if (oldItem == null || !oldItem.hasItemMeta()) return null;
 
-        String itemId = oldItem.getItemMeta().getPersistentDataContainer().get(idKey, PersistentDataType.STRING);
+        ItemMeta oldMeta = oldItem.getItemMeta();
+        String itemId = oldMeta.getPersistentDataContainer().get(idKey, PersistentDataType.STRING);
         if (itemId == null) return null;
 
         BuffedItem template = plugin.getItemManager().getBuffedItem(itemId);
         if (template == null) return null;
+
+        boolean hasUsageLimit = template.isActiveMode() && template.getMaxUses() > 0;
+
+        Integer currentHash = oldMeta.getPersistentDataContainer().get(versionKey, PersistentDataType.INTEGER);
+        boolean hasUpdateFlag = oldMeta.getPersistentDataContainer().has(updateFlagKey, PersistentDataType.BYTE);
+
+        // 1. Hash Check
+        boolean needsUpdate = currentHash == null || currentHash != template.getUpdateHash();
+
+        // 2. Placeholder Check
+        if (template.hasPlaceholders()) {
+            long now = System.currentTimeMillis();
+            Map<String, Long> playerCooldowns = updateCooldowns.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
+            long lastUpdate = playerCooldowns.getOrDefault(itemId, 0L);
+
+            if (now - lastUpdate >= 3000) {
+                needsUpdate = true;
+                playerCooldowns.put(itemId, now);
+            }
+        }
+
+        // 3. Usage Check
+        if (hasUsageLimit && hasUpdateFlag) {
+            needsUpdate = true;
+        }
+
+        if (hasUsageLimit && !hasUpdateFlag && currentHash != null && currentHash == template.getUpdateHash()) {
+            needsUpdate = false;
+        }
+
+        if (!needsUpdate) {
+            return null;
+        }
 
         ItemStack newItem = oldItem.clone();
 
@@ -54,13 +88,17 @@ public class ItemUpdater {
 
         // 1. Display Name Update
         String rawName = template.getDisplayName();
-        String parsedName = plugin.getHookManager().processPlaceholders(player, rawName);
+        String parsedName = template.hasPlaceholders()
+                ? plugin.getHookManager().processPlaceholders(player, rawName)
+                : rawName;
         meta.displayName(ConfigManager.fromLegacy(parsedName));
 
         // 2. Base Lore Update
         List<Component> baseLore = new ArrayList<>();
         for (String line : template.getLore()) {
-            String parsedLine = plugin.getHookManager().processPlaceholders(player, line);
+            String parsedLine = template.hasPlaceholders()
+                    ? plugin.getHookManager().processPlaceholders(player, line)
+                    : line;
             baseLore.add(ConfigManager.fromLegacy(parsedLine));
         }
 
@@ -76,7 +114,9 @@ public class ItemUpdater {
                     ? template.getUsageLore(currentUses)
                     : template.getDepletedLore();
 
-            String parsedUsageLine = plugin.getHookManager().processPlaceholders(player, usageLineRaw);
+            String parsedUsageLine = template.hasPlaceholders()
+                    ? plugin.getHookManager().processPlaceholders(player, usageLineRaw)
+                    : usageLineRaw;
             baseLore.add(ConfigManager.fromLegacy(parsedUsageLine));
         } else {
             meta.getPersistentDataContainer().remove(usesKey);
@@ -99,75 +139,14 @@ public class ItemUpdater {
         // 5. Unbreakable
         meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
 
+        meta.removeItemFlags(ItemFlag.values());
+
         // 6. Attributes
-        meta.setAttributeModifiers(null);
-        boolean forceHideAttributes = false;
-
-        if (template.getAttributeMode() == BuffedItem.AttributeMode.STATIC) {
-            boolean hasAnyAttribute = false;
-
-            for (Map.Entry<String, BuffedItemEffect> effectEntry : template.getEffects().entrySet()) {
-                String slotKey = effectEntry.getKey().toUpperCase();
-                BuffedItemEffect itemEffect = effectEntry.getValue();
-                EquipmentSlot equipmentSlot = getEquipmentSlot(slotKey);
-
-                if (equipmentSlot != null) {
-                    for (ParsedAttribute parsedAttr : itemEffect.getParsedAttributes()) {
-                        AttributeModifier modifier = new AttributeModifier(
-                                parsedAttr.getUuid(),
-                                "buffeditems." + template.getId() + "." + slotKey,
-                                parsedAttr.getAmount(),
-                                parsedAttr.getOperation(),
-                                equipmentSlot
-                        );
-                        meta.addAttributeModifier(parsedAttr.getAttribute(), modifier);
-                        hasAnyAttribute = true;
-                    }
-                }
-            }
-
-            if (!hasAnyAttribute) {
-                Attribute dummyAttr = Attribute.GENERIC_LUCK;
-                for (EquipmentSlot slot : VALID_SLOTS) {
-                    UUID dummyUUID = UUID.nameUUIDFromBytes(
-                            ("buffeditems.dummy.static." + template.getId() + "." + slot.name()).getBytes(StandardCharsets.UTF_8)
-                    );
-
-                    AttributeModifier dummyMod = new AttributeModifier(
-                            dummyUUID,
-                            "buffeditems.dummy." + slot.name(),
-                            0,
-                            AttributeModifier.Operation.ADD_NUMBER,
-                            slot
-                    );
-                    meta.addAttributeModifier(dummyAttr, dummyMod);
-                }
-                forceHideAttributes = true;
-            }
-
-        } else {
-            Attribute dummyAttr = Attribute.GENERIC_LUCK;
-            for (EquipmentSlot slot : VALID_SLOTS) {
-                UUID dummyUUID = UUID.nameUUIDFromBytes(
-                        ("buffeditems.dummy.dynamic." + template.getId() + "." + slot.name()).getBytes(StandardCharsets.UTF_8)
-                );
-
-                AttributeModifier dummyMod = new AttributeModifier(
-                        dummyUUID,
-                        "buffeditems.dummy." + slot.name(),
-                        0,
-                        AttributeModifier.Operation.ADD_NUMBER,
-                        slot
-                );
-                meta.addAttributeModifier(dummyAttr, dummyMod);
-            }
-            forceHideAttributes = true;
-        }
+        ItemUtils.applyAttributes(template, meta);
 
         // 7. Flags
-        meta.removeItemFlags(ItemFlag.values());
         if (template.getFlag("HIDE_ENCHANTS")) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        if (template.getFlag("HIDE_ATTRIBUTES") || forceHideAttributes) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        if (template.getFlag("HIDE_ATTRIBUTES")) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         if (template.getFlag("HIDE_UNBREAKABLE")) meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         if (template.getFlag("HIDE_DESTROYS")) meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
         if (template.getFlag("HIDE_PLACED_ON")) meta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
@@ -179,19 +158,21 @@ public class ItemUpdater {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 
-        newItem.setItemMeta(meta);
-        return newItem;
-    }
+        meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, template.getUpdateHash());
+        meta.getPersistentDataContainer().remove(updateFlagKey);
 
-    private EquipmentSlot getEquipmentSlot(String slot) {
-        switch (slot.toUpperCase()) {
-            case "MAIN_HAND": return EquipmentSlot.HAND;
-            case "OFF_HAND": return EquipmentSlot.OFF_HAND;
-            case "HELMET": return EquipmentSlot.HEAD;
-            case "CHESTPLATE": return EquipmentSlot.CHEST;
-            case "LEGGINGS": return EquipmentSlot.LEGS;
-            case "BOOTS": return EquipmentSlot.FEET;
-            default: return null;
-        }
+        newItem.setItemMeta(meta);
+
+        boolean flagStillExists = meta.getPersistentDataContainer().has(updateFlagKey, PersistentDataType.BYTE);
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                "[ItemUpdater] Flag cleanup: " + (flagStillExists ? "FAILED ❌" : "SUCCESS ✅"));
+
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
+                "[ItemUpdater] Lore updated for item: " + itemId + " | Current uses in NBT: " +
+                        (newItem.getItemMeta().getPersistentDataContainer().has(usesKey, PersistentDataType.INTEGER)
+                                ? newItem.getItemMeta().getPersistentDataContainer().get(usesKey, PersistentDataType.INTEGER)
+                                : "NOT_SET"));
+
+        return newItem;
     }
 }
