@@ -11,7 +11,7 @@ public class CustomRecipe {
     private final int amount;
     private final List<String> shape;
     private final String permission;
-    private final Map<Integer, RecipeIngredient> ingredients;
+    private final Map<Character, RecipeIngredient> ingredients;
 
     private boolean valid;
     private final List<String> errorMessages;
@@ -27,13 +27,13 @@ public class CustomRecipe {
         this.errorMessages = new ArrayList<>();
     }
 
-    public void addIngredient(int slot, RecipeIngredient ingredient) {
-        ingredients.put(slot, ingredient);
+    public void addIngredient(char key, RecipeIngredient ingredient) {
+        ingredients.put(key, ingredient);
     }
-    public RecipeIngredient getIngredient(int slot) {
-        return ingredients.get(slot);
+    public RecipeIngredient getIngredient(char key) {
+        return ingredients.get(key);
     }
-    public Map<Integer, RecipeIngredient> getIngredients() {
+    public Map<Character, RecipeIngredient> getIngredients() {
         return ingredients;
     }
     public String getId() { return id; }
