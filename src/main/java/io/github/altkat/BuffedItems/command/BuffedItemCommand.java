@@ -56,7 +56,7 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(noPermissionMessage);
                     return true;
                 }
-                return handleReloadCommand(sender);
+                return handleReloadCommand(sender, args);
             case "list":
                 if (!sender.hasPermission("buffeditems.command.list")) {
                     sender.sendMessage(noPermissionMessage);
@@ -297,7 +297,21 @@ public class BuffedItemCommand implements CommandExecutor {
         return true;
     }
 
-    private boolean handleReloadCommand(CommandSender sender) {
+    private boolean handleReloadCommand(CommandSender sender, String[] args) {
+
+        boolean isForce = args.length > 1 && args[1].equalsIgnoreCase("force");
+
+        if (!isForce) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (BuffedItems.getPlayerMenuUtility(p).hasUnsavedChanges()) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§c§lWARNING: §r§cPlayer '" + p.getName() + "' is currently editing a recipe!"));
+                    sender.sendMessage(ConfigManager.fromSection("§cReloading now will discard their unsaved changes."));
+                    sender.sendMessage(ConfigManager.fromSection("§eType §6/bi reload force §eto ignore this warning."));
+                    return true;
+                }
+            }
+        }
+
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Reload triggered by " + sender.getName());
 
         ConfigManager.reloadConfig();

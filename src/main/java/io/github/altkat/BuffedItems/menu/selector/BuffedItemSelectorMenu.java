@@ -147,6 +147,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
             case CRAFTING_RESULT:
                 String recipeId = playerMenuUtility.getRecipeToEditId();
                 RecipesConfig.get().set("recipes." + recipeId + ".result.item", itemId);
+                playerMenuUtility.setUnsavedChanges(true);
 
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe result updated to: §e" + itemId));
                 new RecipeEditorMenu(playerMenuUtility, plugin).open();
@@ -198,6 +199,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
             case CRAFTING_INGREDIENT:
                 playerMenuUtility.setChatInputPath("recipe_ingredient_buffed_manual");
+                playerMenuUtility.setUnsavedChanges(true);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 break;
         }

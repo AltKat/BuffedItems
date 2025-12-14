@@ -10,6 +10,7 @@ public class PlayerMenuUtility {
     private String itemToEditId;
     private String targetSlot;
     private int editIndex = -1;
+    private boolean unsavedChanges = false;
 
     private boolean waitingForChatInput = false;
     private String chatInputPath;
@@ -143,6 +144,14 @@ public class PlayerMenuUtility {
         this.selectedRecipeSlot = selectedRecipeSlot;
     }
 
+    public boolean hasUnsavedChanges() {
+        return unsavedChanges;
+    }
+
+    public void setUnsavedChanges(boolean unsavedChanges) {
+        this.unsavedChanges = unsavedChanges;
+    }
+
     public void flushData() {
         this.itemToEditId = null;
         this.targetSlot = null;
@@ -156,5 +165,6 @@ public class PlayerMenuUtility {
         this.tempBonusCount = 0;
         this.recipeToEditId = null;
         this.selectedRecipeSlot = -1;
+        this.unsavedChanges = false;
     }
 }

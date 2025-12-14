@@ -172,6 +172,7 @@ public class IngredientSettingsMenu extends Menu {
         targetLine.setCharAt(col, (type == null) ? ' ' : key);
         shape.set(row, targetLine.toString());
         config.set(shapePath, shape);
+        playerMenuUtility.setUnsavedChanges(true);
     }
 
     @Override

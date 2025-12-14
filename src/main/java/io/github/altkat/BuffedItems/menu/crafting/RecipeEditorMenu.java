@@ -85,9 +85,14 @@ public class RecipeEditorMenu extends Menu {
         }
 
         if (e.getSlot() == 44) {
-            RecipesConfig.save();
-            plugin.getCraftingManager().loadRecipes(true);
-            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aChanges saved successfully."));
+            if (playerMenuUtility.hasUnsavedChanges()) {
+                RecipesConfig.save();
+                plugin.getCraftingManager().loadRecipes(true);
+
+                playerMenuUtility.setUnsavedChanges(false);
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aChanges saved successfully."));
+            }
+
             new RecipeListMenu(playerMenuUtility, plugin).open();
         }
     }
