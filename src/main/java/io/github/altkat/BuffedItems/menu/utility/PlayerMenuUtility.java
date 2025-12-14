@@ -142,4 +142,19 @@ public class PlayerMenuUtility {
     public void setSelectedRecipeSlot(int selectedRecipeSlot) {
         this.selectedRecipeSlot = selectedRecipeSlot;
     }
+
+    public void flushData() {
+        this.itemToEditId = null;
+        this.targetSlot = null;
+        this.editIndex = -1;
+        this.waitingForChatInput = false;
+        this.chatInputPath = null;
+        this.attributeToEdit = null;
+        this.tempId = null;
+        this.tempMaterial = null;
+        this.tempSetId = null;
+        this.tempBonusCount = 0;
+        this.recipeToEditId = null;
+        this.selectedRecipeSlot = -1;
+    }
 }

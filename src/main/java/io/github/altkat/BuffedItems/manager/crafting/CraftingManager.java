@@ -29,11 +29,6 @@ public class CraftingManager {
 
     public void loadRecipes(boolean silent) {
         long startTime = System.currentTimeMillis();
-
-        if (silent) {
-            RecipesConfig.reload();
-        }
-
         unloadRecipes();
         recipes.clear();
 

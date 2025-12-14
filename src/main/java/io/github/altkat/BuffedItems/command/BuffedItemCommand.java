@@ -70,6 +70,7 @@ public class BuffedItemCommand implements CommandExecutor {
                 }
                 if (sender instanceof Player) {
                     Player p = (Player) sender;
+                    BuffedItems.getPlayerMenuUtility(p).flushData();
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Opening main menu for " + p.getName());
                     new MainMenu(BuffedItems.getPlayerMenuUtility(p), plugin).open();
                 } else {

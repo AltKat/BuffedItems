@@ -147,8 +147,6 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
             case CRAFTING_RESULT:
                 String recipeId = playerMenuUtility.getRecipeToEditId();
                 RecipesConfig.get().set("recipes." + recipeId + ".result.item", itemId);
-                RecipesConfig.save();
-                plugin.getCraftingManager().loadRecipes(true);
 
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe result updated to: §e" + itemId));
                 new RecipeEditorMenu(playerMenuUtility, plugin).open();
