@@ -3,7 +3,6 @@ package io.github.altkat.BuffedItems.utility.item;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.utility.ItemUtils;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -22,7 +21,6 @@ public class ItemBuilder {
     private final BuffedItem buffedItem;
     private final ItemStack itemStack;
     private final Plugin plugin;
-    private final int serverVersion;
 
     protected static final EquipmentSlot[] VALID_SLOTS = {
             EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
@@ -33,23 +31,6 @@ public class ItemBuilder {
         this.buffedItem = buffedItem;
         this.plugin = plugin;
         this.itemStack = new ItemStack(buffedItem.getMaterial());
-        this.serverVersion = getMinecraftVersion();
-    }
-
-    private int getMinecraftVersion() {
-        String version = Bukkit.getBukkitVersion();
-        try {
-            String[] parts = version.split("-")[0].split("\\.");
-            if (parts.length >= 2) {
-                int major = Integer.parseInt(parts[0]);
-                int minor = Integer.parseInt(parts[1]);
-                int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
-                return (major * 100 + minor * 10 + patch);
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Could not parse MC version: " + version);
-        }
-        return 1165;
     }
 
     public ItemStack build() {
@@ -62,26 +43,9 @@ public class ItemBuilder {
 
         if (buffedItem.getCustomModelData().isPresent()) {
             int cmdValue = buffedItem.getCustomModelData().get();
-
-            if (serverVersion < 1210) {
-                meta.setCustomModelData(cmdValue);
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                        () -> "[ItemBuilder] Applied CMD (legacy): " + cmdValue + " to " + buffedItem.getId());
-            } else {
-                try {
-                    meta.setCustomModelData(cmdValue);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                            () -> "[ItemBuilder] Applied CMD (Paper): " + cmdValue + " to " + buffedItem.getId());
-                } catch (Exception e) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                            () -> "[ItemBuilder] Legacy CMD failed, trying NMS for " + buffedItem.getId());
-                    try {
-                        applyCustomModelDataNMS(cmdValue);
-                    } catch (Exception nmsException) {
-                        plugin.getLogger().warning("[ItemBuilder] Failed to apply CMD via NMS: " + nmsException.getMessage());
-                    }
-                }
-            }
+            meta.setCustomModelData(cmdValue);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
+                    () -> "[ItemBuilder] Applied CMD (Integer): " + cmdValue + " to " + buffedItem.getId());
         }
 
         if (buffedItem.getFlag("UNBREAKABLE")) {
@@ -159,28 +123,5 @@ public class ItemBuilder {
 
         itemStack.setItemMeta(meta);
         return itemStack;
-    }
-
-    private void applyCustomModelDataNMS(int cmdValue) throws Exception {
-        try {
-            Class<?> itemMetaClass = ItemMeta.class;
-            java.lang.reflect.Method setCustomModelData =
-                    itemMetaClass.getMethod("setCustomModelData", int.class);
-
-            ItemMeta meta = itemStack.getItemMeta();
-            if (meta != null) {
-                setCustomModelData.invoke(meta, cmdValue);
-                itemStack.setItemMeta(meta);
-            }
-        } catch (NoSuchMethodException e) {
-            ItemMeta meta = itemStack.getItemMeta();
-            if (meta != null) {
-                meta.setCustomModelData(cmdValue);
-                itemStack.setItemMeta(meta);
-            }
-        }
-
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                () -> "[ItemBuilder] Applied CMD: " + cmdValue);
     }
 }
