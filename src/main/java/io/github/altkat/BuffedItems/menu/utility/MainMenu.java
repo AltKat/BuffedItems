@@ -30,6 +30,7 @@ public class MainMenu extends Menu {
     public MainMenu(PlayerMenuUtility playerMenuUtility, BuffedItems plugin) {
         super(playerMenuUtility);
         this.plugin = plugin;
+        playerMenuUtility.flushData();
     }
 
     @Override

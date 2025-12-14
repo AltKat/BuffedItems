@@ -85,6 +85,14 @@ public class RecipeEditorMenu extends Menu {
         }
 
         if (e.getSlot() == 44) {
+            if (playerMenuUtility.hasUnsavedChanges()) {
+                RecipesConfig.save();
+                plugin.getCraftingManager().loadRecipes(true);
+
+                playerMenuUtility.setUnsavedChanges(false);
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aChanges saved successfully."));
+            }
+
             new RecipeListMenu(playerMenuUtility, plugin).open();
         }
     }
@@ -160,7 +168,7 @@ public class RecipeEditorMenu extends Menu {
 
         inventory.setItem(22, makeItem(Material.CRAFTING_TABLE, "§eCrafting Grid", "§7Configure the 3x3 pattern."));
         inventory.setItem(23, makeItem(Material.ARROW, "§7->"));
-        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(44, makeItem(Material.GREEN_STAINED_GLASS, "§aSave Recipe"));
     }
 
     private ItemStack getIngredientIconFromConfig(ConfigurationSection sec) {

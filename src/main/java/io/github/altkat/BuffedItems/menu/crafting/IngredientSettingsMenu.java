@@ -10,6 +10,8 @@ import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.utility.Serializer;
+import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -170,29 +172,43 @@ public class IngredientSettingsMenu extends Menu {
         targetLine.setCharAt(col, (type == null) ? ' ' : key);
         shape.set(row, targetLine.toString());
         config.set(shapePath, shape);
-
-        RecipesConfig.save();
-        plugin.getCraftingManager().loadRecipes(true);
+        playerMenuUtility.setUnsavedChanges(true);
     }
 
     @Override
     public void setMenuItems() {
         setFillerGlass();
-        CustomRecipe recipe = plugin.getCraftingManager().getRecipes().get(recipeId);
+
+        char keyChar = (char) ('A' + slotIndex);
+        String path = "recipes." + recipeId + ".ingredients." + keyChar;
+        ConfigurationSection config = RecipesConfig.get();
+
+        String typeStr = config.getString(path + ".type");
+        String value = config.getString(path + ".value");
+        int amount = config.getInt(path + ".amount", 1);
+
         RecipeIngredient ing = null;
 
-        if (recipe != null) {
-            List<String> shape = recipe.getShape();
-            int row = slotIndex / 3;
-            int col = slotIndex % 3;
+        if (typeStr != null) {
+            try {
+                MatchType type = MatchType.valueOf(typeStr);
+                Material mat = Material.STONE;
+                ItemStack exactItem = null;
 
-            if (shape != null && shape.size() > row) {
-                String rowStr = shape.get(row);
-                if (rowStr.length() > col) {
-                    char key = rowStr.charAt(col);
-                    ing = recipe.getIngredient(key);
+                if (type == MatchType.MATERIAL) {
+                    mat = Material.matchMaterial(value != null ? value : "STONE");
+                } else if (type == MatchType.BUFFED_ITEM) {
+                    BuffedItem bi = plugin.getItemManager().getBuffedItem(value);
+                    if (bi != null) mat = bi.getMaterial();
+                } else if (type == MatchType.EXACT) {
+                    exactItem = Serializer.fromBase64(value);
+                    if (exactItem != null) mat = exactItem.getType();
                 }
-            }
+
+                ing = new RecipeIngredient(type, mat, value, amount);
+                if (exactItem != null) ing.setExactReferenceItem(exactItem);
+
+            }catch (Exception ignored) {}
         }
 
         ItemStack currentIcon;

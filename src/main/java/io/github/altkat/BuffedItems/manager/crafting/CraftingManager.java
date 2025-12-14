@@ -11,8 +11,10 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CraftingManager {
 
@@ -20,6 +22,9 @@ public class CraftingManager {
     private final Map<String, CustomRecipe> recipes;
     private final ItemMatcher itemMatcher;
     private final Set<NamespacedKey> trackedKeys = new HashSet<>();
+
+    private BukkitRunnable registrationTask;
+    private BukkitRunnable removalTask;
 
     public CraftingManager(BuffedItems plugin) {
         this.plugin = plugin;
@@ -30,8 +35,8 @@ public class CraftingManager {
     public void loadRecipes(boolean silent) {
         long startTime = System.currentTimeMillis();
 
-        if (silent) {
-            RecipesConfig.reload();
+        if (registrationTask != null && !registrationTask.isCancelled()) {
+            registrationTask.cancel();
         }
 
         unloadRecipes();
@@ -53,180 +58,258 @@ public class CraftingManager {
         int validCount = 0;
         int invalidCount = 0;
         List<String> recipesWithErrors = new ArrayList<>();
+
+        Queue<CustomRecipe> registrationQueue = new ConcurrentLinkedQueue<>();
         boolean shouldRegisterToBook = RecipesConfig.get().getBoolean("settings.register-to-book", true);
 
         for (String recipeId : section.getKeys(false)) {
             ConfigurationSection rSection = section.getConfigurationSection(recipeId);
             if (rSection == null) continue;
 
-            String resultItemId = rSection.getString("result.item");
-            int resultAmount = rSection.getInt("result.amount", 1);
-            List<String> shape = rSection.getStringList("shape");
-            String permission = rSection.getString("permission");
+            CustomRecipe recipe = parseRecipeFromConfig(recipeId, rSection);
 
-            CustomRecipe recipe = new CustomRecipe(recipeId, resultItemId, resultAmount, shape, permission);
-
-            if (resultItemId == null || plugin.getItemManager().getBuffedItem(resultItemId) == null) {
-                recipe.addErrorMessage("Invalid Result Item: " + (resultItemId == null ? "NULL" : resultItemId));
-            }
-
-            if (resultAmount <= 0) {
-                recipe.addErrorMessage("Result amount must be positive.");
-            }
-
-            if (shape.isEmpty() || shape.size() > 3) {
-                recipe.addErrorMessage("Invalid Shape Size (Must be 1-3 lines).");
-            } else {
-                boolean isEmptyShape = true;
-                for (String line : shape) {
-                    if (!line.trim().isEmpty()) {
-                        isEmptyShape = false;
-                        break;
-                    }
-                }
-                if (isEmptyShape) {
-                    recipe.addErrorMessage("Recipe shape cannot be completely empty.");
-                }
-            }
-
-            ConfigurationSection ingSection = rSection.getConfigurationSection("ingredients");
-            Map<Character, RecipeIngredient> charMap = new HashMap<>();
-
-            if (ingSection != null) {
-                for (String key : ingSection.getKeys(false)) {
-                    if (key.length() != 1) continue;
-                    char c = key.charAt(0);
-
-                    String typeStr = ingSection.getString(key + ".type", "MATERIAL");
-                    String value = ingSection.getString(key + ".value", "AIR");
-                    int amount = ingSection.getInt(key + ".amount", 1);
-
-                    MatchType type;
-                    try {
-                        type = MatchType.valueOf(typeStr.toUpperCase());
-                    } catch (IllegalArgumentException e) {
-                        recipe.addErrorMessage("Invalid MatchType for '" + c + "': " + typeStr);
-                        continue;
-                    }
-
-                    Material mat = Material.STONE;
-                    ItemStack exactStack = null;
-
-                    if (type == MatchType.MATERIAL) {
-                        mat = Material.matchMaterial(value);
-                        if (mat == null) {
-                            recipe.addErrorMessage("Invalid Material for '" + c + "': " + value);
-                        }
-                    } else if (type == MatchType.BUFFED_ITEM) {
-                        BuffedItem bi = plugin.getItemManager().getBuffedItem(value);
-                        if (bi != null) {
-                            mat = bi.getMaterial();
-                        } else {
-                            recipe.addErrorMessage("Ingredient '" + c + "' references unknown BuffedItem: " + value);
-                        }
-                    } else if (type == MatchType.EXACT) {
-                        exactStack = io.github.altkat.BuffedItems.utility.Serializer.fromBase64(value);
-                        if (exactStack != null) {
-                            mat = exactStack.getType();
-                        } else {
-                            recipe.addErrorMessage("Invalid Base64 for EXACT ingredient '" + c + "'");
-                        }
-                    }
-
-                    RecipeIngredient ingredient = new RecipeIngredient(type, mat, value, amount);
-                    if (exactStack != null) {
-                        ingredient.setExactReferenceItem(exactStack);
-                    }
-                    charMap.put(c, ingredient);
-                    recipe.addIngredient(c, ingredient);
-                }
-            }
-
-            if (recipe.isValid()) {
-                for (int row = 0; row < shape.size(); row++) {
-                    String line = shape.get(row);
-                    if (line.length() > 3) {
-                        recipe.addErrorMessage("Shape line " + (row + 1) + " is too long (Max 3 chars).");
-                        break;
-                    }
-                    for (int col = 0; col < line.length(); col++) {
-                        char c = line.charAt(col);
-                        if (c != ' ') {
-                            if (!charMap.containsKey(c)) {
-                                recipe.addErrorMessage("Shape contains undefined character: '" + c + "'");
-                            }
-                        }
-                    }
-                }
-            }
+            recipes.put(recipeId, recipe);
 
             if (recipe.isValid()) {
                 validCount++;
                 if (shouldRegisterToBook) {
-                    registerBukkitRecipe(recipe, shape, charMap);
+                    registrationQueue.add(recipe);
                 }
             } else {
                 invalidCount++;
                 recipesWithErrors.add(recipeId);
             }
-            recipes.put(recipeId, recipe);
         }
 
+        printLoadLog(silent, validCount, invalidCount, recipesWithErrors, startTime);
+
+        if (!registrationQueue.isEmpty()) {
+            startBatchRegistration(registrationQueue, silent);
+        }
+    }
+
+    private void startBatchRegistration(Queue<CustomRecipe> queue, boolean silent) {
+        final int BATCH_SIZE = 5;
+        final int totalToRegister = queue.size();
+
+        registrationTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (queue.isEmpty()) {
+                    this.cancel();
+                    if (!silent) {
+                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () ->
+                                "[CraftingManager] Background task finished: Registered " + totalToRegister + " recipes to Bukkit.");
+                    }
+                    return;
+                }
+
+                long batchStart = System.nanoTime();
+                int count = 0;
+
+                while (!queue.isEmpty() && count < BATCH_SIZE) {
+                    CustomRecipe recipe = queue.poll();
+                    if (recipe != null) {
+                        registerBukkitRecipe(recipe);
+                    }
+                    count++;
+                    if (System.nanoTime() - batchStart > 2000000) break;
+                }
+            }
+        };
+
+        registrationTask.runTaskTimer(plugin, 0L, 1L);
+    }
+
+    private void printLoadLog(boolean silent, int valid, int invalid, List<String> errorIds, long startTime) {
+        if (silent) return;
         long elapsedTime = System.currentTimeMillis() - startTime;
+        ConfigManager.logInfo("&aLoaded &e" + valid + "&a custom recipes into memory (&e" + valid + "&a valid, &c" + invalid + "&a with errors) in &e" + elapsedTime + "&ams.");
 
-        if (!silent) {
-            ConfigManager.logInfo("&aLoaded &e" + recipes.size() + "&a custom recipes (&e" + validCount + "&a valid, &e" + invalidCount + "&c with errors&a) in &e" + elapsedTime + "&ams");
+        if (invalid > 0) {
+            String separator = "============================================================";
+            plugin.getLogger().warning(separator);
+            plugin.getLogger().warning("⚠ " + invalid + " custom recipe(s) have configuration errors:");
+            for (String rId : errorIds) {
+                plugin.getLogger().warning("  • " + rId);
 
-            if (invalidCount > 0) {
-                String separator = "============================================================";
-                plugin.getLogger().warning(separator);
-                plugin.getLogger().warning("⚠ " + invalidCount + " custom recipe(s) have configuration errors:");
-                for (String rId : recipesWithErrors) {
-                    CustomRecipe recipe = recipes.get(rId);
-                    plugin.getLogger().warning("  • " + rId + " (" + recipe.getErrorMessages().size() + " error(s))");
-                    for (String error : recipe.getErrorMessages()) {
-                        plugin.getLogger().warning("    - " + ConfigManager.stripLegacy(error));
+                CustomRecipe r = recipes.get(rId);
+                if (r != null) {
+                    for (String err : r.getErrorMessages()) {
+                        plugin.getLogger().warning("    - " + err);
                     }
                 }
-                plugin.getLogger().warning("Use /bi menu -> Crafting to fix these errors.");
-                plugin.getLogger().warning(separator);
             }
+            plugin.getLogger().warning(separator);
         }
     }
 
     public void unloadRecipes() {
-        if (!trackedKeys.isEmpty()) {
-            for (NamespacedKey key : trackedKeys) {
-                Bukkit.removeRecipe(key);
-            }
-            trackedKeys.clear();
-        }
+        if (registrationTask != null && !registrationTask.isCancelled()) registrationTask.cancel();
+        if (removalTask != null && !removalTask.isCancelled()) removalTask.cancel();
+
+        if (trackedKeys.isEmpty()) return;
+
+        Queue<NamespacedKey> removalQueue = new ConcurrentLinkedQueue<>(trackedKeys);
+
+        trackedKeys.clear();
+
+        startBatchRemoval(removalQueue);
     }
 
-    private void registerBukkitRecipe(CustomRecipe recipe, List<String> shape, Map<Character, RecipeIngredient> charMap) {
-        NamespacedKey key = new NamespacedKey(plugin, recipe.getId());
-        trackedKeys.add(key);
-        ItemStack resultStack;
-        BuffedItem item = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
+    private void startBatchRemoval(Queue<NamespacedKey> queue) {
+        final int BATCH_SIZE = 5;
 
-        if (item != null) {
-            resultStack = new ItemBuilder(item, plugin).build();
-            resultStack.setAmount(recipe.getAmount());
+        removalTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (queue.isEmpty()) {
+                    this.cancel();
+                    return;
+                }
+
+                long batchStart = System.nanoTime();
+                int count = 0;
+
+                while (!queue.isEmpty() && count < BATCH_SIZE) {
+                    NamespacedKey key = queue.poll();
+                    if (key != null) {
+                        try {
+                            Bukkit.removeRecipe(key);
+                        } catch (Exception ignored) {}
+                    }
+                    count++;
+                    if (System.nanoTime() - batchStart > 2000000) break;
+                }
+            }
+        };
+        removalTask.runTaskTimer(plugin, 0L, 1L);
+    }
+
+    private CustomRecipe parseRecipeFromConfig(String recipeId, ConfigurationSection rSection) {
+        String resultItemId = rSection.getString("result.item");
+        int resultAmount = rSection.getInt("result.amount", 1);
+        List<String> shape = rSection.getStringList("shape");
+        String permission = rSection.getString("permission");
+
+        CustomRecipe recipe = new CustomRecipe(recipeId, resultItemId, resultAmount, shape, permission);
+
+        if (resultItemId == null || plugin.getItemManager().getBuffedItem(resultItemId) == null)
+            recipe.addErrorMessage("Invalid Result Item: " + resultItemId);
+
+        if (resultAmount <= 0) recipe.addErrorMessage("Result amount must be positive.");
+
+        if (shape.isEmpty() || shape.size() > 3) {
+            recipe.addErrorMessage("Invalid Shape Size.");
         } else {
-            resultStack = new ItemStack(Material.BARRIER);
+            boolean empty = true;
+            for(String s : shape) if(!s.trim().isEmpty()) empty = false;
+            if(empty) recipe.addErrorMessage("Shape cannot be empty.");
         }
 
-        ShapedRecipe bukkitRecipe = new ShapedRecipe(key, resultStack);
-        bukkitRecipe.shape(shape.toArray(new String[0]));
+        ConfigurationSection ingSection = rSection.getConfigurationSection("ingredients");
 
-        for (Map.Entry<Character, RecipeIngredient> entry : charMap.entrySet()) {
-            char charKey = entry.getKey();
-            RecipeIngredient ingredient = entry.getValue();
+        if (ingSection != null) {
+            for (String key : ingSection.getKeys(false)) {
+                if (key.length() != 1) continue;
+                char c = key.charAt(0);
 
-            if (ingredient.getMatchType() == MatchType.BUFFED_ITEM) {
-                BuffedItem bi = plugin.getItemManager().getBuffedItem(ingredient.getData());
-                if (bi != null) {
-                    ItemStack exactItem = new ItemBuilder(bi, plugin).build();
+                String typeStr = ingSection.getString(key + ".type", "MATERIAL");
+                String value = ingSection.getString(key + ".value", "AIR");
+                int amount = ingSection.getInt(key + ".amount", 1);
+
+                MatchType type;
+                try { type = MatchType.valueOf(typeStr.toUpperCase()); }
+                catch (IllegalArgumentException e) {
+                    recipe.addErrorMessage("Invalid type: " + typeStr); continue;
+                }
+
+                Material mat = Material.STONE;
+                ItemStack exactStack = null;
+
+                if (type == MatchType.MATERIAL) {
+                    mat = Material.matchMaterial(value);
+                    if (mat == null) recipe.addErrorMessage("Invalid Material: " + value);
+                } else if (type == MatchType.BUFFED_ITEM) {
+                    BuffedItem bi = plugin.getItemManager().getBuffedItem(value);
+                    if (bi != null) mat = bi.getMaterial();
+                    else recipe.addErrorMessage("Unknown BuffedItem: " + value);
+                } else if (type == MatchType.EXACT) {
+                    exactStack = io.github.altkat.BuffedItems.utility.Serializer.fromBase64(value);
+                    if (exactStack != null) mat = exactStack.getType();
+                    else recipe.addErrorMessage("Invalid Base64");
+                }
+
+                RecipeIngredient ingredient = new RecipeIngredient(type, mat, value, amount);
+                if (exactStack != null) ingredient.setExactReferenceItem(exactStack);
+                recipe.addIngredient(c, ingredient);
+            }
+        }
+
+        if (recipe.isValid()) {
+            Set<Character> shapeChars = new HashSet<>();
+            for (String line : shape) {
+                for (char c : line.toCharArray()) {
+                    if (c != ' ') {
+                        shapeChars.add(c);
+                    }
+                }
+            }
+
+            for (char c : shapeChars) {
+                if (!recipe.getIngredients().containsKey(c)) {
+                    recipe.addErrorMessage("Shape contains character '" + c + "' but it is not defined in ingredients.");
+                }
+            }
+
+            for (char c : recipe.getIngredients().keySet()) {
+                if (!shapeChars.contains(c)) {
+                    recipe.addErrorMessage("Ingredient '" + c + "' is defined but not used in the shape.");
+                }
+            }
+        }
+
+        return recipe;
+    }
+
+    private void registerBukkitRecipe(CustomRecipe recipe) {
+        try {
+            NamespacedKey key = new NamespacedKey(plugin, recipe.getId());
+
+            try {
+                Bukkit.removeRecipe(key);
+            } catch (Exception ignored) {}
+
+            trackedKeys.add(key);
+
+            ItemStack resultStack;
+            BuffedItem item = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
+
+            if (item != null) {
+                resultStack = new ItemBuilder(item, plugin).build();
+                resultStack.setAmount(recipe.getAmount());
+            } else {
+                return;
+            }
+
+            ShapedRecipe bukkitRecipe = new ShapedRecipe(key, resultStack);
+
+            List<String> shape = recipe.getShape();
+            bukkitRecipe.shape(shape.toArray(new String[0]));
+
+            for (Map.Entry<Character, RecipeIngredient> entry : recipe.getIngredients().entrySet()) {
+                char charKey = entry.getKey();
+                RecipeIngredient ingredient = entry.getValue();
+
+                if (ingredient.getMatchType() == MatchType.BUFFED_ITEM) {
+                    BuffedItem bi = plugin.getItemManager().getBuffedItem(ingredient.getData());
+                    if (bi != null) {
+                        ItemStack exactItem = new ItemBuilder(bi, plugin).build();
+                        exactItem.setAmount(1);
+                        bukkitRecipe.setIngredient(charKey, new org.bukkit.inventory.RecipeChoice.ExactChoice(exactItem));
+                    }
+                } else if (ingredient.getMatchType() == MatchType.EXACT && ingredient.getExactReferenceItem() != null) {
+                    ItemStack exactItem = ingredient.getExactReferenceItem().clone();
                     exactItem.setAmount(1);
                     bukkitRecipe.setIngredient(charKey, new org.bukkit.inventory.RecipeChoice.ExactChoice(exactItem));
                 } else {
@@ -234,42 +317,26 @@ public class CraftingManager {
                         bukkitRecipe.setIngredient(charKey, ingredient.getMaterial());
                     }
                 }
-            } else if (ingredient.getMatchType() == MatchType.EXACT) {
-                if (ingredient.getExactReferenceItem() != null) {
-                    ItemStack exactItem = ingredient.getExactReferenceItem().clone();
-                    exactItem.setAmount(1);
-                    bukkitRecipe.setIngredient(charKey, new org.bukkit.inventory.RecipeChoice.ExactChoice(exactItem));
-                }
-            } else {
-                if (ingredient.getMaterial() != null) {
-                    bukkitRecipe.setIngredient(charKey, ingredient.getMaterial());
-                }
             }
+
+            Bukkit.addRecipe(bukkitRecipe);
+
+        } catch (Exception e) {
+            ConfigManager.logInfo("Failed to register Bukkit recipe: " + recipe.getId());
         }
-        try { Bukkit.addRecipe(bukkitRecipe); } catch (Exception ignored) {}
     }
 
     public CustomRecipe findRecipe(ItemStack[] matrix) {
-        if (isMatrixEmpty(matrix)) {
-            return null;
-        }
-
+        if (isMatrixEmpty(matrix)) return null;
         for (CustomRecipe recipe : recipes.values()) {
             if (!recipe.isValid()) continue;
-
-            if (matchesShaped(matrix, recipe)) {
-                return recipe;
-            }
+            if (matchesShaped(matrix, recipe)) return recipe;
         }
         return null;
     }
 
     private boolean isMatrixEmpty(ItemStack[] matrix) {
-        for (ItemStack item : matrix) {
-            if (item != null && item.getType() != Material.AIR) {
-                return false;
-            }
-        }
+        for (ItemStack item : matrix) if (item != null && !item.getType().isAir()) return false;
         return true;
     }
 

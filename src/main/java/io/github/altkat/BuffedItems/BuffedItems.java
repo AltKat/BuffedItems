@@ -146,6 +146,8 @@ public final class BuffedItems extends JavaPlugin {
             }
         }
 
+        RecipesConfig.save();
+
         if (craftingManager != null) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Unloading custom recipes...");
             craftingManager.unloadRecipes();

@@ -3,6 +3,9 @@ package io.github.altkat.BuffedItems.listener;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.manager.config.RecipesConfig;
+import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -183,5 +186,36 @@ public class InventoryListener implements Listener {
         this.lastCheck.remove(uuid);
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
                 () -> "[InventoryChange] Cleared cached data for player: " + uuid);
+    }
+
+    @EventHandler
+    public void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
+        if (!(e.getPlayer() instanceof Player)) return;
+        Player p = (Player) e.getPlayer();
+
+        if (e.getInventory().getHolder() instanceof Menu) {
+            PlayerMenuUtility pmu = BuffedItems.getPlayerMenuUtility(p);
+
+            if (pmu.isWaitingForChatInput()) {
+                return;
+            }
+
+            if (pmu.hasUnsavedChanges()) {
+
+                org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (!p.isOnline()) return;
+                    if (p.getOpenInventory().getTopInventory().getHolder() instanceof Menu) {
+                        return;
+                    }
+
+                    RecipesConfig.save();
+                    plugin.getCraftingManager().loadRecipes(true);
+
+                    pmu.setUnsavedChanges(false);
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§eUnsaved crafting changes have been auto-saved."));
+
+                }, 1L);
+            }
+        }
     }
 }

@@ -33,6 +33,7 @@ public class RecipeInputHandler implements ChatInputHandler {
                 new RecipeListMenu(pmu, plugin).open();
             } else {
                 createDefaultRecipe(newRecipeId);
+                pmu.setUnsavedChanges(true);
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe '" + newRecipeId + "' created successfully!"));
 
                 pmu.setRecipeToEditId(newRecipeId);
@@ -48,8 +49,7 @@ public class RecipeInputHandler implements ChatInputHandler {
 
                 String recipeId = pmu.getRecipeToEditId();
                 RecipesConfig.get().set("recipes." + recipeId + ".result.amount", amount);
-                RecipesConfig.save();
-                plugin.getCraftingManager().loadRecipes(true);
+                pmu.setUnsavedChanges(true);
 
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§aResult amount updated: " + amount));
                 new RecipeEditorMenu(pmu, plugin).open();
@@ -67,8 +67,7 @@ public class RecipeInputHandler implements ChatInputHandler {
 
             String recipeId = pmu.getRecipeToEditId();
             RecipesConfig.get().set("recipes." + recipeId + ".permission", perm);
-            RecipesConfig.save();
-            plugin.getCraftingManager().loadRecipes(true);
+            pmu.setUnsavedChanges(true);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe permission updated: " + (perm == null ? "None" : perm)));
             new RecipeEditorMenu(pmu, plugin).open();
@@ -84,6 +83,7 @@ public class RecipeInputHandler implements ChatInputHandler {
 
                 if (success) {
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§aIngredient amount updated: " + amount));
+                    pmu.setUnsavedChanges(true);
                 } else {
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§cYou must select an ingredient first!"));
                 }
@@ -104,8 +104,7 @@ public class RecipeInputHandler implements ChatInputHandler {
 
             String recipeId = pmu.getRecipeToEditId();
             RecipesConfig.get().set("recipes." + recipeId + ".result.item", input);
-            RecipesConfig.save();
-            plugin.getCraftingManager().loadRecipes(true);
+            pmu.setUnsavedChanges(true);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe result updated to: §e" + input));
             new RecipeEditorMenu(pmu, plugin).open();
@@ -200,9 +199,6 @@ public class RecipeInputHandler implements ChatInputHandler {
         shape.set(row, targetLine.toString());
 
         config.set(shapePath, shape);
-
-        RecipesConfig.save();
-        plugin.getCraftingManager().loadRecipes(true);
     }
 
     private void createDefaultRecipe(String recipeId) {
@@ -217,9 +213,6 @@ public class RecipeInputHandler implements ChatInputHandler {
         shape.add("   ");
         shape.add("   ");
         config.set(path + ".shape", shape);
-
-        RecipesConfig.save();
-        plugin.getCraftingManager().loadRecipes(true);
     }
 
     private void closeChat(PlayerMenuUtility pmu) {

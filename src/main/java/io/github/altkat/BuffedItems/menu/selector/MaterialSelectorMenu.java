@@ -93,6 +93,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
             playerMenuUtility.setTempMaterial(material);
+            playerMenuUtility.setUnsavedChanges(true);
             new IngredientSettingsMenu(playerMenuUtility, plugin, true).open();
         }
     }
@@ -117,6 +118,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
             playerMenuUtility.setChatInputPath("recipe_ingredient_material_manual");
+            playerMenuUtility.setUnsavedChanges(true);
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'IRON_INGOT')."));
         }
 
