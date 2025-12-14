@@ -23,6 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ItemManager {
 
@@ -206,7 +207,9 @@ public class ItemManager {
         if (effectsSection != null) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has effects section");
 
-            for (String slot : effectsSection.getKeys(false)) {
+            List<String> sortedSlots = effectsSection.getKeys(false).stream().sorted().collect(Collectors.toList());
+
+            for (String slot : sortedSlots) {
                 ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
                 if (slotSection == null) continue;
 
@@ -552,15 +555,18 @@ public class ItemManager {
 
         boolean hasPlaceholders = (displayName + lore.toString()).contains("%");
 
+        Map<String, Integer> stableEnchants = new java.util.HashMap<>();
+        enchantments.forEach((ench, lvl) -> stableEnchants.put(ench.getKey().getKey(), lvl));
+
         int updateHash = Objects.hash(
                 displayName,
                 lore,
-                material,
+                material.name(),
                 glow,
                 customModelData,
                 flags,
-                enchantments,
-                attributeMode,
+                stableEnchants,
+                attributeMode.name(),
                 passiveEffectsHash,
                 activeMode,
                 maxUses,
