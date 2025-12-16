@@ -27,7 +27,6 @@ messages:
   protection-prevent-placement-entity: "&#FF0000You cannot place this special entity item."
   protection-prevent-placement-block: "&#FF0000You cannot place this special block."
   protection-prevent-enchant-table: "&#FF0000You cannot enchant this special item."
-  protection-prevent-crafting-use: "&#FF0000You cannot use this special item in crafting."
   protection-prevent-drop: "&#FF0000You cannot drop this item."
   protection-prevent-anvil-use: "&#FF0000This special item cannot be used in an anvil."
   protection-prevent-container-store: "&#FF0000You cannot store this special item in a container."

@@ -138,7 +138,6 @@ public class BuffedItem {
                 //"PREVENT_ANVIL_USE",
                 //"PREVENT_ENCHANT_TABLE",
                 //"PREVENT_SMITHING_USE",
-                "PREVENT_CRAFTING_USE",
                 //"PREVENT_DROP",
                 //"PREVENT_CONSUME"
                 "PREVENT_PLACEMENT"

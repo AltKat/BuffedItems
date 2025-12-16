@@ -7,17 +7,18 @@ import io.github.altkat.BuffedItems.manager.crafting.RecipeIngredient;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import org.bukkit.Material;
+import org.bukkit.block.Crafter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.CrafterCraftEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,16 +35,17 @@ public class CraftingListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareCraft(PrepareItemCraftEvent e) {
-        if (e.getView().getPlayer() != null && isCrafting.contains(e.getView().getPlayer().getUniqueId())) {
-            return;
-        }
-
         CraftingInventory inv = e.getInventory();
         ItemStack[] matrix = inv.getMatrix();
-
         CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
 
         if (match != null) {
+
+            if (!match.isEnabled()) {
+                inv.setResult(null);
+                return;
+            }
+
             Player p = (Player) e.getView().getPlayer();
             if (match.getPermission() != null && !match.getPermission().isEmpty() && !p.hasPermission(match.getPermission())) {
                 inv.setResult(null);
@@ -59,12 +61,15 @@ public class CraftingListener implements Listener {
                 inv.setResult(null);
             }
         } else {
-            Recipe bukkitRecipe = e.getRecipe();
-            if (bukkitRecipe != null) {
-                ItemStack result = inv.getResult();
-                if (plugin.getItemManager().isBuffedItem(result)) {
+            for (ItemStack item : matrix) {
+                if (plugin.getItemManager().isBuffedItem(item)) {
                     inv.setResult(null);
+                    return;
                 }
+            }
+            ItemStack currentResult = inv.getResult();
+            if (currentResult != null && plugin.getItemManager().isBuffedItem(currentResult)) {
+                inv.setResult(null);
             }
         }
     }
@@ -78,7 +83,17 @@ public class CraftingListener implements Listener {
         ItemStack result = inv.getResult();
 
         if (result == null || result.getType() == Material.AIR) return;
-        if (!plugin.getItemManager().isBuffedItem(result)) return;
+
+        if (!plugin.getItemManager().isBuffedItem(result)) {
+            ItemStack[] matrix = inv.getMatrix();
+            for (ItemStack item : matrix) {
+                if (plugin.getItemManager().isBuffedItem(item)) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+            return;
+        }
 
         ItemStack[] matrix = inv.getMatrix();
         CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
@@ -246,5 +261,26 @@ public class CraftingListener implements Listener {
                 material == Material.TADPOLE_BUCKET ||
                 material == Material.TROPICAL_FISH_BUCKET ||
                 material == Material.PUFFERFISH_BUCKET;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onCrafterCraft(CrafterCraftEvent e) {
+        if (!(e.getBlock().getState() instanceof Crafter crafter)) return;
+
+        ItemStack[] matrix = crafter.getInventory().getContents();
+
+        for (ItemStack item : matrix) {
+            if (item != null && item.getType() != Material.AIR) {
+                if (plugin.getItemManager().isBuffedItem(item)) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
+        CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
+        if (match != null) {
+            e.setCancelled(true);
+        }
     }
 }

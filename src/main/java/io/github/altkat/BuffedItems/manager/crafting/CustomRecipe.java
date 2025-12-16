@@ -16,6 +16,8 @@ public class CustomRecipe {
     private boolean valid;
     private final List<String> errorMessages;
 
+    private boolean enabled = true;
+
     public CustomRecipe(String id, String resultItemId, int amount, List<String> shape, String permission) {
         this.id = id;
         this.resultItemId = resultItemId;
@@ -27,6 +29,8 @@ public class CustomRecipe {
         this.errorMessages = new ArrayList<>();
     }
 
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public void addIngredient(char key, RecipeIngredient ingredient) {
         ingredients.put(key, ingredient);
     }

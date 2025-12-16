@@ -104,6 +104,7 @@ public class PublicRecipeListMenu extends PaginatedMenu {
     private List<CustomRecipe> getValidRecipes() {
         return plugin.getCraftingManager().getRecipes().values().stream()
                 .filter(CustomRecipe::isValid)
+                .filter(CustomRecipe::isEnabled)
                 .sorted(Comparator.comparing(CustomRecipe::getId))
                 .collect(Collectors.toList());
     }

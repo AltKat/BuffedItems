@@ -212,8 +212,6 @@ items:
           - SLOW_FALLING;1
         attributes:
           - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.1
-    flags:
-      PREVENT_CRAFTING_USE: true
 
   miners_dream:
     display_name: '&#CC513DM&#C65B3Ci&#BF663An&#B97039e&#B37A37r&#AC8536''&#A68F34s &#99A431D&#93AE30r&#8DB82Ee&#86C32Da&#80CD2Bm'

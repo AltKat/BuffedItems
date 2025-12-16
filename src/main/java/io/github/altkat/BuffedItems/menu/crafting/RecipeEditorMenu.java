@@ -46,7 +46,7 @@ public class RecipeEditorMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 45;
+        return 54;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class RecipeEditorMenu extends Menu {
             return;
         }
 
-        if (e.getSlot() == 16) {
+        if (e.getSlot() == 50) {
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("recipe_permission");
             p.closeInventory();
@@ -84,7 +84,16 @@ public class RecipeEditorMenu extends Menu {
             return;
         }
 
-        if (e.getSlot() == 44) {
+        if (e.getSlot() == 49) {
+            boolean current = RecipesConfig.get().getBoolean("recipes." + recipeId + ".enabled", true);
+            RecipesConfig.get().set("recipes." + recipeId + ".enabled", !current);
+
+            playerMenuUtility.setUnsavedChanges(true);
+            open();
+            return;
+        }
+
+        if (e.getSlot() == 53) {
             if (playerMenuUtility.hasUnsavedChanges()) {
                 RecipesConfig.save();
                 plugin.getCraftingManager().loadRecipes(true);
@@ -117,8 +126,7 @@ public class RecipeEditorMenu extends Menu {
             if (ingredientsSec != null && ingredientsSec.contains(String.valueOf(key))) {
                 ConfigurationSection ingSec = ingredientsSec.getConfigurationSection(String.valueOf(key));
                 if (ingSec != null) {
-                    ItemStack icon = getIngredientIconFromConfig(ingSec);
-                    inventory.setItem(slot, icon);
+                    inventory.setItem(slot, getIngredientIconFromConfig(ingSec));
                 } else {
                     inventory.setItem(slot, makeItem(Material.LIGHT_GRAY_STAINED_GLASS_PANE, "§7Empty Slot", "§eClick to Set"));
                 }
@@ -130,6 +138,8 @@ public class RecipeEditorMenu extends Menu {
         String resultId = section.getString("result.item");
         int amount = section.getInt("result.amount", 1);
         String permission = section.getString("permission", "None");
+
+        boolean isTableEnabled = section.getBoolean("enabled", true);
 
         ItemStack resultStack;
         if (resultId != null) {
@@ -164,11 +174,20 @@ public class RecipeEditorMenu extends Menu {
 
         inventory.setItem(RESULT_SLOT + 9, makeItem(Material.GOLD_NUGGET, "§6Result Amount", "§7Current: §e" + amount, "", "§aClick to Edit"));
 
-        inventory.setItem(16, makeItem(Material.PAPER, "§eRecipe Permission", "§7Current: §f" + (permission == null ? "None" : permission), "", "§aClick to Edit"));
+        inventory.setItem(50, makeItem(Material.PAPER, "§eRecipe Permission", "§7Current: §f" + (permission == null ? "None" : permission), "", "§aClick to Edit"));
 
         inventory.setItem(22, makeItem(Material.CRAFTING_TABLE, "§eCrafting Grid", "§7Configure the 3x3 pattern."));
         inventory.setItem(23, makeItem(Material.ARROW, "§7->"));
-        inventory.setItem(44, makeItem(Material.GREEN_STAINED_GLASS, "§aSave Recipe"));
+
+        ItemStack tableIcon;
+        if (isTableEnabled) {
+            tableIcon = makeItem(Material.LIME_DYE, "§aRecipe Status: ENABLED", "§7Players §acan §7craft this recipe.", "", "§eClick to Disable");
+        } else {
+            tableIcon = makeItem(Material.GRAY_DYE, "§cRecipe Status: DISABLED", "§7Players §ccannot §7craft this recipe.", "", "§eClick to Enable");
+        }
+        inventory.setItem(49, tableIcon);
+
+        inventory.setItem(53, makeItem(Material.GREEN_STAINED_GLASS, "§aSave & Back"));
     }
 
     private ItemStack getIngredientIconFromConfig(ConfigurationSection sec) {

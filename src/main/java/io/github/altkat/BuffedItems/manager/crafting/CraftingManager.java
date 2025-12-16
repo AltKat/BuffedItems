@@ -72,7 +72,7 @@ public class CraftingManager {
 
             if (recipe.isValid()) {
                 validCount++;
-                if (shouldRegisterToBook) {
+                if (shouldRegisterToBook && recipe.isEnabled()) {
                     registrationQueue.add(recipe);
                 }
             } else {
@@ -192,7 +192,11 @@ public class CraftingManager {
         List<String> shape = rSection.getStringList("shape");
         String permission = rSection.getString("permission");
 
+        boolean enabled = rSection.getBoolean("enabled", true);
+
         CustomRecipe recipe = new CustomRecipe(recipeId, resultItemId, resultAmount, shape, permission);
+
+        recipe.setEnabled(enabled);
 
         if (resultItemId == null || plugin.getItemManager().getBuffedItem(resultItemId) == null)
             recipe.addErrorMessage("Invalid Result Item: " + resultItemId);

@@ -209,19 +209,6 @@ public class ItemProtectionListener implements Listener {
     }
 
     @EventHandler
-    public void onCraftItem(CraftItemEvent e) {
-        for (ItemStack item : e.getInventory().getMatrix()) {
-            if (itemHasFlag(item, "PREVENT_CRAFTING_USE")) {
-                e.setCancelled(true);
-                if (e.getWhoClicked() instanceof Player) {
-                    sendProtectionMessage(((Player) e.getWhoClicked()),"protection-prevent-crafting-use");
-                }
-                return;
-            }
-        }
-    }
-
-    @EventHandler
     public void onItemDrop(PlayerDropItemEvent e) {
         if (itemHasFlag(e.getItemDrop().getItemStack(), "PREVENT_DROP")) {
             e.setCancelled(true);
