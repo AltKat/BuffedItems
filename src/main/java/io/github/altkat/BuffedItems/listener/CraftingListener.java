@@ -28,6 +28,7 @@ public class CraftingListener implements Listener {
 
     private final BuffedItems plugin;
     private final Set<UUID> isCrafting = new HashSet<>();
+    private final Set<UUID> isCalculating = new HashSet<>();
 
     public CraftingListener(BuffedItems plugin) {
         this.plugin = plugin;
@@ -35,42 +36,61 @@ public class CraftingListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareCraft(PrepareItemCraftEvent e) {
+        if (!(e.getView().getPlayer() instanceof Player p)) return;
+
+        if (isCrafting.contains(p.getUniqueId())) return;
+
+        if (isCalculating.contains(p.getUniqueId())) return;
+
         CraftingInventory inv = e.getInventory();
         ItemStack[] matrix = inv.getMatrix();
-        CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
 
-        if (match != null) {
-
-            if (!match.isEnabled()) {
-                inv.setResult(null);
-                return;
+        boolean isEmpty = true;
+        for (ItemStack item : matrix) {
+            if (item != null && item.getType() != Material.AIR) {
+                isEmpty = false;
+                break;
             }
+        }
+        if (isEmpty) return;
 
-            Player p = (Player) e.getView().getPlayer();
-            if (match.getPermission() != null && !match.getPermission().isEmpty() && !p.hasPermission(match.getPermission())) {
-                inv.setResult(null);
-                return;
-            }
+        isCalculating.add(p.getUniqueId());
+        try {
+            CustomRecipe match = plugin.getCraftingManager().findRecipe(matrix);
 
-            BuffedItem resultItem = plugin.getItemManager().getBuffedItem(match.getResultItemId());
-            if (resultItem != null) {
-                ItemStack resultStack = new ItemBuilder(resultItem, plugin).build();
-                resultStack.setAmount(match.getAmount());
-                inv.setResult(resultStack);
-            } else {
-                inv.setResult(null);
-            }
-        } else {
-            for (ItemStack item : matrix) {
-                if (plugin.getItemManager().isBuffedItem(item)) {
+            if (match != null) {
+                if (!match.isEnabled()) {
                     inv.setResult(null);
                     return;
                 }
+
+                if (match.getPermission() != null && !match.getPermission().isEmpty() && !p.hasPermission(match.getPermission())) {
+                    inv.setResult(null);
+                    return;
+                }
+
+                BuffedItem resultItem = plugin.getItemManager().getBuffedItem(match.getResultItemId());
+                if (resultItem != null) {
+                    ItemStack resultStack = new ItemBuilder(resultItem, plugin).build();
+                    resultStack.setAmount(match.getAmount());
+                    inv.setResult(resultStack);
+                } else {
+                    inv.setResult(null);
+                }
+            } else {
+                for (ItemStack item : matrix) {
+                    if (plugin.getItemManager().isBuffedItem(item)) {
+                        inv.setResult(null);
+                        return;
+                    }
+                }
+                ItemStack currentResult = inv.getResult();
+                if (currentResult != null && plugin.getItemManager().isBuffedItem(currentResult)) {
+                    inv.setResult(null);
+                }
             }
-            ItemStack currentResult = inv.getResult();
-            if (currentResult != null && plugin.getItemManager().isBuffedItem(currentResult)) {
-                inv.setResult(null);
-            }
+        } finally {
+            isCalculating.remove(p.getUniqueId());
         }
     }
 
@@ -125,6 +145,7 @@ public class CraftingListener implements Listener {
             }
         } finally {
             isCrafting.remove(player.getUniqueId());
+            player.updateInventory();
         }
     }
 
@@ -152,7 +173,6 @@ public class CraftingListener implements Listener {
         }
 
         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
-        player.updateInventory();
     }
 
     private void handleShiftClick(Player player, CustomRecipe match, ItemStack[] matrix, CraftingInventory inv) {
@@ -198,7 +218,6 @@ public class CraftingListener implements Listener {
         }
 
         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
-        player.updateInventory();
     }
 
     private void updateMatrix(CraftingInventory inv, ItemStack[] matrix, CustomRecipe match, int multiplier) {

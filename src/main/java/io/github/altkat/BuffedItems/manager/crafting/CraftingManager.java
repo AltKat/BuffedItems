@@ -37,6 +37,12 @@ public class CraftingManager {
 
         if (registrationTask != null && !registrationTask.isCancelled()) {
             registrationTask.cancel();
+            registrationTask = null;
+        }
+
+        if (removalTask != null && !removalTask.isCancelled()) {
+            removalTask.cancel();
+            removalTask = null;
         }
 
         unloadRecipes();
@@ -89,7 +95,7 @@ public class CraftingManager {
     }
 
     private void startBatchRegistration(Queue<CustomRecipe> queue, boolean silent) {
-        final int BATCH_SIZE = 5;
+        final int BATCH_SIZE = 2;
         final int totalToRegister = queue.size();
 
         registrationTask = new BukkitRunnable() {
@@ -113,12 +119,12 @@ public class CraftingManager {
                         registerBukkitRecipe(recipe);
                     }
                     count++;
-                    if (System.nanoTime() - batchStart > 2000000) break;
+                    if (System.nanoTime() - batchStart > 1500000) break;
                 }
             }
         };
 
-        registrationTask.runTaskTimer(plugin, 0L, 1L);
+        registrationTask.runTaskTimer(plugin, 1L, 2L);
     }
 
     private void printLoadLog(boolean silent, int valid, int invalid, List<String> errorIds, long startTime) {
@@ -145,8 +151,16 @@ public class CraftingManager {
     }
 
     public void unloadRecipes() {
-        if (registrationTask != null && !registrationTask.isCancelled()) registrationTask.cancel();
-        if (removalTask != null && !removalTask.isCancelled()) removalTask.cancel();
+
+        if (registrationTask != null && !registrationTask.isCancelled()) {
+            registrationTask.cancel();
+            registrationTask = null;
+        }
+
+        if (removalTask != null && !removalTask.isCancelled()) {
+            removalTask.cancel();
+            removalTask = null;
+        }
 
         if (trackedKeys.isEmpty()) return;
 
@@ -183,7 +197,7 @@ public class CraftingManager {
                 }
             }
         };
-        removalTask.runTaskTimer(plugin, 0L, 1L);
+        removalTask.runTaskTimer(plugin, 0L, 2L);
     }
 
     private CustomRecipe parseRecipeFromConfig(String recipeId, ConfigurationSection rSection) {
