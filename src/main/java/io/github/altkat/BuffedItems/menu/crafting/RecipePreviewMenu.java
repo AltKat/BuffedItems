@@ -50,6 +50,11 @@ public class RecipePreviewMenu extends Menu {
     public void setMenuItems() {
         setFillerGlass();
 
+        int[] gridSlots = {10, 11, 12, 19, 20, 21, 28, 29, 30};
+        for (int slot : gridSlots) {
+            inventory.setItem(slot, new ItemStack(Material.AIR));
+        }
+
         ItemStack resultIcon;
         BuffedItem resultBi = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
         if (resultBi != null) {
@@ -74,8 +79,6 @@ public class RecipePreviewMenu extends Menu {
         inventory.setItem(25, resultIcon);
 
         inventory.setItem(23, makeItem(Material.ARROW, "§e->"));
-
-        int[] gridSlots = {10, 11, 12, 19, 20, 21, 28, 29, 30};
 
         List<String> shape = recipe.getShape();
         if (shape != null) {

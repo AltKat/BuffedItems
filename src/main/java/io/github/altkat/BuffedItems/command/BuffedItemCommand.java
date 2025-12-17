@@ -317,6 +317,12 @@ public class BuffedItemCommand implements CommandExecutor {
         ConfigManager.reloadConfig();
 
         sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aConfigurations has been reloaded."));
+
+        if (RecipesConfig.get().getBoolean("settings.enabled", true) &&
+                RecipesConfig.get().getBoolean("settings.register-to-book", true)) {
+            sender.sendMessage(ConfigManager.fromSection("§7(Note: Recipes are being updated in the background and will appear in the recipe book shortly.)"));
+        }
+
         return true;
     }
 

@@ -26,6 +26,8 @@ public class CraftingManager {
     private BukkitRunnable registrationTask;
     private BukkitRunnable removalTask;
 
+    private final Map<Material, List<CustomRecipe>> recipeCache = new HashMap<>();
+
     public CraftingManager(BuffedItems plugin) {
         this.plugin = plugin;
         this.recipes = new LinkedHashMap<>();
@@ -47,6 +49,7 @@ public class CraftingManager {
 
         unloadRecipes();
         recipes.clear();
+        recipeCache.clear();
 
         if (!RecipesConfig.get().getBoolean("settings.enabled", true)) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "Custom Crafting system is disabled in recipes.yml");
@@ -73,10 +76,10 @@ public class CraftingManager {
             if (rSection == null) continue;
 
             CustomRecipe recipe = parseRecipeFromConfig(recipeId, rSection);
-
             recipes.put(recipeId, recipe);
 
             if (recipe.isValid()) {
+                cacheRecipe(recipe);
                 validCount++;
                 if (shouldRegisterToBook && recipe.isEnabled()) {
                     registrationQueue.add(recipe);
@@ -95,7 +98,7 @@ public class CraftingManager {
     }
 
     private void startBatchRegistration(Queue<CustomRecipe> queue, boolean silent) {
-        final int BATCH_SIZE = 2;
+        final int BATCH_SIZE = 50;
         final int totalToRegister = queue.size();
 
         registrationTask = new BukkitRunnable() {
@@ -119,7 +122,7 @@ public class CraftingManager {
                         registerBukkitRecipe(recipe);
                     }
                     count++;
-                    if (System.nanoTime() - batchStart > 1500000) break;
+                    if (System.nanoTime() - batchStart > 2000000) break;
                 }
             }
         };
@@ -172,7 +175,7 @@ public class CraftingManager {
     }
 
     private void startBatchRemoval(Queue<NamespacedKey> queue) {
-        final int BATCH_SIZE = 5;
+        final int BATCH_SIZE = 50;
 
         removalTask = new BukkitRunnable() {
             @Override
@@ -346,11 +349,49 @@ public class CraftingManager {
 
     public CustomRecipe findRecipe(ItemStack[] matrix) {
         if (isMatrixEmpty(matrix)) return null;
-        for (CustomRecipe recipe : recipes.values()) {
+
+        ItemStack firstItem = null;
+        for (ItemStack item : matrix) {
+            if (item != null && !item.getType().isAir()) {
+                firstItem = item;
+                break;
+            }
+        }
+
+        if (firstItem == null) return null;
+
+        List<CustomRecipe> candidates = recipeCache.get(firstItem.getType());
+
+        if (candidates == null || candidates.isEmpty()) return null;
+
+        for (CustomRecipe recipe : candidates) {
             if (!recipe.isValid()) continue;
             if (matchesShaped(matrix, recipe)) return recipe;
         }
         return null;
+    }
+
+    private void cacheRecipe(CustomRecipe recipe) {
+        char[][] grid = parseShape(recipe.getShape());
+
+        if (grid.length == 0) return;
+
+        for (char keyChar : grid[0]) {
+            if (keyChar != ' ') {
+                RecipeIngredient ing = recipe.getIngredient(keyChar);
+
+                if (ing != null && ing.getMaterial() != null) {
+                    List<CustomRecipe> list = recipeCache.computeIfAbsent(ing.getMaterial(), k -> new ArrayList<>());
+
+                    if (ing.getMatchType() == MatchType.MATERIAL) {
+                        list.add(recipe);
+                    } else {
+                        list.add(0, recipe);
+                    }
+                    return;
+                }
+            }
+        }
     }
 
     private boolean isMatrixEmpty(ItemStack[] matrix) {
