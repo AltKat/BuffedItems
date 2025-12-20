@@ -137,7 +137,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 } else {
                     items.add(itemId);
                     SetsConfig.get().set("sets." + setId + ".items", items);
-                    SetsConfig.save();
+                    SetsConfig.saveAsync();
                     plugin.getSetManager().loadSets(true);
                     p.sendMessage(ConfigManager.fromSectionWithPrefix("§aAdded " + itemId + " to set."));
                 }

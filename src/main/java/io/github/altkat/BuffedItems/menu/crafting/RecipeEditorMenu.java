@@ -95,7 +95,7 @@ public class RecipeEditorMenu extends Menu {
 
         if (e.getSlot() == 53) {
             if (playerMenuUtility.hasUnsavedChanges()) {
-                RecipesConfig.save();
+                RecipesConfig.saveAsync();
                 plugin.getCraftingManager().loadRecipes(true);
 
                 playerMenuUtility.setUnsavedChanges(false);

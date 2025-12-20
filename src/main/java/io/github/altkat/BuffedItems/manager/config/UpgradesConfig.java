@@ -1,53 +1,46 @@
 package io.github.altkat.BuffedItems.manager.config;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
-public class UpgradesConfig {
+public class UpgradesConfig extends BaseConfig{
 
-    private static File file;
-    private static FileConfiguration config;
+    private static UpgradesConfig instance;
+
+    public UpgradesConfig(BuffedItems plugin) {
+        super(plugin, "upgrades.yml");
+        instance = this;
+    }
 
     public static void setup(BuffedItems plugin) {
-        file = new File(plugin.getDataFolder(), "upgrades.yml");
-
-        if (!file.exists()) {
-            try {
-                if (plugin.getResource("upgrades.yml") != null) {
-                    plugin.saveResource("upgrades.yml", false);
-                } else {
-                    if (!file.createNewFile()) {
-                        plugin.getLogger().warning("Failed to create upgrades.yml file!");
-                        return;
-                    }
-                }
-                ConfigManager.logInfo("&aCreated new upgrades.yml file.");
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not create upgrades.yml!");
-                e.printStackTrace();
-            }
-        }
-
-        config = YamlConfiguration.loadConfiguration(file);
+        new UpgradesConfig(plugin);
     }
 
     public static FileConfiguration get() {
-        return config;
+        return instance.getConfigData();
+    }
+
+    public static void saveAsync() {
+        if (instance != null) instance.saveFileAsync();
     }
 
     public static void save() {
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            System.out.println("Could not save upgrades.yml file!");
-        }
+        if (instance != null) instance.saveFile();
     }
 
     public static void reload() {
-        config = YamlConfiguration.loadConfiguration(file);
+        if (instance != null) instance.reloadFile();
+    }
+
+    public static boolean isDirty() {
+        return instance != null && instance.hasUnsavedChanges();
     }
 }

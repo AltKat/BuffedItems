@@ -1,50 +1,45 @@
 package io.github.altkat.BuffedItems.manager.config;
 
 import io.github.altkat.BuffedItems.BuffedItems;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
-public class SetsConfig {
+public class SetsConfig extends BaseConfig{
 
-    private static File file;
-    private static FileConfiguration config;
+    private static SetsConfig instance;
+
+    public SetsConfig(BuffedItems plugin) {
+        super(plugin, "sets.yml");
+        instance = this;
+    }
 
     public static void setup(BuffedItems plugin) {
-        file = new File(plugin.getDataFolder(), "sets.yml");
-
-        if (!file.exists()) {
-            try {
-                if (plugin.getResource("sets.yml") != null) {
-                    plugin.saveResource("sets.yml", false);
-                } else {
-                    file.createNewFile();
-                }
-                ConfigManager.logInfo("&aCreated new sets.yml file.");
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not create sets.yml!");
-                e.printStackTrace();
-            }
-        }
-
-        config = YamlConfiguration.loadConfiguration(file);
+        new SetsConfig(plugin);
     }
 
     public static FileConfiguration get() {
-        return config;
+        return instance.getConfigData();
+    }
+
+    public static void saveAsync() {
+        if (instance != null) instance.saveFileAsync();
     }
 
     public static void save() {
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            System.out.println("Could not save sets.yml file!");
-        }
+        if (instance != null) instance.saveFile();
     }
 
     public static void reload() {
-        config = YamlConfiguration.loadConfiguration(file);
+        if (instance != null) instance.reloadFile();
+    }
+
+    public static boolean isDirty() {
+        return instance != null && instance.hasUnsavedChanges();
     }
 }

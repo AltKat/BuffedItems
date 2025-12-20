@@ -6,12 +6,14 @@ import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.utility.ItemListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
+import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class LoreEditorMenu extends PaginatedMenu {
@@ -43,6 +45,8 @@ public class LoreEditorMenu extends PaginatedMenu {
             new ItemListMenu(playerMenuUtility, plugin).open();
             return;
         }
+
+        if (e.getSlot() == 4) return;
 
         List<String> lore = new ArrayList<>(item.getLore());
 
@@ -87,6 +91,22 @@ public class LoreEditorMenu extends PaginatedMenu {
 
             if (loreIndex >= lore.size()) return;
 
+            if (e.isShiftClick()) {
+                if (e.isLeftClick()) {
+                    if (loreIndex <= 0) return;
+                    Collections.swap(lore, loreIndex, loreIndex - 1);
+                    ConfigManager.setItemValue(item.getId(), "lore", lore);
+                    this.open();
+                }
+                else if (e.isRightClick()) {
+                    if (loreIndex >= lore.size() - 1) return;
+                    Collections.swap(lore, loreIndex, loreIndex + 1);
+                    ConfigManager.setItemValue(item.getId(), "lore", lore);
+                    this.open();
+                }
+                return;
+            }
+
             if (e.isLeftClick()) {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setChatInputPath("lore." + loreIndex);
@@ -119,6 +139,13 @@ public class LoreEditorMenu extends PaginatedMenu {
             return;
         }
 
+        try {
+            ItemStack previewItem = new ItemBuilder(item, plugin).build();
+            inventory.setItem(4, previewItem);
+        } catch (Exception e) {
+            inventory.setItem(4, makeItem(Material.BARRIER, "§cPreview Unavailable", "§7Error building preview."));
+        }
+
         List<String> lore = item.getLore();
 
         if (!lore.isEmpty()) {
@@ -135,8 +162,10 @@ public class LoreEditorMenu extends PaginatedMenu {
                     itemLore.add("§8(This is a blank line)");
                 }
                 itemLore.add(" ");
-                itemLore.add("§aLeft-Click to Edit");
+                itemLore.add("§eLeft-Click to Edit");
                 itemLore.add("§cRight-Click to Delete");
+                itemLore.add("§aShift + Left to Move Up");
+                itemLore.add("§bShift + Right to Move Down");
                 itemLore.add("§8(Line " + (index + 1) + ")");
 
                 inventory.setItem(9 + i, makeItem(Material.BOOK, displayName, itemLore.toArray(new String[0])));

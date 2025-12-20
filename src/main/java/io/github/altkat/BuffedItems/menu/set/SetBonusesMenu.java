@@ -67,7 +67,7 @@ public class SetBonusesMenu extends PaginatedMenu {
 
             if (e.getClick() == ClickType.RIGHT) {
                 SetsConfig.get().set("sets." + setId + ".bonuses." + countKey, null);
-                SetsConfig.save();
+                SetsConfig.saveAsync();
                 plugin.getSetManager().loadSets(true);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cBonus tier " + countKey + " removed."));
                 this.open();

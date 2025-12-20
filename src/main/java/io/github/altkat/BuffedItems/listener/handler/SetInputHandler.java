@@ -35,7 +35,7 @@ public class SetInputHandler implements ChatInputHandler {
         if (path.equals("set_display_name")) {
             String setId = pmu.getItemToEditId();
             SetsConfig.get().set("sets." + setId + ".display_name", input);
-            SetsConfig.save();
+            SetsConfig.saveAsync();
             plugin.getSetManager().loadSets(true);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSet display name updated!"));
@@ -55,7 +55,7 @@ public class SetInputHandler implements ChatInputHandler {
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§cBonus tier " + count + " already exists."));
                 } else {
                     SetsConfig.get().createSection(basePath);
-                    SetsConfig.save();
+                    SetsConfig.saveAsync();
                     plugin.getSetManager().loadSets(true);
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§aBonus tier " + count + " created!"));
                 }

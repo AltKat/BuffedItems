@@ -31,7 +31,7 @@ public class UsageLimitSettingsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 45;
+        return 54;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class UsageLimitSettingsMenu extends Menu {
         if (e.getCurrentItem() == null) return;
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 44) {
+        if (type == Material.BARRIER && e.getSlot() == 53) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -109,6 +109,11 @@ public class UsageLimitSettingsMenu extends Menu {
             inputPath = "usage-limit.depletion-notification";
             title = "Break Notification";
         }
+        else if (e.getSlot() == 42) {
+            configKey = "usage-limit.depletion-transform-message";
+            inputPath = "usage-limit.depletion-transform-message";
+            title = "Transform Message";
+        }
 
         if (configKey != null) {
             if (e.getClick() == ClickType.RIGHT) {
@@ -121,7 +126,9 @@ public class UsageLimitSettingsMenu extends Menu {
                 playerMenuUtility.setChatInputPath(inputPath);
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new " + title + " in chat."));
-                p.sendMessage(ConfigManager.fromSection("§7Placeholders: {remaining_uses}, {total_uses}"));
+                if(configKey.equals("usage-limit.lore")) {
+                    p.sendMessage(ConfigManager.fromSection("§7Placeholders: {remaining_uses}, {total_uses}"));
+                }
                 p.sendMessage(ConfigManager.fromSection("§7Type 'cancel' to exit."));
             }
         }
@@ -151,6 +158,7 @@ public class UsageLimitSettingsMenu extends Menu {
         inventory.setItem(12, makeItem(actionIcon, "§6Depletion Action",
                 "§7Current: §f" + action.name(), actionDesc, "", "§eClick to Switch"));
 
+        String targetName = "";
         if (action == DepletionAction.TRANSFORM) {
             String targetId = item.getDepletionTransformId();
 
@@ -165,6 +173,7 @@ public class UsageLimitSettingsMenu extends Menu {
                     displayName = "§cUnknown Item";
                 }
                 idLine = "§8(ID: " + targetId + ")";
+                targetName = displayName;
             }
 
             inventory.setItem(14, makeItem(Material.HOPPER, "§dTransform Target",
@@ -176,6 +185,7 @@ public class UsageLimitSettingsMenu extends Menu {
                     "§eClick to Select"));
         } else {
             inventory.setItem(14, makeItem(Material.MINECART, "§8Transform Target", "§7(Requires TRANSFORM action)"));
+            targetName = "&cNot Set";
         }
 
         inventory.setItem(16, makeItem(Material.COMMAND_BLOCK, "§6Depletion Commands",
@@ -190,8 +200,9 @@ public class UsageLimitSettingsMenu extends Menu {
         inventory.setItem(30, makeMessageItem(Material.BOOK, "Depleted Lore", item.getDepletedLore(), "usage-limit-broken-lore"));
         inventory.setItem(32, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", item.getDepletedMessage(), "usage-limit-depleted-message"));
         inventory.setItem(34, makeMessageItem(Material.BELL, "Break Notification", item.getDepletionNotification(), "usage-limit-break-notification"));
+        inventory.setItem(42, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", item.getDepletionTransformMessage(), "usage-limit-depletion-transform"));
 
-        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
     }
 
     private org.bukkit.inventory.ItemStack makeMessageItem(Material mat, String title, String currentVal, String defaultKey) {

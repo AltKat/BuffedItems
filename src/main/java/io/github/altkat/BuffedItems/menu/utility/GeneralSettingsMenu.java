@@ -88,9 +88,9 @@ public class GeneralSettingsMenu extends Menu {
         config.set("settings.enabled", !current);
 
         switch (name) {
-            case "sets" -> SetsConfig.save();
-            case "upgrades" -> UpgradesConfig.save();
-            case "recipes" -> RecipesConfig.save();
+            case "sets" -> SetsConfig.saveAsync();
+            case "upgrades" -> UpgradesConfig.saveAsync();
+            case "recipes" -> RecipesConfig.saveAsync();
         }
 
         loader.accept(true);

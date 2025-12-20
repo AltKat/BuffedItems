@@ -146,14 +146,27 @@ public final class BuffedItems extends JavaPlugin {
             }
         }
 
-        RecipesConfig.save();
-
         if (craftingManager != null) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Unloading custom recipes...");
             craftingManager.unloadRecipes();
         }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Shutdown] Saving final config...");
+
+        if (ItemsConfig.isDirty()) {
+            ItemsConfig.save();
+            getLogger().info("Items.yml had pending changes and was saved.");
+        }
+        if (UpgradesConfig.isDirty()) {
+            UpgradesConfig.save();
+        }
+        if (SetsConfig.isDirty()) {
+            SetsConfig.save();
+        }
+        if (RecipesConfig.isDirty()) {
+            RecipesConfig.save();
+        }
+
         ConfigManager.backupConfig();
 
         playerMenuUtilityMap.clear();

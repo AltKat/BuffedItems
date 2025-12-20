@@ -3,42 +3,44 @@ package io.github.altkat.BuffedItems.manager.config;
 import io.github.altkat.BuffedItems.BuffedItems;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.io.IOException;
 
-public class ItemsConfig {
+public class ItemsConfig extends BaseConfig {
 
-    private static File file;
-    private static FileConfiguration config;
+    private static ItemsConfig instance;
 
-    public static void setup(BuffedItems plugin) {
-        file = new File(plugin.getDataFolder(), "items.yml");
-
-        if (!file.exists()) {
-            try {
-                if (plugin.getResource("items.yml") != null) {
-                    plugin.saveResource("items.yml", false);
-                } else {
-                    if (!file.createNewFile()) {
-                        plugin.getLogger().warning("Failed to create items.yml file!");
-                        return;
-                    }
-                }
-                ConfigManager.logInfo("&aCreated new items.yml file.");
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not create items.yml!");
-                e.printStackTrace();
-            }
-        }
-
-        config = YamlConfiguration.loadConfiguration(file);
-
-        migrateFromOldConfig(plugin);
+    public ItemsConfig(BuffedItems plugin) {
+        super(plugin, "items.yml");
+        instance = this; // Singleton instance
+        migrateFromOldConfig();
     }
 
-    private static void migrateFromOldConfig(BuffedItems plugin) {
+    public static void setup(BuffedItems plugin) {
+        new ItemsConfig(plugin);
+    }
+
+    public static void saveAsync() {
+        if (instance != null) instance.saveFileAsync();
+    }
+
+    public static FileConfiguration get() {
+        return instance.getConfigData();
+    }
+
+    public static void save() {
+        if (instance != null) instance.saveFile();
+    }
+
+    public static void reload() {
+        if (instance != null) instance.reloadFile();
+    }
+
+    public static boolean isDirty() {
+        return instance != null && instance.hasUnsavedChanges();
+    }
+
+    private void migrateFromOldConfig() {
         FileConfiguration mainConfig = plugin.getConfig();
 
         if (mainConfig.contains("items")) {
@@ -79,21 +81,5 @@ public class ItemsConfig {
 
             ConfigManager.logInfo("&aMigration complete! Your config.yml is now clean and items are in items.yml.");
         }
-    }
-
-    public static FileConfiguration get() {
-        return config;
-    }
-
-    public static void save() {
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            System.out.println("Could not save items.yml file!");
-        }
-    }
-
-    public static void reload() {
-        config = YamlConfiguration.loadConfiguration(file);
     }
 }

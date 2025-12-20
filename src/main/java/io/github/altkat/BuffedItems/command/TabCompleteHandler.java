@@ -53,15 +53,51 @@ public class TabCompleteHandler implements TabCompleter {
 
             StringUtil.copyPartialMatches(args[0], subcommands, completions);
 
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
-            List<String> playerNames = Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .collect(Collectors.toList());
-            StringUtil.copyPartialMatches(args[1], playerNames, completions);
+        } else if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("give")) {
+                if (sender.hasPermission("buffeditems.command.give")) {
+                    List<String> playerNames = Bukkit.getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .collect(Collectors.toList());
+                    StringUtil.copyPartialMatches(args[1], playerNames, completions);
+                }
+            } else if (args[0].equalsIgnoreCase("reload")) {
+                if (sender.hasPermission("buffeditems.command.reload")) {
+                    StringUtil.copyPartialMatches(args[1], List.of("all", "items", "recipes", "sets", "upgrades", "config"), completions);
+                }
+            }
 
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
-            List<String> itemIds = new ArrayList<>(plugin.getItemManager().getLoadedItems().keySet());
-            StringUtil.copyPartialMatches(args[2], itemIds, completions);
+        } else if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("give")) {
+                if (sender.hasPermission("buffeditems.command.give")) {
+                    List<String> itemIds = new ArrayList<>(plugin.getItemManager().getLoadedItems().keySet());
+                    StringUtil.copyPartialMatches(args[2], itemIds, completions);
+                }
+            } else if (args[0].equalsIgnoreCase("reload")) {
+                if (sender.hasPermission("buffeditems.command.reload")) {
+                    String reloadType = args[1].toLowerCase();
+                    if (reloadType.equals("all") || reloadType.equals("recipes")) {
+                        StringUtil.copyPartialMatches(args[2], List.of("force"), completions);
+                    }
+                }
+            }
+        } else if (args.length == 4) {
+            if (args[0].equalsIgnoreCase("give")) {
+                if (sender.hasPermission("buffeditems.command.give")) {
+                    StringUtil.copyPartialMatches(args[3], List.of("1", "64", "-s", "--silent"), completions);
+                }
+            }
+        } else if (args.length == 5) {
+            if (args[0].equalsIgnoreCase("give")) {
+                if (sender.hasPermission("buffeditems.command.give")) {
+                    String prevArg = args[3];
+                    if (prevArg.equalsIgnoreCase("-s") || prevArg.equalsIgnoreCase("--silent")) {
+                        StringUtil.copyPartialMatches(args[4], List.of("1", "64"), completions);
+                    } else {
+                        StringUtil.copyPartialMatches(args[4], List.of("-s", "--silent"), completions);
+                    }
+                }
+            }
         }
 
         return completions;

@@ -216,6 +216,49 @@ public class ConfigManager {
         }
     }
 
+    public static void reloadSettings(boolean silent) {
+        synchronized (CONFIG_LOCK) {
+            plugin.reloadConfig();
+            loadGlobalSettings();
+
+            if (!silent) sendDebugMessage(DEBUG_INFO, () -> "[Config] Main settings (config.yml) reloaded.");
+        }
+    }
+
+    public static void reloadItems(boolean silent) {
+        synchronized (CONFIG_LOCK) {
+            ItemsConfig.reload();
+            plugin.getItemManager().loadItems(silent);
+            invalidateAllPlayerCaches();
+            if (!silent) sendDebugMessage(DEBUG_INFO, () -> "[Config] Items module reloaded.");
+        }
+    }
+
+    public static void reloadCrafting(boolean silent) {
+        synchronized (CONFIG_LOCK) {
+            RecipesConfig.reload();
+            plugin.getCraftingManager().loadRecipes(silent);
+            if (!silent) sendDebugMessage(DEBUG_INFO, () -> "[Config] Crafting module reloaded.");
+        }
+    }
+
+    public static void reloadSets(boolean silent) {
+        synchronized (CONFIG_LOCK) {
+            SetsConfig.reload();
+            plugin.getSetManager().loadSets(silent);
+            invalidateAllPlayerCaches();
+            if (!silent) sendDebugMessage(DEBUG_INFO, () -> "[Config] Sets module reloaded.");
+        }
+    }
+
+    public static void reloadUpgrades(boolean silent) {
+        synchronized (CONFIG_LOCK) {
+            UpgradesConfig.reload();
+            plugin.getUpgradeManager().loadRecipes(silent);
+            if (!silent) sendDebugMessage(DEBUG_INFO, () -> "[Config] Upgrades module reloaded.");
+        }
+    }
+
     public static void loadGlobalSettings() {
         debugLevel = plugin.getConfig().getInt("debug-level", 0);
         if (debugLevel < 0) {
@@ -305,7 +348,7 @@ public class ConfigManager {
                 ItemsConfig.get().set(fullPath, value);
             }
 
-            ItemsConfig.save();
+            ItemsConfig.saveAsync();
 
             plugin.getItemManager().reloadSingleItem(itemId);
             plugin.getEffectApplicatorTask().invalidateCacheForHolding(itemId);
@@ -326,7 +369,7 @@ public class ConfigManager {
             config.set("items." + itemId + ".material", "STONE");
             config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
 
-            ItemsConfig.save();
+            ItemsConfig.saveAsync();
 
             plugin.getItemManager().reloadSingleItem(itemId);
 
@@ -357,7 +400,7 @@ public class ConfigManager {
 
             config.set("items." + newItemId + ".display_name", originalDisplayName + " &7(Copy)");
 
-            ItemsConfig.save();
+            ItemsConfig.saveAsync();
 
             plugin.getItemManager().reloadSingleItem(newItemId);
 
@@ -406,7 +449,7 @@ public class ConfigManager {
             String fullPath = (path == null) ? "upgrades." + upgradeId : "upgrades." + upgradeId + "." + path;
 
             UpgradesConfig.get().set(fullPath, value);
-            UpgradesConfig.save();
+            UpgradesConfig.saveAsync();
             UpgradesConfig.reload();
             plugin.getUpgradeManager().loadRecipes(true);
         }
@@ -424,7 +467,7 @@ public class ConfigManager {
             SetsConfig.get().set(path + ".display_name", "&6" + setId);
             SetsConfig.get().set(path + ".items", new java.util.ArrayList<>());
 
-            SetsConfig.save();
+            SetsConfig.saveAsync();
             plugin.getSetManager().loadSets(true);
             return true;
         }
@@ -499,6 +542,11 @@ public class ConfigManager {
     public static String getGlobalDepletionNotification() {
         if (plugin == null) return "&cYour item has run out of charges!";
         return plugin.getConfig().getString("active-items.messages.usage-limit-depletion-notification", "&cYour item has run out of charges!");
+    }
+
+    public static String getGlobalDepletionTransformMessage() {
+        if (plugin == null) return "&cYour item has run out of charges!";
+        return plugin.getConfig().getString("active-items.messages.usage-limit-depletion-transform", "&eYour item transformed!");
     }
 
     public static String getGlobalDepletionSound() {

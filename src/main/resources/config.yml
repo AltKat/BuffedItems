@@ -73,6 +73,7 @@ active-items:
     usage-limit-depleted-lore: "&cItem Depleted - No Uses Left"
     usage-limit-depleted-message: "&cThis item is depleted! You can't use its ability anymore."
     usage-limit-depletion-notification: "&cYour item has run out of charges!"
+    usage-limit-depletion-transform: "&eYour item transformed!"
 
   # Sound Effects
   # Format: SOUND_NAME;VOLUME;PITCH

@@ -70,7 +70,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
         if (e.getSlot() == 51) {
             boolean current = UpgradesConfig.get().getBoolean("settings.browser-button", true);
             UpgradesConfig.get().set("settings.browser-button", !current);
-            UpgradesConfig.save();
+            UpgradesConfig.saveAsync();
             UpgradesConfig.reload();
 
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);

@@ -115,7 +115,7 @@ public class EffectListMenu extends Menu {
 
                 if (isSetBonus) {
                     SetsConfig.get().set(configPath, effects);
-                    SetsConfig.save();
+                    SetsConfig.saveAsync();
                     plugin.getSetManager().loadSets(true);
                 } else {
                     ConfigManager.setItemValue(itemId, extractConfigKey(configPath), effects);

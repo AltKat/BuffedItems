@@ -239,6 +239,9 @@ public class ItemInteractListener implements Listener {
         String targetId = buffedItem.getDepletionTransformId();
 
         if (targetId == null) {
+            plugin.getLogger().warning("[BuffedItems] Configuration Error: Item '" + buffedItem.getId() +
+                    "' has DepletionAction set to TRANSFORM but no 'depletion.transform-to' ID is configured!");
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cItem transformation failed due to misconfiguration. Please contact an administrator."));
             if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(null);
             else player.getInventory().setItemInOffHand(null);
             return;
@@ -252,7 +255,9 @@ public class ItemInteractListener implements Listener {
             if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(resultItem);
             else player.getInventory().setItemInOffHand(resultItem);
 
-            player.sendMessage(ConfigManager.fromLegacyWithPrefix("&aItem transformed!"));
+            String rawTransformMsg = buffedItem.getDepletionTransformMessage();
+            String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
+            player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
         } else {
             plugin.getLogger().warning("[BuffedItems] Transform failed. Target '" + targetId + "' not found.");
             if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(null);
@@ -262,14 +267,24 @@ public class ItemInteractListener implements Listener {
 
     private void giveTransformedItem(Player player, BuffedItem buffedItem) {
         String targetId = buffedItem.getDepletionTransformId();
-        if (targetId == null) return;
+        if (targetId == null){
+            plugin.getLogger().warning("[BuffedItems] Configuration Error: Item '" + buffedItem.getId() +
+                    "' has DepletionAction set to TRANSFORM but no 'depletion.transform-to' ID is configured!");
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cItem transformation failed due to misconfiguration. Please contact an administrator."));
+            return;
+        }
 
         BuffedItem targetItem = plugin.getItemManager().getBuffedItem(targetId);
         if (targetItem != null) {
             ItemStack resultItem = new ItemBuilder(targetItem, plugin).build();
             processMetaPlaceholders(player, resultItem);
             giveItemToPlayer(player, resultItem);
-            player.sendMessage(ConfigManager.fromLegacyWithPrefix("&aItem transformed!"));
+
+            String rawTransformMsg = buffedItem.getDepletionTransformMessage();
+            String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
+            player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
+        }else {
+            plugin.getLogger().warning("[BuffedItems] Transform failed. Target '" + targetId + "' not found.");
         }
     }
 

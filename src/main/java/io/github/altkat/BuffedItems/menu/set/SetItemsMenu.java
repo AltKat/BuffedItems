@@ -64,7 +64,7 @@ public class SetItemsMenu extends PaginatedMenu {
             if (e.getClick() == ClickType.RIGHT) {
                 String removedId = items.remove(index);
                 SetsConfig.get().set("sets." + setId + ".items", items);
-                SetsConfig.save();
+                SetsConfig.saveAsync();
                 plugin.getSetManager().loadSets(true);
                 e.getWhoClicked().sendMessage(ConfigManager.fromSectionWithPrefix("§cRemoved " + removedId + " from set."));
                 this.open();

@@ -335,6 +335,7 @@ public class ItemManager {
         String depletedLore = null;
         String depletedMessage = null;
         String depletionNotification = null;
+        String depletionTransformMessage = null;
         DepletionAction depletionAction = DepletionAction.DISABLE;
         String depletionTransformId = null;
         List<String> depletionCommands = new ArrayList<>();
@@ -372,6 +373,7 @@ public class ItemManager {
                 depletedLore = durabilitySection.getString("depleted-lore", null);
                 depletedMessage = durabilitySection.getString("depleted-message", null);
                 depletionNotification = durabilitySection.getString("depletion-notification", null);
+                depletionTransformMessage = durabilitySection.getString("depletion-transform-message", null);
 
                 String actionStr = durabilitySection.getString("action", "DISABLE");
                 try {
@@ -595,6 +597,7 @@ public class ItemManager {
                 depletedLore,
                 depletedMessage,
                 depletionNotification,
+                depletionTransformMessage,
                 activeDuration,
                 activeCommands,
                 vChat,

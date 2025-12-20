@@ -168,10 +168,10 @@ public class BuffedItemCommand implements CommandExecutor {
     private void sendHelpMessage(CommandSender sender) {
         sender.sendMessage(ConfigManager.fromSection("§#FFD700--- §#FF6347BuffedItems Help §#FFD700---"));
         if (sender.hasPermission("buffeditems.command.give")) {
-            sender.sendMessage(ConfigManager.fromSection("§6/bi give <player> <item_id> [amount]"));
+            sender.sendMessage(ConfigManager.fromSection("§6/bi give <player> <item_id> [amount] [-s]"));
         }
         if (sender.hasPermission("buffeditems.command.reload")) {
-            sender.sendMessage(ConfigManager.fromSection("§6/bi reload (Reloads all config files from disk)"));
+            sender.sendMessage(ConfigManager.fromSection("§6/bi reload [type] [force]"));
         }
         if (sender.hasPermission("buffeditems.command.list")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi list"));
@@ -230,13 +230,36 @@ public class BuffedItemCommand implements CommandExecutor {
         }
 
         int amount = 1;
+        boolean silent = false;
+
         if (args.length >= 4) {
-            try {
-                amount = Integer.parseInt(args[3]);
-            } catch (NumberFormatException e) {
-                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount: " + args[3]));
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Command] Invalid amount: " + args[3]);
-                return true;
+            String arg3 = args[3];
+            if (arg3.equalsIgnoreCase("-s") || arg3.equalsIgnoreCase("--silent")) {
+                silent = true;
+
+                if (args.length >= 5) {
+                    try {
+                        amount = Integer.parseInt(args[4]);
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount: " + args[4]));
+                        return true;
+                    }
+                }
+            }
+            else {
+                try {
+                    amount = Integer.parseInt(arg3);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount: " + arg3));
+                    return true;
+                }
+
+                if (args.length >= 5) {
+                    String arg4 = args[4];
+                    if (arg4.equalsIgnoreCase("-s") || arg4.equalsIgnoreCase("--silent")) {
+                        silent = true;
+                    }
+                }
             }
         }
 
@@ -272,22 +295,28 @@ public class BuffedItemCommand implements CommandExecutor {
 
         target.getInventory().addItem(itemStack);
 
-        sender.sendMessage(ConfigManager.fromLegacyWithPrefix("&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName()));
+        String successMsg = "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName();
+        if (silent) {
+            successMsg += " &7(Silent)";
+        }
+        sender.sendMessage(ConfigManager.fromLegacyWithPrefix(successMsg));
 
-        String rawMsg = plugin.getConfig().getString("messages.give-success-receiver", "&#00FF00You have received &#FFD700{amount}x &#00FF00{item_name}&#00FF00.");
+        if(!silent) {
+            String rawMsg = plugin.getConfig().getString("messages.give-success-receiver", "&#00FF00You have received &#FFD700{amount}x &#00FF00{item_name}&#00FF00.");
 
-        String papiMsg = hooks.processPlaceholders(target, rawMsg);
+            String papiMsg = hooks.processPlaceholders(target, rawMsg);
 
-        Component baseComp = ConfigManager.fromLegacyWithPrefix(papiMsg);
+            Component baseComp = ConfigManager.fromLegacyWithPrefix(papiMsg);
 
-        int finalAmount = amount;
-        Component finalMessage = baseComp
-                .replaceText(builder -> builder.matchLiteral("{amount}").replacement(String.valueOf(finalAmount)))
-                .replaceText(builder -> builder.matchLiteral("{item_name}").replacement(ConfigManager.fromLegacy(buffedItem.getDisplayName())));
+            int finalAmount = amount;
+            Component finalMessage = baseComp
+                    .replaceText(builder -> builder.matchLiteral("{amount}").replacement(String.valueOf(finalAmount)))
+                    .replaceText(builder -> builder.matchLiteral("{item_name}").replacement(ConfigManager.fromLegacy(buffedItem.getDisplayName())));
 
-        target.sendMessage(finalMessage);
+            target.sendMessage(finalMessage);
+        }
 
-        ConfigManager.logInfo("&aGave &e" + amount + "x " + itemId + "&a to &e" + target.getName() + "&a (by: &e" + sender.getName() + "&a)");
+        ConfigManager.logInfo("&aGave &e" + amount + "x " + itemId + "&a to &e" + target.getName() + "&a (by: &e" + sender.getName() + "&a)" + (silent ? " [SILENT]" : ""));
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             plugin.getEffectApplicatorTask().markPlayerForUpdate(target.getUniqueId());
@@ -298,32 +327,115 @@ public class BuffedItemCommand implements CommandExecutor {
     }
 
     private boolean handleReloadCommand(CommandSender sender, String[] args) {
+        boolean isForce = false;
+        String type = null;
+        String invalidArg = null;
 
-        boolean isForce = args.length > 1 && args[1].equalsIgnoreCase("force");
+        if (args.length > 1) {
+            for (int i = 1; i < args.length; i++) {
+                String arg = args[i].toLowerCase();
 
-        if (!isForce) {
+                if (arg.equals("force")) {
+                    isForce = true;
+                } else if (isValidReloadType(arg)) {
+                    if (type == null) {
+                        type = arg;
+                    }
+                } else {
+                    if (type == null && invalidArg == null) {
+                        invalidArg = arg;
+                    }
+                }
+            }
+        }
+
+        if (type == null && invalidArg == null) {
+            type = "all";
+        }
+
+        if (type == null) {
+            sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown reload type: " + invalidArg));
+            sender.sendMessage(ConfigManager.fromSection("§7Available: all, items, recipes, sets, upgrades, config"));
+            return true;
+        }
+
+        boolean supportsForce = type.equals("all") || type.equals("recipes");
+
+        if (isForce && !supportsForce) {
+            sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: 'force' argument is not applicable for '" + type + "'."));
+            return true;
+        }
+
+        if (supportsForce && !isForce) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (BuffedItems.getPlayerMenuUtility(p).hasUnsavedChanges()) {
                     sender.sendMessage(ConfigManager.fromSectionWithPrefix("§c§lWARNING: §r§cPlayer '" + p.getName() + "' is currently editing a recipe!"));
                     sender.sendMessage(ConfigManager.fromSection("§cReloading now will discard their unsaved changes."));
-                    sender.sendMessage(ConfigManager.fromSection("§eType §6/bi reload force §eto ignore this warning."));
+
+                    String cmd = "/bi reload " + (type.equals("all") ? "" : type + " ") + "force";
+                    cmd = cmd.replaceAll(" {2}", " ");
+                    sender.sendMessage(ConfigManager.fromSection("§eType §6" + cmd + " §eto ignore this warning."));
                     return true;
                 }
             }
         }
 
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] Reload triggered by " + sender.getName());
+        String finalType = type;
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Reload] " + finalType + " reload triggered by " + sender.getName());
 
-        ConfigManager.reloadConfig();
+        switch (type) {
+            case "items":
+                ConfigManager.reloadItems(false);
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aItems configuration reloaded."));
+                break;
 
-        sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aConfigurations has been reloaded."));
+            case "recipes":
+                ConfigManager.reloadCrafting(false);
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aCrafting recipes reloaded."));
+                sendCraftingReloadMessage(sender);
+                break;
 
-        if (RecipesConfig.get().getBoolean("settings.enabled", true) &&
-                RecipesConfig.get().getBoolean("settings.register-to-book", true)) {
-            sender.sendMessage(ConfigManager.fromSection("§7(Note: Recipes are being updated in the background and will appear in the recipe book shortly.)"));
+            case "sets":
+                ConfigManager.reloadSets(false);
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aItem Sets reloaded."));
+                break;
+
+            case "upgrades":
+                ConfigManager.reloadUpgrades(false);
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aUpgrade system reloaded."));
+                break;
+
+            case "config":
+                ConfigManager.reloadSettings(false);
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aMain settings (config.yml) reloaded."));
+                break;
+
+            case "all":
+                ConfigManager.reloadConfig();
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§aAll configurations reloaded."));
+                sendCraftingReloadMessage(sender);
+                break;
+
+            default:
+                sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown reload type: " + type));
+                sender.sendMessage(ConfigManager.fromSection("§7Available: all, config, items, recipes, sets, upgrades"));
+                return true;
         }
 
         return true;
+    }
+
+    private boolean isValidReloadType(String arg) {
+        return arg.equals("all") || arg.equals("items") || arg.equals("recipes") ||
+                arg.equals("sets") || arg.equals("upgrades") || arg.equals("config");
+    }
+
+    private void sendCraftingReloadMessage(CommandSender sender) {
+        if (RecipesConfig.get().getBoolean("settings.enabled", true) &&
+                RecipesConfig.get().getBoolean("settings.register-to-book", true)) {
+            sender.sendMessage(ConfigManager.fromSection("§7(Note: Crafting recipes are updated internally and are ready to use.)"));
+            sender.sendMessage(ConfigManager.fromSection("§7(To see them in the Vanilla Recipe Book, a server restart is required.)"));
+        }
     }
 
     private boolean handleListCommand(CommandSender sender) {

@@ -23,8 +23,8 @@ public class CraftingManager {
     private final ItemMatcher itemMatcher;
     private final Set<NamespacedKey> trackedKeys = new HashSet<>();
 
+    private boolean isFirstLoad = true;
     private BukkitRunnable registrationTask;
-    private BukkitRunnable removalTask;
 
     private final Map<Material, List<CustomRecipe>> recipeCache = new HashMap<>();
 
@@ -42,12 +42,12 @@ public class CraftingManager {
             registrationTask = null;
         }
 
-        if (removalTask != null && !removalTask.isCancelled()) {
-            removalTask.cancel();
-            removalTask = null;
+        if (isFirstLoad) {
+            unloadRecipes();
+        } else {
+            if (!silent) ConfigManager.logInfo("&eReload detected. Updating internal cache only. Vanilla Recipe Book will NOT be updated to prevent lag/kicks.");
         }
 
-        unloadRecipes();
         recipes.clear();
         recipeCache.clear();
 
@@ -81,7 +81,7 @@ public class CraftingManager {
             if (recipe.isValid()) {
                 cacheRecipe(recipe);
                 validCount++;
-                if (shouldRegisterToBook && recipe.isEnabled()) {
+                if (isFirstLoad && shouldRegisterToBook && recipe.isEnabled()) {
                     registrationQueue.add(recipe);
                 }
             } else {
@@ -90,11 +90,15 @@ public class CraftingManager {
             }
         }
 
-        printLoadLog(silent, validCount, invalidCount, recipesWithErrors, startTime);
-
         if (!registrationQueue.isEmpty()) {
             startBatchRegistration(registrationQueue, silent);
         }
+
+        if (isFirstLoad) {
+            isFirstLoad = false;
+        }
+
+        printLoadLog(silent, validCount, invalidCount, recipesWithErrors, startTime);
     }
 
     private void startBatchRegistration(Queue<CustomRecipe> queue, boolean silent) {
@@ -130,6 +134,22 @@ public class CraftingManager {
         registrationTask.runTaskTimer(plugin, 1L, 2L);
     }
 
+    public void unloadRecipes() {
+        if (registrationTask != null && !registrationTask.isCancelled()) {
+            registrationTask.cancel();
+            registrationTask = null;
+        }
+
+        if (trackedKeys.isEmpty()) return;
+
+        for (NamespacedKey key : trackedKeys) {
+            try {
+                Bukkit.removeRecipe(key);
+            } catch (Exception ignored) {}
+        }
+        trackedKeys.clear();
+    }
+
     private void printLoadLog(boolean silent, int valid, int invalid, List<String> errorIds, long startTime) {
         if (silent) return;
         long elapsedTime = System.currentTimeMillis() - startTime;
@@ -151,56 +171,6 @@ public class CraftingManager {
             }
             plugin.getLogger().warning(separator);
         }
-    }
-
-    public void unloadRecipes() {
-
-        if (registrationTask != null && !registrationTask.isCancelled()) {
-            registrationTask.cancel();
-            registrationTask = null;
-        }
-
-        if (removalTask != null && !removalTask.isCancelled()) {
-            removalTask.cancel();
-            removalTask = null;
-        }
-
-        if (trackedKeys.isEmpty()) return;
-
-        Queue<NamespacedKey> removalQueue = new ConcurrentLinkedQueue<>(trackedKeys);
-
-        trackedKeys.clear();
-
-        startBatchRemoval(removalQueue);
-    }
-
-    private void startBatchRemoval(Queue<NamespacedKey> queue) {
-        final int BATCH_SIZE = 50;
-
-        removalTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (queue.isEmpty()) {
-                    this.cancel();
-                    return;
-                }
-
-                long batchStart = System.nanoTime();
-                int count = 0;
-
-                while (!queue.isEmpty() && count < BATCH_SIZE) {
-                    NamespacedKey key = queue.poll();
-                    if (key != null) {
-                        try {
-                            Bukkit.removeRecipe(key);
-                        } catch (Exception ignored) {}
-                    }
-                    count++;
-                    if (System.nanoTime() - batchStart > 2000000) break;
-                }
-            }
-        };
-        removalTask.runTaskTimer(plugin, 0L, 2L);
     }
 
     private CustomRecipe parseRecipeFromConfig(String recipeId, ConfigurationSection rSection) {

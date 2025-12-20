@@ -59,7 +59,10 @@ settings:
   # false: Recipes are HIDDEN from the book but still work perfectly.
   #        Useful to avoid visual confusion or for secret recipes.
   #        Recipe registration is a heavy operation. If you don't strictly need the vanilla recipe book feature it's recommended to set false.
-  register-to-book: false
+  # IMPORTANT:
+  # - New or edited recipes work INSTANTLY for crafting and /bi recipes menu.
+  # - However, updates to the Visual Vanilla Recipe Book require a SERVER RESTART.
+  register-to-book: true
 
 # ===================================================================
 

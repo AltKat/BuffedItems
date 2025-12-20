@@ -60,7 +60,7 @@ public class RecipeListMenu extends PaginatedMenu {
         if (e.getSlot() == 45) {
             boolean current = RecipesConfig.get().getBoolean("settings.register-to-book", true);
             RecipesConfig.get().set("settings.register-to-book", !current);
-            RecipesConfig.save();
+            RecipesConfig.saveAsync();
 
             plugin.getCraftingManager().loadRecipes(true);
 
@@ -86,7 +86,7 @@ public class RecipeListMenu extends PaginatedMenu {
             }
             else if (e.getClick() == ClickType.RIGHT) {
                 RecipesConfig.get().set("recipes." + recipe.getId(), null);
-                RecipesConfig.save();
+                RecipesConfig.saveAsync();
                 plugin.getCraftingManager().loadRecipes(true);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cRecipe '" + recipe.getId() + "' deleted."));
                 this.open();
@@ -112,6 +112,18 @@ public class RecipeListMenu extends PaginatedMenu {
                 "§7added to the vanilla Recipe Book.",
                 "",
                 "§7Current: " + status,
+                "",
+                "§c§l⚠ IMPORTANT NOTE:",
+                "§7Changes to the Vanilla Recipe Book",
+                "§7(green book) require a §cRESTART§7.",
+                "",
+                "§7This applies to:",
+                "§7• Toggling this setting",
+                "§7• New, Edited, or Deleted recipes",
+                "",
+                "§aHowever:",
+                "§7Crafting functionality and the",
+                "§f/bi recipes §7menu update §aINSTANTLY§7.",
                 "",
                 "§eClick to Toggle"));
 

@@ -30,6 +30,7 @@ public class BuffedItem {
     private final String customDepletedLore;
     private final String customDepletedMessage;
     private final String customDepletionNotification;
+    private String customDepletionTransformMessage;
     private final int activeDuration;
     private final List<String> activeCommands;
     private final boolean visualChat;
@@ -68,7 +69,7 @@ public class BuffedItem {
                       String activePermission, String passivePermission, Map<String, Boolean> flags,
                       Map<Enchantment, Integer> enchantments, Integer customModelData, String customModelDataRaw,
                       boolean activeMode, int cooldown, int maxUses, String customUsageLore, String customDepletedLore, String customDepletedMessage,
-                      String customDepletionNotification, int activeDuration, List<String> activeCommands, boolean visualChat,
+                      String customDepletionNotification, String customDepletionTransformMessage, int activeDuration, List<String> activeCommands, boolean visualChat,
                       boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
                       String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
                       String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
@@ -95,6 +96,7 @@ public class BuffedItem {
         this.customDepletedLore = customDepletedLore;
         this.customDepletedMessage = customDepletedMessage;
         this.customDepletionNotification = customDepletionNotification;
+        this.customDepletionTransformMessage = customDepletionTransformMessage;
         this.activeCommands = (activeCommands != null) ? activeCommands : new ArrayList<>();
         this.visualChat = visualChat;
         this.visualTitle = visualTitle;
@@ -255,6 +257,12 @@ public class BuffedItem {
         return (this.customDepletionNotification != null && !this.customDepletionNotification.isEmpty())
                 ? this.customDepletionNotification
                 : ConfigManager.getGlobalDepletionNotification();
+    }
+
+    public String getDepletionTransformMessage() {
+        return (this.customDepletionTransformMessage != null && !this.customDepletionTransformMessage.isEmpty())
+                ? this.customDepletionTransformMessage
+                : ConfigManager.getGlobalDepletionTransformMessage();
     }
 
     public int getActiveDuration() {

@@ -208,7 +208,7 @@ public class InventoryListener implements Listener {
                         return;
                     }
 
-                    RecipesConfig.save();
+                    RecipesConfig.saveAsync();
                     plugin.getCraftingManager().loadRecipes(true);
 
                     pmu.setUnsavedChanges(false);

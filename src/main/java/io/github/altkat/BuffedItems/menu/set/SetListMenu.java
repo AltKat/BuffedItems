@@ -73,7 +73,7 @@ public class SetListMenu extends PaginatedMenu {
             }
             else if (e.getClick() == ClickType.RIGHT) {
                 SetsConfig.get().set("sets." + set.getId(), null);
-                SetsConfig.save();
+                SetsConfig.saveAsync();
                 plugin.getSetManager().loadSets(true);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cSet '" + set.getId() + "' deleted."));
                 p.playSound(p.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1, 1);

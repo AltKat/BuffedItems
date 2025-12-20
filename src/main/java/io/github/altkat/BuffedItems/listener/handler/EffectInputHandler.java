@@ -348,7 +348,7 @@ public class EffectInputHandler implements ChatInputHandler {
 
             effects.add(finalConfigString);
             SetsConfig.get().set(configPath, effects);
-            SetsConfig.save();
+            SetsConfig.saveAsync();
             plugin.getSetManager().loadSets(true);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSet bonus updated!"));
@@ -404,7 +404,7 @@ public class EffectInputHandler implements ChatInputHandler {
 
             effects.set(index, newEffectString);
             SetsConfig.get().set(configPath, effects);
-            SetsConfig.save();
+            SetsConfig.saveAsync();
             plugin.getSetManager().loadSets(true);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSet bonus updated!"));
