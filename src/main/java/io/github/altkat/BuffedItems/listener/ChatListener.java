@@ -135,14 +135,11 @@ public class ChatListener implements Listener {
 
         if (path.equals("createnewitem") || path.equals("duplicateitem")) {
             creationInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.startsWith("lore.")) {
+        } else if (path.startsWith("display.lore")) {
             loreInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.equals("display_name") || path.equals("permission") || path.equals("active_permission") || path.equals("passive_permission") ||
-                path.equals("material.manual") || path.equals("custom_model_data")) {
+        } else if (path.startsWith("display.") || path.equals("permission") || path.startsWith("passive_effects.") || path.equals("material.manual")) {
             basicInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.startsWith("active.cooldown") || path.startsWith("active.duration") ||
-                path.startsWith("active.commands.") || path.startsWith("active.msg.") ||
-                path.startsWith("active.sounds.") || path.startsWith("usage-limit.")) {
+        } else if (path.startsWith("active_ability.") || path.startsWith("usage.")) {
             activeSettingsInputHandler.handle(player, pmu, input, path, itemId);
         } else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")
                 || path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {

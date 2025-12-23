@@ -12,6 +12,7 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
+import io.github.altkat.BuffedItems.utility.item.data.*;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -121,34 +122,143 @@ public class ItemManager {
     private BuffedItem parseItem(ConfigurationSection itemSection, String itemId) {
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Processing item: " + itemId);
 
-        String displayName = itemSection.getString("display_name", "Default Name");
-        List<String> lore = itemSection.getStringList("lore");
+        List<String> errorMessages = new ArrayList<>();
+
+        // Basic Info
         String materialName = itemSection.getString("material", "STONE");
         Material material = Material.matchMaterial(materialName);
-        boolean glow = itemSection.getBoolean("glow", false);
-        String permission = itemSection.getString("permission");
+        if (material == null) {
+            String errorMsg = "Invalid Material: '" + materialName + "'";
+            errorMessages.add("§c" + errorMsg);
+            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
+            material = Material.BARRIER;
+        }
 
+        String permission = itemSection.getString("permission");
         if (permission != null && (permission.equals(ConfigManager.NO_PERMISSION) || permission.trim().isEmpty())) {
             permission = null;
         }
 
-        String activePerm = itemSection.getString("active_permission");
-        if (activePerm != null && (activePerm.equals(ConfigManager.NO_PERMISSION) || activePerm.trim().isEmpty())) {
-            activePerm = null;
+        // Parse sections
+        Map<String, Boolean> flags = new HashMap<>();
+        ConfigurationSection flagsSection = itemSection.getConfigurationSection("flags");
+        if (flagsSection != null) {
+            for (String flagKey : flagsSection.getKeys(false)) {
+                flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
+            }
+        }
+        Map<Enchantment, Integer> enchantments = parseEnchantments(itemSection, errorMessages);
+
+        ItemDisplay itemDisplay = parseDisplay(itemSection.getConfigurationSection("display"), itemId, errorMessages);
+        PassiveEffects passiveEffects = parsePassiveEffects(itemSection.getConfigurationSection("passive_effects"), itemId, errorMessages);
+        ActiveAbility activeAbility = parseActiveAbility(itemSection.getConfigurationSection("active_ability"), itemId, errorMessages);
+        UsageDetails usageDetails = parseUsageDetails(itemSection.getConfigurationSection("active_ability.usage"), itemId, errorMessages);
+
+        boolean hasPlaceholders = (itemDisplay.getDisplayName() + itemDisplay.getLore().toString()).contains("%");
+
+        // --- Create Stable Representations for Hashing ---
+
+        // 1. Enchantments
+        Map<String, Integer> stableEnchants = new TreeMap<>();
+        enchantments.forEach((enchant, level) -> stableEnchants.put(enchant.getKey().toString(), level));
+
+        // 2. Passive Effects
+        Map<String, String> stablePassiveEffects = new TreeMap<>();
+        passiveEffects.getEffects().forEach((slot, effect) -> {
+            List<String> potionStrings = effect.getPotionEffects().entrySet().stream()
+                    .map(entry -> entry.getKey().getName() + ";" + entry.getValue())
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            List<String> attributeStrings = effect.getParsedAttributes().stream()
+                    .map(attr -> attr.getAttribute().name() + ";" + attr.getOperation().name() + ";" + attr.getAmount())
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            stablePassiveEffects.put(slot, String.join(",", potionStrings) + "|" + String.join(",", attributeStrings));
+        });
+
+
+        int updateHash = Objects.hash(
+                itemDisplay.getDisplayName(),
+                itemDisplay.getLore(),
+                material.name(),
+                itemDisplay.hasGlow(),
+                itemDisplay.getCustomModelData().orElse(null),
+                flags,
+                stableEnchants, // Use stable representation
+                passiveEffects.getAttributeMode().name(),
+                stablePassiveEffects, // Use stable representation
+                activeAbility.isEnabled(),
+                usageDetails.getMaxUses(),
+                usageDetails.getUsageLore(),
+                usageDetails.getDepletedLore()
+        );
+
+        BuffedItem finalBuffedItem = new BuffedItem(
+                itemId,
+                material,
+                permission,
+                updateHash,
+                hasPlaceholders,
+                itemDisplay,
+                passiveEffects,
+                activeAbility,
+                usageDetails,
+                flags,
+                enchantments
+        );
+
+        for (String errorMsg : errorMessages) {
+            finalBuffedItem.addErrorMessage(errorMsg);
         }
 
-        String passivePerm = itemSection.getString("passive_permission");
-        if (passivePerm != null && (passivePerm.equals(ConfigManager.NO_PERMISSION) || passivePerm.trim().isEmpty())) {
-            passivePerm = null;
-        }
+        ItemStack stack = new ItemBuilder(finalBuffedItem, plugin).build();
+        finalBuffedItem.setCachedItem(stack);
 
-        List<String> errorMessages = new ArrayList<>();
+        return finalBuffedItem;
+    }
+
+    private Map<Enchantment, Integer> parseEnchantments(ConfigurationSection section, List<String> errorMessages) {
+        Map<Enchantment, Integer> enchantments = new HashMap<>();
+        List<String> enchantmentStrings = section.getStringList("enchantments");
+        for (String enchString : enchantmentStrings) {
+            try {
+                String[] parts = enchString.split(";");
+                if (parts.length != 2) throw new IllegalArgumentException("Must be format ENCHANTMENT_NAME;LEVEL");
+
+                Enchantment enchantment = EnchantmentFinder.findEnchantment(parts[0].toUpperCase(), plugin);
+                if (enchantment == null) {
+                    errorMessages.add("§cInvalid Enchantment name: '" + parts[0] + "'");
+                    continue;
+                }
+
+                int level = Integer.parseInt(parts[1]);
+                if (level <= 0) continue;
+
+                if (enchantments.containsKey(enchantment)) continue;
+
+                enchantments.put(enchantment, level);
+            } catch (Exception e) {
+                errorMessages.add("§cCorrupt Enchantment format: §e'" + enchString + "'");
+            }
+        }
+        return enchantments;
+    }
+
+    private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages) {
+        if (section == null) {
+            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null);
+        }
+        String displayName = section.getString("name", "Default Name");
+        List<String> lore = section.getStringList("lore");
+        boolean glow = section.getBoolean("glow", false);
 
         Integer customModelData;
         String customModelDataRaw;
 
-        if (itemSection.contains("custom-model-data")) {
-            Object cmdValue = itemSection.get("custom-model-data");
+        if (section.contains("custom-model-data")) {
+            Object cmdValue = section.get("custom-model-data");
 
             if (cmdValue instanceof Integer) {
                 customModelDataRaw = String.valueOf(cmdValue);
@@ -164,16 +274,9 @@ public class ItemManager {
 
                 if (resolved != null) {
                     customModelData = resolved.getValue();
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                            () -> "[ItemManager] Item " + itemId + " resolved custom-model-data: " +
-                                    customModelDataRaw + " -> " + customModelData +
-                                    " (source: " + resolved.getSource() + ")");
                 } else {
                     customModelData = null;
-                    String errorMsg = "Invalid custom-model-data: '" + customModelDataRaw + "'";
-                    errorMessages.add("§c" + errorMsg);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                            () -> "[Item: " + itemId + "] " + errorMsg);
+                    errorMessages.add("§cInvalid custom-model-data: '" + customModelDataRaw + "'");
                 }
             } else {
                 customModelData = null;
@@ -183,464 +286,228 @@ public class ItemManager {
             customModelData = null;
         }
 
-        if (material == null) {
-            String errorMsg = "Invalid Material: '" + materialName + "'";
-            errorMessages.add("§c" + errorMsg);
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
-            material = Material.BARRIER;
+        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw);
+    }
+
+    private PassiveEffects parsePassiveEffects(ConfigurationSection section, String itemId, List<String> errorMessages) {
+        if (section == null) {
+            return new PassiveEffects(new HashMap<>(), BuffedItem.AttributeMode.STATIC, null);
+        }
+        String passivePerm = section.getString("permission");
+        if (passivePerm != null && (passivePerm.equals(ConfigManager.NO_PERMISSION) || passivePerm.trim().isEmpty())) {
+            passivePerm = null;
         }
 
-        Map<String, Boolean> flags = new HashMap<>();
-        ConfigurationSection flagsSection = itemSection.getConfigurationSection("flags");
-        if (flagsSection != null) {
-            for (String flagKey : flagsSection.getKeys(false)) {
-                flags.put(flagKey.toUpperCase(), flagsSection.getBoolean(flagKey, false));
-            }
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has " + flags.size() + " custom flags");
+        BuffedItem.AttributeMode attributeMode;
+        try {
+            attributeMode = BuffedItem.AttributeMode.valueOf(section.getString("attribute_mode", "STATIC").toUpperCase());
+        } catch (IllegalArgumentException e) {
+            attributeMode = BuffedItem.AttributeMode.STATIC;
+            errorMessages.add("§cInvalid attribute_mode. Defaulting to STATIC.");
         }
-
-        int passiveEffectsHash = 0;
 
         Map<String, BuffedItemEffect> effects = new HashMap<>();
-        ConfigurationSection effectsSection = itemSection.getConfigurationSection("effects");
+        ConfigurationSection effectsSection = section.getConfigurationSection("slots");
 
         if (effectsSection != null) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has effects section");
-
-            List<String> sortedSlots = effectsSection.getKeys(false).stream().sorted().collect(Collectors.toList());
-
-            for (String slot : sortedSlots) {
+            for (String slot : effectsSection.getKeys(false)) {
                 ConfigurationSection slotSection = effectsSection.getConfigurationSection(slot);
                 if (slotSection == null) continue;
 
                 Map<PotionEffectType, Integer> potionEffects = new HashMap<>();
-                List<ParsedAttribute> parsedAttributes = new ArrayList<>();
-                List<String> potionEffectStrings = slotSection.getStringList("potion_effects");
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + potionEffectStrings.size() + " potion effects");
-
-                for (String effectString : potionEffectStrings) {
+                for (String effectString : slotSection.getStringList("potion_effects")) {
                     try {
                         String[] parts = effectString.split(";");
-                        String effectName = parts[0].toUpperCase();
-                        PotionEffectType type = PotionEffectType.getByName(effectName);
-
+                        PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
                         if (type == null) {
-                            String errorMsg = "Invalid PotionEffect: '" + effectName + "'";
-                            errorMessages.add("§c" + errorMsg);
-                            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
+                            errorMessages.add("§cInvalid PotionEffect: '" + parts[0] + "'");
                             continue;
                         }
-
-                        int level = Integer.parseInt(parts[1]);
-                        potionEffects.put(type, level);
+                        potionEffects.put(type, Integer.parseInt(parts[1]));
                     } catch (Exception e) {
-                        String errorMsg = "Corrupt PotionEffect format: §e'" + effectString + "'";
-                        errorMessages.add("§c" + errorMsg);
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg + " | Error: " + e.getMessage());
+                        errorMessages.add("§cCorrupt PotionEffect format: §e'" + effectString + "'");
                     }
                 }
 
-                List<String> originalAttributeStrings = slotSection.getStringList("attributes");
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " slot " + slot + " has " + originalAttributeStrings.size() + " attributes");
-
-                for (String attrString : originalAttributeStrings) {
+                List<ParsedAttribute> parsedAttributes = new ArrayList<>();
+                for (String attrString : slotSection.getStringList("attributes")) {
                     try {
                         String[] parts = attrString.split(";");
-                        if (parts.length != 3) {
-                            throw new IllegalArgumentException("Attribute string must have 3 parts separated by ';'. Found: " + attrString);
-                        }
-
                         Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
                         AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                         double amount = Double.parseDouble(parts[2]);
-
                         UUID modifierUUID = EffectManager.getUuidForItem(itemId, slot.toUpperCase(), attribute);
-
                         parsedAttributes.add(new ParsedAttribute(attribute, operation, amount, modifierUUID));
                         managedAttributeUUIDs.add(modifierUUID);
-
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[ItemManager] Pre-parsed and cached attribute UUID: " + modifierUUID + " for " + attribute.name());
-
-                    } catch (IllegalArgumentException e) {
-                        String errorMsg = "Invalid Attribute or Operation: '" + attrString + "'. Error: " + e.getMessage();
-                        errorMessages.add("§c" + errorMsg);
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
                     } catch (Exception e) {
-                        String errorMsg = "Corrupt Attribute format: §e'" + attrString + "'";
-                        errorMessages.add("§c" + errorMsg);
-                        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg + " | Error: " + e.getMessage());
+                        errorMessages.add("§cCorrupt Attribute format: §e'" + attrString + "'");
                     }
                 }
-
                 effects.put(slot.toUpperCase(), new BuffedItemEffect(potionEffects, parsedAttributes));
-
-                passiveEffectsHash = Objects.hash(passiveEffectsHash, slot, potionEffectStrings, originalAttributeStrings);
             }
         }
+        return new PassiveEffects(effects, attributeMode, passivePerm);
+    }
 
-        Map<Enchantment, Integer> enchantments = new HashMap<>();
-        List<String> enchantmentStrings = itemSection.getStringList("enchantments");
-        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Item " + itemId + " has " + enchantmentStrings.size() + " enchantments listed.");
-
-        for (String enchString : enchantmentStrings) {
-            try {
-                String[] parts = enchString.split(";");
-                if (parts.length != 2) {
-                    throw new IllegalArgumentException("Must be format ENCHANTMENT_NAME;LEVEL");
-                }
-
-                String enchName = parts[0].toUpperCase();
-                Enchantment enchantment = EnchantmentFinder.findEnchantment(enchName, plugin);
-
-                if (enchantment == null) {
-                    String errorMsg = "Invalid Enchantment name: '" + enchName + "'";
-                    errorMessages.add("§c" + errorMsg);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
-                    continue;
-                }
-
-                int level = Integer.parseInt(parts[1]);
-
-                if (level <= 0) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Item: " + itemId + "] Enchantment level for " + enchName + " must be positive, found: " + level + ". Skipping.");
-                    continue;
-                }
-
-                if (enchantments.containsKey(enchantment)) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Item: " + itemId + "] Duplicate enchantment found: '" + enchName + "'. Using the first definition.");
-                    continue;
-                }
-
-                enchantments.put(enchantment, level);
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Parsed enchantment: " + enchantment.getKey().getKey() + " Level: " + level);
-
-            } catch (NumberFormatException e) {
-                String errorMsg = "Invalid Enchantment level format: §e'" + enchString + "'";
-                errorMessages.add("§c" + errorMsg);
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
-            } catch (Exception e) {
-                String errorMsg = "Corrupt Enchantment format: §e'" + enchString + "' Error: " + e.getMessage();
-                errorMessages.add("§c" + errorMsg);
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[Item: " + itemId + "] " + errorMsg);
-            }
+    private ActiveAbility parseActiveAbility(ConfigurationSection section, String itemId, List<String> errorMessages) {
+        if (section == null) {
+            return new ActiveAbility(false, 0, 0, null, new ArrayList<>(), new BuffedItemEffect(new HashMap<>(), new ArrayList<>()), new AbilityVisuals(null), new AbilitySounds(null,null,null), new ArrayList<>());
         }
 
-        ConfigurationSection activeModeSection = itemSection.getConfigurationSection("active-mode");
+        boolean enabled = section.getBoolean("enabled", false);
+        int cooldown = section.getInt("cooldown", 0);
+        int duration = section.getInt("duration", 0);
+        
+        String activePerm = section.getString("permission");
+        if (activePerm != null && (activePerm.equals(ConfigManager.NO_PERMISSION) || activePerm.trim().isEmpty())) {
+            activePerm = null;
+        }
 
-        boolean activeMode = false;
-        int cooldown;
-        int activeDuration = 0;
-        int maxUses = 0;
-        String durabilityLore = null;
-        String depletedLore = null;
-        String depletedMessage = null;
-        String depletionNotification = null;
-        String depletionTransformMessage = null;
-        DepletionAction depletionAction = DepletionAction.DISABLE;
-        String depletionTransformId = null;
-        List<String> depletionCommands = new ArrayList<>();
-        List<String> activeCommands = new ArrayList<>();
-
-        boolean vChat = true;
-        boolean vTitle = true;
-        boolean vActionBar = true;
-        boolean vBossBar = true;
-        String bbColor = "RED";
-        String bbStyle = "SOLID";
-        String msgChat = null;
-        String msgTitle = null;
-        String msgSubtitle = null;
-        String msgActionBar = null;
-        String msgBossBar = null;
-
-        String soundSuccess = null;
-        String soundCooldown = null;
-        String soundCostFail = null;
-        String soundDepletion = null;
-        String soundDepletedTry = null;
-
+        // Parse Costs
         List<ICost> costs = new ArrayList<>();
-        BuffedItemEffect activeEffectsObj = null;
-
-        if (activeModeSection != null) {
-            activeMode = activeModeSection.getBoolean("enabled", false);
-            cooldown = activeModeSection.getInt("cooldown", 0);
-
-            if (activeModeSection.isConfigurationSection("usage-limit")) {
-                ConfigurationSection durabilitySection = activeModeSection.getConfigurationSection("usage-limit");
-                maxUses = durabilitySection.getInt("max-usage", -1);
-                durabilityLore = durabilitySection.getString("lore", null);
-                depletedLore = durabilitySection.getString("depleted-lore", null);
-                depletedMessage = durabilitySection.getString("depleted-message", null);
-                depletionNotification = durabilitySection.getString("depletion-notification", null);
-                depletionTransformMessage = durabilitySection.getString("depletion-transform-message", null);
-
-                String actionStr = durabilitySection.getString("action", "DISABLE");
+        if (section.contains("costs")) {
+            List<Map<?, ?>> costList = section.getMapList("costs");
+            for (Map<?, ?> rawMap : costList) {
                 try {
-                    depletionAction = DepletionAction.valueOf(actionStr.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    errorMessages.add("§cInvalid Depletion Action: " + actionStr + " (Defaulting to DISABLE)");
-                }
-
-                depletionTransformId = durabilitySection.getString("transform-item", null);
-                depletionCommands = durabilitySection.getStringList("commands");
-            }
-
-            activeDuration = activeModeSection.getInt("duration", 0);
-            activeCommands = activeModeSection.getStringList("commands");
-
-            if (cooldown < 0) {
-                errorMessages.add("§cActive Mode: Cooldown cannot be negative.");
-            }
-            if (activeDuration < 0) {
-                errorMessages.add("§cActive Mode: Duration cannot be negative.");
-            }
-
-            if (activeMode) {
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is loaded as ACTIVE item (CD: " + cooldown + "s)");
-            }
-
-            ConfigurationSection visualsSection = activeModeSection.getConfigurationSection("visuals");
-            if (visualsSection != null) {
-                vChat = visualsSection.getBoolean("chat", true);
-                vTitle = visualsSection.getBoolean("title", true);
-                vActionBar = visualsSection.getBoolean("action-bar", true);
-                vBossBar = visualsSection.getBoolean("boss-bar", true);
-
-                bbColor = visualsSection.getString("boss-bar-color", "RED");
-                try {
-                    org.bukkit.boss.BarColor.valueOf(bbColor);
-                } catch (IllegalArgumentException e) {
-                    errorMessages.add("§cActive Mode Error: Invalid BossBar Color '" + bbColor + "'. Valid: RED, BLUE, GREEN, etc.");
-                }
-
-                bbStyle = visualsSection.getString("boss-bar-style", "SOLID");
-                try {
-                    org.bukkit.boss.BarStyle.valueOf(bbStyle);
-                } catch (IllegalArgumentException e) {
-                    errorMessages.add("§cActive Mode Error: Invalid BossBar Style '" + bbStyle + "'. Valid: SOLID, SEGMENTED_6, etc.");
-                }
-
-                msgChat = visualsSection.getString("messages.cooldown-chat");
-                msgTitle = visualsSection.getString("messages.cooldown-title");
-                msgSubtitle = visualsSection.getString("messages.cooldown-subtitle");
-                msgActionBar = visualsSection.getString("messages.cooldown-action-bar");
-                msgBossBar = visualsSection.getString("messages.cooldown-boss-bar");
-            }
-
-            ConfigurationSection soundsSection = activeModeSection.getConfigurationSection("sounds");
-            if (soundsSection != null) {
-                soundSuccess = validateSound(soundsSection.getString("success"), "success", errorMessages);
-                soundCooldown = validateSound(soundsSection.getString("cooldown"), "cooldown", errorMessages);
-                soundCostFail = validateSound(soundsSection.getString("cost-fail"), "cost-fail", errorMessages);
-                soundDepletion = validateSound(soundsSection.getString("depletion"), "depletion", errorMessages);
-                soundDepletedTry = validateSound(soundsSection.getString("depleted-try"), "depleted-try", errorMessages);
-            }
-
-            for (int i = 0; i < activeCommands.size(); i++) {
-                String cmd = activeCommands.get(i);
-                if (cmd.contains("[chance:")) {
-                    try {
-                        int start = cmd.indexOf("[chance:") + 8;
-                        int end = cmd.indexOf("]", start);
-                        if (end != -1) {
-                            double chanceVal = Double.parseDouble(cmd.substring(start, end));
-                            if (chanceVal < 0 || chanceVal > 100) {
-                                errorMessages.add("§cActive Mode Error: Command chance must be 0-100. Found: " + chanceVal + " in command #" + (i+1));
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        errorMessages.add("§cActive Mode Error: Invalid chance number format in command #" + (i+1));
-                    }
-                }
-                if (cmd.contains("[delay:")) {
-                    try {
-                        int start = cmd.indexOf("[delay:") + 7;
-                        int end = cmd.indexOf("]", start);
-                        if (end != -1) {
-                            long delayVal = Long.parseLong(cmd.substring(start, end));
-                            if (delayVal < 0) {
-                                errorMessages.add("§cActive Mode Error: Command delay cannot be negative. Found: " + delayVal + " in command #" + (i+1));
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        errorMessages.add("§cActive Mode Error: Invalid delay number format in command #" + (i+1));
-                    }
+                    ICost cost = plugin.getCostManager().parseCost(rawMap);
+                    if (cost != null) costs.add(cost);
+                    else errorMessages.add("§cUnknown cost type: " + rawMap.get("type"));
+                } catch (Exception e) {
+                    errorMessages.add("§cError parsing cost: " + e.getMessage());
                 }
             }
+        }
+        
+        ConfigurationSection actionsSection = section.getConfigurationSection("actions");
+        List<String> commands = new ArrayList<>();
+        BuffedItemEffect activeEffects = new BuffedItemEffect(new HashMap<>(), new ArrayList<>());
 
-            if (activeModeSection.contains("costs")) {
-                List<Map<?, ?>> costList = activeModeSection.getMapList("costs");
-                for (int i = 0; i < costList.size(); i++) {
-                    Map<?, ?> rawMap = costList.get(i);
-                    try {
-                        ICost cost = plugin.getCostManager().parseCost(rawMap);
-                        if (cost != null) {
-                            costs.add(cost);
-                        } else {
-                            String type = String.valueOf(rawMap.get("type"));
-                            errorMessages.add("§cActive Mode Error: Invalid Cost at index " + (i + 1) + " (Unknown Type: " + type + ")");
-                        }
-                    } catch (Exception e) {
-                        String type = String.valueOf(rawMap.get("type"));
-                        errorMessages.add("§cActive Mode Error: " + e.getMessage() + " (Type: " + type + ")");
-                    }
-                }
-
-                List<ICost> finalCosts = costs;
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[ItemManager] Loaded " + finalCosts.size() + " costs for item: " + itemId);
-            }
-
-            ConfigurationSection activeEffectsSection = activeModeSection.getConfigurationSection("effects");
+        if(actionsSection != null) {
+            commands = actionsSection.getStringList("commands");
+            // Parse Active Effects
+            ConfigurationSection activeEffectsSection = actionsSection.getConfigurationSection("effects");
             if (activeEffectsSection != null) {
                 Map<PotionEffectType, Integer> activePotions = new HashMap<>();
-
                 for (String effectString : activeEffectsSection.getStringList("potion_effects")) {
                     try {
                         String[] parts = effectString.split(";");
-                        if (parts.length < 2) throw new IllegalArgumentException("Missing level");
-
                         PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
-                        if (type == null) throw new IllegalArgumentException("Invalid potion type: " + parts[0]);
-
-                        int level = Integer.parseInt(parts[1]);
-                        if (level <= 0) throw new IllegalArgumentException("Level must be positive");
-
-                        activePotions.put(type, level);
+                        if (type == null) {
+                            errorMessages.add("§cInvalid PotionEffect in active-mode: '" + parts[0] + "'");
+                            continue;
+                        }
+                        activePotions.put(type, Integer.parseInt(parts[1]));
                     } catch (Exception e) {
-                        errorMessages.add("§cActive Mode Error: " + e.getMessage() + " in '" + effectString + "'");
+                        errorMessages.add("§cCorrupt active-mode PotionEffect: §e'" + effectString + "'");
                     }
                 }
-
                 List<ParsedAttribute> activeAttributes = new ArrayList<>();
-
                 for (String attrString : activeEffectsSection.getStringList("attributes")) {
                     try {
                         String[] parts = attrString.split(";");
-                        if (parts.length < 3) throw new IllegalArgumentException("Invalid format");
-
                         Attribute attribute = Attribute.valueOf(parts[0].toUpperCase());
                         AttributeModifier.Operation operation = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
                         double amount = Double.parseDouble(parts[2]);
-
                         activeAttributes.add(new ParsedAttribute(attribute, operation, amount, UUID.randomUUID()));
-                    } catch (IllegalArgumentException e) {
-                        errorMessages.add("§cActive Mode Error: Invalid Attribute/Operation in '" + attrString + "'");
                     } catch (Exception e) {
-                        errorMessages.add("§cActive Mode Error: Corrupt attribute format '" + attrString + "'");
+                        errorMessages.add("§cCorrupt active-mode Attribute: §e'" + attrString + "'");
                     }
                 }
-                activeEffectsObj = new BuffedItemEffect(activePotions, activeAttributes);
+                activeEffects = new BuffedItemEffect(activePotions, activeAttributes);
             }
-        } else {
-            durabilityLore = null;
-            maxUses = -1;
-            cooldown = 0;
         }
 
-        if (activeEffectsObj == null) {
-            activeEffectsObj = new BuffedItemEffect(new HashMap<>(), new ArrayList<>());
+        // Parse Visuals and Sounds
+        AbilityVisuals visuals = parseAbilityVisuals(section.getConfigurationSection("visuals"), errorMessages);
+        AbilitySounds sounds = parseAbilitySounds(section.getConfigurationSection("sounds"), errorMessages);
+
+
+        return new ActiveAbility(enabled, cooldown, duration, activePerm, commands, activeEffects, visuals, sounds, costs);
+    }
+    
+    private AbilityVisuals parseAbilityVisuals(ConfigurationSection visualsSection, List<String> errorMessages) {
+        if (visualsSection == null) {
+            return new AbilityVisuals(null);
+        }
+        CooldownVisuals cooldownVisuals = parseCooldownVisuals(visualsSection.getConfigurationSection("cooldown"));
+        return new AbilityVisuals(cooldownVisuals);
+    }
+
+    private CooldownVisuals parseCooldownVisuals(ConfigurationSection cooldownSection) {
+        if (cooldownSection == null) {
+            return new CooldownVisuals(null, null, null, null);
+        }
+        ChatCooldownVisuals chat = parseChatCooldownVisuals(cooldownSection.getConfigurationSection("chat"));
+        TitleCooldownVisuals title = parseTitleCooldownVisuals(cooldownSection.getConfigurationSection("title"));
+        ActionBarCooldownVisuals actionBar = parseActionBarCooldownVisuals(cooldownSection.getConfigurationSection("action-bar"));
+        BossBarCooldownVisuals bossBar = parseBossBarCooldownVisuals(cooldownSection.getConfigurationSection("boss-bar"));
+        return new CooldownVisuals(chat, title, actionBar, bossBar);
+    }
+
+    private ChatCooldownVisuals parseChatCooldownVisuals(ConfigurationSection section) {
+        if (section == null) return new ChatCooldownVisuals(true, null);
+        return new ChatCooldownVisuals(section.getBoolean("enabled", true), section.getString("message"));
+    }
+
+    private TitleCooldownVisuals parseTitleCooldownVisuals(ConfigurationSection section) {
+        if (section == null) return new TitleCooldownVisuals(true, null, null);
+        return new TitleCooldownVisuals(section.getBoolean("enabled", true), section.getString("message"), section.getString("subtitle"));
+    }
+
+    private ActionBarCooldownVisuals parseActionBarCooldownVisuals(ConfigurationSection section) {
+        if (section == null) return new ActionBarCooldownVisuals(true, null);
+        return new ActionBarCooldownVisuals(section.getBoolean("enabled", true), section.getString("message"));
+    }
+
+    private BossBarCooldownVisuals parseBossBarCooldownVisuals(ConfigurationSection section) {
+        if (section == null) return new BossBarCooldownVisuals(true, "SOLID", "RED", null);
+        return new BossBarCooldownVisuals(section.getBoolean("enabled", true), section.getString("style", "SOLID"), section.getString("color", "RED"), section.getString("message"));
+    }
+
+
+    private AbilitySounds parseAbilitySounds(ConfigurationSection soundsSection, List<String> errorMessages) {
+        if (soundsSection == null) return new AbilitySounds(null,null,null);
+
+        String success = validateSound(soundsSection.getString("success"), "success", errorMessages);
+        String costFail = validateSound(soundsSection.getString("cost-fail"), "cost-fail", errorMessages);
+        String cooldown = validateSound(soundsSection.getString("cooldown"), "cooldown", errorMessages);
+
+        return new AbilitySounds(success, costFail, cooldown);
+    }
+
+    private UsageDetails parseUsageDetails(ConfigurationSection section, String itemId, List<String> errorMessages) {
+        if(section == null) {
+            return new UsageDetails(-1, DepletionAction.DISABLE, null, new ArrayList<>(), null, null, null, null, null, null, null);
         }
 
-        String attrModeStr = itemSection.getString("attribute_mode", "STATIC").toUpperCase();
-        BuffedItem.AttributeMode attributeMode;
+        int maxUses = section.getInt("limit", -1);
+        String usageLore = section.getString("lore_format");
+        String depletedLore = section.getString("depleted_lore");
+        String depletedMessage = section.getString("depleted_message");
+        String depletionNotification = section.getString("depletion_notification");
+        String transformMessage = section.getString("transform_message");
+        List<String> depletionCommands = section.getStringList("commands");
+        String depletionSound = validateSound(section.getString("depletion_sound"), "depletion", errorMessages);
+        String depletedTrySound = validateSound(section.getString("depleted_try_sound"), "depleted-try", errorMessages);
+
+
+        DepletionAction action = DepletionAction.DISABLE;
         try {
-            attributeMode = BuffedItem.AttributeMode.valueOf(attrModeStr);
+            action = DepletionAction.valueOf(section.getString("action", "DISABLE").toUpperCase());
         } catch (IllegalArgumentException e) {
-            attributeMode = BuffedItem.AttributeMode.STATIC;
-            errorMessages.add("§cInvalid attribute_mode '" + attrModeStr + "'. Defaulting to STATIC.");
+            errorMessages.add("§cInvalid Depletion Action: " + section.getString("action") + ".");
         }
 
-        if (attributeMode == BuffedItem.AttributeMode.DYNAMIC) {
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO, () -> "[ItemManager] Item " + itemId + " is set to DYNAMIC attribute mode.");
-        }
+        String transformId = section.getString("transform_item");
 
-        boolean hasPlaceholders = (displayName + lore.toString()).contains("%");
-
-        Map<String, Integer> stableEnchants = new java.util.HashMap<>();
-        enchantments.forEach((ench, lvl) -> stableEnchants.put(ench.getKey().getKey(), lvl));
-
-        int updateHash = Objects.hash(
-                displayName,
-                lore,
-                material.name(),
-                glow,
-                customModelData,
-                flags,
-                stableEnchants,
-                attributeMode.name(),
-                passiveEffectsHash,
-                activeMode,
-                maxUses,
-                durabilityLore,
-                depletedLore
-        );
-
-        BuffedItem finalBuffedItem = new BuffedItem(
-                itemId,
-                displayName,
-                lore,
-                material,
-                glow,
-                effects,
-                permission,
-                activePerm,
-                passivePerm,
-                flags,
-                enchantments,
-                customModelData,
-                customModelDataRaw,
-                activeMode,
-                cooldown,
-                maxUses,
-                durabilityLore,
-                depletedLore,
-                depletedMessage,
-                depletionNotification,
-                depletionTransformMessage,
-                activeDuration,
-                activeCommands,
-                vChat,
-                vTitle,
-                vActionBar,
-                vBossBar,
-                bbColor,
-                bbStyle,
-                activeEffectsObj,
-                msgChat,
-                msgTitle,
-                msgSubtitle,
-                msgActionBar,
-                msgBossBar,
-                soundSuccess,
-                soundCooldown,
-                soundCostFail,
-                soundDepletion,
-                soundDepletedTry,
-                depletionAction,
-                depletionTransformId,
-                depletionCommands,
-                attributeMode,
-                costs,
-                updateHash,
-                hasPlaceholders
-        );
-
-        for (String errorMsg : errorMessages) {
-            finalBuffedItem.addErrorMessage(errorMsg);
-        }
-
-        ItemStack stack = new ItemBuilder(finalBuffedItem, plugin).build();
-        finalBuffedItem.setCachedItem(stack);
-
-        return finalBuffedItem;
+        return new UsageDetails(maxUses, action, transformId, depletionCommands, usageLore, depletedLore, depletedMessage, depletionNotification, transformMessage, depletionSound, depletedTrySound);
     }
 
     private void cleanupOldUUIDs(BuffedItem item) {
-        if (item == null || item.getEffects() == null) return;
+        if (item == null || item.getPassiveEffects() == null || item.getPassiveEffects().getEffects() == null) return;
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[ItemManager] Cleaning up old UUIDs for: " + item.getId());
-        for (BuffedItemEffect effect : item.getEffects().values()) {
+        for (BuffedItemEffect effect : item.getPassiveEffects().getEffects().values()) {
             if (effect.getParsedAttributes() == null) continue;
             for (ParsedAttribute attr : effect.getParsedAttributes()) {
                 managedAttributeUUIDs.remove(attr.getUuid());

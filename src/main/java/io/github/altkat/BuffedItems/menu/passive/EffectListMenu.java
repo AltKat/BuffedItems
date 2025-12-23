@@ -9,12 +9,17 @@ import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.AttributeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.PotionEffectSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.utility.item.BuffedItem;
+import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Generic menu for displaying and managing effects (Potion, Attribute)
@@ -29,7 +34,8 @@ public class EffectListMenu extends Menu {
 
     public enum EffectType {
         POTION_EFFECT(Material.POTION),
-        ATTRIBUTE(Material.IRON_SWORD);
+        ATTRIBUTE(Material.IRON_SWORD),
+        ENCHANTMENT(Material.ENCHANTED_BOOK);
 
         private final Material icon;
 
@@ -158,14 +164,11 @@ public class EffectListMenu extends Menu {
         addBackButton(this);
 
         String itemId = playerMenuUtility.getItemToEditId();
-        String configPath = buildConfigPath(itemId);
+        BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
+        if (item == null && !isSetBonus) return;
 
-        List<String> effectsConfig;
-        if (isSetBonus) {
-            effectsConfig = SetsConfig.get().getStringList(configPath);
-        } else {
-            effectsConfig = ItemsConfig.get().getStringList(configPath);
-        }
+        List<String> effectsConfig = getEffectsConfig(item);
+
 
         if (!effectsConfig.isEmpty()) {
             for (int i = 0; i < effectsConfig.size(); i++) {
@@ -196,6 +199,32 @@ public class EffectListMenu extends Menu {
         }
 
         setFillerGlass();
+    }
+    private List<String> getEffectsConfig(BuffedItem item) {
+        if (isSetBonus) {
+            return SetsConfig.get().getStringList(buildConfigPath(null));
+        }
+
+        BuffedItemEffect effects;
+        if (isActive) {
+            effects = item.getActiveAbility().getEffects();
+        } else {
+            effects = item.getPassiveEffects().getEffects().get(context);
+        }
+
+        if (effects == null) {
+            return new ArrayList<>();
+        }
+
+        if (effectType == EffectType.POTION_EFFECT) {
+            return effects.getPotionEffects().entrySet().stream()
+                    .map(entry -> entry.getKey().getName() + ";" + entry.getValue())
+                    .collect(Collectors.toList());
+        } else {
+            return effects.getParsedAttributes().stream()
+                    .map(attr -> attr.getAttribute().name() + ";" + attr.getOperation().name() + ";" + attr.getAmount())
+                    .collect(Collectors.toList());
+        }
     }
 
     private void openBackMenu() {
@@ -235,15 +264,15 @@ public class EffectListMenu extends Menu {
 
         if (isActive) {
             if (effectType == EffectType.POTION_EFFECT) {
-                return "items." + itemId + ".active-mode.effects.potion_effects";
+                return "items." + itemId + ".active_ability.actions.effects.potion_effects";
             } else {
-                return "items." + itemId + ".active-mode.effects.attributes";
+                return "items." + itemId + ".active_ability.actions.effects.attributes";
             }
         } else {
             if (effectType == EffectType.POTION_EFFECT) {
-                return "items." + itemId + ".effects." + context + ".potion_effects";
+                return "items." + itemId + ".passive_effects.slots." + context + ".potion_effects";
             } else {
-                return "items." + itemId + ".effects." + context + ".attributes";
+                return "items." + itemId + ".passive_effects.slots." + context + ".attributes";
             }
         }
     }

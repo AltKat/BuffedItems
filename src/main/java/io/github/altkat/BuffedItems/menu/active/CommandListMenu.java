@@ -23,7 +23,7 @@ public class CommandListMenu extends PaginatedMenu {
         ACTIVE(
                 "Active Commands",
                 "active.commands.",
-                "commands",
+                "active-mode.commands",
                 "When Right-Clicked"
         ),
         DEPLETION(
@@ -71,8 +71,8 @@ public class CommandListMenu extends PaginatedMenu {
         if (item == null) return;
 
         List<String> commands = (context == CommandContext.ACTIVE)
-                ? new ArrayList<>(item.getActiveCommands())
-                : new ArrayList<>(item.getDepletionCommands());
+                ? new ArrayList<>(item.getActiveAbility().getCommands())
+                : new ArrayList<>(item.getUsageDetails().getDepletionCommands());
 
         if (handlePageChange(e, commands.size())) return;
 
@@ -169,8 +169,8 @@ public class CommandListMenu extends PaginatedMenu {
         if (item == null) return;
 
         List<String> commands = (context == CommandContext.ACTIVE)
-                ? item.getActiveCommands()
-                : item.getDepletionCommands();
+                ? item.getActiveAbility().getCommands()
+                : item.getUsageDetails().getDepletionCommands();
 
         if (!commands.isEmpty()) {
             for (int i = 0; i < maxItemsPerPage; i++) {

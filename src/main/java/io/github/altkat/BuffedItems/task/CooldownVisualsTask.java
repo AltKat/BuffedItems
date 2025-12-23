@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.cooldown.CooldownManager;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
+import io.github.altkat.BuffedItems.utility.item.data.BossBarCooldownVisuals;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.boss.BarColor;
@@ -52,17 +53,17 @@ public class CooldownVisualsTask extends BukkitRunnable {
             String itemId = handItem.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
             if (itemId != null) {
                 BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
-                if (buffedItem != null && buffedItem.isActiveMode()) {
+                if (buffedItem != null && buffedItem.getActiveAbility().isEnabled()) {
                     CooldownManager cm = plugin.getCooldownManager();
                     currentItem = buffedItem;
                     if (cm.isOnCooldown(player, itemId)) {
                         remaining = cm.getRemainingSeconds(player, itemId);
-                        maxCooldown = buffedItem.getCooldown();
+                        maxCooldown = buffedItem.getActiveAbility().getCooldown();
 
-                        useActionBar = buffedItem.isVisualActionBar();
-                        useBossBar = buffedItem.isVisualBossBar();
-                        bbColorStr = buffedItem.getBossBarColor();
-                        bbStyleStr = buffedItem.getBossBarStyle();
+                        useActionBar = buffedItem.getActiveAbility().getVisuals().getCooldown().getActionBar().isEnabled();
+                        useBossBar = buffedItem.getActiveAbility().getVisuals().getCooldown().getBossBar().isEnabled();
+                        bbColorStr = buffedItem.getActiveAbility().getVisuals().getCooldown().getBossBar().getColor();
+                        bbStyleStr = buffedItem.getActiveAbility().getVisuals().getCooldown().getBossBar().getStyle();
 
                         showVisuals = true;
                     }
@@ -72,7 +73,7 @@ public class CooldownVisualsTask extends BukkitRunnable {
 
         if (useActionBar && showVisuals) {
             String rawMsg = null;
-            if (currentItem != null) rawMsg = currentItem.getCustomActionBarMsg();
+            if (currentItem != null) rawMsg = currentItem.getActiveAbility().getVisuals().getCooldown().getActionBar().getMessage();
 
             if (rawMsg == null) {
                 rawMsg = plugin.getConfig().getString("active-items.messages.cooldown-action-bar", "&fCD: {time}s");
@@ -107,7 +108,7 @@ public class CooldownVisualsTask extends BukkitRunnable {
             bar.setProgress(progress);
 
             String rawTitle = null;
-            if (currentItem != null) rawTitle = currentItem.getCustomBossBarMsg();
+            if (currentItem != null) rawTitle = currentItem.getActiveAbility().getVisuals().getCooldown().getBossBar().getMessage();
 
             if (rawTitle == null) {
                 rawTitle = plugin.getConfig().getString("active-items.messages.cooldown-boss-bar", "CD: {time}s");

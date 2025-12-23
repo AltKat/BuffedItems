@@ -137,7 +137,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             String resultName = "§f" + recipe.getResultItemId();
             BuffedItem resultItem = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
             if (resultItem != null) {
-                resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getDisplayName()));
+                resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getItemDisplay().getDisplayName()));
             }
 
             if (recipe.getResultAmount() > 1) {
@@ -155,7 +155,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                     String bId = ((BuffedItemCost) recipe.getBaseCost()).getRequiredItemId();
                     BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
                     if (bItem != null) {
-                        baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                        baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
                     }
                 }
             }

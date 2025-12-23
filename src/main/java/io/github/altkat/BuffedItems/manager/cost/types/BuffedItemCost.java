@@ -56,7 +56,7 @@ public class BuffedItemCost implements ICost {
 
         String displayName;
         if (item != null) {
-            displayName = ConfigManager.toSection(ConfigManager.fromLegacy(item.getDisplayName()));
+            displayName = ConfigManager.toSection(ConfigManager.fromLegacy(item.getItemDisplay().getDisplayName()));
         } else {
             displayName = requiredItemId;
         }
@@ -101,7 +101,7 @@ public class BuffedItemCost implements ICost {
 
         String displayName;
         if (item != null) {
-            displayName = item.getDisplayName();
+            displayName = item.getItemDisplay().getDisplayName();
         } else {
             displayName = requiredItemId;
         }

@@ -95,7 +95,7 @@ public class PublicSetListMenu extends PaginatedMenu {
             lore.add(ConfigManager.fromSection("§7Set Pieces (" + set.getItemIds().size() + "):"));
             for (String itemId : set.getItemIds()) {
                 BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
-                String itemName = (item != null) ? ConfigManager.toSection(ConfigManager.fromLegacy(item.getDisplayName())) : itemId;
+                String itemName = (item != null) ? ConfigManager.toSection(ConfigManager.fromLegacy(item.getItemDisplay().getDisplayName())) : itemId;
                 lore.add(ConfigManager.fromSection(" §8• §f" + itemName));
             }
             lore.add(Component.empty());

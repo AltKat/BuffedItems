@@ -65,7 +65,7 @@ public class CostListMenu extends Menu {
             // 1. DELETE (Right Click)
             if (e.getClick() == ClickType.RIGHT) {
                 costList.remove(e.getSlot());
-                ConfigManager.setItemValue(itemId, "costs", costList);
+                ConfigManager.setItemValue(itemId, "active-mode.costs", costList);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cCost removed."));
                 this.open();
             }
@@ -168,7 +168,7 @@ public class CostListMenu extends Menu {
             if (bItem != null) {
                 displayItem = new ItemBuilder(bItem, plugin).build();
                 title = ConfigManager.fromSection("§f" + amountStr + "x ")
-                        .append(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                        .append(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
                 lore.add(ConfigManager.fromSection("§8Type: §#FF6347Buffed Item§#FFD700"));
                 lore.add(ConfigManager.fromSection("§8ID: §7" + bItemId));
             } else {

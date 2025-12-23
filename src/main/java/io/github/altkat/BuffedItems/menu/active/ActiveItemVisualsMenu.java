@@ -59,19 +59,19 @@ public class ActiveItemVisualsMenu extends Menu {
 
         switch (type) {
             case PAPER:
-                ConfigManager.setItemValue(itemId, "visuals.chat", !item.isVisualChat());
+                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.chat.enabled", !item.getActiveAbility().getVisuals().getCooldown().getChat().isEnabled());
                 this.open();
                 break;
             case NAME_TAG:
-                ConfigManager.setItemValue(itemId, "visuals.title", !item.isVisualTitle());
+                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.title.enabled", !item.getActiveAbility().getVisuals().getCooldown().getTitle().isEnabled());
                 this.open();
                 break;
             case IRON_BARS:
-                ConfigManager.setItemValue(itemId, "visuals.action-bar", !item.isVisualActionBar());
+                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.action-bar.enabled", !item.getActiveAbility().getVisuals().getCooldown().getActionBar().isEnabled());
                 this.open();
                 break;
             case WITHER_SKELETON_SKULL:
-                ConfigManager.setItemValue(itemId, "visuals.boss-bar", !item.isVisualBossBar());
+                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.boss-bar.enabled", !item.getActiveAbility().getVisuals().getCooldown().getBossBar().isEnabled());
                 this.open();
                 break;
 
@@ -88,44 +88,26 @@ public class ActiveItemVisualsMenu extends Menu {
                 String title = "";
 
                 if (slot == 19) {
-                    path = "active.msg.chat";
+                    path = "active_ability.visuals.cooldown.chat.message";
                     title = "Chat Message";
                 } else if (slot == 21) {
-                    path = "active.msg.title";
+                    path = "active_ability.visuals.cooldown.title.message";
                     title = "Title Message (Split with '|' for subtitle)";
                 } else if (slot == 23) {
-                    path = "active.msg.actionbar";
+                    path = "active_ability.visuals.cooldown.action-bar.message";
                     title = "Action Bar Message";
                 } else if (slot == 25) {
-                    path = "active.msg.bossbar";
+                    path = "active_ability.visuals.cooldown.boss-bar.message";
                     title = "Boss Bar Message";
                 }
 
                 if (!path.isEmpty()) {
                     if (e.isRightClick()) {
-                        String configPath = null;
-                        String subtitlePath = null;
-
-                        switch (path) {
-                            case "active.msg.chat":
-                                configPath = "visuals.messages.cooldown-chat";
-                                break;
-                            case "active.msg.title":
-                                configPath = "visuals.messages.cooldown-title";
-                                subtitlePath = "visuals.messages.cooldown-subtitle";
-                                break;
-                            case "active.msg.actionbar":
-                                configPath = "visuals.messages.cooldown-action-bar";
-                                break;
-                            case "active.msg.bossbar":
-                                configPath = "visuals.messages.cooldown-boss-bar";
-                                break;
-                        }
-
-                        if (subtitlePath != null) {
+                        String subtitlePath = path.replace(".message", ".subtitle");
+                        if(path.equals("active_ability.visuals.cooldown.title.message")) {
                             ConfigManager.setItemValue(itemId, subtitlePath, null);
                         }
-                        ConfigManager.setItemValue(itemId, configPath, null);
+                        ConfigManager.setItemValue(itemId, path, null);
                         p.sendMessage(ConfigManager.fromSectionWithPrefix("§aReset to default config message."));
                         this.open();
                     } else {
@@ -148,25 +130,25 @@ public class ActiveItemVisualsMenu extends Menu {
 
         setFillerGlass();
 
-        inventory.setItem(10, createVisualToggle(Material.PAPER, "Chat Message", item.isVisualChat()));
-        inventory.setItem(12, createVisualToggle(Material.NAME_TAG, "Title Alert", item.isVisualTitle()));
-        inventory.setItem(14, createVisualToggle(Material.IRON_BARS, "Action Bar", item.isVisualActionBar()));
-        inventory.setItem(16, createVisualToggle(Material.WITHER_SKELETON_SKULL, "Boss Bar", item.isVisualBossBar()));
+        inventory.setItem(10, createVisualToggle(Material.PAPER, "Chat Message", item.getActiveAbility().getVisuals().getCooldown().getChat().isEnabled()));
+        inventory.setItem(12, createVisualToggle(Material.NAME_TAG, "Title Alert", item.getActiveAbility().getVisuals().getCooldown().getTitle().isEnabled()));
+        inventory.setItem(14, createVisualToggle(Material.IRON_BARS, "Action Bar", item.getActiveAbility().getVisuals().getCooldown().getActionBar().isEnabled()));
+        inventory.setItem(16, createVisualToggle(Material.WITHER_SKELETON_SKULL, "Boss Bar", item.getActiveAbility().getVisuals().getCooldown().getBossBar().isEnabled()));
 
         inventory.setItem(19, makeItem(Material.WRITABLE_BOOK, "§eEdit Chat Msg",
-                formatMessageLore(item.getCustomChatMsg(), "active-items.messages.cooldown-chat")));
+                formatMessageLore(item.getActiveAbility().getVisuals().getCooldown().getChat().getMessage(), "active-items.messages.cooldown-chat")));
 
         inventory.setItem(21, makeItem(Material.WRITABLE_BOOK, "§eEdit Title Msg",
-                formatTitleLore(item.getCustomTitleMsg(), item.getCustomSubtitleMsg())));
+                formatTitleLore(item.getActiveAbility().getVisuals().getCooldown().getTitle().getMessage(), item.getActiveAbility().getVisuals().getCooldown().getTitle().getSubtitle())));
 
         inventory.setItem(23, makeItem(Material.WRITABLE_BOOK, "§eEdit Action Bar",
-                formatMessageLore(item.getCustomActionBarMsg(), "active-items.messages.cooldown-action-bar")));
+                formatMessageLore(item.getActiveAbility().getVisuals().getCooldown().getActionBar().getMessage(), "active-items.messages.cooldown-action-bar")));
 
         inventory.setItem(25, makeItem(Material.WRITABLE_BOOK, "§eEdit Boss Bar",
-                formatMessageLore(item.getCustomBossBarMsg(), "active-items.messages.cooldown-boss-bar")));
+                formatMessageLore(item.getActiveAbility().getVisuals().getCooldown().getBossBar().getMessage(), "active-items.messages.cooldown-boss-bar")));
 
-        inventory.setItem(34, makeItem(Material.PAINTING, "§dBossBar Style", "§7Current: §e" + item.getBossBarStyle(), "§eClick to Change"));
-        inventory.setItem(43, makeItem(Material.GLOW_INK_SAC, "§dBossBar Color", "§7Current: §e" + item.getBossBarColor(), "§eClick to Change"));
+        inventory.setItem(34, makeItem(Material.PAINTING, "§dBossBar Style", "§7Current: §e" + item.getActiveAbility().getVisuals().getCooldown().getBossBar().getStyle(), "§eClick to Change"));
+        inventory.setItem(43, makeItem(Material.GLOW_INK_SAC, "§dBossBar Color", "§7Current: §e" + item.getActiveAbility().getVisuals().getCooldown().getBossBar().getColor(), "§eClick to Change"));
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
     }

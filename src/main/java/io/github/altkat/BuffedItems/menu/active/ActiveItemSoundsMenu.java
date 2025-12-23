@@ -71,7 +71,7 @@ public class ActiveItemSoundsMenu extends Menu {
 
         setFillerGlass();
 
-        String currSuccess = item.getCustomSuccessSound();
+        String currSuccess = item.getActiveAbility().getSounds().getSuccess();
         if (currSuccess == null) {
             currSuccess = "§a" + ConfigManager.getGlobalSuccessSound() + " §8(Default)";
         } else {
@@ -85,7 +85,7 @@ public class ActiveItemSoundsMenu extends Menu {
                 "§eClick to Change"));
 
 
-        String currCostFail = item.getCustomCostFailSound();
+        String currCostFail = item.getActiveAbility().getSounds().getCostFail();
         if (currCostFail == null) {
             currCostFail = "§6" + ConfigManager.getGlobalCostFailSound() + " §8(Default)";
         } else {
@@ -100,7 +100,7 @@ public class ActiveItemSoundsMenu extends Menu {
 
 
 
-        String currCool = item.getCustomCooldownSound();
+        String currCool = item.getActiveAbility().getSounds().getCooldown();
         if (currCool == null) {
             currCool = "§c" + ConfigManager.getGlobalCooldownSound() + " §8(Default)";
         } else {
@@ -113,7 +113,7 @@ public class ActiveItemSoundsMenu extends Menu {
                 "",
                 "§eClick to Change"));
 
-        String currDepletion = item.getCustomDepletionSound();
+        String currDepletion = item.getUsageDetails().getDepletionSound();
         if (currDepletion == null) {
             currDepletion = "§5" + ConfigManager.getGlobalDepletionSound() + " §8(Default)";
         } else {
@@ -126,7 +126,7 @@ public class ActiveItemSoundsMenu extends Menu {
                 "",
                 "§eClick to Change"));
 
-        String currTry = item.getCustomDepletedTrySound();
+        String currTry = item.getUsageDetails().getDepletedTrySound();
         if (currTry == null) currTry = "§7" + ConfigManager.getGlobalDepletedTrySound() + " §8(Default)";
         else currTry = "§7" + currTry;
 

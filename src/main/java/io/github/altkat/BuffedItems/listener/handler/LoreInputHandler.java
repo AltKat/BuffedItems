@@ -29,15 +29,15 @@ public class LoreInputHandler implements ChatInputHandler {
             return;
         }
 
-        List<String> currentLore = new ArrayList<>(item.getLore());
+        List<String> currentLore = new ArrayList<>(item.getItemDisplay().getLore());
 
-        if (path.equals("lore.add")) {
+        if (path.equals("display.lore.add")) {
             currentLore.add(input);
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
                     () -> "[Chat] Added new lore line to " + itemId);
         } else {
             try {
-                int index = Integer.parseInt(path.substring(5));
+                int index = Integer.parseInt(path.substring(13));
                 if (index >= 0 && index < currentLore.size()) {
                     currentLore.set(index, input);
                     ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
@@ -58,7 +58,7 @@ public class LoreInputHandler implements ChatInputHandler {
             }
         }
 
-        ConfigManager.setItemValue(itemId, "lore", currentLore);
+        ConfigManager.setItemValue(itemId, "display.lore", currentLore);
         player.sendMessage(ConfigManager.fromSectionWithPrefix("§aLore has been updated!"));
 
         closeChatInput(pmu);

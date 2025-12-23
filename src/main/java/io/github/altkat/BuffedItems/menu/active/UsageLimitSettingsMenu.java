@@ -50,22 +50,22 @@ public class UsageLimitSettingsMenu extends Menu {
 
         if (e.getSlot() == 10) {
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("usage-limit.max-usage");
+            playerMenuUtility.setChatInputPath("usage.limit");
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Max Usage amount in chat (e.g. 50)."));
-            p.sendMessage(ConfigManager.fromSection("§7Current: " + (item.getMaxUses() > 0 ? item.getMaxUses() : "Unlimited (-1)")));
+            p.sendMessage(ConfigManager.fromSection("§7Current: " + (item.getUsageDetails().getMaxUses() > 0 ? item.getUsageDetails().getMaxUses() : "Unlimited (-1)")));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit."));
             return;
         }
 
         if (e.getSlot() == 12) {
-            DepletionAction current = item.getDepletionAction();
+            DepletionAction current = item.getUsageDetails().getDepletionAction();
             DepletionAction next;
             if (current == DepletionAction.DISABLE) next = DepletionAction.DESTROY;
             else if (current == DepletionAction.DESTROY) next = DepletionAction.TRANSFORM;
             else next = DepletionAction.DISABLE;
 
-            ConfigManager.setItemValue(itemId, "usage-limit.action", next.name());
+            ConfigManager.setItemValue(itemId, "usage.action", next.name());
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             this.open();
             return;
@@ -90,28 +90,28 @@ public class UsageLimitSettingsMenu extends Menu {
         String title = null;
 
         if (e.getSlot() == 28) {
-            configKey = "usage-limit.lore";
-            inputPath = "usage-limit.lore";
+            configKey = "usage.lore_format";
+            inputPath = "usage.lore_format";
             title = "Usage Lore Line";
         }
         else if (e.getSlot() == 30) {
-            configKey = "usage-limit.depleted-lore";
-            inputPath = "usage-limit.depleted-lore";
+            configKey = "usage.depleted_lore";
+            inputPath = "usage.depleted_lore";
             title = "Depleted Lore Line";
         }
         else if (e.getSlot() == 32) {
-            configKey = "usage-limit.depleted-message";
-            inputPath = "usage-limit.depleted-message";
+            configKey = "usage.depletion_actions.messages.depleted";
+            inputPath = "usage.depletion_actions.messages.depleted";
             title = "Depleted Denial Message";
         }
         else if (e.getSlot() == 34) {
-            configKey = "usage-limit.depletion-notification";
-            inputPath = "usage-limit.depletion-notification";
+            configKey = "usage.depletion_actions.messages.depletion_notification";
+            inputPath = "usage.depletion_actions.messages.depletion_notification";
             title = "Break Notification";
         }
         else if (e.getSlot() == 42) {
-            configKey = "usage-limit.depletion-transform-message";
-            inputPath = "usage-limit.depletion-transform-message";
+            configKey = "usage.depletion_actions.messages.transform";
+            inputPath = "usage.depletion_actions.messages.transform";
             title = "Transform Message";
         }
 
@@ -126,7 +126,7 @@ public class UsageLimitSettingsMenu extends Menu {
                 playerMenuUtility.setChatInputPath(inputPath);
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new " + title + " in chat."));
-                if(configKey.equals("usage-limit.lore")) {
+                if(configKey.equals("usage.lore_format")) {
                     p.sendMessage(ConfigManager.fromSection("§7Placeholders: {remaining_uses}, {total_uses}"));
                 }
                 p.sendMessage(ConfigManager.fromSection("§7Type 'cancel' to exit."));
@@ -140,12 +140,12 @@ public class UsageLimitSettingsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        int maxUses = item.getMaxUses();
+        int maxUses = item.getUsageDetails().getMaxUses();
         String usageStatus = (maxUses > 0) ? "§e" + maxUses : "§aUnlimited (-1)";
         inventory.setItem(10, makeItem(Material.REDSTONE, "§cMax Usage Limit",
                 "§7Current: " + usageStatus, "", "§eClick to Edit"));
 
-        DepletionAction action = item.getDepletionAction();
+        DepletionAction action = item.getUsageDetails().getDepletionAction();
         Material actionIcon = Material.BARRIER;
         String actionDesc = "§7Item becomes unusable.";
         if (action == DepletionAction.DESTROY) {
@@ -160,7 +160,7 @@ public class UsageLimitSettingsMenu extends Menu {
 
         String targetName = "";
         if (action == DepletionAction.TRANSFORM) {
-            String targetId = item.getDepletionTransformId();
+            String targetId = item.getUsageDetails().getTransformId();
 
             String displayName = "§cNone";
             String idLine = "";
@@ -168,7 +168,7 @@ public class UsageLimitSettingsMenu extends Menu {
             if (targetId != null) {
                 BuffedItem targetItem = plugin.getItemManager().getBuffedItem(targetId);
                 if (targetItem != null) {
-                    displayName = ConfigManager.toSection(ConfigManager.fromLegacy(targetItem.getDisplayName()));
+                    displayName = ConfigManager.toSection(ConfigManager.fromLegacy(targetItem.getItemDisplay().getDisplayName()));
                 } else {
                     displayName = "§cUnknown Item";
                 }
@@ -192,15 +192,15 @@ public class UsageLimitSettingsMenu extends Menu {
                 "§7Manage commands executed when",
                 "§7the item usage reaches 0.",
                 "",
-                "§7Current: §f" + item.getDepletionCommands().size() + " commands",
+                "§7Current: §f" + item.getUsageDetails().getDepletionCommands().size() + " commands",
                 "",
                 "§eClick to Edit"));
 
-        inventory.setItem(28, makeMessageItem(Material.PAPER, "Usage Lore", item.getUsageLore(maxUses > 0 ? maxUses : 1), "usage-limit-lore"));
-        inventory.setItem(30, makeMessageItem(Material.BOOK, "Depleted Lore", item.getDepletedLore(), "usage-limit-broken-lore"));
-        inventory.setItem(32, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", item.getDepletedMessage(), "usage-limit-depleted-message"));
-        inventory.setItem(34, makeMessageItem(Material.BELL, "Break Notification", item.getDepletionNotification(), "usage-limit-break-notification"));
-        inventory.setItem(42, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", item.getDepletionTransformMessage(), "usage-limit-depletion-transform"));
+        inventory.setItem(28, makeMessageItem(Material.PAPER, "Usage Lore", item.getUsageLore(maxUses > 0 ? maxUses : 1), "usage.lore_format"));
+        inventory.setItem(30, makeMessageItem(Material.BOOK, "Depleted Lore", item.getUsageDetails().getDepletedLore(), "usage.depleted_lore"));
+        inventory.setItem(32, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", item.getUsageDetails().getDepletedMessage(), "usage.depletion_actions.messages.depleted"));
+        inventory.setItem(34, makeMessageItem(Material.BELL, "Break Notification", item.getUsageDetails().getDepletionNotification(), "usage.depletion_actions.messages.depletion_notification"));
+        inventory.setItem(42, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", item.getUsageDetails().getDepletionTransformMessage(), "usage.depletion_actions.messages.transform"));
 
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
     }

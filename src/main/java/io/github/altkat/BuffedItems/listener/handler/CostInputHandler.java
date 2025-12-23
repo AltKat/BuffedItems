@@ -115,9 +115,9 @@ public class CostInputHandler implements ChatInputHandler {
                 }
             }
 
-            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
             costs.add(newCost);
-            ConfigManager.setItemValue(itemId, "costs", costs);
+            ConfigManager.setItemValue(itemId, "active_ability.costs", costs);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCost added successfully!"));
             closeChatInput(pmu);
@@ -139,7 +139,7 @@ public class CostInputHandler implements ChatInputHandler {
     @SuppressWarnings("unchecked")
     private void handleEditCostAmount(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         int index = pmu.getEditIndex();
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
 
         if (index < 0 || index >= costList.size()) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Cost index out of bounds."));
@@ -169,7 +169,7 @@ public class CostInputHandler implements ChatInputHandler {
                 else targetCost.put("amount", val);
             }
 
-            ConfigManager.setItemValue(itemId, "costs", editableList);
+            ConfigManager.setItemValue(itemId, "active_ability.costs", editableList);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCost amount updated!"));
 
             closeChatInput(pmu);
@@ -185,7 +185,7 @@ public class CostInputHandler implements ChatInputHandler {
     @SuppressWarnings("unchecked")
     private void handleEditCostMessage(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         int index = pmu.getEditIndex();
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
 
         if (index < 0 || index >= costList.size()) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Cost index out of bounds."));
@@ -209,7 +209,7 @@ public class CostInputHandler implements ChatInputHandler {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aFailure message updated!"));
         }
 
-        ConfigManager.setItemValue(itemId, "costs", editableList);
+        ConfigManager.setItemValue(itemId, "active_ability.costs", editableList);
         closeChatInput(pmu);
         new CostListMenu(pmu, plugin).open();
     }

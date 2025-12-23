@@ -78,7 +78,7 @@ public class ItemInteractListener implements Listener {
         if (itemId == null) return;
 
         BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
-        if (buffedItem == null || !buffedItem.isActiveMode()) {
+        if (buffedItem == null || !buffedItem.getActiveAbility().isEnabled()) {
             return;
         }
 
@@ -103,16 +103,16 @@ public class ItemInteractListener implements Listener {
             currentUses = item.getItemMeta().getPersistentDataContainer().get(durabilityKey, PersistentDataType.INTEGER);
             if (currentUses != null && currentUses <= 0) {
                 event.setCancelled(true);
-                String rawDepletedMsg = buffedItem.getDepletedMessage();
+                String rawDepletedMsg = buffedItem.getUsageDetails().getDepletedMessage();
                 String parsedDepletedMsg = hooks.processPlaceholders(player, rawDepletedMsg);
                 player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepletedMsg));
-                playConfiguredSound(player, buffedItem.getCustomDepletedTrySound(), ConfigManager.getGlobalDepletedTrySound());
+                playConfiguredSound(player, buffedItem.getUsageDetails().getDepletedTrySound(), ConfigManager.getGlobalDepletedTrySound());
                 return;
             }
         }
 
         // Cost Checks
-        List<ICost> costs = buffedItem.getCosts();
+        List<ICost> costs = buffedItem.getActiveAbility().getCosts();
         if (costs != null && !costs.isEmpty()) {
             List<String> missingRequirements = new ArrayList<>();
 
@@ -126,7 +126,7 @@ public class ItemInteractListener implements Listener {
                 for (String msg : missingRequirements) {
                     player.sendMessage(ConfigManager.fromLegacy(msg));
                 }
-                playConfiguredSound(player, buffedItem.getCustomCostFailSound(), ConfigManager.getGlobalCostFailSound());
+                playConfiguredSound(player, buffedItem.getActiveAbility().getSounds().getCostFail(), ConfigManager.getGlobalCostFailSound());
                 event.setCancelled(true);
                 return;
             }
@@ -140,14 +140,14 @@ public class ItemInteractListener implements Listener {
         }
 
         // Set cooldown
-        if (buffedItem.getCooldown() > 0) {
-            plugin.getCooldownManager().setCooldown(player, itemId, buffedItem.getCooldown());
+        if (buffedItem.getActiveAbility().getCooldown() > 0) {
+            plugin.getCooldownManager().setCooldown(player, itemId, buffedItem.getActiveAbility().getCooldown());
         }
 
         // Execute active effects and commands
-        executeCommands(player, buffedItem.getActiveCommands());
+        executeCommands(player, buffedItem.getActiveAbility().getCommands());
         applyActiveEffects(player, buffedItem);
-        playConfiguredSound(player, buffedItem.getCustomSuccessSound(), ConfigManager.getGlobalSuccessSound());
+        playConfiguredSound(player, buffedItem.getActiveAbility().getSounds().getSuccess(), ConfigManager.getGlobalSuccessSound());
 
         if (currentUses != null && currentUses > 0) {
             int newUses = currentUses - 1;
@@ -189,17 +189,17 @@ public class ItemInteractListener implements Listener {
     }
 
     private void handleDepletion(Player player, BuffedItem buffedItem, ItemStack originalItem, EquipmentSlot hand) {
-        String rawDepleteMsg = buffedItem.getDepletionNotification();
+        String rawDepleteMsg = buffedItem.getUsageDetails().getDepletionNotification();
         String parsedDepleteMsg = hooks.processPlaceholders(player, rawDepleteMsg);
         player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepleteMsg));
 
-        playConfiguredSound(player, buffedItem.getCustomDepletionSound(), ConfigManager.getGlobalDepletionSound());
+        playConfiguredSound(player, buffedItem.getUsageDetails().getDepletionSound(), ConfigManager.getGlobalDepletionSound());
 
-        if (!buffedItem.getDepletionCommands().isEmpty()) {
-            executeCommands(player, buffedItem.getDepletionCommands());
+        if (!buffedItem.getUsageDetails().getDepletionCommands().isEmpty()) {
+            executeCommands(player, buffedItem.getUsageDetails().getDepletionCommands());
         }
 
-        DepletionAction action = buffedItem.getDepletionAction();
+        DepletionAction action = buffedItem.getUsageDetails().getDepletionAction();
 
         if (action == DepletionAction.DESTROY) {
             if (originalItem.getAmount() > 1) {
@@ -236,7 +236,7 @@ public class ItemInteractListener implements Listener {
     }
 
     private void setTransformedItemInHand(Player player, BuffedItem buffedItem, EquipmentSlot hand) {
-        String targetId = buffedItem.getDepletionTransformId();
+        String targetId = buffedItem.getUsageDetails().getTransformId();
 
         if (targetId == null) {
             plugin.getLogger().warning("[BuffedItems] Configuration Error: Item '" + buffedItem.getId() +
@@ -255,7 +255,7 @@ public class ItemInteractListener implements Listener {
             if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(resultItem);
             else player.getInventory().setItemInOffHand(resultItem);
 
-            String rawTransformMsg = buffedItem.getDepletionTransformMessage();
+            String rawTransformMsg = buffedItem.getUsageDetails().getDepletionTransformMessage();
             String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
             player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
         } else {
@@ -266,7 +266,7 @@ public class ItemInteractListener implements Listener {
     }
 
     private void giveTransformedItem(Player player, BuffedItem buffedItem) {
-        String targetId = buffedItem.getDepletionTransformId();
+        String targetId = buffedItem.getUsageDetails().getTransformId();
         if (targetId == null){
             plugin.getLogger().warning("[BuffedItems] Configuration Error: Item '" + buffedItem.getId() +
                     "' has DepletionAction set to TRANSFORM but no 'depletion.transform-to' ID is configured!");
@@ -280,7 +280,7 @@ public class ItemInteractListener implements Listener {
             processMetaPlaceholders(player, resultItem);
             giveItemToPlayer(player, resultItem);
 
-            String rawTransformMsg = buffedItem.getDepletionTransformMessage();
+            String rawTransformMsg = buffedItem.getUsageDetails().getDepletionTransformMessage();
             String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
             player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
         }else {
@@ -317,8 +317,8 @@ public class ItemInteractListener implements Listener {
     private void handleCooldownMessage(Player player, BuffedItem buffedItem) {
         double remaining = plugin.getCooldownManager().getRemainingSeconds(player, buffedItem.getId());
 
-        if (buffedItem.isVisualChat()) {
-            String rawMsg = buffedItem.getCustomChatMsg();
+        if (buffedItem.getActiveAbility().getVisuals().getCooldown().getChat().isEnabled()) {
+            String rawMsg = buffedItem.getActiveAbility().getVisuals().getCooldown().getChat().getMessage();
             if (rawMsg == null) {
                 rawMsg = plugin.getConfig().getString("active-items.messages.cooldown-chat", "&cWait {time}s");
             }
@@ -326,13 +326,13 @@ public class ItemInteractListener implements Listener {
             player.sendMessage(ConfigManager.fromLegacy(parsedMsg));
         }
 
-        if (buffedItem.isVisualTitle()) {
-            String title = buffedItem.getCustomTitleMsg();
+        if (buffedItem.getActiveAbility().getVisuals().getCooldown().getTitle().isEnabled()) {
+            String title = buffedItem.getActiveAbility().getVisuals().getCooldown().getTitle().getMessage();
             if (title == null) {
                 title = plugin.getConfig().getString("active-items.messages.cooldown-title", "");
             }
 
-            String subtitle = buffedItem.getCustomSubtitleMsg();
+            String subtitle = buffedItem.getActiveAbility().getVisuals().getCooldown().getTitle().getSubtitle();
             if (subtitle == null) {
                 subtitle = plugin.getConfig().getString("active-items.messages.cooldown-subtitle", "");
             }
@@ -346,7 +346,7 @@ public class ItemInteractListener implements Listener {
             ));
         }
 
-        playConfiguredSound(player, buffedItem.getCustomCooldownSound(), ConfigManager.getGlobalCooldownSound());
+        playConfiguredSound(player, buffedItem.getActiveAbility().getSounds().getCooldown(), ConfigManager.getGlobalCooldownSound());
     }
 
     /**
@@ -563,10 +563,10 @@ public class ItemInteractListener implements Listener {
     }
 
     private void applyActiveEffects(Player player, BuffedItem item) {
-        BuffedItemEffect effects = item.getActiveEffects();
+        BuffedItemEffect effects = item.getActiveAbility().getEffects();
         if (effects == null) return;
 
-        int durationTicks = item.getActiveDuration() > 0 ? item.getActiveDuration() * 20 : 100;
+        int durationTicks = item.getActiveAbility().getDuration() > 0 ? item.getActiveAbility().getDuration() * 20 : 100;
         boolean showIcon = ConfigManager.shouldShowPotionIcons();
 
         for (Map.Entry<PotionEffectType, Integer> entry : effects.getPotionEffects().entrySet()) {

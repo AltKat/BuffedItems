@@ -41,12 +41,12 @@ public class PassiveItemSettingsMenu extends Menu {
         if (e.getSlot() == 8) {
             BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
             if (item != null) {
-                BuffedItem.AttributeMode current = item.getAttributeMode();
+                BuffedItem.AttributeMode current = item.getPassiveEffects().getAttributeMode();
                 BuffedItem.AttributeMode next = (current == BuffedItem.AttributeMode.STATIC)
                         ? BuffedItem.AttributeMode.DYNAMIC
                         : BuffedItem.AttributeMode.STATIC;
 
-                ConfigManager.setItemValue(item.getId(), "attribute_mode", next.name());
+                ConfigManager.setItemValue(item.getId(), "passive_effects.attribute_mode", next.name());
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                 this.open();
             }
@@ -74,7 +74,7 @@ public class PassiveItemSettingsMenu extends Menu {
 
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item != null) {
-            BuffedItem.AttributeMode attrMode = item.getAttributeMode();
+            BuffedItem.AttributeMode attrMode = item.getPassiveEffects().getAttributeMode();
             String modeColor = (attrMode == BuffedItem.AttributeMode.DYNAMIC) ? "§b" : "§7";
             Material modeIcon = (attrMode == BuffedItem.AttributeMode.DYNAMIC) ? Material.GOLD_BLOCK : Material.IRON_BLOCK;
 

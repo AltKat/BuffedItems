@@ -295,7 +295,7 @@ public class BuffedItemCommand implements CommandExecutor {
 
         target.getInventory().addItem(itemStack);
 
-        String successMsg = "&aGave &e" + amount + "x &r" + buffedItem.getDisplayName() + "&a to " + target.getName();
+        String successMsg = "&aGave &e" + amount + "x &r" + buffedItem.getItemDisplay().getDisplayName() + "&a to " + target.getName();
         if (silent) {
             successMsg += " &7(Silent)";
         }
@@ -311,7 +311,7 @@ public class BuffedItemCommand implements CommandExecutor {
             int finalAmount = amount;
             Component finalMessage = baseComp
                     .replaceText(builder -> builder.matchLiteral("{amount}").replacement(String.valueOf(finalAmount)))
-                    .replaceText(builder -> builder.matchLiteral("{item_name}").replacement(ConfigManager.fromLegacy(buffedItem.getDisplayName())));
+                    .replaceText(builder -> builder.matchLiteral("{item_name}").replacement(ConfigManager.fromLegacy(buffedItem.getItemDisplay().getDisplayName())));
 
             target.sendMessage(finalMessage);
         }

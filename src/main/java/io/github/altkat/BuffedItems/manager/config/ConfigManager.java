@@ -331,6 +331,10 @@ public class ConfigManager {
                 } else if (path.startsWith("active_effects")) {
                     // active_effects.potion_effects -> active-mode.effects.potion_effects
                     normalizedPath = path.replace("active_effects", "active-mode.effects");
+                } else if (path.startsWith("enchantments")) {
+                    normalizedPath = path;
+                } else if (path.startsWith("usage")) {
+                    normalizedPath = "active_ability." + path;
                 } else {
                     normalizedPath = path;
                 }
@@ -365,9 +369,9 @@ public class ConfigManager {
                 return false;
             }
 
-            config.set("items." + itemId + ".display_name", "&f" + itemId);
             config.set("items." + itemId + ".material", "STONE");
-            config.set("items." + itemId + ".lore", List.of("", "&7A new BuffedItem."));
+            config.set("items." + itemId + ".display.name", "&f" + itemId);
+            config.set("items." + itemId + ".display.lore", List.of("", "&7A new BuffedItem."));
 
             ItemsConfig.saveAsync();
 
@@ -393,12 +397,12 @@ public class ConfigManager {
                 return null;
             }
 
-            String originalDisplayName = sourceSection.getString("display_name", "&f" + sourceItemId);
+            String originalDisplayName = sourceSection.getString("display.name", "&f" + sourceItemId);
 
             ConfigurationSection newSection = config.createSection("items." + newItemId);
             deepCopySection(sourceSection, newSection);
 
-            config.set("items." + newItemId + ".display_name", originalDisplayName + " &7(Copy)");
+            config.set("items." + newItemId + ".display.name", originalDisplayName + " &7(Copy)");
 
             ItemsConfig.saveAsync();
 
@@ -464,7 +468,7 @@ public class ConfigManager {
             }
 
             String path = "sets." + setId;
-            SetsConfig.get().set(path + ".display_name", "&6" + setId);
+            SetsConfig.get().set(path + ".display.name", "&6" + setId);
             SetsConfig.get().set(path + ".items", new java.util.ArrayList<>());
 
             SetsConfig.saveAsync();

@@ -123,7 +123,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 break;
 
             case USAGE_LIMIT:
-                ConfigManager.setItemValue(playerMenuUtility.getItemToEditId(), "usage-limit.transform-item", itemId);
+                ConfigManager.setItemValue(playerMenuUtility.getItemToEditId(), "usage.transform_item", itemId);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aTransform Target updated to: §e" + itemId));
                 new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
                 break;
@@ -188,7 +188,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 break;
 
             case USAGE_LIMIT:
-                playerMenuUtility.setChatInputPath("usage-limit.transform-item");
+                playerMenuUtility.setChatInputPath("usage.transform_item");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Target Buffed Item ID manually."));
                 break;
 

@@ -33,10 +33,10 @@ public class ItemUtils {
 
         boolean forceHideAttributes = false;
 
-        if (item.getAttributeMode() == BuffedItem.AttributeMode.STATIC) {
+        if (item.getPassiveEffects().getAttributeMode() == BuffedItem.AttributeMode.STATIC) {
             boolean hasAnyAttribute = false;
 
-            for (Map.Entry<String, BuffedItemEffect> effectEntry : item.getEffects().entrySet()) {
+            for (Map.Entry<String, BuffedItemEffect> effectEntry : item.getPassiveEffects().getEffects().entrySet()) {
                 String slotKey = effectEntry.getKey().toUpperCase();
                 BuffedItemEffect itemEffect = effectEntry.getValue();
 

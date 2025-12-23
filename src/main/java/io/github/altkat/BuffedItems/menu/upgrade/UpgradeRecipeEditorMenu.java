@@ -114,7 +114,7 @@ public class UpgradeRecipeEditorMenu extends Menu {
         String resultDisplayName = "§f" + resultItemId;
         BuffedItem resultItem = plugin.getItemManager().getBuffedItem(resultItemId);
         if (resultItem != null) {
-            resultDisplayName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getDisplayName()));
+            resultDisplayName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getItemDisplay().getDisplayName()));
         }
 
         String baseDisplayName = "§cNone";
@@ -142,7 +142,7 @@ public class UpgradeRecipeEditorMenu extends Menu {
                     BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
 
                     if (bItem != null) {
-                        baseDisplayName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                        baseDisplayName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
                     } else {
                         baseDisplayName = "§f" + bId;
                     }

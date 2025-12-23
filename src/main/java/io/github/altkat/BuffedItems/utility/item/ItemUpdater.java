@@ -45,7 +45,7 @@ public class ItemUpdater {
         BuffedItem template = plugin.getItemManager().getBuffedItem(itemId);
         if (template == null) return null;
 
-        boolean hasUsageLimit = template.isActiveMode() && template.getMaxUses() > 0;
+        boolean hasUsageLimit = template.getActiveAbility().isEnabled() && template.getUsageDetails().getMaxUses() > 0;
 
         Integer currentHash = oldMeta.getPersistentDataContainer().get(versionKey, PersistentDataType.INTEGER);
         boolean hasUpdateFlag = oldMeta.getPersistentDataContainer().has(updateFlagKey, PersistentDataType.BYTE);
@@ -87,7 +87,7 @@ public class ItemUpdater {
         ItemMeta meta = newItem.getItemMeta();
 
         // 1. Display Name Update
-        String rawName = template.getDisplayName();
+        String rawName = template.getItemDisplay().getDisplayName();
         String parsedName = template.hasPlaceholders()
                 ? plugin.getHookManager().processPlaceholders(player, rawName)
                 : rawName;
@@ -95,15 +95,15 @@ public class ItemUpdater {
 
         // 2. Base Lore Update
         List<Component> baseLore = new ArrayList<>();
-        for (String line : template.getLore()) {
+        for (String line : template.getItemDisplay().getLore()) {
             String parsedLine = template.hasPlaceholders()
                     ? plugin.getHookManager().processPlaceholders(player, line)
                     : line;
             baseLore.add(ConfigManager.fromLegacy(parsedLine));
         }
 
-        int currentUses = template.getMaxUses();
-        if (template.isActiveMode() && template.getMaxUses() > 0) {
+        int currentUses = template.getUsageDetails().getMaxUses();
+        if (template.getActiveAbility().isEnabled() && template.getUsageDetails().getMaxUses() > 0) {
             if (meta.getPersistentDataContainer().has(usesKey, PersistentDataType.INTEGER)) {
                 currentUses = meta.getPersistentDataContainer().get(usesKey, PersistentDataType.INTEGER);
             } else {
@@ -125,11 +125,7 @@ public class ItemUpdater {
         meta.lore(baseLore);
 
         // 3. Custom Model Data
-        if (template.getCustomModelData().isPresent()) {
-            meta.setCustomModelData(template.getCustomModelData().get());
-        } else {
-            meta.setCustomModelData(null);
-        }
+        template.getItemDisplay().getCustomModelData().ifPresent(meta::setCustomModelData);
 
         // 4. Enchantments (Sync with template)
         for (Map.Entry<Enchantment, Integer> entry : template.getEnchantments().entrySet()) {
@@ -153,7 +149,7 @@ public class ItemUpdater {
         if (template.getFlag("HIDE_ADDITIONAL_TOOLTIP")) meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         if (template.getFlag("HIDE_ARMOR_TRIM")) meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
 
-        if (template.hasGlow() && !meta.hasEnchants()) {
+        if (template.getItemDisplay().hasGlow() && !meta.hasEnchants()) {
             meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }

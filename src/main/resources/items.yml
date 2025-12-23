@@ -141,10 +141,16 @@ items:
     glow: true
     active-mode:
       enabled: true
-      usage-limit:
-        max-usage: 1
+      usage:
+        limit: 1
         action: DESTROY
-        lore: '&6Remaining Tries: {remaining_uses}/{total_uses}'
+        lore_format: '&6Remaining Tries: {remaining_uses}/{total_uses}'
+        depletion_actions:
+          messages:
+            depleted: '&cThis item is depleted! You can''t use its ability anymore!'
+            depletion_notification: '&cYour item has run out of charges!'
+          depleted_lore: '&c&lNO USES LEFT'
+          depletion_transform: '&eYour item transformed!'
       cooldown: 0
       costs:
         - type: MONEY
@@ -174,13 +180,15 @@ items:
     glow: true
     active-mode:
       enabled: true
-      usage-limit:
-        max-usage: 10
+      usage:
+        limit: 10
         action: DISABLE
-        lore: '&f• &bMana: &f{remaining_uses} &7(Max: {total_uses})'
-        depleted-lore: '&c&l• Out of mana!'
-        depleted-message: '&cMana drained! You can''t use this item''s ability anymore!'
-        depletion-notification: '&6&lMana Crystal of Staff is shattered! You can''t use this item''s ability anymore!'
+        lore_format: '&f• &bMana: &f{remaining_uses} &7(Max: {total_uses})'
+        depleted_lore: '&c&l• Out of mana!'
+        depletion_actions:
+          messages:
+            depleted: '&cMana drained! You can''t use this item''s ability anymore!'
+            depletion_notification: '&6&lMana Crystal of Staff is shattered! You can''t use this item''s ability anymore!'
       commands:
         - '[chance:33] [console] execute at %player% run summon fireball ^ ^1 ^2 {ExplosionPower:2,direction:[0.0,0.0,0.0]} ;; [message] &c&l🔥 FIREBALL!'
         - '[else] [chance:50] [console] execute at %player% run summon lightning_bolt ^ ^ ^8 ;; [message] &e&l⚡ THUNDER!'
@@ -240,6 +248,12 @@ items:
       effects:
         potion_effects:
           - HASTE;3
+      usage:
+        limit: -1
+        depletion_actions:
+          action: DISABLE
+          messages:
+            depleted: '&cThis pickaxe is out of power!'
     effects:
       MAIN_HAND:
         potion_effects:

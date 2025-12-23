@@ -131,13 +131,13 @@ public class EffectApplicatorTask extends BukkitRunnable {
                     }
                 }
 
-                if (item.getEffects().containsKey(slot)) {
-                    BuffedItemEffect itemEffects = item.getEffects().get(slot);
+                if (item.getPassiveEffects().getEffects().containsKey(slot)) {
+                    BuffedItemEffect itemEffects = item.getPassiveEffects().getEffects().get(slot);
 
                     itemEffects.getPotionEffects().forEach((type, level) ->
                             desiredPotionEffects.merge(type, level, Integer::max));
 
-                    if (item.getAttributeMode() == BuffedItem.AttributeMode.DYNAMIC || slot.equals("INVENTORY")) {
+                    if (item.getPassiveEffects().getAttributeMode() == BuffedItem.AttributeMode.DYNAMIC || slot.equals("INVENTORY")) {
                         for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
                             desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
 
@@ -312,7 +312,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     }
 
     private boolean checkCachedPermission(Player player, BuffedItem item) {
-        String permNode = item.getPassivePermissionRaw();
+        String permNode = item.getPassiveEffects().getPassivePermission();
         if (permNode == null && item.getPermission() != null) {
             permNode = item.getPermission();
         }
