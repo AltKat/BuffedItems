@@ -104,49 +104,65 @@ public class ChatListener implements Listener {
             return;
         }
 
+        // --- SPECIAL HANDLERS ---
         if (path.equals("enchantment_search")) {
             handleEnchantmentSearch(player, pmu, input);
             return;
         }
 
-        if (path.startsWith("upgrade.ingredients.") || path.startsWith("upgrade.base.")) {
-            ingredientInputHandler.handle(player, pmu, input, path, itemId);
-            return;
-        }
-
-        if (path.startsWith("upgrade.") || path.equals("create_upgrade")) {
+        // --- MODULE-LEVEL ROUTING ---
+        if (path.equals("create_upgrade")) { // Handle create_upgrade specifically
             upgradeInputHandler.handle(player, pmu, input, path, itemId);
             return;
         }
-
-        if (path.startsWith("create_set") || path.equals("set_display_name") || path.equals("create_bonus_tier")) {
+        if (path.startsWith("upgrade")) {
+            if (path.startsWith("upgrade.ingredients.") || path.startsWith("upgrade.base.")) {
+                ingredientInputHandler.handle(player, pmu, input, path, itemId);
+            } else {
+                upgradeInputHandler.handle(player, pmu, input, path, itemId);
+            }
+            return;
+        }
+        if (path.startsWith("recipe_") || path.equals("create_recipe")) {
+            recipeInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+        if (path.equals("createnewitem") || path.equals("duplicateitem")) {
+            creationInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+        // --- SET SYSTEM ROUTING (Specific Before General) ---
+        if (path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
+            effectInputHandler.handle(player, pmu, input, path, itemId);
+            return;
+        }
+        if (path.equals("create_set") || path.equals("set_display_name") || path.equals("create_bonus_tier") || path.equals("set_add_item")) {
             setInputHandler.handle(player, pmu, input, path, itemId);
             return;
         }
 
-        if (path.equals("create_recipe") || path.equals("recipe_result_amount") ||
-                path.equals("recipe_ingredient_amount") || path.equals("recipe_result_manual") ||
-                path.equals("recipe_ingredient_buffed_manual") ||
-                path.equals("recipe_ingredient_material_manual") || path.equals("recipe_permission")) {
+        // --- ITEM-SPECIFIC HANDLERS (Order is crucial: most specific to most general) ---
 
-            recipeInputHandler.handle(player, pmu, input, path, itemId);
-            return;
-        }
-
-        if (path.equals("createnewitem") || path.equals("duplicateitem")) {
-            creationInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.startsWith("display.lore")) {
-            loreInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.startsWith("display.") || path.equals("permission") || path.startsWith("passive_effects.") || path.equals("material.manual")) {
-            basicInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.startsWith("active_ability.") || path.startsWith("usage.")) {
-            activeSettingsInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.contains("potion_effects") || path.contains("attributes") || path.contains("enchantments")
-                || path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
+        // 1. Most specific prefixes for active abilities
+        if (path.startsWith("active_ability.actions.effects.")) {
             effectInputHandler.handle(player, pmu, input, path, itemId);
-        } else if (path.startsWith("active.costs.")) {
+        } else if (path.startsWith("active_ability.costs.")) {
             costInputHandler.handle(player, pmu, input, path, itemId);
-        } else {
+        }
+        // 2. Broader paths for basic properties, including specific permission overrides
+        else if (path.startsWith("display.") || path.equals("permission") || path.equals("active_ability.permission") || path.equals("passive_effects.permission") || path.equals("material.manual")) {
+            basicInputHandler.handle(player, pmu, input, path, itemId);
+        }
+        // 3. General active ability settings (catches the rest of active_ability.*)
+        else if (path.startsWith("active_ability.") || path.startsWith("usage.")) {
+            activeSettingsInputHandler.handle(player, pmu, input, path, itemId);
+        }
+        // 4. Passive effects and other generic handlers
+        else if (path.startsWith("potion_effects") || path.startsWith("attributes") || path.startsWith("enchantments")) {
+            effectInputHandler.handle(player, pmu, input, path, itemId);
+        }
+        // 5. Default case for unknown paths
+        else {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Unknown input path: " + path));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
                     () -> "[Chat] Attempted to set unknown path via chat: " + path);

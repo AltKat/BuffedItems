@@ -24,23 +24,23 @@ public class CostInputHandler implements ChatInputHandler {
 
     @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
-        if (path.equals("active.costs.add.ITEM_QUANTITY")) {
+        if (path.equals("active_ability.costs.add.ITEM_QUANTITY")) {
             handleItemQuantityInput(player, pmu, input, itemId);
             return;
         }
 
-        if (path.equals("active.costs.add.BUFFED_ITEM_QUANTITY")) {
+        if (path.equals("active_ability.costs.add.BUFFED_ITEM_QUANTITY")) {
             handleBuffedItemQuantityInput(player, pmu, input, itemId);
             return;
         }
 
-        if (path.startsWith("active.costs.add.")) {
-            String type = path.substring(17);
+        if (path.startsWith("active_ability.costs.add.")) {
+            String type = path.substring(25);
             if (type.equals("BUFFED_ITEM_QUANTITY")) type = "BUFFED_ITEM";
             handleAddCost(player, pmu, input, type, itemId);
-        } else if (path.equals("active.costs.edit.amount")) {
+        } else if (path.equals("active_ability.costs.edit.amount")) {
             handleEditCostAmount(player, pmu, input, itemId);
-        } else if (path.equals("active.costs.edit.message")) {
+        } else if (path.equals("active_ability.costs.edit.message")) {
             handleEditCostMessage(player, pmu, input, itemId);
         }
     }
@@ -131,7 +131,7 @@ public class CostInputHandler implements ChatInputHandler {
             else player.sendMessage(ConfigManager.fromSection("§7Please enter a valid positive number."));
 
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.add." + type);
+            pmu.setChatInputPath("active_ability.costs.add." + type);
         }
     }
 
@@ -227,7 +227,7 @@ public class CostInputHandler implements ChatInputHandler {
         } catch (NumberFormatException e) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
+            pmu.setChatInputPath("active_ability.costs.add.BUFFED_ITEM_QUANTITY");
         }
     }
 
@@ -249,7 +249,7 @@ public class CostInputHandler implements ChatInputHandler {
         } catch (NumberFormatException e) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.add.ITEM_QUANTITY");
+            pmu.setChatInputPath("active_ability.costs.add.ITEM_QUANTITY");
         }
     }
 

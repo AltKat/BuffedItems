@@ -71,7 +71,6 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             boolean current = UpgradesConfig.get().getBoolean("settings.browser-button", true);
             UpgradesConfig.get().set("settings.browser-button", !current);
             UpgradesConfig.saveAsync();
-            UpgradesConfig.reload();
 
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             this.open();

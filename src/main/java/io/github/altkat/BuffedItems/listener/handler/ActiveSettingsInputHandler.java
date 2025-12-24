@@ -28,13 +28,13 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
             handleActiveCooldownEdit(player, pmu, input, itemId);
         } else if (path.equals("active_ability.duration")) {
             handleActiveDurationEdit(player, pmu, input, itemId);
-        } else if (path.equals("active.commands.add")) {
+        } else if (path.equals("active_ability.commands.add")) {
             handleAddCommand(player, pmu, input, itemId);
-        } else if (path.startsWith("active.commands.edit.")) {
+        } else if (path.startsWith("active_ability.commands.edit.")) {
             handleEditCommand(player, pmu, input, path, itemId);
-        } else if (path.startsWith("active.msg.")) {
+        } else if (path.startsWith("active_ability.visuals.cooldown.")) {
             handleActiveMessageEdit(player, pmu, input, path, itemId);
-        } else if (path.startsWith("active.sounds.")) {
+        } else if (path.startsWith("active_ability.sounds.")) {
             handleActiveSoundEdit(player, pmu, input, path, itemId);
         }else if (path.startsWith("usage.")) {
             handleUsageLimitEdit(player, pmu, input, path, itemId);
@@ -113,7 +113,18 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
 
 
     private void handleActiveMessageEdit(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
-        String messageType = path.substring(11);
+        String messageType;
+        try {
+            int startIndex = path.indexOf("cooldown.") + 9;
+            int endIndex = path.lastIndexOf(".message");
+            messageType = path.substring(startIndex, endIndex);
+        } catch (Exception e) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Could not parse message type from path: " + path));
+            closeChatInput(pmu);
+            new ActiveItemVisualsMenu(pmu, plugin).open();
+            return;
+        }
+
         String configPath = getMessageConfigPath(messageType);
 
         if (configPath == null) {
@@ -143,13 +154,13 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
     }
 
     private void handleActiveSoundEdit(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
-        String soundType = path.substring(14);
+        String soundType = path.substring(path.lastIndexOf('.') + 1);
 
         if (!isValidSoundFormat(input)) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid format! Use: NAME;VOLUME;PITCH"));
             player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.sounds." + soundType);
+            pmu.setChatInputPath(path);
             return;
         }
 
@@ -170,9 +181,9 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
 
     private void handleUsageLimitEdit(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         if (path.equals("usage.commands.add")) {
-            List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active_ability.usage.depletion_actions.commands"));
+            List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active_ability.usage.commands"));
             commands.add(input);
-            ConfigManager.setItemValue(itemId, "usage.depletion_actions.commands", commands);
+            ConfigManager.setItemValue(itemId, "usage.commands", commands);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDepletion command added!"));
             closeChatInput(pmu);
             new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
@@ -181,11 +192,11 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         else if (path.startsWith("usage.commands.edit.")) {
             try {
                 int index = Integer.parseInt(path.substring(20));
-                List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active_ability.usage.depletion_actions.commands"));
+                List<String> commands = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + ".active_ability.usage.commands"));
 
                 if (index >= 0 && index < commands.size()) {
                     commands.set(index, input);
-                    ConfigManager.setItemValue(itemId, "usage.depletion_actions.commands", commands);
+                    ConfigManager.setItemValue(itemId, "usage.commands", commands);
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDepletion command updated!"));
                 } else {
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Command index out of bounds."));
@@ -199,8 +210,18 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
             }
             return;
         }
-
-        if (path.equals("usage.limit")) {
+        else if (path.equals("usage.depletion_sound") || path.equals("usage.depleted_try_sound")) {
+             if (!isValidSoundFormat(input)) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid format! Use: NAME;VOLUME;PITCH"));
+                player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                pmu.setWaitingForChatInput(true);
+                pmu.setChatInputPath(path);
+                return;
+            }
+            ConfigManager.setItemValue(itemId, path, input);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aSound updated!"));
+        }
+        else if (path.equals("usage.limit")) {
             try {
                 int val = Integer.parseInt(input);
                 if (val < -1 || val == 0) throw new NumberFormatException();
@@ -224,7 +245,6 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
              player.sendMessage(ConfigManager.fromSectionWithPrefix("§aMessage setting updated!"));
         }
 
-
         closeChatInput(pmu);
         new UsageLimitSettingsMenu(pmu, plugin).open();
     }
@@ -238,8 +258,8 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
         return switch (messageType) {
             case "chat" -> "active_ability.visuals.cooldown.chat.message";
             case "title" -> "active_ability.visuals.cooldown.title.message";
-            case "actionbar" -> "active_ability.visuals.cooldown.action-bar.message";
-            case "bossbar" -> "active_ability.visuals.cooldown.boss-bar.message";
+            case "action-bar" -> "active_ability.visuals.cooldown.action-bar.message";
+            case "boss-bar" -> "active_ability.visuals.cooldown.boss-bar.message";
             default -> null;
         };
     }

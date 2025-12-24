@@ -76,7 +76,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         else if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
             playerMenuUtility.setTempMaterial(material);
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("active.costs.add.ITEM_QUANTITY");
+            playerMenuUtility.setChatInputPath("active_ability.costs.add.ITEM_QUANTITY");
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: §e" + material.name()));
             p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
@@ -109,7 +109,7 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'STONE')."));
         }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.COST) {
-            playerMenuUtility.setChatInputPath("active.costs.add.ITEM");
+            playerMenuUtility.setChatInputPath("active_ability.costs.add.ITEM");
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§eFormat: AMOUNT;MATERIAL (e.g. 10;DIAMOND)"));
         }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {

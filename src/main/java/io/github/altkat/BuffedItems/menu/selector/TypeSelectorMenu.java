@@ -66,7 +66,7 @@ public class TypeSelectorMenu extends Menu {
         }
 
         String prefix = (context == MaterialSelectionContext.COST)
-                ? "active.costs.add."
+                ? "active_ability.costs.add."
                 : "upgrade.ingredients.add.";
 
         playerMenuUtility.setWaitingForChatInput(true);

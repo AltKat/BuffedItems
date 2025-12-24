@@ -47,13 +47,20 @@ public class SoundSettingsMenu extends Menu {
         if (e.getCurrentItem() == null) return;
 
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+            openPreviousMenu();
             return;
         }
 
+        boolean isDepletionSound = "depletion".equals(soundType) || "depleted-try".equals(soundType);
+        String soundKey = isDepletionSound
+                ? ("depletion".equals(soundType) ? "depletion_sound" : "depleted_try_sound")
+                : soundType;
+        String basePath = isDepletionSound ? "usage." : "active_ability.sounds.";
+
+
         if (e.getCurrentItem().getType() == Material.JUKEBOX) {
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("active.sounds." + soundType);
+            playerMenuUtility.setChatInputPath(basePath + soundKey);
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the sound name in chat."));
             p.sendMessage(ConfigManager.fromSection("§7Format: SOUND_NAME;VOLUME;PITCH"));
@@ -64,9 +71,9 @@ public class SoundSettingsMenu extends Menu {
         }
 
         if (e.getCurrentItem().getType() == Material.REDSTONE_BLOCK) {
-            ConfigManager.setItemValue(itemId, "sounds." + soundType, "NONE");
+            ConfigManager.setItemValue(itemId, basePath + soundKey, "NONE");
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+            openPreviousMenu();
             return;
         }
 
@@ -78,9 +85,9 @@ public class SoundSettingsMenu extends Menu {
                 if (soundData.contains("NOTE_BLOCK_PLING")) soundData = soundData.replace("1.0", "2.0");
 
                 if (e.isLeftClick()) {
-                    ConfigManager.setItemValue(itemId, "sounds." + soundType, soundData);
+                    ConfigManager.setItemValue(itemId, basePath + soundKey, soundData);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-                    new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+                    openPreviousMenu();
                 } else if (e.isRightClick()) {
                     try {
                         float pitch = soundData.contains("2.0") ? 2.0f : 1.0f;
@@ -88,6 +95,15 @@ public class SoundSettingsMenu extends Menu {
                     } catch (Exception ignored) {}
                 }
             }
+        }
+    }
+
+    private void openPreviousMenu() {
+        boolean isDepletionSound = "depletion".equals(soundType) || "depleted-try".equals(soundType);
+        if (isDepletionSound) {
+            new io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
+        } else {
+            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
         }
     }
 

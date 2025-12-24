@@ -103,14 +103,8 @@ public class EffectListMenu extends Menu {
 
         // Effect slots (click to edit/delete)
         if (clickedSlot < 45) {
-            String configPath = buildConfigPath(itemId);
-            List<String> effects;
-
-            if (isSetBonus) {
-                effects = SetsConfig.get().getStringList(configPath);
-            } else {
-                effects = ItemsConfig.get().getStringList(configPath);
-            }
+            BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
+            List<String> effects = getEffectsConfig(item);
 
             if (clickedSlot >= effects.size()) return;
 
@@ -119,6 +113,7 @@ public class EffectListMenu extends Menu {
                 String removedInfo = effects.get(clickedSlot);
                 effects.remove(clickedSlot);
 
+                String configPath = buildConfigPath(itemId);
                 if (isSetBonus) {
                     SetsConfig.get().set(configPath, effects);
                     SetsConfig.saveAsync();
@@ -201,12 +196,15 @@ public class EffectListMenu extends Menu {
         setFillerGlass();
     }
     private List<String> getEffectsConfig(BuffedItem item) {
-        if (isSetBonus) {
-            return SetsConfig.get().getStringList(buildConfigPath(null));
-        }
+        BuffedItemEffect effects = null;
 
-        BuffedItemEffect effects;
-        if (isActive) {
+        if (isSetBonus) {
+            String setId = playerMenuUtility.getTempSetId();
+            int count = playerMenuUtility.getTempBonusCount();
+            if (plugin.getSetManager().getSet(setId) != null && plugin.getSetManager().getSet(setId).getBonusFor(count) != null) {
+                effects = plugin.getSetManager().getSet(setId).getBonusFor(count).getEffects();
+            }
+        } else if (isActive) {
             effects = item.getActiveAbility().getEffects();
         } else {
             effects = item.getPassiveEffects().getEffects().get(context);
@@ -219,10 +217,12 @@ public class EffectListMenu extends Menu {
         if (effectType == EffectType.POTION_EFFECT) {
             return effects.getPotionEffects().entrySet().stream()
                     .map(entry -> entry.getKey().getName() + ";" + entry.getValue())
+                    .sorted()
                     .collect(Collectors.toList());
-        } else {
+        } else { // ATTRIBUTE
             return effects.getParsedAttributes().stream()
                     .map(attr -> attr.getAttribute().name() + ";" + attr.getOperation().name() + ";" + attr.getAmount())
+                    .sorted()
                     .collect(Collectors.toList());
         }
     }
@@ -299,9 +299,9 @@ public class EffectListMenu extends Menu {
         }
         if (isActive) {
             if (effectType == EffectType.POTION_EFFECT) {
-                return "active.potion_effects." + operation;
+                return "active_ability.actions.effects.potion_effects." + operation;
             } else {
-                return "active.attributes." + operation;
+                return "active_ability.actions.effects.attributes." + operation;
             }
         } else {
             if (effectType == EffectType.POTION_EFFECT) {

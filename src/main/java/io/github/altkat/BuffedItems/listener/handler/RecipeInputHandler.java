@@ -117,6 +117,7 @@ public class RecipeInputHandler implements ChatInputHandler {
             }
 
             saveIngredientHelper(pmu, MatchType.BUFFED_ITEM, Material.STONE, input, 1);
+            pmu.setUnsavedChanges(true);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aIngredient set to Buffed Item: §e" + input));
             new IngredientSettingsMenu(pmu, plugin, false).open();
             closeChat(pmu);
@@ -133,6 +134,7 @@ public class RecipeInputHandler implements ChatInputHandler {
             }
 
             saveIngredientHelper(pmu, MatchType.MATERIAL, mat, mat.name(), 1);
+            pmu.setUnsavedChanges(true);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aIngredient set to Material: §e" + mat.name()));
             new IngredientSettingsMenu(pmu, plugin, false).open();
             closeChat(pmu);

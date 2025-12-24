@@ -54,14 +54,6 @@ public class ActiveItemSoundsMenu extends Menu {
         else if (e.getSlot() == 14) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cooldown").open();
         }
-
-        else if (e.getSlot() == 16) {
-            new SoundSettingsMenu(playerMenuUtility, plugin, "depletion").open();
-        }
-
-        else if (e.getSlot() == 25) {
-            new SoundSettingsMenu(playerMenuUtility, plugin, "depleted-try").open();
-        }
     }
 
     @Override
@@ -112,29 +104,6 @@ public class ActiveItemSoundsMenu extends Menu {
                 "§7Current: " + currCool,
                 "",
                 "§eClick to Change"));
-
-        String currDepletion = item.getUsageDetails().getDepletionSound();
-        if (currDepletion == null) {
-            currDepletion = "§5" + ConfigManager.getGlobalDepletionSound() + " §8(Default)";
-        } else {
-            currDepletion = "§5" + currDepletion;
-        }
-
-        inventory.setItem(16, makeItem(Material.JUKEBOX, "§5Depletion Sound",
-                "§7Sound played when item breaks/depletes.",
-                "§7Current: " + currDepletion,
-                "",
-                "§eClick to Change"));
-
-        String currTry = item.getUsageDetails().getDepletedTrySound();
-        if (currTry == null) currTry = "§7" + ConfigManager.getGlobalDepletedTrySound() + " §8(Default)";
-        else currTry = "§7" + currTry;
-
-        inventory.setItem(25, makeItem(Material.DISPENSER, "§8Depleted Try Sound",
-                "§7Sound played when trying to use",
-                "§7an empty/depleted item.",
-                "§7Current: " + currTry,
-                "", "§eClick to Change"));
 
         inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
     }

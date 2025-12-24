@@ -43,7 +43,7 @@ public class BossBarStyleMenu extends Menu {
             String styleName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
             try {
                 BarStyle style = BarStyle.valueOf(styleName);
-                ConfigManager.setItemValue(itemId, "visuals.boss-bar-style", style.name());
+                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.boss-bar.style", style.name());
                 new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
             } catch (IllegalArgumentException ignored) {}
         }

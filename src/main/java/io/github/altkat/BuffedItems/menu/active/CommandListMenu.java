@@ -22,14 +22,14 @@ public class CommandListMenu extends PaginatedMenu {
     public enum CommandContext {
         ACTIVE(
                 "Active Commands",
-                "active.commands.",
-                "active-mode.commands",
+                "active_ability.commands.",
+                "active_ability.actions.commands",
                 "When Right-Clicked"
         ),
         DEPLETION(
                 "Depletion Commands",
-                "usage-limit.commands.",
-                "usage-limit.commands",
+                "usage.commands.",
+                "usage.commands",
                 "When Item Depletes"
         );
 

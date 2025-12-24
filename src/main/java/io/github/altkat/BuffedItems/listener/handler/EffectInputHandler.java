@@ -30,10 +30,10 @@ public class EffectInputHandler implements ChatInputHandler {
         EffectListMenu.EffectType effectType;
         String context;
 
-        if (path.startsWith("active.potion_effects")) {
+        if (path.startsWith("active_ability.actions.effects.potion_effects")) {
             effectType = EffectListMenu.EffectType.POTION_EFFECT;
             context = "ACTIVE";
-        } else if (path.startsWith("active.attributes")) {
+        } else if (path.startsWith("active_ability.actions.effects.attributes")) {
             effectType = EffectListMenu.EffectType.ATTRIBUTE;
             context = "ACTIVE";
         } else if (path.startsWith("potion_effects")) {
@@ -49,7 +49,7 @@ public class EffectInputHandler implements ChatInputHandler {
                 handleEditEnchantment(player, pmu, input, itemId);
             }
             return;
-        } else if (path.startsWith("set.potion.")) {
+        } else if (path.startsWith("set.potion.add.")) {
             handleAddSetEffect(player, pmu, input, path, EffectListMenu.EffectType.POTION_EFFECT);
             return;
         } else if (path.equals("set.potion.edit")) {
@@ -68,8 +68,15 @@ public class EffectInputHandler implements ChatInputHandler {
 
         String configPath = buildConfigPath(itemId, context, effectType);
 
-        if (path.endsWith(".add")) {
-            String name = path.substring(path.indexOf(".") + 1, path.lastIndexOf("."));
+        if (path.contains(".add.")) {
+            String name;
+            int addIndex = path.indexOf(".add.");
+            if (addIndex != -1) {
+                name = path.substring(addIndex + 5);
+            } else {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cCould not parse effect name from path: " + path));
+                return;
+            }
             handleAddGenericEffect(player, pmu, input, name, itemId, configPath, effectType, context);
         } else if (path.endsWith(".edit")) {
             handleEditGenericEffect(player, pmu, input, itemId, effectType, configPath, context);
@@ -157,6 +164,8 @@ public class EffectInputHandler implements ChatInputHandler {
     ) {
         String fullConfigPath = "items." + itemId + "." + configPath;
         List<String> effects = ItemsConfig.get().getStringList(fullConfigPath);
+        // Sort the effects list to match the order in EffectListMenu
+        effects.sort(String::compareTo);
         int index = pmu.getEditIndex();
 
         if (index < 0 || index >= effects.size()) {
@@ -337,6 +346,8 @@ public class EffectInputHandler implements ChatInputHandler {
         String configPath = basePath + "." + listKey;
 
         List<String> effects = SetsConfig.get().getStringList(configPath);
+        // Sort the effects list to match the order in EffectListMenu
+        effects.sort(String::compareTo);
         int index = pmu.getEditIndex();
 
         if (index == -1 || index >= effects.size()) {

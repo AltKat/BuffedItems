@@ -54,11 +54,11 @@ public class PermissionSettingsMenu extends Menu {
                 title = "Main Permission";
                 break;
             case 13: // Active
-                inputPath = "active_permission";
+                inputPath = "active_ability.permission";
                 title = "Active Permission (Override)";
                 break;
             case 15: // Passive
-                inputPath = "passive_permission";
+                inputPath = "passive_effects.permission";
                 title = "Passive Permission (Override)";
                 break;
         }

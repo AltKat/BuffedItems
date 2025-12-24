@@ -454,7 +454,6 @@ public class ConfigManager {
 
             UpgradesConfig.get().set(fullPath, value);
             UpgradesConfig.saveAsync();
-            UpgradesConfig.reload();
             plugin.getUpgradeManager().loadRecipes(true);
         }
     }

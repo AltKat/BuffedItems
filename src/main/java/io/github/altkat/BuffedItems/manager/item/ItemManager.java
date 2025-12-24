@@ -427,7 +427,12 @@ public class ItemManager {
     
     private AbilityVisuals parseAbilityVisuals(ConfigurationSection visualsSection, List<String> errorMessages) {
         if (visualsSection == null) {
-            return new AbilityVisuals(null);
+            return new AbilityVisuals(new CooldownVisuals(
+                    new ChatCooldownVisuals(true, null),
+                    new TitleCooldownVisuals(true, null, null),
+                    new ActionBarCooldownVisuals(true, null),
+                    new BossBarCooldownVisuals(true, "SOLID", "RED", null)
+            ));
         }
         CooldownVisuals cooldownVisuals = parseCooldownVisuals(visualsSection.getConfigurationSection("cooldown"));
         return new AbilityVisuals(cooldownVisuals);
@@ -435,7 +440,12 @@ public class ItemManager {
 
     private CooldownVisuals parseCooldownVisuals(ConfigurationSection cooldownSection) {
         if (cooldownSection == null) {
-            return new CooldownVisuals(null, null, null, null);
+            return new CooldownVisuals(
+                    new ChatCooldownVisuals(true, null),
+                    new TitleCooldownVisuals(true, null, null),
+                    new ActionBarCooldownVisuals(true, null),
+                    new BossBarCooldownVisuals(true, "SOLID", "RED", null)
+            );
         }
         ChatCooldownVisuals chat = parseChatCooldownVisuals(cooldownSection.getConfigurationSection("chat"));
         TitleCooldownVisuals title = parseTitleCooldownVisuals(cooldownSection.getConfigurationSection("title"));

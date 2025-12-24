@@ -43,7 +43,7 @@ public class BossBarColorMenu extends Menu {
             String colorName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
             try {
                 BarColor color = BarColor.valueOf(colorName);
-                ConfigManager.setItemValue(itemId, "visuals.boss-bar-color", color.name());
+                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.boss-bar.color", color.name());
                 new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
             } catch (IllegalArgumentException ignored) {}
         }
