@@ -375,19 +375,44 @@ public class EffectApplicatorTask extends BukkitRunnable {
             }
 
             if (isHolding) {
-                Player player = Bukkit.getPlayer(playerUUID);
-                if (player != null && player.isOnline()) {
-                    // This is the "nuke" option.
-                    // It clears all attributes and then marks the player for a full rescan and re-application.
-                    plugin.getEffectManager().clearAllAttributes(player);
-                    markPlayerForUpdate(playerUUID);
-                    markedCount++;
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Cleared attributes and marked player " + player.getName() + " for update due to holding " + itemId);
-                }
+                markPlayerForUpdate(playerUUID);
+                markedCount++;
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Marked player " + playerUUID + " for update due to holding " + itemId);
             }
         }
         final int finalMarkedCount = markedCount;
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Marked " + finalMarkedCount + " player(s) for update due to holding " + itemId);
+    }
+
+    public void forceAttributeRefreshForHolding(String itemId) {
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Forcing attribute refresh for players holding: " + itemId);
+        int markedCount = 0;
+        for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
+            UUID playerUUID = entry.getKey();
+            CachedPlayerData data = entry.getValue();
+
+            if (data == null || data.activeItems == null) continue;
+
+            boolean isHolding = false;
+            for (CachedItem itemEntry : data.activeItems) {
+                if (itemEntry.item.getId().equals(itemId)) {
+                    isHolding = true;
+                    break;
+                }
+            }
+
+            if (isHolding) {
+                Player player = Bukkit.getPlayer(playerUUID);
+                if (player != null && player.isOnline()) {
+                    plugin.getEffectManager().clearAllAttributes(player);
+                    markPlayerForUpdate(playerUUID);
+                    markedCount++;
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Cleared attributes and marked player " + player.getName() + " for full refresh due to holding " + itemId);
+                }
+            }
+        }
+        final int finalMarkedCount = markedCount;
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Forced attribute refresh for " + finalMarkedCount + " player(s).");
     }
 
     public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {

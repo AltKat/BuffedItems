@@ -191,6 +191,11 @@ public class EffectInputHandler implements ChatInputHandler {
             effects.set(index, newEffectString);
             ConfigManager.setItemValue(itemId, configPath, effects);
 
+            // This is the targeted "nuke" fix. It only runs for attribute edits.
+            if (effectType == EffectListMenu.EffectType.ATTRIBUTE) {
+                plugin.getEffectApplicatorTask().forceAttributeRefreshForHolding(itemId);
+            }
+
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.name()) + " has been updated!"));
             closeChatInput(pmu);
             new EffectListMenu(pmu, plugin, effectType, context).open();
