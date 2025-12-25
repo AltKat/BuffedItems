@@ -375,9 +375,15 @@ public class EffectApplicatorTask extends BukkitRunnable {
             }
 
             if (isHolding) {
-                markPlayerForUpdate(playerUUID);
-                markedCount++;
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Marked player " + playerUUID + " due to holding " + itemId);
+                Player player = Bukkit.getPlayer(playerUUID);
+                if (player != null && player.isOnline()) {
+                    // This is the "nuke" option.
+                    // It clears all attributes and then marks the player for a full rescan and re-application.
+                    plugin.getEffectManager().clearAllAttributes(player);
+                    markPlayerForUpdate(playerUUID);
+                    markedCount++;
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Cleared attributes and marked player " + player.getName() + " for update due to holding " + itemId);
+                }
             }
         }
         final int finalMarkedCount = markedCount;

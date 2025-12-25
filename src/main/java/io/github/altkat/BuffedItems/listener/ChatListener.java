@@ -149,6 +149,10 @@ public class ChatListener implements Listener {
         } else if (path.startsWith("active_ability.costs.")) {
             costInputHandler.handle(player, pmu, input, path, itemId);
         }
+        // Handle lore edits specifically before the general 'display.' handler
+        else if (path.startsWith("display.lore.")) {
+            loreInputHandler.handle(player, pmu, input, path, itemId);
+        }
         // 2. Broader paths for basic properties, including specific permission overrides
         else if (path.startsWith("display.") || path.equals("permission") || path.equals("active_ability.permission") || path.equals("passive_effects.permission") || path.equals("material.manual")) {
             basicInputHandler.handle(player, pmu, input, path, itemId);
@@ -199,70 +203,70 @@ public class ChatListener implements Listener {
             return;
         }
 
-        if (path.equals("display_name") || path.equals("custom_model_data") || path.equals("material.manual")) {
+        if (path.equals("display.name") || path.equals("display.custom-model-data") || path.equals("material.manual")) {
             new ItemEditorMenu(pmu, plugin).open();
             return;
         }
 
-        if(path.equals("permission") || path.equals("active_permission") || path.equals("passive_permission")){
+        if(path.equals("permission") || path.equals("active_ability.permission") || path.equals("passive_effects.permission")){
             new PermissionSettingsMenu(pmu, plugin).open();
             return;
         }
 
-        if (path.startsWith("lore.")) {
+        if (path.startsWith("display.lore.")) {
             new LoreEditorMenu(pmu, plugin).open();
             return;
         }
 
-        if (path.startsWith("usage-limit.commands.")) {
+        if (path.startsWith("usage.commands.")) {
             new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
             return;
         }
 
-        if (path.startsWith("usage-limit.")) {
+        if (path.startsWith("usage.")) {
             new UsageLimitSettingsMenu(pmu, plugin).open();
             return;
         }
 
-        if (path.startsWith("active.")) {
-            if (path.startsWith("active.costs.")) {
-                if (path.startsWith("active.costs.edit.")) {
-                    new CostListMenu(pmu, plugin).open();
-                } else if (path.equals("active.costs.add.ITEM_QUANTITY")) {
-                    pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
-                    new MaterialSelectorMenu(pmu, plugin).open();
-                } else if (path.startsWith("active.costs.add.")) {
-                    new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
-                } else {
-                    new CostListMenu(pmu, plugin).open();
-                }
-                return;
+        if (path.startsWith("active_ability.costs.")) {
+            if (path.startsWith("active_ability.costs.edit.")) {
+                new CostListMenu(pmu, plugin).open();
+            } else if (path.equals("active_ability.costs.add.ITEM_QUANTITY")) {
+                pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
+                new MaterialSelectorMenu(pmu, plugin).open();
+            } else if (path.startsWith("active_ability.costs.add.")) {
+                new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
+            } else {
+                new CostListMenu(pmu, plugin).open();
             }
+            return;
+        }
 
-            if (path.startsWith("active.commands.")) {
-                new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
-                return;
-            }
+        if (path.startsWith("active_ability.commands.")) {
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
+            return;
+        }
 
-            if (path.startsWith("active.msg.")) {
-                new ActiveItemVisualsMenu(pmu, plugin).open();
-                return;
-            }
+        if (path.startsWith("active_ability.visuals.")) {
+            new ActiveItemVisualsMenu(pmu, plugin).open();
+            return;
+        }
 
-            if (path.startsWith("active.sounds.")) {
-                new ActiveItemSoundsMenu(pmu, plugin).open();
-                return;
-            }
+        if (path.startsWith("active_ability.sounds.")) {
+            new ActiveItemSoundsMenu(pmu, plugin).open();
+            return;
+        }
 
-            if (path.startsWith("active.potion_effects")) {
-                new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, "ACTIVE").open();
-                return;
-            }
-            if (path.startsWith("active.attributes")) {
-                new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, "ACTIVE").open();
-                return;
-            }
+        if (path.startsWith("active_ability.actions.effects.potion_effects")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, "ACTIVE").open();
+            return;
+        }
+        if (path.startsWith("active_ability.actions.effects.attributes")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, "ACTIVE").open();
+            return;
+        }
 
+        if (path.startsWith("active_ability.")) {
             new ActiveItemSettingsMenu(pmu, plugin).open();
             return;
         }

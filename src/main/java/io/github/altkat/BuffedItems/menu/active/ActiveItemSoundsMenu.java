@@ -28,7 +28,7 @@ public class ActiveItemSoundsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 36;
+        return 27;
     }
 
     @Override
@@ -38,20 +38,20 @@ public class ActiveItemSoundsMenu extends Menu {
 
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 35) {
+        if (type == Material.BARRIER && e.getSlot() == 26) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getSlot() == 10) {
+        if (e.getSlot() == 11) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "success").open();
         }
 
-        else if (e.getSlot() == 12) {
+        else if (e.getSlot() == 13) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cost-fail").open();
         }
 
-        else if (e.getSlot() == 14) {
+        else if (e.getSlot() == 15) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cooldown").open();
         }
     }
@@ -70,7 +70,7 @@ public class ActiveItemSoundsMenu extends Menu {
             currSuccess = "§a" + currSuccess;
         }
 
-        inventory.setItem(10, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
+        inventory.setItem(11, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
                 "§7Sound played on successful use.",
                 "§7Current: " + currSuccess,
                 "",
@@ -84,7 +84,7 @@ public class ActiveItemSoundsMenu extends Menu {
             currCostFail = "§6" + currCostFail;
         }
 
-        inventory.setItem(12, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
+        inventory.setItem(13, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
                 "§7Sound played when a cost is not met.",
                 "§7Current: " + currCostFail,
                 "",
@@ -99,12 +99,12 @@ public class ActiveItemSoundsMenu extends Menu {
             currCool = "§c" + currCool;
         }
 
-        inventory.setItem(14, makeItem(Material.ANVIL, "§cCooldown Sound",
+        inventory.setItem(15, makeItem(Material.ANVIL, "§cCooldown Sound",
                 "§7Sound played when on cooldown.",
                 "§7Current: " + currCool,
                 "",
                 "§eClick to Change"));
 
-        inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(26, makeItem(Material.BARRIER, "§cBack"));
     }
 }
