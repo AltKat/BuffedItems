@@ -122,6 +122,15 @@ public class ItemEditorMenu extends Menu {
             case CLOCK:
                 new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
                 break;
+            case CYAN_DYE:
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setChatInputPath("display.color");
+                p.closeInventory();
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter a hex color code for the armor."));
+                p.sendMessage(ConfigManager.fromSection("§7Format: §e#RRGGBB §7(e.g., §e#FF0000 §7for red)"));
+                p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear the color."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                break;
         }
     }
 
@@ -213,6 +222,13 @@ public class ItemEditorMenu extends Menu {
                 "",
                 "§eClick to Manage"));
 
+        if (previewItem.getItemMeta() instanceof org.bukkit.inventory.meta.LeatherArmorMeta) {
+            String colorDisplay = item.getItemDisplay().getColor()
+                    .map(c -> String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue()))
+                    .orElse("§cNone");
+            inventory.setItem(29, makeItem(Material.CYAN_DYE, "§aDye Armor Color", "§7Current: §e" + colorDisplay, "§7Click to set a hex color code.", "§7(e.g., #FF0000)"));
+        }
+
         addBackButton(new ItemListMenu(playerMenuUtility, plugin));
         setFillerGlass();
     }
@@ -247,6 +263,9 @@ public class ItemEditorMenu extends Menu {
             }
             infoLore.add(ConfigManager.fromSection("§7Model Data: " + cmdDisplay));
         }
+
+        item.getItemDisplay().getColor().ifPresent(c ->
+                infoLore.add(ConfigManager.fromSection(String.format("§7Color: §e#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue()))));
 
         infoLore.add(Component.empty());
         if (item.getActiveAbility().isEnabled()) {

@@ -50,11 +50,21 @@ public class ItemUpdater {
         Integer currentHash = oldMeta.getPersistentDataContainer().get(versionKey, PersistentDataType.INTEGER);
         boolean hasUpdateFlag = oldMeta.getPersistentDataContainer().has(updateFlagKey, PersistentDataType.BYTE);
 
-        // 1. Hash Check
-        boolean needsUpdate = currentHash == null || currentHash != template.getUpdateHash();
+        // --- Simplified and Corrected Update Logic ---
+        boolean needsUpdate = false;
 
-        // 2. Placeholder Check
-        if (template.hasPlaceholders()) {
+        // 1. Core definition changed (color, name, stats, etc.)
+        if (currentHash == null || !currentHash.equals(template.getUpdateHash())) {
+            needsUpdate = true;
+        }
+
+        // 2. Lore needs to be updated after item usage (e.g. usage limit)
+        if (!needsUpdate && hasUsageLimit && hasUpdateFlag) {
+            needsUpdate = true;
+        }
+
+        // 3. Placeholders need refreshing
+        if (!needsUpdate && template.hasPlaceholders()) {
             long now = System.currentTimeMillis();
             Map<String, Long> playerCooldowns = updateCooldowns.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
             long lastUpdate = playerCooldowns.getOrDefault(itemId, 0L);
@@ -63,15 +73,6 @@ public class ItemUpdater {
                 needsUpdate = true;
                 playerCooldowns.put(itemId, now);
             }
-        }
-
-        // 3. Usage Check
-        if (hasUsageLimit && hasUpdateFlag) {
-            needsUpdate = true;
-        }
-
-        if (hasUsageLimit && !hasUpdateFlag && currentHash != null && currentHash == template.getUpdateHash()) {
-            needsUpdate = false;
         }
 
         if (!needsUpdate) {
@@ -135,6 +136,14 @@ public class ItemUpdater {
         // 5. Unbreakable
         meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
 
+        // Clear and re-apply glow and flags to ensure consistency
+        meta.removeEnchant(Enchantment.LUCK_OF_THE_SEA);
+        if (template.getItemDisplay().hasGlow()) {
+            if (!meta.hasEnchants() || template.getFlag("HIDE_ENCHANTS")) {
+                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
+            }
+        }
+
         meta.removeItemFlags(ItemFlag.values());
 
         // 6. Attributes
@@ -149,9 +158,17 @@ public class ItemUpdater {
         if (template.getFlag("HIDE_ADDITIONAL_TOOLTIP")) meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         if (template.getFlag("HIDE_ARMOR_TRIM")) meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
 
+        // Re-apply glow flag if needed, because we cleared all flags
         if (template.getItemDisplay().hasGlow() && !meta.hasEnchants()) {
-            meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        // 8. Color for Leather Armor
+        if (meta instanceof org.bukkit.inventory.meta.LeatherArmorMeta leatherMeta) {
+            template.getItemDisplay().getColor().ifPresentOrElse(
+                    leatherMeta::setColor,
+                    () -> leatherMeta.setColor(null) // Reset color if not specified
+            );
         }
 
         meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, template.getUpdateHash());

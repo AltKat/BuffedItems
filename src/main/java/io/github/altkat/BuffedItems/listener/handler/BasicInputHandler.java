@@ -14,6 +14,8 @@ public class BasicInputHandler implements ChatInputHandler {
 
     private final BuffedItems plugin;
     private static final Pattern PERMISSION_NODE_PATTERN = Pattern.compile("^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^#?[0-9a-fA-F]{6}$");
+
 
     public BasicInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
@@ -24,6 +26,9 @@ public class BasicInputHandler implements ChatInputHandler {
         switch (path) {
             case "display.name":
                 handleDisplayNameEdit(player, pmu, input, itemId);
+                break;
+            case "display.color":
+                handleColorEdit(player, pmu, input, itemId);
                 break;
             case "permission":
                 handlePermissionEdit(player, pmu, input, itemId, "permission");
@@ -74,6 +79,26 @@ public class BasicInputHandler implements ChatInputHandler {
         }
         closeChatInput(pmu);
         new PermissionSettingsMenu(pmu, plugin).open();
+    }
+    
+    private void handleColorEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
+            ConfigManager.setItemValue(itemId, "display.color", null);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aArmor color has been removed."));
+        } else if (HEX_COLOR_PATTERN.matcher(input).matches()) {
+            String hex = input.startsWith("#") ? input : "#" + input;
+            ConfigManager.setItemValue(itemId, "display.color", hex);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aArmor color has been set to: §e" + hex));
+        } else {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid hex color code! Format must be #RRGGBB."));
+            player.sendMessage(ConfigManager.fromSection("§cYour input: §e" + input));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("display.color");
+            return; // Don't close chat input, let them try again
+        }
+
+        closeChatInput(pmu);
+        new ItemEditorMenu(pmu, plugin).open();
     }
 
     private void handleMaterialManualEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {

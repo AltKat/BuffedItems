@@ -13,6 +13,7 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import io.github.altkat.BuffedItems.utility.item.data.*;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -185,6 +186,7 @@ public class ItemManager {
                 material.name(),
                 itemDisplay.hasGlow(),
                 itemDisplay.getCustomModelData().orElse(null),
+                itemDisplay.getColor().map(Color::asRGB).orElse(null),
                 flags,
                 stableEnchants, // Use stable representation
                 passiveEffects.getAttributeMode().name(),
@@ -248,11 +250,26 @@ public class ItemManager {
 
     private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages) {
         if (section == null) {
-            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null);
+            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null, null);
         }
         String displayName = section.getString("name", "Default Name");
         List<String> lore = section.getStringList("lore");
         boolean glow = section.getBoolean("glow", false);
+        org.bukkit.Color color = null;
+        String colorStr = section.getString("color");
+        if (colorStr != null) {
+            try {
+                if (colorStr.startsWith("#")) {
+                    colorStr = colorStr.substring(1);
+                }
+                int red = Integer.valueOf(colorStr.substring(0, 2), 16);
+                int green = Integer.valueOf(colorStr.substring(2, 4), 16);
+                int blue = Integer.valueOf(colorStr.substring(4, 6), 16);
+                color = org.bukkit.Color.fromRGB(red, green, blue);
+            } catch (IllegalArgumentException | StringIndexOutOfBoundsException e) {
+                errorMessages.add("§cInvalid hex color code: '" + colorStr + "' for item '" + itemId + "'.");
+            }
+        }
 
         Integer customModelData;
         String customModelDataRaw;
@@ -286,7 +303,7 @@ public class ItemManager {
             customModelData = null;
         }
 
-        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw);
+        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw, color);
     }
 
     private PassiveEffects parsePassiveEffects(ConfigurationSection section, String itemId, List<String> errorMessages) {

@@ -112,6 +112,10 @@ public class ItemBuilder {
 
             meta.lore(lore);
         }
+        
+        if (meta instanceof org.bukkit.inventory.meta.LeatherArmorMeta leatherMeta) {
+            buffedItem.getItemDisplay().getColor().ifPresent(leatherMeta::setColor);
+        }
 
         itemStack.setItemMeta(meta);
         return itemStack;

@@ -203,7 +203,7 @@ public class ChatListener implements Listener {
             return;
         }
 
-        if (path.equals("display.name") || path.equals("display.custom-model-data") || path.equals("material.manual")) {
+        if (path.equals("display.name") || path.equals("display.custom-model-data") || path.equals("material.manual") || path.equals("display.color")) {
             new ItemEditorMenu(pmu, plugin).open();
             return;
         }
