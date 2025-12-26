@@ -428,10 +428,10 @@ public class ItemManager {
     private AbilityVisuals parseAbilityVisuals(ConfigurationSection visualsSection, List<String> errorMessages) {
         if (visualsSection == null) {
             return new AbilityVisuals(new CooldownVisuals(
-                    new ChatCooldownVisuals(true, null),
-                    new TitleCooldownVisuals(true, null, null),
-                    new ActionBarCooldownVisuals(true, null),
-                    new BossBarCooldownVisuals(true, "SOLID", "RED", null)
+                    new ChatCooldownVisuals(ConfigManager.isVisualChatEnabled(), null),
+                    new TitleCooldownVisuals(ConfigManager.isVisualTitleEnabled(), null, null),
+                    new ActionBarCooldownVisuals(ConfigManager.isVisualActionBarEnabled(), null),
+                    new BossBarCooldownVisuals(ConfigManager.isVisualBossBarEnabled(), ConfigManager.getBossBarStyle(), ConfigManager.getBossBarColor(), null)
             ));
         }
         CooldownVisuals cooldownVisuals = parseCooldownVisuals(visualsSection.getConfigurationSection("cooldown"));
@@ -441,10 +441,10 @@ public class ItemManager {
     private CooldownVisuals parseCooldownVisuals(ConfigurationSection cooldownSection) {
         if (cooldownSection == null) {
             return new CooldownVisuals(
-                    new ChatCooldownVisuals(true, null),
-                    new TitleCooldownVisuals(true, null, null),
-                    new ActionBarCooldownVisuals(true, null),
-                    new BossBarCooldownVisuals(true, "SOLID", "RED", null)
+                    new ChatCooldownVisuals(ConfigManager.isVisualChatEnabled(), null),
+                    new TitleCooldownVisuals(ConfigManager.isVisualTitleEnabled(), null, null),
+                    new ActionBarCooldownVisuals(ConfigManager.isVisualActionBarEnabled(), null),
+                    new BossBarCooldownVisuals(ConfigManager.isVisualBossBarEnabled(), ConfigManager.getBossBarStyle(), ConfigManager.getBossBarColor(), null)
             );
         }
         ChatCooldownVisuals chat = parseChatCooldownVisuals(cooldownSection.getConfigurationSection("chat"));
@@ -455,23 +455,23 @@ public class ItemManager {
     }
 
     private ChatCooldownVisuals parseChatCooldownVisuals(ConfigurationSection section) {
-        if (section == null) return new ChatCooldownVisuals(true, null);
-        return new ChatCooldownVisuals(section.getBoolean("enabled", true), section.getString("message"));
+        if (section == null) return new ChatCooldownVisuals(ConfigManager.isVisualChatEnabled(), null);
+        return new ChatCooldownVisuals(section.getBoolean("enabled", ConfigManager.isVisualChatEnabled()), section.getString("message"));
     }
 
     private TitleCooldownVisuals parseTitleCooldownVisuals(ConfigurationSection section) {
-        if (section == null) return new TitleCooldownVisuals(true, null, null);
-        return new TitleCooldownVisuals(section.getBoolean("enabled", true), section.getString("message"), section.getString("subtitle"));
+        if (section == null) return new TitleCooldownVisuals(ConfigManager.isVisualTitleEnabled(), null, null);
+        return new TitleCooldownVisuals(section.getBoolean("enabled", ConfigManager.isVisualTitleEnabled()), section.getString("message"), section.getString("subtitle"));
     }
 
     private ActionBarCooldownVisuals parseActionBarCooldownVisuals(ConfigurationSection section) {
-        if (section == null) return new ActionBarCooldownVisuals(true, null);
-        return new ActionBarCooldownVisuals(section.getBoolean("enabled", true), section.getString("message"));
+        if (section == null) return new ActionBarCooldownVisuals(ConfigManager.isVisualActionBarEnabled(), null);
+        return new ActionBarCooldownVisuals(section.getBoolean("enabled", ConfigManager.isVisualActionBarEnabled()), section.getString("message"));
     }
 
     private BossBarCooldownVisuals parseBossBarCooldownVisuals(ConfigurationSection section) {
-        if (section == null) return new BossBarCooldownVisuals(true, "SOLID", "RED", null);
-        return new BossBarCooldownVisuals(section.getBoolean("enabled", true), section.getString("style", "SOLID"), section.getString("color", "RED"), section.getString("message"));
+        if (section == null) return new BossBarCooldownVisuals(ConfigManager.isVisualBossBarEnabled(), ConfigManager.getBossBarStyle(), ConfigManager.getBossBarColor(), null);
+        return new BossBarCooldownVisuals(section.getBoolean("enabled", ConfigManager.isVisualBossBarEnabled()), section.getString("style", ConfigManager.getBossBarStyle()), section.getString("color", ConfigManager.getBossBarColor()), section.getString("message"));
     }
 
 
@@ -491,14 +491,14 @@ public class ItemManager {
         }
 
         int maxUses = section.getInt("limit", -1);
-        String usageLore = section.getString("lore_format");
-        String depletedLore = section.getString("depleted_lore");
-        String depletedMessage = section.getString("depleted_message");
-        String depletionNotification = section.getString("depletion_notification");
-        String transformMessage = section.getString("transform_message");
+        String usageLore = section.getString("lore_format", ConfigManager.getGlobalUsageLore());
+        String depletedLore = section.getString("depleted_lore", ConfigManager.getGlobalDepletedLore());
+        String depletedMessage = section.getString("depleted_message", ConfigManager.getGlobalDepletedMessage());
+        String depletionNotification = section.getString("depletion_notification", ConfigManager.getGlobalDepletionNotification());
+        String transformMessage = section.getString("transform_message", ConfigManager.getGlobalDepletionTransformMessage());
         List<String> depletionCommands = section.getStringList("commands");
-        String depletionSound = validateSound(section.getString("depletion_sound"), "depletion", errorMessages);
-        String depletedTrySound = validateSound(section.getString("depleted_try_sound"), "depleted-try", errorMessages);
+        String depletionSound = validateSound(section.getString("depletion_sound", ConfigManager.getGlobalDepletionSound()), "depletion", errorMessages);
+        String depletedTrySound = validateSound(section.getString("depleted_try_sound", ConfigManager.getGlobalDepletedTrySound()), "depleted-try", errorMessages);
 
 
         DepletionAction action = DepletionAction.DISABLE;

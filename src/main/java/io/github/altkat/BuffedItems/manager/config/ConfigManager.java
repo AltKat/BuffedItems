@@ -196,6 +196,8 @@ public class ConfigManager {
             }
 
             plugin.reloadConfig();
+            loadGlobalSettings();
+
             ItemsConfig.reload();
             UpgradesConfig.reload();
             SetsConfig.reload();
@@ -206,7 +208,6 @@ public class ConfigManager {
             plugin.getSetManager().loadSets(silent);
             plugin.getCraftingManager().loadRecipes(silent);
 
-            loadGlobalSettings();
             invalidateAllPlayerCaches();
 
             if (!silent) {
@@ -220,6 +221,10 @@ public class ConfigManager {
         synchronized (CONFIG_LOCK) {
             plugin.reloadConfig();
             loadGlobalSettings();
+
+            // Items depend on global settings for fallbacks, so they must be reloaded too.
+            plugin.getItemManager().loadItems(silent);
+            invalidateAllPlayerCaches();
 
             if (!silent) sendDebugMessage(DEBUG_INFO, () -> "[Config] Main settings (config.yml) reloaded.");
         }
