@@ -92,9 +92,10 @@ public class BasicInputHandler implements ChatInputHandler {
         } else {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid hex color code! Format must be #RRGGBB."));
             player.sendMessage(ConfigManager.fromSection("§cYour input: §e" + input));
+            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             pmu.setWaitingForChatInput(true);
             pmu.setChatInputPath("display.color");
-            return; // Don't close chat input, let them try again
+            return;
         }
 
         closeChatInput(pmu);
