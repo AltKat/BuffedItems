@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.utility.item.data.ActiveAbility;
 import io.github.altkat.BuffedItems.utility.item.data.ItemDisplay;
 import io.github.altkat.BuffedItems.utility.item.data.PassiveEffects;
 import io.github.altkat.BuffedItems.utility.item.data.UsageDetails;
+import io.github.altkat.BuffedItems.utility.item.data.visual.PassiveVisuals;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -21,6 +22,7 @@ public class BuffedItem {
 
     private final ItemDisplay itemDisplay;
     private final PassiveEffects passiveEffects;
+    private final PassiveVisuals passiveVisuals;
     private final ActiveAbility activeAbility;
     private final UsageDetails usageDetails;
     private final Map<String, Boolean> flags;
@@ -32,7 +34,7 @@ public class BuffedItem {
 
     public enum AttributeMode { STATIC, DYNAMIC }
 
-    public BuffedItem(String id, Material material, String permission, int updateHash, boolean hasPlaceholders, ItemDisplay itemDisplay, PassiveEffects passiveEffects, ActiveAbility activeAbility, UsageDetails usageDetails, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
+    public BuffedItem(String id, Material material, String permission, int updateHash, boolean hasPlaceholders, ItemDisplay itemDisplay, PassiveEffects passiveEffects, PassiveVisuals passiveVisuals, ActiveAbility activeAbility, UsageDetails usageDetails, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
         this.id = id;
         this.material = material;
         this.permission = permission;
@@ -40,6 +42,7 @@ public class BuffedItem {
         this.hasPlaceholders = hasPlaceholders;
         this.itemDisplay = itemDisplay;
         this.passiveEffects = passiveEffects;
+        this.passiveVisuals = passiveVisuals;
         this.activeAbility = activeAbility;
         this.usageDetails = usageDetails;
         this.flags = flags;
@@ -107,6 +110,10 @@ public class BuffedItem {
 
     public PassiveEffects getPassiveEffects() {
         return passiveEffects;
+    }
+
+    public PassiveVisuals getPassiveVisuals() {
+        return passiveVisuals;
     }
 
     public ActiveAbility getActiveAbility() {

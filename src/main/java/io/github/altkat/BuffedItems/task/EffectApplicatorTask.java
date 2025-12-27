@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
+import io.github.altkat.BuffedItems.manager.visual.PassiveVisualsManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
@@ -28,6 +29,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private final NamespacedKey nbtKey;
     private final ActiveAttributeManager attributeManager;
     private final EffectManager effectManager;
+    private final PassiveVisualsManager passiveVisualsManager;
 
     private final Map<UUID, Set<PotionEffectType>> managedPotions = new ConcurrentHashMap<>();
 
@@ -49,6 +51,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         this.nbtKey = new NamespacedKey(plugin, "buffeditem_id");
         this.attributeManager = plugin.getActiveAttributeManager();
         this.effectManager = plugin.getEffectManager();
+        this.passiveVisualsManager = plugin.getPassiveVisualsManager();
     }
 
     @Override
@@ -109,6 +112,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
             desiredInventoryAttributeUUIDs.clear();
 
             Map<String, Integer> currentSetCounts = new HashMap<>();
+            List<PassiveVisualsManager.ActiveItemInfo> visualItems = new ArrayList<>();
 
             for (CachedItem entry : cachedData.activeItems) {
                 BuffedItem item = entry.item;
@@ -119,6 +123,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
                         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task-Fast Path] Player " + player.getName() + " lacks permission for " + item.getId() + ". Skipping effects.");
                     }
                     continue;
+                }
+
+                // Add to visuals list if it's not an inventory-only item
+                if (!slot.equals("INVENTORY")) {
+                    visualItems.add(new PassiveVisualsManager.ActiveItemInfo(item, slot));
                 }
 
                 if (entry.setId != null && !slot.equals("INVENTORY")) {
@@ -145,12 +154,15 @@ public class EffectApplicatorTask extends BukkitRunnable {
                                 effectManager.applySingleAttribute(player, parsedAttr, slot);
                             }
                         }
-                    }
-
-                }
-            }
-
-            for (Map.Entry<String, Integer> setEntry : currentSetCounts.entrySet()) {
+                                        }
+                                    }
+                                }
+                    
+                                // Update Passive Visuals
+                                passiveVisualsManager.updatePlayerVisuals(player, visualItems);
+                    
+                                for (Map.Entry<String, Integer> setEntry : currentSetCounts.entrySet()) {
+                    
                 String setId = setEntry.getKey();
                 int count = setEntry.getValue();
 
@@ -270,6 +282,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
         if (itemId != null) {
             BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
             if (buffedItem != null) {
+
+                if ((slot.equals("MAIN_HAND") || slot.equals("OFF_HAND")) && isArmor(item.getType())) {
+                    return;
+                }
+
                 String setId = plugin.getSetManager().getSetIdByItem(itemId);
                 activeItems.add(new CachedItem(buffedItem, slot, setId));
                 if (debugTick) {
@@ -351,6 +368,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         playersToUpdate.remove(uuid);
         permissionCache.remove(uuid);
         attributeManager.clearPlayer(uuid);
+        passiveVisualsManager.clearPlayer(player);
     }
 
     public void markPlayerForUpdate(UUID playerUUID) {

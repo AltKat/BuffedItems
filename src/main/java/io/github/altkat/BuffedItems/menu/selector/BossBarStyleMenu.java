@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemVisualsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.passive.PassiveItemVisualsMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.boss.BarStyle;
@@ -34,8 +35,12 @@ public class BossBarStyleMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
         if (e.getCurrentItem().getType() == Material.BLACK_STAINED_GLASS_PANE) return;
+
+        boolean isPassive = "passive_visuals".equals(playerMenuUtility.getChatInputPath());
+        String configPath = isPassive ? "passive_effects.visuals.boss-bar.style" : "active_ability.visuals.cooldown.boss-bar.style";
+
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
+            openPrevious(isPassive);
             return;
         }
 
@@ -43,9 +48,17 @@ public class BossBarStyleMenu extends Menu {
             String styleName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
             try {
                 BarStyle style = BarStyle.valueOf(styleName);
-                ConfigManager.setItemValue(itemId, "active_ability.visuals.cooldown.boss-bar.style", style.name());
-                new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
+                ConfigManager.setItemValue(itemId, configPath, style.name());
+                openPrevious(isPassive);
             } catch (IllegalArgumentException ignored) {}
+        }
+    }
+
+    private void openPrevious(boolean passive) {
+        if (passive) {
+            new PassiveItemVisualsMenu(playerMenuUtility, plugin).open();
+        } else {
+            new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
         }
     }
 

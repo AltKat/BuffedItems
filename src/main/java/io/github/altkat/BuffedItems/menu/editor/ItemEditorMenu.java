@@ -181,7 +181,15 @@ public class ItemEditorMenu extends Menu {
         inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
-        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings"));
+        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings",
+                "§7Define permissions required to use the item.",
+                "",
+                "§f• Main Item Permission",
+                "§f• Active Ability Permission",
+                "§f• Passive Effects Permission",
+                "",
+                "§eClick to Manage"
+                ));
 
         String cmdDisplay;
         if (item.getItemDisplay().getCustomModelData().isPresent()) {
@@ -209,6 +217,7 @@ public class ItemEditorMenu extends Menu {
                 "",
                 "§f• Potion Effects",
                 "§f• Attribute Modifiers",
+                "§f• Visual Effects",
                 "",
                 "§eClick to Manage"));
 
@@ -219,6 +228,7 @@ public class ItemEditorMenu extends Menu {
                 "§f• Cooldowns & Visuals",
                 "§f• Commands & Sounds",
                 "§f• Temporary Effects",
+                "§f• Usage Limits & Costs",
                 "",
                 "§eClick to Manage"));
 

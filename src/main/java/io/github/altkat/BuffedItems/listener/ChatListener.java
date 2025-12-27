@@ -27,6 +27,7 @@ public class ChatListener implements Listener {
         chatInputRouter.registerHandler(new RecipeInputHandler(plugin));
         chatInputRouter.registerHandler(new CreationInputHandler(plugin));
         chatInputRouter.registerHandler(new SetInputHandler(plugin));
+        chatInputRouter.registerHandler(new PassiveVisualsInputHandler(plugin));
         chatInputRouter.registerHandler(new CostInputHandler(plugin));
         chatInputRouter.registerHandler(new LoreInputHandler(plugin));
         chatInputRouter.registerHandler(new EffectInputHandler(plugin));

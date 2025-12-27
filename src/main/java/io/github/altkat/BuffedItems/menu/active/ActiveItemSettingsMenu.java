@@ -160,7 +160,6 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Success Sound",
                 "§f• Cooldown Sound",
                 "§f• Cost Fail Sound",
-                "§f• Depletion Sounds",
                 "",
                 "§eClick to Edit"));
 
@@ -177,6 +176,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Max Usage & Actions",
                 "§f• Usage Lore",
                 "§f• Depletion Messages",
+                "§f• Depletion Sounds",
                 "§f• Transformation Logic",
                 "",
                 "§eClick to Manage"));

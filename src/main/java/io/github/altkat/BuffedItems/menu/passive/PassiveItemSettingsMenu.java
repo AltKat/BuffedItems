@@ -58,6 +58,11 @@ public class PassiveItemSettingsMenu extends Menu {
             return;
         }
 
+        if (e.getSlot() == 13) {
+            new PassiveItemVisualsMenu(playerMenuUtility, plugin).open();
+            return;
+        }
+
         switch (type) {
             case POTION:
                 new SlotSelectionMenu(playerMenuUtility, plugin, SlotSelectionMenu.MenuType.POTION_EFFECT).open();
@@ -100,6 +105,15 @@ public class PassiveItemSettingsMenu extends Menu {
                 "",
                 "§7(Requires selecting a slot)",
                 "§eClick to Edit"));
+
+        inventory.setItem(13, makeItem(Material.GLOW_INK_SAC, "§dVisual Effects",
+                "§7Add visual feedback when this",
+                "§7item is held or worn.",
+                "",
+                "§7- BossBar, Action Bar",
+                "§7- Title Alerts, Sounds",
+                "",
+                "§eClick to Configure"));
 
         inventory.setItem(15, makeItem(Material.IRON_SWORD, "§bPassive Attributes",
                 "§7Add permanent stats like",

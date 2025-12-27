@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemSoundsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.passive.PassiveItemVisualsMenu;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -31,6 +32,7 @@ public class SoundSettingsMenu extends Menu {
             case "cost-fail" -> "Cost Fail";
             case "depletion" -> "Depletion";
             case "depleted-try" -> "Depleted Try";
+            case "passive" -> "Equip";
             default -> soundType;
         };
         return "Set " + displayType + " Sound";
@@ -51,11 +53,23 @@ public class SoundSettingsMenu extends Menu {
             return;
         }
 
-        boolean isDepletionSound = "depletion".equals(soundType) || "depleted-try".equals(soundType);
-        String soundKey = isDepletionSound
-                ? ("depletion".equals(soundType) ? "depletion_sound" : "depleted_try_sound")
-                : soundType;
-        String basePath = isDepletionSound ? "usage." : "active_ability.sounds.";
+        String basePath;
+        switch (soundType) {
+            case "passive":
+                basePath = "passive_effects.visuals.sound.";
+                break;
+            case "depletion":
+            case "depleted-try":
+                basePath = "usage.";
+                break;
+            default:
+                basePath = "active_ability.sounds.";
+                break;
+        }
+        
+        String soundKey = ("depletion".equals(soundType) || "depleted-try".equals(soundType))
+                ? (soundType.equals("depletion") ? "depletion_sound" : "depleted_try_sound")
+                : (soundType.equals("passive") ? "sound" : soundType);
 
 
         if (e.getCurrentItem().getType() == Material.JUKEBOX) {
@@ -100,8 +114,11 @@ public class SoundSettingsMenu extends Menu {
 
     private void openPreviousMenu() {
         boolean isDepletionSound = "depletion".equals(soundType) || "depleted-try".equals(soundType);
+        boolean isPassive = "passive".equals(soundType);
         if (isDepletionSound) {
             new io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
+        } else if (isPassive) {
+            new PassiveItemVisualsMenu(playerMenuUtility, plugin).open();
         } else {
             new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
         }

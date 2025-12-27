@@ -13,11 +13,14 @@ import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import io.github.altkat.BuffedItems.utility.item.ItemBuilder;
 import io.github.altkat.BuffedItems.utility.item.data.*;
+import io.github.altkat.BuffedItems.utility.item.data.visual.*;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -152,6 +155,7 @@ public class ItemManager {
 
         ItemDisplay itemDisplay = parseDisplay(itemSection.getConfigurationSection("display"), itemId, errorMessages);
         PassiveEffects passiveEffects = parsePassiveEffects(itemSection.getConfigurationSection("passive_effects"), itemId, errorMessages);
+        PassiveVisuals passiveVisuals = parsePassiveVisuals(itemSection.getConfigurationSection("passive_effects.visuals"), errorMessages);
         ActiveAbility activeAbility = parseActiveAbility(itemSection.getConfigurationSection("active_ability"), itemId, errorMessages);
         UsageDetails usageDetails = parseUsageDetails(itemSection.getConfigurationSection("active_ability.usage"), itemId, errorMessages);
 
@@ -191,6 +195,27 @@ public class ItemManager {
                 stableEnchants, // Use stable representation
                 passiveEffects.getAttributeMode().name(),
                 stablePassiveEffects, // Use stable representation
+                passiveVisuals.getTriggerMode(),
+                passiveVisuals.getActionBar().isEnabled(),
+                passiveVisuals.getActionBar().getMessage(),
+                passiveVisuals.getActionBar().getDuration(),
+                passiveVisuals.getActionBar().getDelay(),
+                passiveVisuals.getBossBar().isEnabled(),
+                passiveVisuals.getBossBar().getTitle(),
+                passiveVisuals.getBossBar().getColor(),
+                passiveVisuals.getBossBar().getStyle(),
+                passiveVisuals.getBossBar().getDuration(),
+                passiveVisuals.getBossBar().getDelay(),
+                passiveVisuals.getTitle().isEnabled(),
+                passiveVisuals.getTitle().getHeader(),
+                passiveVisuals.getTitle().getSubtitle(),
+                passiveVisuals.getTitle().getFadeIn(),
+                passiveVisuals.getTitle().getStay(),
+                passiveVisuals.getTitle().getFadeOut(),
+                passiveVisuals.getTitle().getDelay(),
+                passiveVisuals.getSound().isEnabled(),
+                passiveVisuals.getSound().getSound(),
+                passiveVisuals.getSound().getDelay(),
                 activeAbility.isEnabled(),
                 usageDetails.getMaxUses(),
                 usageDetails.getUsageLore(),
@@ -205,6 +230,7 @@ public class ItemManager {
                 hasPlaceholders,
                 itemDisplay,
                 passiveEffects,
+                passiveVisuals,
                 activeAbility,
                 usageDetails,
                 flags,
@@ -219,6 +245,92 @@ public class ItemManager {
         finalBuffedItem.setCachedItem(stack);
 
         return finalBuffedItem;
+    }
+
+    private PassiveVisuals parsePassiveVisuals(ConfigurationSection section, List<String> errorMessages) {
+        if (section == null) {
+            // Return default disabled objects
+            return new PassiveVisuals(VisualTriggerMode.CONTINUOUS,
+                    new ActionBarSettings(false, null, 0, 0),
+                    new BossBarSettings(false, null, BarColor.WHITE, BarStyle.SOLID, 0, 0),
+                    new TitleSettings(false, null, null, 10, 70, 20, 0),
+                    new SoundSettings(false, null, 0));
+        }
+
+        VisualTriggerMode mode = VisualTriggerMode.CONTINUOUS;
+        try {
+            mode = VisualTriggerMode.valueOf(section.getString("mode", "CONTINUOUS").toUpperCase());
+        } catch (IllegalArgumentException e) {
+            errorMessages.add("§cInvalid passive visual mode: " + section.getString("mode"));
+        }
+
+        // Action Bar
+        ConfigurationSection abSection = section.getConfigurationSection("action-bar");
+        ActionBarSettings abSettings = new ActionBarSettings(false, null, 0, 0);
+        if (abSection != null) {
+            abSettings = new ActionBarSettings(
+                    abSection.getBoolean("enabled", false),
+                    abSection.getString("message"),
+                    abSection.getInt("duration", 3),
+                    abSection.getInt("delay", 0)
+            );
+        }
+
+        // Title
+        ConfigurationSection titleSection = section.getConfigurationSection("title");
+        TitleSettings titleSettings = new TitleSettings(false, null, null, 10, 70, 20, 0);
+        if (titleSection != null) {
+            titleSettings = new TitleSettings(
+                    titleSection.getBoolean("enabled", false),
+                    titleSection.getString("header"),
+                    titleSection.getString("subtitle"),
+                    titleSection.getInt("fade-in", 10),
+                    titleSection.getInt("stay", 70),
+                    titleSection.getInt("fade-out", 20),
+                    titleSection.getInt("delay", 0)
+            );
+        }
+        
+        // Sound
+        ConfigurationSection soundSection = section.getConfigurationSection("sound");
+        SoundSettings soundSettings = new SoundSettings(false, null, 0);
+        if (soundSection != null) {
+            soundSettings = new SoundSettings(
+                    soundSection.getBoolean("enabled", false),
+                    validateSound(soundSection.getString("sound"), "passive-visual-sound", errorMessages),
+                    soundSection.getInt("delay", 0)
+            );
+        }
+
+        // Boss Bar
+        ConfigurationSection bbSection = section.getConfigurationSection("boss-bar");
+        BossBarSettings bbSettings = new BossBarSettings(false, null, BarColor.WHITE, BarStyle.SOLID, 3, 0);
+        if (bbSection != null) {
+            BarColor color = BarColor.WHITE;
+            try {
+                color = BarColor.valueOf(bbSection.getString("color", "WHITE").toUpperCase());
+            } catch (IllegalArgumentException e) {
+                errorMessages.add("§cInvalid boss-bar color: " + bbSection.getString("color"));
+            }
+
+            BarStyle style = BarStyle.SOLID;
+            try {
+                style = BarStyle.valueOf(bbSection.getString("style", "SOLID").toUpperCase());
+            } catch (IllegalArgumentException e) {
+                errorMessages.add("§cInvalid boss-bar style: " + bbSection.getString("style"));
+            }
+
+            bbSettings = new BossBarSettings(
+                    bbSection.getBoolean("enabled", false),
+                    bbSection.getString("title"),
+                    color,
+                    style,
+                    bbSection.getInt("duration", 3),
+                    bbSection.getInt("delay", 0)
+            );
+        }
+        
+        return new PassiveVisuals(mode, abSettings, bbSettings, titleSettings, soundSettings);
     }
 
     private Map<Enchantment, Integer> parseEnchantments(ConfigurationSection section, List<String> errorMessages) {
