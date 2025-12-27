@@ -3,10 +3,7 @@ package io.github.altkat.BuffedItems.listener.handler;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
-import io.github.altkat.BuffedItems.menu.active.ActiveItemSettingsMenu;
-import io.github.altkat.BuffedItems.menu.active.ActiveItemVisualsMenu;
-import io.github.altkat.BuffedItems.menu.active.CommandListMenu;
-import io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu;
+import io.github.altkat.BuffedItems.menu.active.*;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.menu.utility.SoundSettingsMenu;
 import org.bukkit.entity.Player;
@@ -20,6 +17,46 @@ public class ActiveSettingsInputHandler implements ChatInputHandler {
 
     public ActiveSettingsInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean shouldHandle(String path) {
+        if (path.startsWith("active_ability.actions.effects.") ||
+                path.startsWith("active_ability.costs.") ||
+                path.equals("active_ability.permission")) {
+            return false;
+        }
+        return path.startsWith("active_ability.") || path.startsWith("usage.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("usage.commands.")) {
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.DEPLETION).open();
+            return;
+        }
+
+        if (path.startsWith("usage.")) {
+            new UsageLimitSettingsMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("active_ability.commands.")) {
+            new CommandListMenu(pmu, plugin, CommandListMenu.CommandContext.ACTIVE).open();
+            return;
+        }
+
+        if (path.startsWith("active_ability.visuals.")) {
+            new ActiveItemVisualsMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.startsWith("active_ability.sounds.")) {
+            new ActiveItemSoundsMenu(pmu, plugin).open();
+            return;
+        }
+
+        new ActiveItemSettingsMenu(pmu, plugin).open();
     }
 
     @Override

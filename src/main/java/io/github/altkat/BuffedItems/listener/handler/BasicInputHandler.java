@@ -22,6 +22,29 @@ public class BasicInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        // Exclude lore, which is handled by LoreInputHandler
+        if (path.startsWith("display.lore.")) {
+            return false;
+        }
+        return path.startsWith("display.") ||
+                path.equals("permission") ||
+                path.equals("active_ability.permission") ||
+                path.equals("passive_effects.permission") ||
+                path.equals("material.manual");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.equals("permission") || path.equals("active_ability.permission") || path.equals("passive_effects.permission")) {
+            new PermissionSettingsMenu(pmu, plugin).open();
+        } else {
+            // display.* (name, color, custom-model-data) and material.manual
+            new ItemEditorMenu(pmu, plugin).open();
+        }
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         switch (path) {
             case "display.name":

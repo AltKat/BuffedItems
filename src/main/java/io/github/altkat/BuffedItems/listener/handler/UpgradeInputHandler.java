@@ -17,6 +17,23 @@ public class UpgradeInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        if (path.startsWith("upgrade.ingredients.") || path.startsWith("upgrade.base.")) {
+            return false;
+        }
+        return path.equals("create_upgrade") || path.startsWith("upgrade.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.equals("create_upgrade")) {
+            new UpgradeRecipeListMenu(pmu, plugin).open();
+        } else {
+            new UpgradeRecipeEditorMenu(pmu, plugin).open();
+        }
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         if (path.equals("create_upgrade")) {
             handleCreateUpgrade(player, pmu, input);

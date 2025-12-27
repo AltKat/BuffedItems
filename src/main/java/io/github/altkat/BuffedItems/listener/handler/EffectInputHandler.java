@@ -6,6 +6,7 @@ import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
+import io.github.altkat.BuffedItems.menu.set.SetBonusEffectSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -21,6 +22,35 @@ public class EffectInputHandler implements ChatInputHandler {
 
     public EffectInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("active_ability.actions.effects.") ||
+                path.startsWith("potion_effects") ||
+                path.startsWith("attributes") ||
+                path.startsWith("enchantments.") ||
+                path.startsWith("set.potion.") ||
+                path.startsWith("set.attribute.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("active_ability.actions.effects.potion_effects")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, "ACTIVE").open();
+        } else if (path.startsWith("active_ability.actions.effects.attributes")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, "ACTIVE").open();
+        } else if (path.startsWith("potion_effects.")) {
+            String slot = pmu.getTargetSlot();
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, slot).open();
+        } else if (path.startsWith("attributes.")) {
+            String slot = pmu.getTargetSlot();
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, slot).open();
+        } else if (path.startsWith("enchantments.")) {
+            new EnchantmentListMenu(pmu, plugin).open();
+        } else if (path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
+            new SetBonusEffectSelectorMenu(pmu, plugin).open();
+        }
     }
 
     @Override

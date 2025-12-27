@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
+import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
@@ -20,6 +21,25 @@ public class CostInputHandler implements ChatInputHandler {
 
     public CostInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("active_ability.costs.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("active_ability.costs.edit.")) {
+            new CostListMenu(pmu, plugin).open();
+        } else if (path.equals("active_ability.costs.add.ITEM_QUANTITY")) {
+            pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
+            new MaterialSelectorMenu(pmu, plugin).open();
+        } else if (path.startsWith("active_ability.costs.add.")) {
+            new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
+        } else {
+            new CostListMenu(pmu, plugin).open();
+        }
     }
 
     @Override
@@ -178,7 +198,7 @@ public class CostInputHandler implements ChatInputHandler {
         } catch (NumberFormatException e) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a positive number."));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.edit.amount");
+            pmu.setChatInputPath("active_ability.costs.edit.amount");
         }
     }
 

@@ -24,6 +24,33 @@ public class RecipeInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("recipe_") || path.equals("create_recipe");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.equals("create_recipe")) {
+            new RecipeListMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("recipe_result_amount") || path.equals("recipe_result_manual") || path.equals("recipe_permission")) {
+            new RecipeEditorMenu(pmu, plugin).open();
+            return;
+        }
+
+        if (path.equals("recipe_ingredient_amount") || path.equals("recipe_ingredient_buffed_manual")
+                || path.equals("recipe_ingredient_material_manual")) {
+
+            new IngredientSettingsMenu(pmu, plugin, false).open();
+            return;
+        }
+
+        new RecipeEditorMenu(pmu, plugin).open();
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         if (path.equals("create_recipe")) {
             String newRecipeId = input.toLowerCase().replace(" ", "_");

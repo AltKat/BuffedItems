@@ -3,6 +3,8 @@ package io.github.altkat.BuffedItems.listener.handler;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
+import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.IngredientListMenu;
 import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -20,6 +22,29 @@ public class IngredientInputHandler implements ChatInputHandler {
 
     public IngredientInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("upgrade.ingredients.") || path.startsWith("upgrade.base.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("upgrade.ingredients.")) {
+            if (path.startsWith("upgrade.ingredients.edit.")) {
+                new IngredientListMenu(pmu, plugin).open();
+            } else if (path.equals("upgrade.ingredients.add.ITEM_QUANTITY")) {
+                pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.INGREDIENT);
+                new MaterialSelectorMenu(pmu, plugin).open();
+            } else if (path.startsWith("upgrade.ingredients.add.")) {
+                new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.INGREDIENT).open();
+            } else {
+                new IngredientListMenu(pmu, plugin).open();
+            }
+        } else {
+            new UpgradeRecipeEditorMenu(pmu, plugin).open();
+        }
     }
 
     @Override

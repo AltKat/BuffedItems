@@ -20,6 +20,16 @@ public class LoreInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("display.lore.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        new LoreEditorMenu(pmu, plugin).open();
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) {

@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.set.SetBonusesMenu;
+import io.github.altkat.BuffedItems.menu.set.SetEditorMenu;
 import io.github.altkat.BuffedItems.menu.set.SetItemsMenu;
 import io.github.altkat.BuffedItems.menu.set.SetListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
@@ -17,6 +18,27 @@ public class SetInputHandler implements ChatInputHandler {
 
     public SetInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean shouldHandle(String path) {
+        return path.equals("create_set") || path.equals("set_display_name") ||
+                path.equals("create_bonus_tier") || path.equals("set_add_item");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.equals("create_set")) {
+            new SetListMenu(pmu, plugin).open();
+        } else if (path.equals("set_display_name")) {
+            new SetEditorMenu(pmu, plugin).open();
+        } else if (path.equals("create_bonus_tier")) {
+            new SetBonusesMenu(pmu, plugin).open();
+        } else if (path.equals("set_add_item")) {
+            new SetItemsMenu(pmu, plugin).open();
+        } else {
+            new SetListMenu(pmu, plugin).open();
+        }
     }
 
     @Override
