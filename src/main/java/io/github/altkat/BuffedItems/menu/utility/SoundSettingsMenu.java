@@ -2,8 +2,10 @@ package io.github.altkat.BuffedItems.menu.utility;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
+import io.github.altkat.BuffedItems.menu.active.ActiveItemCastVisualsMenu;
 import io.github.altkat.BuffedItems.menu.active.ActiveItemSoundsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.passive.PassiveItemVisualsMenu;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -31,6 +33,8 @@ public class SoundSettingsMenu extends Menu {
             case "cost-fail" -> "Cost Fail";
             case "depletion" -> "Depletion";
             case "depleted-try" -> "Depleted Try";
+            case "passive" -> "Equip";
+            case "cast" -> "Cast Visual";
             default -> soundType;
         };
         return "Set " + displayType + " Sound";
@@ -47,13 +51,35 @@ public class SoundSettingsMenu extends Menu {
         if (e.getCurrentItem() == null) return;
 
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+            openPreviousMenu();
             return;
         }
 
+        String basePath;
+        switch (soundType) {
+            case "passive":
+                basePath = "passive_effects.visuals.sound.";
+                break;
+            case "cast":
+                basePath = "active_ability.visuals.cast.sound.";
+                break;
+            case "depletion":
+            case "depleted-try":
+                basePath = "usage.";
+                break;
+            default:
+                basePath = "active_ability.sounds.";
+                break;
+        }
+        
+        String soundKey = ("depletion".equals(soundType) || "depleted-try".equals(soundType))
+                ? (soundType.equals("depletion") ? "depletion_sound" : "depleted_try_sound")
+                : ((soundType.equals("passive") || soundType.equals("cast")) ? "sound" : soundType);
+
+
         if (e.getCurrentItem().getType() == Material.JUKEBOX) {
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("active.sounds." + soundType);
+            playerMenuUtility.setChatInputPath(basePath + soundKey);
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the sound name in chat."));
             p.sendMessage(ConfigManager.fromSection("§7Format: SOUND_NAME;VOLUME;PITCH"));
@@ -64,9 +90,9 @@ public class SoundSettingsMenu extends Menu {
         }
 
         if (e.getCurrentItem().getType() == Material.REDSTONE_BLOCK) {
-            ConfigManager.setItemValue(itemId, "sounds." + soundType, "NONE");
+            ConfigManager.setItemValue(itemId, basePath + soundKey, "NONE");
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+            openPreviousMenu();
             return;
         }
 
@@ -78,9 +104,9 @@ public class SoundSettingsMenu extends Menu {
                 if (soundData.contains("NOTE_BLOCK_PLING")) soundData = soundData.replace("1.0", "2.0");
 
                 if (e.isLeftClick()) {
-                    ConfigManager.setItemValue(itemId, "sounds." + soundType, soundData);
+                    ConfigManager.setItemValue(itemId, basePath + soundKey, soundData);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-                    new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
+                    openPreviousMenu();
                 } else if (e.isRightClick()) {
                     try {
                         float pitch = soundData.contains("2.0") ? 2.0f : 1.0f;
@@ -88,6 +114,18 @@ public class SoundSettingsMenu extends Menu {
                     } catch (Exception ignored) {}
                 }
             }
+        }
+    }
+
+    private void openPreviousMenu() {
+        if ("cast".equals(soundType)) {
+            new ActiveItemCastVisualsMenu(playerMenuUtility, plugin).open();
+        } else if ("passive".equals(soundType)) {
+            new PassiveItemVisualsMenu(playerMenuUtility, plugin).open();
+        } else if ("depletion".equals(soundType) || "depleted-try".equals(soundType)) {
+            new io.github.altkat.BuffedItems.menu.active.UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
+        } else {
+            new ActiveItemSoundsMenu(playerMenuUtility, plugin).open();
         }
     }
 

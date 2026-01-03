@@ -12,6 +12,7 @@ public class HookManager {
     private PlaceholderAPIHook placeholderAPIHook;
     private VaultHook vaultHook;
     private CoinsEngineHook coinsEngineHook;
+    private AuraSkillsHook auraSkillsHook;
 
     public HookManager(BuffedItems plugin) {
         this.plugin = plugin;
@@ -42,6 +43,10 @@ public class HookManager {
             this.coinsEngineHook = new CoinsEngineHook();
         }
 
+        if (plugin.getServer().getPluginManager().getPlugin("AuraSkills") != null) {
+            this.auraSkillsHook = new AuraSkillsHook();
+        }
+
     }
 
     public ItemsAdderHook getItemsAdderHook() {
@@ -55,6 +60,7 @@ public class HookManager {
     }
     public VaultHook getVaultHook() { return vaultHook; }
     public CoinsEngineHook getCoinsEngineHook() { return coinsEngineHook; }
+    public AuraSkillsHook getAuraSkillsHook() { return auraSkillsHook; }
 
     public boolean isItemsAdderLoaded() {
         return itemsAdderHook != null;
@@ -67,6 +73,7 @@ public class HookManager {
     }
     public boolean isVaultLoaded() { return vaultHook != null; }
     public boolean isCoinsEngineLoaded() { return coinsEngineHook != null; }
+    public boolean isAuraSkillsLoaded() { return auraSkillsHook != null; }
 
     public String processPlaceholders(OfflinePlayer p, String s) {
         if(s == null) return null;

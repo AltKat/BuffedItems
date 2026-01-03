@@ -3,9 +3,14 @@ package io.github.altkat.BuffedItems.listener.handler;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.SetsConfig;
+import io.github.altkat.BuffedItems.menu.set.SetBonusesMenu;
+import io.github.altkat.BuffedItems.menu.set.SetEditorMenu;
+import io.github.altkat.BuffedItems.menu.set.SetItemsMenu;
 import io.github.altkat.BuffedItems.menu.set.SetListMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 public class SetInputHandler implements ChatInputHandler {
 
@@ -13,6 +18,27 @@ public class SetInputHandler implements ChatInputHandler {
 
     public SetInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean shouldHandle(String path) {
+        return path.equals("create_set") || path.equals("set_display_name") ||
+                path.equals("create_bonus_tier") || path.equals("set_add_item");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.equals("create_set")) {
+            new SetListMenu(pmu, plugin).open();
+        } else if (path.equals("set_display_name")) {
+            new SetEditorMenu(pmu, plugin).open();
+        } else if (path.equals("create_bonus_tier")) {
+            new SetBonusesMenu(pmu, plugin).open();
+        } else if (path.equals("set_add_item")) {
+            new SetItemsMenu(pmu, plugin).open();
+        } else {
+            new SetListMenu(pmu, plugin).open();
+        }
     }
 
     @Override
@@ -62,14 +88,32 @@ public class SetInputHandler implements ChatInputHandler {
 
                 pmu.setWaitingForChatInput(false);
                 pmu.setChatInputPath(null);
-                new io.github.altkat.BuffedItems.menu.set.SetBonusesMenu(pmu, plugin).open();
+                new SetBonusesMenu(pmu, plugin).open();
 
             } catch (NumberFormatException e) {
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number. Enter a positive integer."));
                 pmu.setWaitingForChatInput(false);
                 pmu.setChatInputPath(null);
-                new io.github.altkat.BuffedItems.menu.set.SetBonusesMenu(pmu, plugin).open();
+                new SetBonusesMenu(pmu, plugin).open();
             }
+        }
+        if (path.equals("set_add_item")) {
+            String newItemId = input;
+            String setId = pmu.getItemToEditId();
+            List<String> items = SetsConfig.get().getStringList("sets." + setId + ".items");
+
+            if (items.contains(newItemId)) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cItem already in set."));
+            } else {
+                items.add(newItemId);
+                SetsConfig.get().set("sets." + setId + ".items", items);
+                SetsConfig.saveAsync();
+                plugin.getSetManager().loadSets(true);
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aAdded " + newItemId + " to set."));
+            }
+            pmu.setWaitingForChatInput(false);
+            pmu.setChatInputPath(null);
+            new SetItemsMenu(pmu, plugin).open();
         }
     }
 }

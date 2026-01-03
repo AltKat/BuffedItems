@@ -71,7 +71,6 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             boolean current = UpgradesConfig.get().getBoolean("settings.browser-button", true);
             UpgradesConfig.get().set("settings.browser-button", !current);
             UpgradesConfig.saveAsync();
-            UpgradesConfig.reload();
 
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             this.open();
@@ -137,7 +136,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
             String resultName = "§f" + recipe.getResultItemId();
             BuffedItem resultItem = plugin.getItemManager().getBuffedItem(recipe.getResultItemId());
             if (resultItem != null) {
-                resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getDisplayName()));
+                resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getItemDisplay().getDisplayName()));
             }
 
             if (recipe.getResultAmount() > 1) {
@@ -155,7 +154,7 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                     String bId = ((BuffedItemCost) recipe.getBaseCost()).getRequiredItemId();
                     BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
                     if (bItem != null) {
-                        baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                        baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
                     }
                 }
             }

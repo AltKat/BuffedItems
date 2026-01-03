@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
+import io.github.altkat.BuffedItems.menu.utility.SoundSettingsMenu;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.DepletionAction;
 import org.bukkit.Material;
@@ -31,7 +32,7 @@ public class UsageLimitSettingsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 54;
+        return 45;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class UsageLimitSettingsMenu extends Menu {
         if (e.getCurrentItem() == null) return;
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 53) {
+        if (type == Material.BARRIER && e.getSlot() == 44) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
@@ -50,22 +51,22 @@ public class UsageLimitSettingsMenu extends Menu {
 
         if (e.getSlot() == 10) {
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("usage-limit.max-usage");
+            playerMenuUtility.setChatInputPath("usage.limit");
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Max Usage amount in chat (e.g. 50)."));
-            p.sendMessage(ConfigManager.fromSection("§7Current: " + (item.getMaxUses() > 0 ? item.getMaxUses() : "Unlimited (-1)")));
+            p.sendMessage(ConfigManager.fromSection("§7Current: " + (item.getUsageDetails().getMaxUses() > 0 ? item.getUsageDetails().getMaxUses() : "Unlimited (-1)")));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit."));
             return;
         }
 
         if (e.getSlot() == 12) {
-            DepletionAction current = item.getDepletionAction();
+            DepletionAction current = item.getUsageDetails().getDepletionAction();
             DepletionAction next;
             if (current == DepletionAction.DISABLE) next = DepletionAction.DESTROY;
             else if (current == DepletionAction.DESTROY) next = DepletionAction.TRANSFORM;
             else next = DepletionAction.DISABLE;
 
-            ConfigManager.setItemValue(itemId, "usage-limit.action", next.name());
+            ConfigManager.setItemValue(itemId, "usage.action", next.name());
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
             this.open();
             return;
@@ -78,40 +79,41 @@ public class UsageLimitSettingsMenu extends Menu {
                     BuffedItemSelectorMenu.SelectionContext.USAGE_LIMIT
             ).open();
             return;
-        }
-
-        else if (e.getSlot() == 16) {
+        } else if (e.getSlot() == 16) {
             new CommandListMenu(playerMenuUtility, plugin, CommandListMenu.CommandContext.DEPLETION).open();
             return;
+        } else if (e.getSlot() == 32) {
+            new SoundSettingsMenu(playerMenuUtility, plugin, "depletion").open();
+            return;
+        } else if (e.getSlot() == 34) {
+            new SoundSettingsMenu(playerMenuUtility, plugin, "depleted-try").open();
+            return;
         }
+
 
         String configKey = null;
         String inputPath = null;
         String title = null;
 
-        if (e.getSlot() == 28) {
-            configKey = "usage-limit.lore";
-            inputPath = "usage-limit.lore";
+        if (e.getSlot() == 20) {
+            configKey = "usage.lore_format";
+            inputPath = "usage.lore_format";
             title = "Usage Lore Line";
-        }
-        else if (e.getSlot() == 30) {
-            configKey = "usage-limit.depleted-lore";
-            inputPath = "usage-limit.depleted-lore";
+        } else if (e.getSlot() == 22) {
+            configKey = "usage.depleted_lore";
+            inputPath = "usage.depleted_lore";
             title = "Depleted Lore Line";
-        }
-        else if (e.getSlot() == 32) {
-            configKey = "usage-limit.depleted-message";
-            inputPath = "usage-limit.depleted-message";
+        } else if (e.getSlot() == 24) {
+            configKey = "usage.depleted_message";
+            inputPath = "usage.depleted_message";
             title = "Depleted Denial Message";
-        }
-        else if (e.getSlot() == 34) {
-            configKey = "usage-limit.depletion-notification";
-            inputPath = "usage-limit.depletion-notification";
+        } else if (e.getSlot() == 28) {
+            configKey = "usage.depletion_notification";
+            inputPath = "usage.depletion_notification";
             title = "Break Notification";
-        }
-        else if (e.getSlot() == 42) {
-            configKey = "usage-limit.depletion-transform-message";
-            inputPath = "usage-limit.depletion-transform-message";
+        } else if (e.getSlot() == 30) {
+            configKey = "usage.transform_message";
+            inputPath = "usage.transform_message";
             title = "Transform Message";
         }
 
@@ -126,10 +128,10 @@ public class UsageLimitSettingsMenu extends Menu {
                 playerMenuUtility.setChatInputPath(inputPath);
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter new " + title + " in chat."));
-                if(configKey.equals("usage-limit.lore")) {
+                if (configKey.equals("usage.lore_format")) {
                     p.sendMessage(ConfigManager.fromSection("§7Placeholders: {remaining_uses}, {total_uses}"));
                 }
-                p.sendMessage(ConfigManager.fromSection("§7Type 'cancel' to exit."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit."));
             }
         }
     }
@@ -140,12 +142,12 @@ public class UsageLimitSettingsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        int maxUses = item.getMaxUses();
+        int maxUses = item.getUsageDetails().getMaxUses();
         String usageStatus = (maxUses > 0) ? "§e" + maxUses : "§aUnlimited (-1)";
         inventory.setItem(10, makeItem(Material.REDSTONE, "§cMax Usage Limit",
                 "§7Current: " + usageStatus, "", "§eClick to Edit"));
 
-        DepletionAction action = item.getDepletionAction();
+        DepletionAction action = item.getUsageDetails().getDepletionAction();
         Material actionIcon = Material.BARRIER;
         String actionDesc = "§7Item becomes unusable.";
         if (action == DepletionAction.DESTROY) {
@@ -158,51 +160,67 @@ public class UsageLimitSettingsMenu extends Menu {
         inventory.setItem(12, makeItem(actionIcon, "§6Depletion Action",
                 "§7Current: §f" + action.name(), actionDesc, "", "§eClick to Switch"));
 
-        String targetName = "";
         if (action == DepletionAction.TRANSFORM) {
-            String targetId = item.getDepletionTransformId();
-
+            String targetId = item.getUsageDetails().getTransformId();
             String displayName = "§cNone";
             String idLine = "";
 
-            if (targetId != null) {
+            if (targetId != null && !targetId.isEmpty()) {
                 BuffedItem targetItem = plugin.getItemManager().getBuffedItem(targetId);
-                if (targetItem != null) {
-                    displayName = ConfigManager.toSection(ConfigManager.fromLegacy(targetItem.getDisplayName()));
-                } else {
-                    displayName = "§cUnknown Item";
-                }
+                displayName = (targetItem != null)
+                        ? ConfigManager.toSection(ConfigManager.fromLegacy(targetItem.getItemDisplay().getDisplayName()))
+                        : "§cUnknown Item";
                 idLine = "§8(ID: " + targetId + ")";
-                targetName = displayName;
             }
 
             inventory.setItem(14, makeItem(Material.HOPPER, "§dTransform Target",
-                    "§7The item to give upon depletion.",
-                    "",
-                    "§7Current: " + displayName,
-                    idLine,
-                    "",
-                    "§eClick to Select"));
+                    "§7The item to give upon depletion.", "", "§7Current: " + displayName, idLine, "", "§eClick to Select"));
         } else {
             inventory.setItem(14, makeItem(Material.MINECART, "§8Transform Target", "§7(Requires TRANSFORM action)"));
-            targetName = "&cNot Set";
         }
 
         inventory.setItem(16, makeItem(Material.COMMAND_BLOCK, "§6Depletion Commands",
-                "§7Manage commands executed when",
-                "§7the item usage reaches 0.",
-                "",
-                "§7Current: §f" + item.getDepletionCommands().size() + " commands",
-                "",
-                "§eClick to Edit"));
+                "§7Manage commands executed when", "§7the item usage reaches 0.", "",
+                "§7Current: §f" + item.getUsageDetails().getDepletionCommands().size() + " commands", "", "§eClick to Edit"));
 
-        inventory.setItem(28, makeMessageItem(Material.PAPER, "Usage Lore", item.getUsageLore(maxUses > 0 ? maxUses : 1), "usage-limit-lore"));
-        inventory.setItem(30, makeMessageItem(Material.BOOK, "Depleted Lore", item.getDepletedLore(), "usage-limit-broken-lore"));
-        inventory.setItem(32, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", item.getDepletedMessage(), "usage-limit-depleted-message"));
-        inventory.setItem(34, makeMessageItem(Material.BELL, "Break Notification", item.getDepletionNotification(), "usage-limit-break-notification"));
-        inventory.setItem(42, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", item.getDepletionTransformMessage(), "usage-limit-depletion-transform"));
+        // Messages with default fallbacks
+        String usageLore = item.getUsageLore(maxUses > 0 ? maxUses : 1);
+        inventory.setItem(20, makeMessageItem(Material.PAPER, "Usage Lore", usageLore, "usage.lore_format"));
 
-        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
+        String depletedLore = item.getUsageDetails().getDepletedLore();
+        if (depletedLore == null || depletedLore.isEmpty())
+            depletedLore = ConfigManager.getGlobalDepletedLore() + " &8(Default)";
+        inventory.setItem(22, makeMessageItem(Material.BOOK, "Depleted Lore", depletedLore, "usage.depleted_lore"));
+
+        String depletedMsg = item.getUsageDetails().getDepletedMessage();
+        if (depletedMsg == null || depletedMsg.isEmpty())
+            depletedMsg = ConfigManager.getGlobalDepletedMessage() + " &8(Default)";
+        inventory.setItem(24, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", depletedMsg, "usage.depleted_message"));
+
+        String depletionNotif = item.getUsageDetails().getDepletionNotification();
+        if (depletionNotif == null || depletionNotif.isEmpty())
+            depletionNotif = ConfigManager.getGlobalDepletionNotification() + " &8(Default)";
+        inventory.setItem(28, makeMessageItem(Material.BELL, "Break Notification", depletionNotif, "usage.depletion_notification"));
+
+        String transformMsg = item.getUsageDetails().getDepletionTransformMessage();
+        if (transformMsg == null || transformMsg.isEmpty())
+            transformMsg = ConfigManager.getGlobalDepletionTransformMessage() + " &8(Default)";
+        inventory.setItem(30, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", transformMsg, "usage.transform_message"));
+
+
+        // Sounds with default fallbacks
+        String currDepletion = item.getUsageDetails().getDepletionSound();
+        if (currDepletion == null) currDepletion = "§5" + ConfigManager.getGlobalDepletionSound() + " §8(Default)";
+        else currDepletion = "§5" + currDepletion;
+        inventory.setItem(32, makeItem(Material.JUKEBOX, "§5Depletion Sound", "§7Current: " + currDepletion, "", "§eClick to Change"));
+
+        String currTry = item.getUsageDetails().getDepletedTrySound();
+        if (currTry == null) currTry = "§7" + ConfigManager.getGlobalDepletedTrySound() + " §8(Default)";
+        else currTry = "§7" + currTry;
+        inventory.setItem(34, makeItem(Material.DISPENSER, "§8Depleted Try Sound", "§7Current: " + currTry, "", "§eClick to Change"));
+
+
+        inventory.setItem(44, makeItem(Material.BARRIER, "§cBack"));
     }
 
     private org.bukkit.inventory.ItemStack makeMessageItem(Material mat, String title, String currentVal, String defaultKey) {

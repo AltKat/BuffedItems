@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.menu.active.CostListMenu;
+import io.github.altkat.BuffedItems.menu.selector.MaterialSelectorMenu;
 import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
@@ -23,24 +24,43 @@ public class CostInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("active_ability.costs.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("active_ability.costs.edit.")) {
+            new CostListMenu(pmu, plugin).open();
+        } else if (path.equals("active_ability.costs.add.ITEM_QUANTITY")) {
+            pmu.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.COST);
+            new MaterialSelectorMenu(pmu, plugin).open();
+        } else if (path.startsWith("active_ability.costs.add.")) {
+            new TypeSelectorMenu(pmu, plugin, PlayerMenuUtility.MaterialSelectionContext.COST).open();
+        } else {
+            new CostListMenu(pmu, plugin).open();
+        }
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
-        if (path.equals("active.costs.add.ITEM_QUANTITY")) {
+        if (path.equals("active_ability.costs.add.ITEM_QUANTITY")) {
             handleItemQuantityInput(player, pmu, input, itemId);
             return;
         }
 
-        if (path.equals("active.costs.add.BUFFED_ITEM_QUANTITY")) {
+        if (path.equals("active_ability.costs.add.BUFFED_ITEM_QUANTITY")) {
             handleBuffedItemQuantityInput(player, pmu, input, itemId);
             return;
         }
 
-        if (path.startsWith("active.costs.add.")) {
-            String type = path.substring(17);
+        if (path.startsWith("active_ability.costs.add.")) {
+            String type = path.substring(25);
             if (type.equals("BUFFED_ITEM_QUANTITY")) type = "BUFFED_ITEM";
             handleAddCost(player, pmu, input, type, itemId);
-        } else if (path.equals("active.costs.edit.amount")) {
+        } else if (path.equals("active_ability.costs.edit.amount")) {
             handleEditCostAmount(player, pmu, input, itemId);
-        } else if (path.equals("active.costs.edit.message")) {
+        } else if (path.equals("active_ability.costs.edit.message")) {
             handleEditCostMessage(player, pmu, input, itemId);
         }
     }
@@ -115,9 +135,9 @@ public class CostInputHandler implements ChatInputHandler {
                 }
             }
 
-            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+            List<Map<?, ?>> costs = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
             costs.add(newCost);
-            ConfigManager.setItemValue(itemId, "costs", costs);
+            ConfigManager.setItemValue(itemId, "active_ability.costs", costs);
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCost added successfully!"));
             closeChatInput(pmu);
@@ -131,7 +151,7 @@ public class CostInputHandler implements ChatInputHandler {
             else player.sendMessage(ConfigManager.fromSection("§7Please enter a valid positive number."));
 
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.add." + type);
+            pmu.setChatInputPath("active_ability.costs.add." + type);
         }
     }
 
@@ -139,7 +159,7 @@ public class CostInputHandler implements ChatInputHandler {
     @SuppressWarnings("unchecked")
     private void handleEditCostAmount(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         int index = pmu.getEditIndex();
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
 
         if (index < 0 || index >= costList.size()) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Cost index out of bounds."));
@@ -169,7 +189,7 @@ public class CostInputHandler implements ChatInputHandler {
                 else targetCost.put("amount", val);
             }
 
-            ConfigManager.setItemValue(itemId, "costs", editableList);
+            ConfigManager.setItemValue(itemId, "active_ability.costs", editableList);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCost amount updated!"));
 
             closeChatInput(pmu);
@@ -178,14 +198,14 @@ public class CostInputHandler implements ChatInputHandler {
         } catch (NumberFormatException e) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a positive number."));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.edit.amount");
+            pmu.setChatInputPath("active_ability.costs.edit.amount");
         }
     }
 
     @SuppressWarnings("unchecked")
     private void handleEditCostMessage(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         int index = pmu.getEditIndex();
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
 
         if (index < 0 || index >= costList.size()) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Cost index out of bounds."));
@@ -209,7 +229,7 @@ public class CostInputHandler implements ChatInputHandler {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aFailure message updated!"));
         }
 
-        ConfigManager.setItemValue(itemId, "costs", editableList);
+        ConfigManager.setItemValue(itemId, "active_ability.costs", editableList);
         closeChatInput(pmu);
         new CostListMenu(pmu, plugin).open();
     }
@@ -227,7 +247,7 @@ public class CostInputHandler implements ChatInputHandler {
         } catch (NumberFormatException e) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
+            pmu.setChatInputPath("active_ability.costs.add.BUFFED_ITEM_QUANTITY");
         }
     }
 
@@ -249,7 +269,7 @@ public class CostInputHandler implements ChatInputHandler {
         } catch (NumberFormatException e) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid amount. Please enter a valid number."));
             pmu.setWaitingForChatInput(true);
-            pmu.setChatInputPath("active.costs.add.ITEM_QUANTITY");
+            pmu.setChatInputPath("active_ability.costs.add.ITEM_QUANTITY");
         }
     }
 

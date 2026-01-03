@@ -54,26 +54,26 @@ public class ActiveItemSettingsMenu extends Menu {
 
         switch (type) {
             case LEVER:
-                boolean newMode = !item.isActiveMode();
-                ConfigManager.setItemValue(itemId, "active_mode", newMode);
+                boolean newMode = !item.getActiveAbility().isEnabled();
+                ConfigManager.setItemValue(itemId, "active_ability.enabled", newMode);
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
                 this.open();
                 break;
 
             case CLOCK:
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("active.cooldown");
+                playerMenuUtility.setChatInputPath("active_ability.cooldown");
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the Cooldown (in seconds) in chat."));
-                p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getCooldown() + "s)"));
+                p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getActiveAbility().getCooldown() + "s)"));
                 break;
 
             case COMPASS:
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("active.duration");
+                playerMenuUtility.setChatInputPath("active_ability.duration");
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter the Effect Duration (in seconds) in chat."));
-                p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getActiveDuration() + "s)"));
+                p.sendMessage(ConfigManager.fromSection("§7(Current: " + item.getActiveAbility().getDuration() + "s)"));
                 break;
 
             case COMMAND_BLOCK:
@@ -115,7 +115,7 @@ public class ActiveItemSettingsMenu extends Menu {
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item == null) return;
 
-        boolean isActive = item.isActiveMode();
+        boolean isActive = item.getActiveAbility().isEnabled();
         inventory.setItem(10, makeItem(Material.LEVER,
                 isActive ? "§aActive Mode: ON" : "§cActive Mode: OFF",
                 "§7Enable/Disable right-click functionality.",
@@ -123,17 +123,17 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§eClick to Toggle"));
 
         inventory.setItem(12, makeItem(Material.CLOCK, "§bSet Cooldown",
-                "§7Current: §e" + item.getCooldown() + "s",
+                "§7Current: §e" + item.getActiveAbility().getCooldown() + "s",
                 "",
                 "§eClick to Edit"));
 
         inventory.setItem(14, makeItem(Material.COMPASS, "§bSet Effect Duration",
-                "§7Current: §e" + item.getActiveDuration() + "s",
+                "§7Current: §e" + item.getActiveAbility().getDuration() + "s",
                 "",
                 "§eClick to Edit"));
 
         inventory.setItem(16, makeItem(Material.COMMAND_BLOCK, "§6Manage Commands",
-                "§7Current: §e" + item.getActiveCommands().size() + " commands",
+                "§7Current: §e" + item.getActiveAbility().getCommands().size() + " commands",
                 "",
                 "§eClick to Edit List"));
 
@@ -149,9 +149,8 @@ public class ActiveItemSettingsMenu extends Menu {
 
         inventory.setItem(23, makeItem(Material.PAINTING, "§eVisual Settings",
                 "§7Configure visual indicators:",
-                "§f• Chat, Title, Action Bar",
-                "§f• BossBar Settings",
-                "§f• Custom Messages",
+                "§f• Cast Visuals",
+                "§f• Cooldown Visuals",
                 "",
                 "§eClick to Edit"));
 
@@ -160,7 +159,6 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Success Sound",
                 "§f• Cooldown Sound",
                 "§f• Cost Fail Sound",
-                "§f• Depletion Sounds",
                 "",
                 "§eClick to Edit"));
 
@@ -177,6 +175,7 @@ public class ActiveItemSettingsMenu extends Menu {
                 "§f• Max Usage & Actions",
                 "§f• Usage Lore",
                 "§f• Depletion Messages",
+                "§f• Depletion Sounds",
                 "§f• Transformation Logic",
                 "",
                 "§eClick to Manage"));

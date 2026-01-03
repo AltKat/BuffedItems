@@ -16,6 +16,16 @@ public class CreationInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        return path.equals("createnewitem") || path.equals("duplicateitem");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        new ItemListMenu(pmu, plugin).open();
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         if (path.equals("createnewitem")) {
             handleCreateNewItem(player, pmu, input);

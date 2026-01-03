@@ -34,6 +34,7 @@ public class ItemFlagsMenu extends Menu {
             new FlagInfo("PREVENT_ENCHANT_TABLE", Material.LAPIS_LAZULI, "Prevent Enchant Table", "Prevents placing the item in an enchanting table."),
             new FlagInfo("PREVENT_SMITHING_USE", Material.SMITHING_TABLE, "Prevent Smithing Use", "Prevents using the item in a smithing table."),
             new FlagInfo("HIDE_ARMOR_TRIM", Material.PINK_DYE, "Hide Armor Trim", "Hides 'Upgrade: ...' trim details."),
+            new FlagInfo("HIDE_DYE", Material.CYAN_DYE, "Hide Dye", "Hides 'Dyed' text on leather armor."),
             new FlagInfo("PREVENT_DROP", Material.DROPPER, "Prevent Drop/Store", "Prevents dropping (Q/drag), storing in containers, or item frames."),
             new FlagInfo("PREVENT_CONSUME", Material.APPLE, "Prevent Consumption", "Prevents eating, drinking (potions), or consuming."),
             new FlagInfo("UNBREAKABLE", Material.ANVIL, "Unbreakable", "Prevents the item from losing durability."),

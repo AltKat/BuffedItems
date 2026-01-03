@@ -103,4 +103,5 @@ active-items:
       item: "&cMissing Item: &e{amount}x {material}"
       buffed_item: "&cMissing Item: &e{amount}x {item_name}"
       coinsengine: "&cNot enough Money! Cost: &e{amount} {currency_name}"
+      auraskills_mana: "&cNot enough Mana! Cost: &e{amount}"
       default: "&cYou cannot afford this cost."

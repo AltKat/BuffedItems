@@ -12,8 +12,10 @@ public class ItemsConfig extends BaseConfig {
 
     public ItemsConfig(BuffedItems plugin) {
         super(plugin, "items.yml");
-        instance = this; // Singleton instance
+        instance = this;
         migrateFromOldConfig();
+        ConfigUpdater.migrateItems(config, new File(plugin.getDataFolder(), "items.yml"));
+        reload();
     }
 
     public static void setup(BuffedItems plugin) {

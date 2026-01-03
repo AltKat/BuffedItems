@@ -4,6 +4,7 @@ import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.attribute.ActiveAttributeManager;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.effect.EffectManager;
+import io.github.altkat.BuffedItems.manager.visual.PassiveVisualsManager;
 import io.github.altkat.BuffedItems.utility.attribute.ParsedAttribute;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import io.github.altkat.BuffedItems.utility.item.BuffedItemEffect;
@@ -28,6 +29,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     private final NamespacedKey nbtKey;
     private final ActiveAttributeManager attributeManager;
     private final EffectManager effectManager;
+    private final PassiveVisualsManager passiveVisualsManager;
 
     private final Map<UUID, Set<PotionEffectType>> managedPotions = new ConcurrentHashMap<>();
 
@@ -49,6 +51,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         this.nbtKey = new NamespacedKey(plugin, "buffeditem_id");
         this.attributeManager = plugin.getActiveAttributeManager();
         this.effectManager = plugin.getEffectManager();
+        this.passiveVisualsManager = plugin.getPassiveVisualsManager();
     }
 
     @Override
@@ -109,6 +112,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
             desiredInventoryAttributeUUIDs.clear();
 
             Map<String, Integer> currentSetCounts = new HashMap<>();
+            List<PassiveVisualsManager.ActiveItemInfo> visualItems = new ArrayList<>();
 
             for (CachedItem entry : cachedData.activeItems) {
                 BuffedItem item = entry.item;
@@ -121,6 +125,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
                     continue;
                 }
 
+                // Add to visuals list if it's not an inventory-only item
+                if (!slot.equals("INVENTORY")) {
+                    visualItems.add(new PassiveVisualsManager.ActiveItemInfo(item, slot));
+                }
+
                 if (entry.setId != null && !slot.equals("INVENTORY")) {
 
                     boolean isHandSlot = slot.equals("MAIN_HAND") || slot.equals("OFF_HAND");
@@ -131,26 +140,34 @@ public class EffectApplicatorTask extends BukkitRunnable {
                     }
                 }
 
-                if (item.getEffects().containsKey(slot)) {
-                    BuffedItemEffect itemEffects = item.getEffects().get(slot);
+                if (item.getPassiveEffects().getEffects().containsKey(slot)) {
+                    BuffedItemEffect itemEffects = item.getPassiveEffects().getEffects().get(slot);
 
                     itemEffects.getPotionEffects().forEach((type, level) ->
                             desiredPotionEffects.merge(type, level, Integer::max));
 
-                    if (item.getAttributeMode() == BuffedItem.AttributeMode.DYNAMIC || slot.equals("INVENTORY")) {
+                    if (item.getPassiveEffects().getAttributeMode() == BuffedItem.AttributeMode.DYNAMIC || slot.equals("INVENTORY")) {
                         for (ParsedAttribute parsedAttr : itemEffects.getParsedAttributes()) {
                             desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
 
-                            if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
+                            boolean handledByHook = false;
+                            if (plugin.getHookManager().getAuraSkillsHook() != null) {
+                                handledByHook = plugin.getHookManager().getAuraSkillsHook().tryAddStatModifier(player, parsedAttr.getAttribute(), parsedAttr.getUuid().toString(), parsedAttr.getAmount());
+                            }
+
+                            if (!handledByHook && !attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
                                 effectManager.applySingleAttribute(player, parsedAttr, slot);
                             }
                         }
-                    }
-
-                }
-            }
-
-            for (Map.Entry<String, Integer> setEntry : currentSetCounts.entrySet()) {
+                                        }
+                                    }
+                                }
+                    
+                                // Update Passive Visuals
+                                passiveVisualsManager.updatePlayerVisuals(player, visualItems);
+                    
+                                for (Map.Entry<String, Integer> setEntry : currentSetCounts.entrySet()) {
+                    
                 String setId = setEntry.getKey();
                 int count = setEntry.getValue();
 
@@ -167,7 +184,13 @@ public class EffectApplicatorTask extends BukkitRunnable {
 
                         for (ParsedAttribute parsedAttr : effects.getParsedAttributes()) {
                             desiredInventoryAttributeUUIDs.add(parsedAttr.getUuid());
-                            if (!attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
+
+                            boolean handledByHook = false;
+                            if (plugin.getHookManager().getAuraSkillsHook() != null) {
+                                handledByHook = plugin.getHookManager().getAuraSkillsHook().tryAddStatModifier(player, parsedAttr.getAttribute(), parsedAttr.getUuid().toString(), parsedAttr.getAmount());
+                            }
+
+                            if (!handledByHook && !attributeManager.hasModifier(playerUUID, parsedAttr.getAttribute(), parsedAttr.getUuid())) {
                                 effectManager.applySingleAttribute(player, parsedAttr, "SET_BONUS");
                             }
                         }
@@ -209,6 +232,16 @@ public class EffectApplicatorTask extends BukkitRunnable {
                 ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
                         "[Task-Fast Path] REMOVED attribute modifier: " + toRemove.uuid + " for " + player.getName());
             }
+
+            if (plugin.getHookManager().getAuraSkillsHook() != null) {
+                Set<UUID> allManagedUUIDs = plugin.getItemManager().getManagedAttributeUUIDs();
+                for (UUID managedUUID : allManagedUUIDs) {
+                    if (!desiredInventoryAttributeUUIDs.contains(managedUUID)) {
+                        plugin.getHookManager().getAuraSkillsHook().removeStatModifier(player, managedUUID.toString());
+                    }
+                }
+            }
+
 
         }
 
@@ -270,6 +303,11 @@ public class EffectApplicatorTask extends BukkitRunnable {
         if (itemId != null) {
             BuffedItem buffedItem = plugin.getItemManager().getBuffedItem(itemId);
             if (buffedItem != null) {
+
+                if ((slot.equals("MAIN_HAND") || slot.equals("OFF_HAND")) && isArmor(item.getType())) {
+                    return;
+                }
+
                 String setId = plugin.getSetManager().getSetIdByItem(itemId);
                 activeItems.add(new CachedItem(buffedItem, slot, setId));
                 if (debugTick) {
@@ -312,7 +350,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
     }
 
     private boolean checkCachedPermission(Player player, BuffedItem item) {
-        String permNode = item.getPassivePermissionRaw();
+        String permNode = item.getPassiveEffects().getPassivePermission();
         if (permNode == null && item.getPermission() != null) {
             permNode = item.getPermission();
         }
@@ -351,6 +389,7 @@ public class EffectApplicatorTask extends BukkitRunnable {
         playersToUpdate.remove(uuid);
         permissionCache.remove(uuid);
         attributeManager.clearPlayer(uuid);
+        passiveVisualsManager.clearPlayer(player);
     }
 
     public void markPlayerForUpdate(UUID playerUUID) {
@@ -377,11 +416,42 @@ public class EffectApplicatorTask extends BukkitRunnable {
             if (isHolding) {
                 markPlayerForUpdate(playerUUID);
                 markedCount++;
-                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Marked player " + playerUUID + " due to holding " + itemId);
+                ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Marked player " + playerUUID + " for update due to holding " + itemId);
             }
         }
         final int finalMarkedCount = markedCount;
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Marked " + finalMarkedCount + " player(s) for update due to holding " + itemId);
+    }
+
+    public void forceAttributeRefreshForHolding(String itemId) {
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Forcing attribute refresh for players holding: " + itemId);
+        int markedCount = 0;
+        for (Map.Entry<UUID, CachedPlayerData> entry : playerCache.entrySet()) {
+            UUID playerUUID = entry.getKey();
+            CachedPlayerData data = entry.getValue();
+
+            if (data == null || data.activeItems == null) continue;
+
+            boolean isHolding = false;
+            for (CachedItem itemEntry : data.activeItems) {
+                if (itemEntry.item.getId().equals(itemId)) {
+                    isHolding = true;
+                    break;
+                }
+            }
+
+            if (isHolding) {
+                Player player = Bukkit.getPlayer(playerUUID);
+                if (player != null && player.isOnline()) {
+                    plugin.getEffectManager().clearAllAttributes(player);
+                    markPlayerForUpdate(playerUUID);
+                    markedCount++;
+                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () -> "[Task] --> Cleared attributes and marked player " + player.getName() + " for full refresh due to holding " + itemId);
+                }
+            }
+        }
+        final int finalMarkedCount = markedCount;
+        ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[Task] Forced attribute refresh for " + finalMarkedCount + " player(s).");
     }
 
     public Set<PotionEffectType> getManagedEffects(UUID playerUUID) {

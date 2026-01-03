@@ -49,7 +49,7 @@ public class AttributeOperationSelectorMenu extends Menu {
         if ("SET_BONUS".equals(targetSlot)) {
             prefix = "set.attribute.";
         } else if ("ACTIVE".equals(targetSlot)) {
-            prefix = "active.attributes.";
+            prefix = "active_ability.actions.effects.attributes.";
         } else {
             prefix = "attributes.";
         }

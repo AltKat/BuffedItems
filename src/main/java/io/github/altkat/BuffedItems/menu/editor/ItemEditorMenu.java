@@ -77,7 +77,7 @@ public class ItemEditorMenu extends Menu {
                 break;
             case NAME_TAG:
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("display_name");
+                playerMenuUtility.setChatInputPath("display.name");
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromLegacyWithPrefix("§aPlease type the new display name in chat. Use '&' for color codes. &7[ &#E12B5DH&#E12B5De&#E12B5Dx &#E12B5Dc&#E12B5Do&#DD3266l&#D83870o&#D43F79r&#D04583s &#C75295s&#C3599Fu&#BF5FA8p&#BB66B2p&#B66CBBo&#B273C4r&#AE79CEt&#AA80D7e&#A586E1d&#A18DEA! &7]"));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
@@ -91,7 +91,7 @@ public class ItemEditorMenu extends Menu {
             case BEACON:
                 BuffedItem item = plugin.getItemManager().getBuffedItem(playerMenuUtility.getItemToEditId());
                 if (item != null) {
-                    ConfigManager.setItemValue(item.getId(), "glow", !item.hasGlow());
+                    ConfigManager.setItemValue(item.getId(), "display.glow", !item.getItemDisplay().hasGlow());
                     this.open();
                 }
                 break;
@@ -106,7 +106,7 @@ public class ItemEditorMenu extends Menu {
                 break;
             case ARMOR_STAND:
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("custom_model_data");
+                playerMenuUtility.setChatInputPath("display.custom-model-data");
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Custom Model Data:"));
                 p.sendMessage(ConfigManager.fromSection("§7Direct integer: §e100001"));
@@ -121,6 +121,18 @@ public class ItemEditorMenu extends Menu {
 
             case CLOCK:
                 new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
+                break;
+            case CYAN_DYE:
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setChatInputPath("display.color");
+                p.closeInventory();
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter a hex color code for the armor."));
+                p.sendMessage(ConfigManager.fromSection("§7Format: §e#RRGGBB §7(e.g., §e#FF0000 §7for red)"));
+                p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear the color."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                break;
+            case GRAY_DYE:
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cThis option is only available for Leather Armor items."));
                 break;
         }
     }
@@ -167,20 +179,27 @@ public class ItemEditorMenu extends Menu {
 
         inventory.setItem(4, previewItem);
 
-        String currentName = item.getDisplayName().replace('&', '§');
+        String currentName = item.getItemDisplay().getDisplayName().replace('&', '§');
 
         inventory.setItem(11, makeItem(Material.NAME_TAG, "§aChange Display Name", "§7Current: " + currentName));
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aChange Material", "§7Current: §e" + item.getMaterial().name()));
         inventory.setItem(13, makeItem(Material.BOOK, "§aEdit Lore", "§7Click to modify the item's lore."));
-        String permDisplay = (item.getPermission() != null) ? item.getPermission() : "§cNone";
-        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings", "§7Click to modify permission settings"));
+        inventory.setItem(14, makeItem(Material.PAPER, "§aPermission Settings",
+                "§7Define permissions required to use the item.",
+                "",
+                "§f• Main Item Permission",
+                "§f• Active Ability Permission",
+                "§f• Passive Effects Permission",
+                "",
+                "§eClick to Manage"
+                ));
 
         String cmdDisplay;
-        if (item.getCustomModelData().isPresent()) {
-            cmdDisplay = "§e" + item.getCustomModelData().get();
-            if (item.getCustomModelDataRaw().isPresent()) {
-                String raw = item.getCustomModelDataRaw().get();
-                if (!raw.equals(String.valueOf(item.getCustomModelData().get()))) {
+        if (item.getItemDisplay().getCustomModelData().isPresent()) {
+            cmdDisplay = "§e" + item.getItemDisplay().getCustomModelData().get();
+            if (item.getItemDisplay().getCustomModelDataRaw().isPresent()) {
+                String raw = item.getItemDisplay().getCustomModelDataRaw().get();
+                if (!raw.equals(String.valueOf(item.getItemDisplay().getCustomModelData().get()))) {
                     cmdDisplay += " §7(" + raw + ")";
                 }
             }
@@ -192,7 +211,7 @@ public class ItemEditorMenu extends Menu {
                 "§7Used for custom resource pack models.",
                 "§7Supports: Direct, ItemsAdder, Nexo"));
 
-        inventory.setItem(20, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.hasGlow() ? "§aEnabled" : "§cDisabled")));
+        inventory.setItem(20, makeItem(Material.BEACON, "§aToggle Glow", "§7Current: " + (item.getItemDisplay().hasGlow() ? "§aEnabled" : "§cDisabled")));
         inventory.setItem(21, makeItem(Material.ENCHANTED_BOOK, "§dEdit Enchantments", "§7Click to add, remove, or modify", "§7the item's enchantments."));
         inventory.setItem(22, makeItem(Material.REDSTONE_TORCH, "§6Edit Item Flags", "§7Control item behaviors like 'Unbreakable',", "§7'Prevent Anvil Use', 'Hide Attributes', etc."));
         inventory.setItem(23, makeItem(Material.CHEST_MINECART, "§b§lPassive Effects",
@@ -201,6 +220,7 @@ public class ItemEditorMenu extends Menu {
                 "",
                 "§f• Potion Effects",
                 "§f• Attribute Modifiers",
+                "§f• Visual Effects",
                 "",
                 "§eClick to Manage"));
 
@@ -211,8 +231,18 @@ public class ItemEditorMenu extends Menu {
                 "§f• Cooldowns & Visuals",
                 "§f• Commands & Sounds",
                 "§f• Temporary Effects",
+                "§f• Usage Limits & Costs",
                 "",
                 "§eClick to Manage"));
+
+        if (previewItem.getItemMeta() instanceof org.bukkit.inventory.meta.LeatherArmorMeta) {
+            String colorDisplay = item.getItemDisplay().getColor()
+                    .map(c -> String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue()))
+                    .orElse("§cNone");
+            inventory.setItem(29, makeItem(Material.CYAN_DYE, "§aDye Armor Color", "§7Current: §e" + colorDisplay, "§7Click to set a hex color code.", "§7(e.g., #FF0000)"));
+        } else {
+            inventory.setItem(29, makeItem(Material.GRAY_DYE, "§7Dye Armor Color", "§cNot Applicable", "§7This option is only available", "§7for Leather Armor items."));
+        }
 
         addBackButton(new ItemListMenu(playerMenuUtility, plugin));
         setFillerGlass();
@@ -225,41 +255,44 @@ public class ItemEditorMenu extends Menu {
         infoLore.add(ConfigManager.fromSection("§7Item ID: §b" + item.getId()));
         infoLore.add(ConfigManager.fromSection("§7Material: §f" + item.getMaterial().name()));
 
-        String glowStatus = item.hasGlow() ? "§aYes" : "§cNo";
+        String glowStatus = item.getItemDisplay().hasGlow() ? "§aYes" : "§cNo";
         infoLore.add(ConfigManager.fromSection("§7Glow: " + glowStatus));
 
         String mainPerm = (item.getPermission() != null) ? item.getPermission() : "§7None";
         infoLore.add(ConfigManager.fromSection("§7Permission: §f" + mainPerm));
 
-        if (item.getActivePermissionRaw() != null) {
-            infoLore.add(ConfigManager.fromSection("§7- Active Perm: §b" + item.getActivePermissionRaw()));
+        if (item.getActiveAbility().getActivePermission() != null) {
+            infoLore.add(ConfigManager.fromSection("§7- Active Perm: §b" + item.getActiveAbility().getActivePermission()));
         }
-        if (item.getPassivePermissionRaw() != null) {
-            infoLore.add(ConfigManager.fromSection("§7- Passive Perm: §d" + item.getPassivePermissionRaw()));
+        if (item.getPassiveEffects().getPassivePermission() != null) {
+            infoLore.add(ConfigManager.fromSection("§7- Passive Perm: §d" + item.getPassiveEffects().getPassivePermission()));
         }
 
-        if (item.getCustomModelData().isPresent()) {
-            String cmdDisplay = "§e" + item.getCustomModelData().get();
-            if (item.getCustomModelDataRaw().isPresent()) {
-                String raw = item.getCustomModelDataRaw().get();
-                if (!raw.equals(String.valueOf(item.getCustomModelData().get()))) {
+        if (item.getItemDisplay().getCustomModelData().isPresent()) {
+            String cmdDisplay = "§e" + item.getItemDisplay().getCustomModelData().get();
+            if (item.getItemDisplay().getCustomModelDataRaw().isPresent()) {
+                String raw = item.getItemDisplay().getCustomModelDataRaw().get();
+                if (!raw.equals(String.valueOf(item.getItemDisplay().getCustomModelData().get()))) {
                     cmdDisplay += " §7(" + raw + ")";
                 }
             }
             infoLore.add(ConfigManager.fromSection("§7Model Data: " + cmdDisplay));
         }
 
-        infoLore.add(Component.empty());
-        if (item.isActiveMode()) {
-            infoLore.add(ConfigManager.fromSection("§6§l[Active Ability: ON]"));
-            infoLore.add(ConfigManager.fromSection("§7Cooldown: §f" + item.getCooldown() + "s §7| Duration: §f" + item.getActiveDuration() + "s"));
+        item.getItemDisplay().getColor().ifPresent(c ->
+                infoLore.add(ConfigManager.fromSection(String.format("§7Color: §e#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue()))));
 
-            int maxUses = item.getMaxUses();
+        infoLore.add(Component.empty());
+        if (item.getActiveAbility().isEnabled()) {
+            infoLore.add(ConfigManager.fromSection("§6§l[Active Ability: ON]"));
+            infoLore.add(ConfigManager.fromSection("§7Cooldown: §f" + item.getActiveAbility().getCooldown() + "s §7| Duration: §f" + item.getActiveAbility().getDuration() + "s"));
+
+            int maxUses = item.getUsageDetails().getMaxUses();
             if (maxUses > 0) {
                 infoLore.add(ConfigManager.fromSection("§7Usage Limit: §e" + maxUses));
-                infoLore.add(ConfigManager.fromSection("§7Depletion: §f" + item.getDepletionAction().name()));
-                if (item.getDepletionAction() == DepletionAction.TRANSFORM) {
-                    String target = item.getDepletionTransformId();
+                infoLore.add(ConfigManager.fromSection("§7Depletion: §f" + item.getUsageDetails().getDepletionAction().name()));
+                if (item.getUsageDetails().getDepletionAction() == DepletionAction.TRANSFORM) {
+                    String target = item.getUsageDetails().getTransformId();
                     infoLore.add(ConfigManager.fromSection("§7Transform: §b" + (target != null ? target : "None")));
                 }
             } else {
@@ -267,13 +300,13 @@ public class ItemEditorMenu extends Menu {
             }
 
             StringBuilder visuals = new StringBuilder();
-            visuals.append(item.isVisualChat() ? "§a[Chat] " : "§8[Chat] ");
-            visuals.append(item.isVisualTitle() ? "§a[Title] " : "§8[Title] ");
-            visuals.append(item.isVisualActionBar() ? "§a[Action] " : "§8[Action] ");
-            visuals.append(item.isVisualBossBar() ? "§a[BossBar]" : "§8[BossBar]");
+            visuals.append(item.getActiveAbility().getVisuals().getCooldown().getChat().isEnabled() ? "§a[Chat] " : "§8[Chat] ");
+            visuals.append(item.getActiveAbility().getVisuals().getCooldown().getTitle().isEnabled() ? "§a[Title] " : "§8[Title] ");
+            visuals.append(item.getActiveAbility().getVisuals().getCooldown().getActionBar().isEnabled() ? "§a[Action] " : "§8[Action] ");
+            visuals.append(item.getActiveAbility().getVisuals().getCooldown().getBossBar().isEnabled() ? "§a[BossBar]" : "§8[BossBar]");
             infoLore.add(ConfigManager.fromSection("§7Visuals: " + visuals.toString()));
 
-            List<ICost> costs = item.getCosts();
+            List<ICost> costs = item.getActiveAbility().getCosts();
             if (!costs.isEmpty()) {
                 infoLore.add(ConfigManager.fromSection("§7Costs:"));
                 for (ICost cost : costs) {
@@ -283,11 +316,11 @@ public class ItemEditorMenu extends Menu {
                 infoLore.add(ConfigManager.fromSection("§7Costs: §aFree"));
             }
 
-            if (!item.getActiveCommands().isEmpty()) {
-                infoLore.add(ConfigManager.fromSection("§7Commands: §f" + item.getActiveCommands().size() + " active"));
+            if (!item.getActiveAbility().getCommands().isEmpty()) {
+                infoLore.add(ConfigManager.fromSection("§7Commands: §f" + item.getActiveAbility().getCommands().size() + " active"));
             }
 
-            BuffedItemEffect activeEffects = item.getActiveEffects();
+            BuffedItemEffect activeEffects = item.getActiveAbility().getEffects();
             if (activeEffects != null) {
                 if (!activeEffects.getPotionEffects().isEmpty() || !activeEffects.getParsedAttributes().isEmpty()) {
                     infoLore.add(ConfigManager.fromSection("§7On-Click Effects:"));
@@ -315,7 +348,7 @@ public class ItemEditorMenu extends Menu {
             });
         }
 
-        Map<String, BuffedItemEffect> effects = item.getEffects();
+        Map<String, BuffedItemEffect> effects = item.getPassiveEffects().getEffects();
         if (!effects.isEmpty()) {
             infoLore.add(Component.empty());
             infoLore.add(ConfigManager.fromSection("§d§l[Passive Effects]"));

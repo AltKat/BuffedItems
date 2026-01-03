@@ -53,7 +53,7 @@ public class PotionEffectSelectorMenu extends PaginatedMenu {
             if ("SET_BONUS".equals(targetSlot)) {
                 prefix = "set.potion.";
             } else if ("ACTIVE".equals(targetSlot)) {
-                prefix = "active.potion_effects.";
+                prefix = "active_ability.actions.effects.potion_effects.";
             } else {
                 prefix = "potion_effects.";
             }

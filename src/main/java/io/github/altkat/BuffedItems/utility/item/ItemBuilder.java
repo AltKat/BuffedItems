@@ -2,6 +2,9 @@ package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.utility.ItemUtils;
+import io.github.altkat.BuffedItems.utility.item.data.ActiveAbility;
+import io.github.altkat.BuffedItems.utility.item.data.ItemDisplay;
+import io.github.altkat.BuffedItems.utility.item.data.UsageDetails;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -37,16 +40,13 @@ public class ItemBuilder {
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) {return itemStack;}
 
-        meta.displayName(ConfigManager.fromLegacy(buffedItem.getDisplayName()));
-        List<Component> coloredLore = ConfigManager.loreFromLegacy(buffedItem.getLore());
+        ItemDisplay display = buffedItem.getItemDisplay();
+
+        meta.displayName(ConfigManager.fromLegacy(display.getDisplayName()));
+        List<Component> coloredLore = ConfigManager.loreFromLegacy(display.getLore());
         meta.lore(coloredLore);
 
-        if (buffedItem.getCustomModelData().isPresent()) {
-            int cmdValue = buffedItem.getCustomModelData().get();
-            meta.setCustomModelData(cmdValue);
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE,
-                    () -> "[ItemBuilder] Applied CMD (Integer): " + cmdValue + " to " + buffedItem.getId());
-        }
+        display.getCustomModelData().ifPresent(meta::setCustomModelData);
 
         if (buffedItem.getFlag("UNBREAKABLE")) {
             meta.setUnbreakable(true);
@@ -56,30 +56,19 @@ public class ItemBuilder {
 
         if (hasRealEnchants) {
             for (Map.Entry<Enchantment, Integer> entry : buffedItem.getEnchantments().entrySet()) {
-                Enchantment enchantment = entry.getKey();
-                int level = entry.getValue();
-                try {
-                    meta.addEnchant(enchantment, level, true);
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED, () ->
-                            "[ItemBuilder] Applied enchantment: " + enchantment.getKey().getKey() +
-                                    " Level: " + level + " to item " + buffedItem.getId());
-                } catch (IllegalArgumentException e) {
-                    ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                            () -> "[ItemBuilder] Failed to apply enchantment " + enchantment.getKey().getKey() +
-                                    " with level " + level + " to item " + buffedItem.getId() + ": " + e.getMessage());
-                }
+                meta.addEnchant(entry.getKey(), entry.getValue(), true);
             }
         }
 
-        if (buffedItem.hasGlow()) {
-            if (!hasRealEnchants || buffedItem.getFlag("HIDE_ENCHANTS")) {
-                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, false);
+        if (display.hasGlow()) {
+            if (!hasRealEnchants) {
+                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
             }
         }
 
         ItemUtils.applyAttributes(buffedItem, meta);
 
-        if (buffedItem.getFlag("HIDE_ENCHANTS")) {
+        if (buffedItem.getFlag("HIDE_ENCHANTS") || (display.hasGlow() && !hasRealEnchants)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
         if (buffedItem.getFlag("HIDE_ATTRIBUTES")) {
@@ -100,6 +89,9 @@ public class ItemBuilder {
         if (buffedItem.getFlag("HIDE_ARMOR_TRIM")) {
             meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
         }
+        if (buffedItem.getFlag("HIDE_DYE")) {
+            meta.addItemFlags(ItemFlag.HIDE_DYE);
+        }
 
         NamespacedKey key = new NamespacedKey(plugin, "buffeditem_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, buffedItem.getId());
@@ -107,18 +99,25 @@ public class ItemBuilder {
         NamespacedKey versionKey = new NamespacedKey(plugin, "buffeditem_version");
         meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, buffedItem.getUpdateHash());
 
-        if(buffedItem.isActiveMode() && buffedItem.getMaxUses() > 0){
+        ActiveAbility activeAbility = buffedItem.getActiveAbility();
+        UsageDetails usageDetails = buffedItem.getUsageDetails();
+
+        if(activeAbility.isEnabled() && usageDetails.getMaxUses() > 0){
             NamespacedKey maxKey = new NamespacedKey(plugin, "remaining_active_uses");
-            meta.getPersistentDataContainer().set(maxKey, PersistentDataType.INTEGER, buffedItem.getMaxUses());
+            meta.getPersistentDataContainer().set(maxKey, PersistentDataType.INTEGER, usageDetails.getMaxUses());
 
             List<Component> lore = meta.lore();
             if(lore == null){
                 lore = new ArrayList<>();
             }
-            String dynamicLore = buffedItem.getUsageLore(buffedItem.getMaxUses());
+            String dynamicLore = buffedItem.getUsageLore(usageDetails.getMaxUses());
             lore.add(ConfigManager.fromLegacy(dynamicLore));
 
             meta.lore(lore);
+        }
+        
+        if (meta instanceof org.bukkit.inventory.meta.LeatherArmorMeta leatherMeta) {
+            buffedItem.getItemDisplay().getColor().ifPresent(leatherMeta::setColor);
         }
 
         itemStack.setItemMeta(meta);

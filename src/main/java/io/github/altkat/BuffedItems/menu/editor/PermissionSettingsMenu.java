@@ -54,11 +54,11 @@ public class PermissionSettingsMenu extends Menu {
                 title = "Main Permission";
                 break;
             case 13: // Active
-                inputPath = "active_permission";
+                inputPath = "active_ability.permission";
                 title = "Active Permission (Override)";
                 break;
             case 15: // Passive
-                inputPath = "passive_permission";
+                inputPath = "passive_effects.permission";
                 title = "Passive Permission (Override)";
                 break;
         }
@@ -83,8 +83,8 @@ public class PermissionSettingsMenu extends Menu {
 
         String perm = item.getPermission();
         String mainPerm = (perm != null) ? perm : "NONE";
-        String activePerm = item.getActivePermissionRaw();
-        String passivePerm = item.getPassivePermissionRaw();
+        String activePerm = item.getActiveAbility().getActivePermission();
+        String passivePerm = item.getPassiveEffects().getPassivePermission();
 
         inventory.setItem(4, makeItem(Material.BOOK, "§bHow Permissions Work?",
                 "§7Simple explanation:",

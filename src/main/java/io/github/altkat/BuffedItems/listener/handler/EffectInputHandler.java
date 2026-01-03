@@ -1,12 +1,12 @@
 package io.github.altkat.BuffedItems.listener.handler;
 
 import io.github.altkat.BuffedItems.BuffedItems;
-import io.github.altkat.BuffedItems.listener.EffectType;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.ItemsConfig;
 import io.github.altkat.BuffedItems.manager.config.SetsConfig;
 import io.github.altkat.BuffedItems.menu.editor.EnchantmentListMenu;
 import io.github.altkat.BuffedItems.menu.passive.EffectListMenu;
+import io.github.altkat.BuffedItems.menu.set.SetBonusEffectSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -25,187 +25,217 @@ public class EffectInputHandler implements ChatInputHandler {
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        return path.startsWith("active_ability.actions.effects.") ||
+                path.startsWith("potion_effects") ||
+                path.startsWith("attributes") ||
+                path.startsWith("enchantments.") ||
+                path.startsWith("set.potion.") ||
+                path.startsWith("set.attribute.");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.startsWith("active_ability.actions.effects.potion_effects")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, "ACTIVE").open();
+        } else if (path.startsWith("active_ability.actions.effects.attributes")) {
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, "ACTIVE").open();
+        } else if (path.startsWith("potion_effects.")) {
+            String slot = pmu.getTargetSlot();
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.POTION_EFFECT, slot).open();
+        } else if (path.startsWith("attributes.")) {
+            String slot = pmu.getTargetSlot();
+            new EffectListMenu(pmu, plugin, EffectListMenu.EffectType.ATTRIBUTE, slot).open();
+        } else if (path.startsWith("enchantments.")) {
+            new EnchantmentListMenu(pmu, plugin).open();
+        } else if (path.startsWith("set.potion.") || path.startsWith("set.attribute.")) {
+            new SetBonusEffectSelectorMenu(pmu, plugin).open();
+        }
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
-        if (path.startsWith("active.potion_effects.add.")) {
-            handleAddGenericEffect(player, pmu, input, path, itemId,
-                    "items." + itemId + ".active-mode.effects.potion_effects", EffectType.POTION_EFFECT,
-                    p -> p.substring(26), "ACTIVE", null);
-        } else if (path.equals("active.potion_effects.edit")) {
-            handleEditGenericEffect(player, pmu, input, itemId, EffectType.POTION_EFFECT,
-                    "items." + itemId + ".active-mode.effects.potion_effects", "ACTIVE", null);
-        } else if (path.startsWith("active.attributes.add.")) {
-            handleAddGenericEffect(player, pmu, input, path, itemId,
-                    "items." + itemId + ".active-mode.effects.attributes", EffectType.ATTRIBUTE,
-                    p -> p.substring(22), "ACTIVE", null);
-        } else if (path.equals("active.attributes.edit")) {
-            handleEditGenericEffect(player, pmu, input, itemId, EffectType.ATTRIBUTE,
-                    "items." + itemId + ".active-mode.effects.attributes", "ACTIVE", null);
-        } else if (path.startsWith("potion_effects.add.")) {
-            String slot = pmu.getTargetSlot();
-            handleAddGenericEffect(player, pmu, input, path, itemId,
-                    "items." + itemId + ".effects." + slot + ".potion_effects", EffectType.POTION_EFFECT,
-                    p -> p.substring(19), slot, slot);
-        } else if (path.equals("potion_effects.edit")) {
-            String slot = pmu.getTargetSlot();
-            handleEditGenericEffect(player, pmu, input, itemId, EffectType.POTION_EFFECT,
-                    "items." + itemId + ".effects." + slot + ".potion_effects", slot, slot);
-        } else if (path.startsWith("attributes.add.")) {
-            String slot = pmu.getTargetSlot();
-            handleAddGenericEffect(player, pmu, input, path, itemId,
-                    "items." + itemId + ".effects." + slot + ".attributes", EffectType.ATTRIBUTE,
-                    p -> p.substring(15), slot, slot);
-        } else if (path.equals("attributes.edit")) {
-            String slot = pmu.getTargetSlot();
-            handleEditGenericEffect(player, pmu, input, itemId, EffectType.ATTRIBUTE,
-                    "items." + itemId + ".effects." + slot + ".attributes", slot, slot);
-        } else if (path.equals("enchantments.edit")) {
-            handleEditEnchantment(player, pmu, input, itemId);
-        } else if (path.startsWith("enchantments.add.")) {
-            handleAddEnchantment(player, pmu, input, path, itemId);
+
+        String slot = pmu.getTargetSlot();
+        EffectListMenu.EffectType effectType;
+        String context;
+
+        if (path.startsWith("active_ability.actions.effects.potion_effects")) {
+            effectType = EffectListMenu.EffectType.POTION_EFFECT;
+            context = "ACTIVE";
+        } else if (path.startsWith("active_ability.actions.effects.attributes")) {
+            effectType = EffectListMenu.EffectType.ATTRIBUTE;
+            context = "ACTIVE";
+        } else if (path.startsWith("potion_effects")) {
+            effectType = EffectListMenu.EffectType.POTION_EFFECT;
+            context = slot;
+        } else if (path.startsWith("attributes")) {
+            effectType = EffectListMenu.EffectType.ATTRIBUTE;
+            context = slot;
+        } else if (path.startsWith("enchantments.")) {
+            if (path.contains(".add")) {
+                handleAddEnchantment(player, pmu, input, path.replace(".add", ""), itemId);
+            } else { // .edit
+                handleEditEnchantment(player, pmu, input, itemId);
+            }
+            return;
         } else if (path.startsWith("set.potion.add.")) {
-            handleAddSetEffect(player, pmu, input, path, EffectType.POTION_EFFECT);
+            handleAddSetEffect(player, pmu, input, path, EffectListMenu.EffectType.POTION_EFFECT);
+            return;
         } else if (path.equals("set.potion.edit")) {
-            handleEditSetEffect(player, pmu, input, EffectType.POTION_EFFECT);
+            handleEditSetEffect(player, pmu, input, EffectListMenu.EffectType.POTION_EFFECT);
+            return;
         } else if (path.startsWith("set.attribute.add.")) {
-            handleAddSetEffect(player, pmu, input, path, EffectType.ATTRIBUTE);
+            handleAddSetEffect(player, pmu, input, path, EffectListMenu.EffectType.ATTRIBUTE);
+            return;
         } else if (path.equals("set.attribute.edit")) {
-            handleEditSetEffect(player, pmu, input, EffectType.ATTRIBUTE);
+            handleEditSetEffect(player, pmu, input, EffectListMenu.EffectType.ATTRIBUTE);
+            return;
+        } else {
+            player.sendMessage("Unknown input path: " + path);
+            return;
+        }
+
+        String configPath = buildConfigPath(itemId, context, effectType);
+
+        if (path.contains(".add.")) {
+            String name;
+            int addIndex = path.indexOf(".add.");
+            if (addIndex != -1) {
+                name = path.substring(addIndex + 5);
+            } else {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cCould not parse effect name from path: " + path));
+                return;
+            }
+            handleAddGenericEffect(player, pmu, input, name, itemId, configPath, effectType, context);
+        } else if (path.endsWith(".edit")) {
+            handleEditGenericEffect(player, pmu, input, itemId, effectType, configPath, context);
         }
     }
 
 
-    // ==================== GENERIC EFFECT HANDLERS ====================
+    private String buildConfigPath(String itemId, String context, EffectListMenu.EffectType effectType) {
+        String effectPath = (effectType == EffectListMenu.EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
+        if ("ACTIVE".equals(context)) {
+            return "active_ability.actions.effects." + effectPath;
+        } else {
+            return "passive_effects.slots." + context + "." + effectPath;
+        }
+    }
 
     private void handleAddGenericEffect(
             Player player,
             PlayerMenuUtility pmu,
             String input,
-            String path,
+            String rawName,
             String itemId,
             String configPath,
-            EffectType effectType,
-            Function<String, String> nameExtractor,
-            String context,
-            String slot
+            EffectListMenu.EffectType effectType,
+            String context
     ) {
-        String rawName = nameExtractor.apply(path);
-        List<String> effects = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
+        String fullConfigPath = "items." + itemId + "." + configPath;
+        List<String> effects = new ArrayList<>(ItemsConfig.get().getStringList(fullConfigPath));
 
         try {
             String finalConfigString;
-
-            if (effectType == EffectType.ATTRIBUTE) {
+            if (effectType == EffectListMenu.EffectType.ATTRIBUTE) {
                 String[] parts = rawName.split("\\.");
-                if (parts.length < 2) {
-                    throw new IllegalArgumentException("Invalid attribute path format: " + rawName);
-                }
+                if (parts.length < 2) throw new IllegalArgumentException("Invalid attribute path format: " + rawName);
+
                 String attrName = parts[0];
                 String opName = parts[1];
-
-                validateEffectName(EffectType.ATTRIBUTE, attrName);
+                validateEffectName(EffectListMenu.EffectType.ATTRIBUTE, attrName);
                 double amount = Double.parseDouble(input);
 
-                String checkStr = attrName + ";" + opName;
-                if (effects.stream().anyMatch(s -> s.toUpperCase().startsWith(checkStr.toUpperCase()))) {
+                if (effects.stream().anyMatch(s -> s.toUpperCase().startsWith(attrName.toUpperCase() + ";" + opName.toUpperCase() + ";"))) {
                     throw new IllegalStateException("Duplicate attribute");
                 }
-
                 finalConfigString = attrName + ";" + opName + ";" + amount;
-
-            } else {
-                String potionName = rawName;
-                validateEffectName(effectType, potionName);
-
+            } else { // Potion
+                validateEffectName(EffectListMenu.EffectType.POTION_EFFECT, rawName);
                 int level = Integer.parseInt(input);
                 if (level <= 0) throw new NumberFormatException();
 
-                if (effectExists(effects, potionName)) {
+                if (effects.stream().anyMatch(s -> s.toUpperCase().startsWith(rawName.toUpperCase() + ";"))) {
                     throw new IllegalStateException("Duplicate effect");
                 }
-
-                finalConfigString = potionName + ";" + level;
+                finalConfigString = rawName + ";" + level;
             }
 
             effects.add(finalConfigString);
+            ConfigManager.setItemValue(itemId, configPath, effects);
 
-            String configKey = configPath.substring(configPath.indexOf(".") + itemId.length() + 2);
-            ConfigManager.setItemValue(itemId, configKey, effects);
-
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.getDisplayName()) + " has been added!"));
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
-                    () -> "[EffectHandler] Added " + effectType.getDisplayName() + ": " + finalConfigString + " for " + itemId);
-
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.name()) + " has been added!"));
             closeChatInput(pmu);
-            openAppropriateMenu(player, pmu, effectType, context, slot);
+            new EffectListMenu(pmu, plugin, effectType, context).open();
 
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format."));
         } catch (IllegalStateException ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: This " + effectType.getDisplayName() + " already exists on the item."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: This " + effectType.name().toLowerCase() + " already exists on the item."));
             closeChatInput(pmu);
-            openAppropriateMenu(player, pmu, effectType, context, slot);
+            new EffectListMenu(pmu, plugin, effectType, context).open();
         } catch (IllegalArgumentException ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid " + effectType.getDisplayName() + " format: " + rawName));
-            ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
-                    () -> "[EffectHandler] Failed to add " + effectType.getDisplayName() + ": " + rawName + " - " + ex.getMessage());
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid " + effectType.name().toLowerCase() + " name: " + rawName));
             closeChatInput(pmu);
-            openAppropriateMenu(player, pmu, effectType, context, slot);
+            new EffectListMenu(pmu, plugin, effectType, context).open();
         }
     }
+
 
     private void handleEditGenericEffect(
             Player player,
             PlayerMenuUtility pmu,
             String input,
             String itemId,
-            EffectType effectType,
+            EffectListMenu.EffectType effectType,
             String configPath,
-            String context,
-            String slot
+            String context
     ) {
-        List<String> effects = ItemsConfig.get().getStringList(configPath);
+        String fullConfigPath = "items." + itemId + "." + configPath;
+        List<String> effects = ItemsConfig.get().getStringList(fullConfigPath);
+        // Sort the effects list to match the order in EffectListMenu
+        effects.sort(String::compareTo);
         int index = pmu.getEditIndex();
 
-        if (index == -1 || index >= effects.size()) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid " + effectType.getDisplayName() + " index."));
+        if (index < 0 || index >= effects.size()) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid effect index."));
             closeChatInput(pmu);
-            openAppropriateMenu(player, pmu, effectType, context, slot);
+            new EffectListMenu(pmu, plugin, effectType, context).open();
             return;
         }
 
         try {
-            String currentString = effects.get(index);
-            String[] parts = currentString.split(";");
+            String[] parts = effects.get(index).split(";");
             String newEffectString;
 
-            if (effectType == EffectType.ATTRIBUTE) {
-                if (parts.length < 3) throw new IllegalStateException("Corrupt attribute data");
+            if (effectType == EffectListMenu.EffectType.ATTRIBUTE) {
                 double newAmount = Double.parseDouble(input);
                 newEffectString = parts[0] + ";" + parts[1] + ";" + newAmount;
-            } else {
-                if (parts.length < 2) throw new IllegalStateException("Corrupt effect data");
+            } else { // Potion
                 int newLevel = Integer.parseInt(input);
                 if (newLevel <= 0) throw new NumberFormatException();
                 newEffectString = parts[0] + ";" + newLevel;
             }
 
             effects.set(index, newEffectString);
+            ConfigManager.setItemValue(itemId, configPath, effects);
 
-            String configKey = configPath.substring(configPath.indexOf(".") + itemId.length() + 2);
-            ConfigManager.setItemValue(itemId, configKey, effects);
+            // This is the targeted "nuke" fix. It only runs for attribute edits.
+            if (effectType == EffectListMenu.EffectType.ATTRIBUTE) {
+                plugin.getEffectApplicatorTask().forceAttributeRefreshForHolding(itemId);
+            }
 
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.getDisplayName()) + " has been updated!"));
-
-            pmu.setEditIndex(-1);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + capitalizeFirstLetter(effectType.name()) + " has been updated!"));
             closeChatInput(pmu);
-            openAppropriateMenu(player, pmu, effectType, context, slot);
+            new EffectListMenu(pmu, plugin, effectType, context).open();
 
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number. Please enter a valid number."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format."));
         } catch (Exception ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError updating " + effectType.getDisplayName() + ". Data might be corrupt."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cAn unexpected error occurred."));
             closeChatInput(pmu);
-            openAppropriateMenu(player, pmu, effectType, context, slot);
+            new EffectListMenu(pmu, plugin, effectType, context).open();
         }
     }
 
@@ -213,11 +243,11 @@ public class EffectInputHandler implements ChatInputHandler {
     // ==================== ENCHANTMENT HANDLERS ====================
 
     private void handleEditEnchantment(Player player, PlayerMenuUtility pmu, String input, String itemId) {
-        String configPath = "items." + itemId + ".enchantments";
-        List<String> enchantments = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
+        String configPath = "enchantments";
+        List<String> enchantments = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + "." + configPath));
         int index = pmu.getEditIndex();
 
-        if (index == -1 || index >= enchantments.size()) {
+        if (index < 0 || index >= enchantments.size()) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid enchantment index."));
             closeChatInput(pmu);
             new EnchantmentListMenu(pmu, plugin).open();
@@ -226,95 +256,69 @@ public class EffectInputHandler implements ChatInputHandler {
 
         try {
             int newLevel = Integer.parseInt(input);
-            if (newLevel <= 0) {
-                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a positive whole number (e.g., 1, 5, 10)."));
-                return;
-            }
+            if (newLevel <= 0) throw new NumberFormatException();
 
             String[] parts = enchantments.get(index).split(";");
-            if (parts.length == 2) {
-                String enchantName = parts[0];
-                if (Enchantment.getByName(enchantName.toUpperCase()) == null) {
-                    player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Corrupted enchantment name '" + enchantName + "' found in config."));
-                    closeChatInput(pmu);
-                    new EnchantmentListMenu(pmu, plugin).open();
-                    return;
-                }
+            String newEnchantString = parts[0] + ";" + newLevel;
+            enchantments.set(index, newEnchantString);
 
-                String newEnchantString = enchantName + ";" + newLevel;
-                enchantments.set(index, newEnchantString);
-                ConfigManager.setItemValue(itemId, "enchantments", enchantments);
-                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnchantment level has been updated!"));
-            } else {
-                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Corrupted enchantment data found at index " + index));
-            }
+            ConfigManager.setItemValue(itemId, configPath, enchantments);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnchantment level has been updated!"));
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a whole number (e.g., 1, 5, 10)."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a positive whole number."));
             return;
         }
 
-        pmu.setEditIndex(-1);
         closeChatInput(pmu);
         new EnchantmentListMenu(pmu, plugin).open();
     }
 
     private void handleAddEnchantment(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
-        String configPath = "items." + itemId + ".enchantments";
-        List<String> enchantments = new ArrayList<>(ItemsConfig.get().getStringList(configPath));
-        String enchantName = path.substring(17);
+        String configPath = "enchantments";
+        String enchantName = path.substring("enchantments.".length());
+        List<String> enchantments = new ArrayList<>(ItemsConfig.get().getStringList("items." + itemId + "." + configPath));
 
         try {
-            if (Enchantment.getByName(enchantName.toUpperCase()) == null) {
-                throw new IllegalArgumentException("Invalid Enchantment name");
-            }
-
+            validateEffectName(EffectListMenu.EffectType.ENCHANTMENT, enchantName);
             int level = Integer.parseInt(input);
-            if (level <= 0) {
-                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid level. Please enter a positive whole number (e.g., 1, 5, 10)."));
-                return;
-            }
+            if (level <= 0) throw new NumberFormatException();
 
-            if (enchantmentExists(enchantments, enchantName)) {
+            if (enchantments.stream().anyMatch(s -> s.toUpperCase().startsWith(enchantName.toUpperCase() + ";"))) {
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: This enchantment already exists on the item."));
                 closeChatInput(pmu);
                 new EnchantmentListMenu(pmu, plugin).open();
                 return;
             }
 
-            String newEnchantString = enchantName + ";" + level;
-            enchantments.add(newEnchantString);
-            ConfigManager.setItemValue(itemId, "enchantments", enchantments);
+            enchantments.add(enchantName + ";" + level);
+            ConfigManager.setItemValue(itemId, configPath, enchantments);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnchantment has been added!"));
 
         } catch (NumberFormatException ex) {
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format: " + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number format."));
             return;
         } catch (IllegalArgumentException ex) {
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§cError: Invalid enchantment name: " + enchantName));
-            closeChatInput(pmu);
-            new EnchantmentListMenu(pmu, plugin).open();
-            return;
         }
 
         closeChatInput(pmu);
         new EnchantmentListMenu(pmu, plugin).open();
     }
-
-    private void handleAddSetEffect(Player player, PlayerMenuUtility pmu, String input, String path, EffectType effectType) {
+    private void handleAddSetEffect(Player player, PlayerMenuUtility pmu, String input, String path, EffectListMenu.EffectType effectType) {
         String setId = pmu.getTempSetId();
         int count = pmu.getTempBonusCount();
         String basePath = "sets." + setId + ".bonuses." + count;
-        String listKey = (effectType == EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
+        String listKey = (effectType == EffectListMenu.EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
         String configPath = basePath + "." + listKey;
 
-        String rawName = path.substring(effectType == EffectType.POTION_EFFECT ? 15 : 18);
+        String rawName = path.substring(effectType == EffectListMenu.EffectType.POTION_EFFECT ? 15 : 18);
 
         List<String> effects = new ArrayList<>(SetsConfig.get().getStringList(configPath));
 
         try {
             String finalConfigString;
 
-            if (effectType == EffectType.ATTRIBUTE) {
+            if (effectType == EffectListMenu.EffectType.ATTRIBUTE) {
                 String[] parts = rawName.split("\\.");
                 if (parts.length < 2) {
                     throw new IllegalArgumentException("Invalid attribute path format");
@@ -322,7 +326,7 @@ public class EffectInputHandler implements ChatInputHandler {
                 String attrName = parts[0];
                 String opName = parts[1];
 
-                validateEffectName(EffectType.ATTRIBUTE, attrName);
+                validateEffectName(EffectListMenu.EffectType.ATTRIBUTE, attrName);
                 double amount = Double.parseDouble(input);
 
                 String checkStr = attrName + ";" + opName;
@@ -334,12 +338,12 @@ public class EffectInputHandler implements ChatInputHandler {
 
             } else {
                 String potionName = rawName;
-                validateEffectName(EffectType.POTION_EFFECT, potionName);
+                validateEffectName(EffectListMenu.EffectType.POTION_EFFECT, potionName);
 
                 int level = Integer.parseInt(input);
                 if (level <= 0) throw new NumberFormatException();
 
-                if (effectExists(effects, potionName)) {
+                if (effects.stream().anyMatch(s -> s.toUpperCase().startsWith(potionName.toUpperCase() + ";"))) {
                     throw new IllegalStateException("Duplicate effect");
                 }
 
@@ -369,14 +373,16 @@ public class EffectInputHandler implements ChatInputHandler {
         }
     }
 
-    private void handleEditSetEffect(Player player, PlayerMenuUtility pmu, String input, EffectType effectType) {
+    private void handleEditSetEffect(Player player, PlayerMenuUtility pmu, String input, EffectListMenu.EffectType effectType) {
         String setId = pmu.getTempSetId();
         int count = pmu.getTempBonusCount();
         String basePath = "sets." + setId + ".bonuses." + count;
-        String listKey = (effectType == EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
+        String listKey = (effectType == EffectListMenu.EffectType.POTION_EFFECT) ? "potion_effects" : "attributes";
         String configPath = basePath + "." + listKey;
 
         List<String> effects = SetsConfig.get().getStringList(configPath);
+        // Sort the effects list to match the order in EffectListMenu
+        effects.sort(String::compareTo);
         int index = pmu.getEditIndex();
 
         if (index == -1 || index >= effects.size()) {
@@ -391,7 +397,7 @@ public class EffectInputHandler implements ChatInputHandler {
             String[] parts = currentString.split(";");
             String newEffectString;
 
-            if (effectType == EffectType.ATTRIBUTE) {
+            if (effectType == EffectListMenu.EffectType.ATTRIBUTE) {
                 if (parts.length < 3) throw new IllegalStateException("Corrupt attribute data");
                 double newAmount = Double.parseDouble(input);
                 newEffectString = parts[0] + ";" + parts[1] + ";" + newAmount;
@@ -421,9 +427,9 @@ public class EffectInputHandler implements ChatInputHandler {
         }
     }
 
-    private void openSetEffectMenu(PlayerMenuUtility pmu, EffectType effectType) {
+    private void openSetEffectMenu(PlayerMenuUtility pmu, EffectListMenu.EffectType effectType) {
         new EffectListMenu(pmu, plugin,
-                effectType == EffectType.POTION_EFFECT ? EffectListMenu.EffectType.POTION_EFFECT : EffectListMenu.EffectType.ATTRIBUTE,
+                effectType,
                 "SET_BONUS").open();
     }
 
@@ -431,13 +437,14 @@ public class EffectInputHandler implements ChatInputHandler {
     private void closeChatInput(PlayerMenuUtility pmu) {
         pmu.setWaitingForChatInput(false);
         pmu.setChatInputPath(null);
+        pmu.setEditIndex(-1);
     }
 
-    private void validateEffectName(EffectType effectType, String name) throws IllegalArgumentException {
+    private void validateEffectName(EffectListMenu.EffectType effectType, String name) throws IllegalArgumentException {
         switch (effectType) {
             case POTION_EFFECT:
                 if (PotionEffectType.getByName(name.toUpperCase()) == null) {
-                    throw new IllegalArgumentException("Invalid potion effect");
+                    throw new IllegalArgumentException("Invalid potion effect name");
                 }
                 break;
             case ATTRIBUTE:
@@ -445,35 +452,16 @@ public class EffectInputHandler implements ChatInputHandler {
                 break;
             case ENCHANTMENT:
                 if (Enchantment.getByName(name.toUpperCase()) == null) {
-                    throw new IllegalArgumentException("Invalid enchantment");
+                    throw new IllegalArgumentException("Invalid enchantment name");
                 }
                 break;
         }
-    }
-
-    private void openAppropriateMenu(Player player, PlayerMenuUtility pmu, EffectType effectType, String context, String slot) {
-        EffectListMenu.EffectType menuEffectType =
-                effectType == EffectType.POTION_EFFECT ?
-                        EffectListMenu.EffectType.POTION_EFFECT :
-                        EffectListMenu.EffectType.ATTRIBUTE;
-
-        new EffectListMenu(pmu, plugin, menuEffectType, context).open();
-    }
-
-    private boolean effectExists(List<String> effects, String effectName) {
-        return effects.stream()
-                .anyMatch(s -> s.toUpperCase().startsWith(effectName.toUpperCase() + ";"));
-    }
-
-    private boolean enchantmentExists(List<String> enchantments, String enchantName) {
-        return enchantments.stream()
-                .anyMatch(s -> s.toUpperCase().startsWith(enchantName.toUpperCase() + ";"));
     }
 
     private String capitalizeFirstLetter(String str) {
         if (str == null || str.isEmpty()) {
             return str;
         }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase().replace("_", " ");
     }
 }

@@ -209,6 +209,16 @@ public class ItemProtectionListener implements Listener {
     }
 
     @EventHandler
+    public void onPrepareGrindstone(PrepareGrindstoneEvent e) {
+        ItemStack item1 = e.getInventory().getItem(0);
+        ItemStack item2 = e.getInventory().getItem(1);
+
+        if(plugin.getItemManager().isBuffedItem(item1) || plugin.getItemManager().isBuffedItem(item2)){
+            e.setResult(null);
+        }
+    }
+
+    @EventHandler
     public void onItemDrop(PlayerDropItemEvent e) {
         if (itemHasFlag(e.getItemDrop().getItemStack(), "PREVENT_DROP")) {
             e.setCancelled(true);

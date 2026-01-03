@@ -16,6 +16,7 @@ import io.github.altkat.BuffedItems.manager.item.ItemManager;
 import io.github.altkat.BuffedItems.manager.set.SetManager;
 import io.github.altkat.BuffedItems.manager.upgrade.UpgradeManager;
 import io.github.altkat.BuffedItems.manager.upgrade.UpgradeRecipe;
+import io.github.altkat.BuffedItems.manager.visual.PassiveVisualsManager;
 import io.github.altkat.BuffedItems.menu.MenuListener;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.task.CooldownVisualsTask;
@@ -53,6 +54,7 @@ public final class BuffedItems extends JavaPlugin {
     private ItemUpdater itemUpdater;
     private SetManager setManager;
     private CraftingManager craftingManager;
+    private PassiveVisualsManager passiveVisualsManager;
 
     @Override
     public void onEnable() {
@@ -175,6 +177,10 @@ public final class BuffedItems extends JavaPlugin {
             cooldownVisualsTask.cleanup();
         }
 
+        if (passiveVisualsManager != null) {
+            passiveVisualsManager.cleanup();
+        }
+
         ConfigManager.logInfo("&aCleanup complete: &e" + successCount + "/" + playerCount + "&a players cleaned" + (failCount > 0 ? "&c (" + failCount + " failed)" : ""));
         ConfigManager.logInfo("&cBuffedItems has been disabled!");
     }
@@ -191,6 +197,7 @@ public final class BuffedItems extends JavaPlugin {
         itemUpdater = new ItemUpdater(this);
         setManager = new SetManager(this);
         craftingManager = new CraftingManager(this);
+        passiveVisualsManager = new PassiveVisualsManager(this);
     }
 
     private void registerListenersAndCommands() {
@@ -311,6 +318,7 @@ public final class BuffedItems extends JavaPlugin {
         if (hookManager.isCoinsEngineLoaded()) activeHooks.add("CoinsEngine");
         if (hookManager.isItemsAdderLoaded()) activeHooks.add("ItemsAdder");
         if (hookManager.isNexoLoaded()) activeHooks.add("Nexo");
+        if (hookManager.isAuraSkillsLoaded()) activeHooks.add("AuraSkills");
 
         ConfigManager.logInfo("");
         ConfigManager.logInfo("&#9B59B6  Hooks:");
@@ -380,6 +388,7 @@ public final class BuffedItems extends JavaPlugin {
     public ItemUpdater getItemUpdater() { return itemUpdater;}
     public SetManager getSetManager() {return setManager;}
     public CraftingManager getCraftingManager() {return craftingManager;}
+    public PassiveVisualsManager getPassiveVisualsManager() { return passiveVisualsManager; }
     private void isCompatible() {
         try {
             Class.forName("com.destroystokyo.paper.event.player.PlayerArmorChangeEvent");

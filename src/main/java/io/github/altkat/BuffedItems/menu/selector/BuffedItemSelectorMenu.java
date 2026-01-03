@@ -115,7 +115,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
             case COST:
                 playerMenuUtility.setTempId(itemId);
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("active.costs.add.BUFFED_ITEM_QUANTITY");
+                playerMenuUtility.setChatInputPath("active_ability.costs.add.BUFFED_ITEM_QUANTITY");
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected Item: §e" + itemId));
                 p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount (Quantity) in chat."));
@@ -123,7 +123,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 break;
 
             case USAGE_LIMIT:
-                ConfigManager.setItemValue(playerMenuUtility.getItemToEditId(), "usage-limit.transform-item", itemId);
+                ConfigManager.setItemValue(playerMenuUtility.getItemToEditId(), "usage.transform_item", itemId);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aTransform Target updated to: §e" + itemId));
                 new UsageLimitSettingsMenu(playerMenuUtility, plugin).open();
                 break;
@@ -182,14 +182,19 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
                 break;
 
             case COST:
-                playerMenuUtility.setChatInputPath("active.costs.add.BUFFED_ITEM");
+                playerMenuUtility.setChatInputPath("active_ability.costs.add.BUFFED_ITEM");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 p.sendMessage(ConfigManager.fromSection("§eFormat: AMOUNT;ITEM_ID"));
                 break;
 
             case USAGE_LIMIT:
-                playerMenuUtility.setChatInputPath("usage-limit.transform-item");
+                playerMenuUtility.setChatInputPath("usage.transform_item");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Target Buffed Item ID manually."));
+                break;
+
+            case SET_MEMBER:
+                playerMenuUtility.setChatInputPath("set_add_item");
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Buffed Item ID manually."));
                 break;
 
             case CRAFTING_RESULT:

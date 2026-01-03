@@ -4,322 +4,373 @@
 # Website: https://altkat.github.io
 # Wiki: https://github.com/AltKat/BuffedItems/wiki
 # -------------------------------------------------------------------------------------------
-
-# ===================================================================
-#                       BUFFED ITEMS - ITEMS.YML
-# ===================================================================
 #
-# This file contains all the custom items created by the plugin.
-# We RECOMMEND using the in-game editor (/bi menu) to make changes easily.
+#  IMPORTANT:
+#  • Use the in-game editor for the best experience: /bi menu
+#  • For manual editing and advanced features, please read the WIKI.
+#  • Apply changes with: /bi reload
 #
-# If you edit this file manually, use /bi reload to apply changes.
-# This file contains limited information. Please see wiki for more info.
-# ===================================================================
-
-# --- CONFIGURATION GUIDE ---
-#
-# display_name: The in-game name. Supports '&' for legacy colors and '&#RRGGBB' for HEX.
-# lore: List of description lines.
-# material: Valid Spigot Material name (e.g. DIAMOND_SWORD, STONE).
-# glow: (true/false) Adds enchantment glow.
-# permission: (Optional) Permission node required to use/benefit from the item.
-# custom-model-data: (Optional) Integer for resource packs (or 'itemsadder:id', 'nexo:id').
-#
-# flags: Control item flags and protections.
-#   - UNBREAKABLE, HIDE_ATTRIBUTES, HIDE_ENCHANTS, PREVENT_DROP, PREVENT_DEATH_DROP, etc.
-#
-# effects: Passive permanent effects applied when holding/wearing the item.
-#   - Slots: MAIN_HAND, OFF_HAND, HELMET, CHESTPLATE, LEGGINGS, BOOTS, INVENTORY
-#
-# --- NEW ACTIVE ITEM FEATURES GUIDE ---
-# active-mode:
-#   enabled: (true/false) Enables the active ability system.
-#   cooldown: (integer) Cooldown in seconds between uses.
-#   duration: (integer) Duration in seconds for active effects.
-#
-#   commands: A list of commands to run when right-clicked.
-#     You can chain prefixes to create complex mechanics.
-#     PREFIX ORDER: Flexible! You can mix [delay], [chance], and [console].
-#
-#     LOGIC PREFIXES:
-#     - [delay:ticks]     -> Waits X ticks (20 ticks = 1 second) before running this part.
-#                            Delays are cumulative (added to previous delays).
-#     - [chance:percent]  -> Runs the command with X% success chance (0-100).
-#     - [console]         -> Runs the command as Console (Admin). Without this, it runs as Player.
-#     - [else]            -> Runs only if the IMMEDIATELY preceding [chance] command fails.
-#
-#     MESSAGE ACTIONS (No command needed):
-#     - [message] text      -> Sends a clean message to player (colored, no prefix).
-#     - [actionbar] text    -> Sends text above the hotbar.
-#     - [title] Main|Sub    -> Sends a big title. Split subtitle with '|'.
-#
-#     CHAINING:
-#     - Use ';;' to execute multiple commands/actions sequentially.
-#     - Logic (Chance/Delay) applies to the specific chain link it is in.
-#
-#     EXAMPLES:
-#     - 'help' (Immediate player command, help command will be executed as player.)
-#     - '[console] kill %player%' (Immediate console command, kills player)
-#     - '[chance:50] [console] give %player% diamond 1 ;; [message] &aYou won!' (Console command with 50% success chance, if first part success then second block will be executed, will send to the player You Won message.)
-#     - '[delay:40] [chance:25] [console] kill %player%' (Wait 2s, then 25% chance to kill player)
-#     - '[chance:50][title] &cBOSS!|&7Spawning... ;; [delay:60] [console] summon wither %player_x% %player_y% %player_z%' (Sends a title with 50% success chance if succeeds after 3 seconds delay it will summon a wither at the player's location)
-#
-#     PLACEHOLDERS:
-#     - Built-in: %player%, %player_x%, %player_y%, %player_z%, %player_yaw%, %player_pitch%
-#     - PlaceholderAPI: Fully supported! (e.g., %vault_eco_balance% >= 1000)
-#
-#   effects: Apply potions/attributes on right-click (requires duration).
-#     potion_effects: List of 'EFFECT;LEVEL'
-#     attributes: List of 'ATTRIBUTE;OPERATION;AMOUNT'
-#
-#   costs: A list of requirements to use the active item.
-#     You can add multiple costs to a single item.
-#
-#     AVAILABLE COST TYPES:
-#     - MONEY: Requires Vault currency.
-#         - amount: (double)
-#     - EXPERIENCE: Requires XP points.
-#         - amount: (int)
-#     - LEVEL: Requires XP levels.
-#         - amount: (int)
-#     - HUNGER: Requires food level (20 = full bar).
-#         - amount: (int)
-#     - HEALTH: Requires health points (2 = 1 heart).
-#         - amount: (double)
-#     - ITEM: Requires a vanilla item.
-#         - amount: (int)
-#         - material: ITEM_NAME (e.g. DIAMOND)
-#     - BUFFED_ITEM: Requires another custom BuffedItem.
-#         - amount: (int)
-#         - item_id: custom_item_id (e.g. warriors_talisman)
-#     - COINSENGINE: Requires a CoinsEngine currency.
-#         - amount: (double)
-#         - currency_id: currency_name (Optional, default: 'coins')
-#
-#     EXAMPLE:
-#       costs:
-#         - type: MONEY
-#           amount: 100.0
-#         - type: BUFFED_ITEM
-#           amount: 1
-#           item_id: "magic_stone"
-#
-#   visuals: Override global visual settings for this item.
-#     chat, title, action-bar, boss-bar: true/false
-#     boss-bar-color: RED, BLUE, etc.
-#     boss-bar-style: SOLID, SEGMENTED_6, etc.
-#     messages: Override default messages (chat, title, subtitle, action-bar, boss-bar).
-#
-#   sounds: Override global sound settings.
-#     success: 'SOUND_NAME;VOL;PITCH'
-#     cooldown: 'SOUND_NAME;VOL;PITCH'
-#     cost-fail: "SOUND_NAME;VOL;PITCH"
-#
-#   usage-limit: Limiting the number of uses (Durability system).
-#     max-usage: (int) Total uses. Set -1 for unlimited.
-#     action: (DISABLE / DESTROY / TRANSFORM) What happens when depleted?
-#     transform-item: Buffed Item ID to give if action is TRANSFORM.
-#     lore: Custom lore line for remaining uses. Use {remaining_uses} and {total_uses}.
-#     depleted-lore: Lore line shown when item has 0 uses left.
-#     depleted-message: Message sent when trying to use an already depleted item.
-#     depletion-notification: Message sent to player at the moment item breaks/depletes.
-#     commands: List of commands to run when item depletes. (Supports logic prefixes like active-mode)
-# ===================================================================
+# -------------------------------------------------------------------------------------------
 
 items:
   identify_scroll:
-    display_name: '&#708090Identify Scroll'
     material: PAPER
-    lore:
-      - '&#D3D3D3A risky scroll used to identify'
-      - '&#D3D3D3valuable items.'
-      - ''
-      - '&cCost: &e$500 &7+ &f1x Scroll'
-      - '&7- &aSuccess: &680% (Reward)'
-      - '&7- &cFailure: &420% (Scroll wasted)'
-      - ''
-    glow: true
-    active-mode:
+    display:
+      name: '&bIdentify Scroll'
+      lore:
+        - ''
+        - '&#D3D3D3A risky scroll used to identify'
+        - '&#D3D3D3valuable items.'
+        - ''
+        - '&cCost: &e$500'
+        - '&7- &aSuccess: &650% (Reward)'
+        - '&7- &cFailure: &450% (Scroll wasted)'
+        - ''
+      glow: true
+    active_ability:
       enabled: true
-      usage-limit:
-        max-usage: 1
-        action: DESTROY
-        lore: '&6Remaining Tries: {remaining_uses}/{total_uses}'
       cooldown: 0
       costs:
         - type: MONEY
           amount: 500.0
           message: '&cYou need &e$500 &cto use this scroll.'
-      commands:
-        - '[chance:80] [console] give %player% diamond_sword 1 ;; [title] &aSUCCESS!|&7Item Identified.'
-        - '[else] [title] &cFAILED!|&7The scroll crumbled to dust.'
+      actions:
+        commands:
+          - '[delay:70] [chance:50] [console] give %player% diamond_sword 1 ;; [title] &aSUCCESS!|&7Item Identified.'
+          - '[else][title] &cFAILED!|&7The scroll crumbled to dust.'
+      usage:
+        depletion_sound: NONE
+        limit: 1
+        action: DESTROY
       sounds:
         success: ITEM_BOOK_PAGE_TURN;1.0;1.0
         cost-fail: ENTITY_VILLAGER_NO;1.0;1.0
-        depletion: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;1.0
-        depleted-try: BLOCK_DISPENSER_FAIL;1.0;1.0
+      visuals:
+        cast:
+          sound:
+            sound: BLOCK_NOTE_BLOCK_PLING;2.0;2.0
+            enabled: true
+            delay: 70
+          title:
+            enabled: true
+            header: '&#ea81b8P&#e785b4a&#e489b0p&#e08dabe&#dd91a7r&#da94a3''&#d7989fs &#d0a096b&#cda492e&#caa88ei&#c6ac8an&#c3b086g &#bdb77di&#b9bb79d&#b6bf75e&#b3c371n&#b0c76ct&#accb68i&#a9cf64f&#a6d260e&#a3d65cd&#9fda57.&#9cde53.&#99e24f.'
+            subtitle: '&bGood Luck!'
+            stay: 40
+          particles:
+            - type: WITCH
+              shape: BURST
+              count: 40
+              speed: 0.15
+              offset_x: 0.0
+              offset_y: 0.0
+              offset_z: 0.0
+              mode: CONTINUOUS
 
   elemental_staff:
-    display_name: '&#FFA500Elemental Staff'
     material: BLAZE_ROD
-    lore:
-      - '&7Channels chaotic elemental energy.'
-      - ''
-      - '&eActive (Right-Click):'
-      - '&7Casts a random spell:'
-      - '&c• 33% Fireball'
-      - '&e• 33% Lightning Strike'
-      - '&f• 33% Gust (Levitation)'
-      - ''
-    glow: true
-    active-mode:
+    display:
+      name: '&#FFA500Elemental Staff'
+      lore:
+        - ''
+        - '&7Channels chaotic elemental energy.'
+        - ''
+        - '&eActive (Right-Click):'
+        - '&7Casts a random spell:'
+        - '&c• 33% Fireball'
+        - '&e• 33% Lightning Strike'
+        - '&f• 33% Gust (Levitation)'
+        - ''
+      glow: true
+    active_ability:
       enabled: true
-      usage-limit:
-        max-usage: 10
-        action: DISABLE
-        lore: '&f• &bMana: &f{remaining_uses} &7(Max: {total_uses})'
-        depleted-lore: '&c&l• Out of mana!'
-        depleted-message: '&cMana drained! You can''t use this item''s ability anymore!'
-        depletion-notification: '&6&lMana Crystal of Staff is shattered! You can''t use this item''s ability anymore!'
-      commands:
-        - '[chance:33] [console] execute at %player% run summon fireball ^ ^1 ^2 {ExplosionPower:2,direction:[0.0,0.0,0.0]} ;; [message] &c&l🔥 FIREBALL!'
-        - '[else] [chance:50] [console] execute at %player% run summon lightning_bolt ^ ^ ^8 ;; [message] &e&l⚡ THUNDER!'
-        - '[else] [console] effect give %player% levitation 2 5 ;; [message] &f&l💨
-          GUST!'
+      actions:
+        commands:
+          - '[chance:33] [console] execute at %player% run summon fireball ^ ^1 ^2 {ExplosionPower:2,direction:[0.0,0.0,0.0]} ;; [message] &c&l🔥 FIREBALL!'
+          - '[else] [chance:50] [console] execute at %player% run summon lightning_bolt ^ ^ ^8 ;; [message] &e&l⚡ THUNDER!'
+          - '[else] [console] effect give %player% levitation 2 5 ;; [message] &f&l💨 GUST!'
+      usage:
+        depletion_sound: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;0.5
+        depleted_try_sound: BLOCK_DISPENSER_FAIL;1.0;1.2
       sounds:
         success: BLOCK_BEACON_POWER_SELECT;1.0;1.0
-        depletion: ENTITY_ZOMBIE_ATTACK_IRON_DOOR;1.0;0.5
-        depleted-try: BLOCK_DISPENSER_FAIL;1.0;1.2
-        cooldown: BLOCK_NOTE_BLOCK_PLING;2.0;2.0
         cost-fail: ENTITY_VILLAGER_NO;1.0;1.0
+        cooldown: BLOCK_NOTE_BLOCK_PLING;2.0;2.0
+      visuals:
+        cast:
+          particles:
+            - type: FLAME
+              shape: BURST
+              count: 40
+              speed: 0.15
+              offset_x: 0.0
+              offset_y: 0.0
+              offset_z: 0.0
+              mode: CONTINUOUS
 
   bunny_charm:
-    display_name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
-    lore:
-      - '&#E8D5FFA pulsating charm that channels'
-      - '&#D5C2FFthe energy of swift creatures.'
-      - ''
-      - '&#98FB98Passive Effects (Off Hand):'
-      - '&#C0FFC0• Jump Boost II'
-      - '&#C0FFC0• Slow Falling I'
-      - '&#C0FFC0• +10% Knockback Resistance'
     material: RABBIT_FOOT
-    glow: true
-    effects:
-      OFF_HAND:
-        potion_effects:
-          - JUMP_BOOST;2
-          - SLOW_FALLING;1
-        attributes:
-          - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.1
+    display:
+      name: '&#54C885B&#4FC88Cu&#49C892n&#44C899n&#3EC8A0y &#34C8ADC&#2EC8B4h&#29C8BBa&#23C8C1r&#1EC8C8m'
+      lore:
+        - ''
+        - '&#E8D5FFA pulsating charm that channels'
+        - '&#D5C2FFthe energy of swift creatures.'
+        - ''
+        - '&#98FB98Passive Effects (Off Hand):'
+        - '&#C0FFC0• Jump Boost II'
+        - '&#C0FFC0• Slow Falling I'
+        - '&#C0FFC0• +10% Knockback Resistance'
+      glow: true
+    passive_effects:
+      slots:
+        OFF_HAND:
+          potion_effects:
+            - JUMP_BOOST;2
+            - SLOW_FALLING;1
+          attributes:
+            - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.1
 
   miners_dream:
-    display_name: '&#CC513DM&#C65B3Ci&#BF663An&#B97039e&#B37A37r&#AC8536''&#A68F34s &#99A431D&#93AE30r&#8DB82Ee&#86C32Da&#80CD2Bm'
-    lore:
-      - '&#DAA520This legendary pickaxe hums with'
-      - '&#DAA520the very essence of the earth.'
-      - ''
-      - '&#00FF00Passive Effects (Main Hand):'
-      - '&#7FFF7F• SPEED II'
-      - '&#7FFF7F• +2 Attack Speed'
-      - '&#7FFF7F• Unbreakable'
-      - ''
-      - '&eActive (Right-Click - 10s CD):'
-      - '&6Super Mining Speed: &aHASTE III for 5s'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#DAA520Efficiency V, Unbreaking III'
     material: DIAMOND_PICKAXE
-    glow: true
-    active-mode:
-      enabled: true
-      cooldown: 10
-      duration: 5
-      commands:
-        - '[actionbar] &aHaste Burst Activated! (5s)'
-      effects:
-        potion_effects:
-          - HASTE;3
-    effects:
-      MAIN_HAND:
-        potion_effects:
-          - SPEED;2
-        attributes:
-          - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.2
     enchantments:
       - EFFICIENCY;5
       - UNBREAKING;3
     flags:
       UNBREAKABLE: true
+    display:
+      name: '&#CC513DM&#C65B3Ci&#BF663An&#B97039e&#B37A37r&#AC8536''&#A68F34s &#99A431D&#93AE30r&#8DB82Ee&#86C32Da&#80CD2Bm'
+      lore:
+        - ''
+        - '&#DAA520This legendary pickaxe hums with'
+        - '&#DAA520the very essence of the earth.'
+        - ''
+        - '&#00FF00Passive Effects (Main Hand):'
+        - '&#7FFF7F• SPEED II'
+        - '&#7FFF7F• +2 Attack Speed'
+        - '&#7FFF7F• Unbreakable'
+        - ''
+        - '&eActive (Right-Click - 10s CD):'
+        - '&6Super Mining Speed: &aHASTE III for 5s'
+        - ''
+        - '&#FFD700Enchantments:'
+        - '&#DAA520Efficiency V, Unbreaking III'
+      glow: true
+    passive_effects:
+      slots:
+        MAIN_HAND:
+          potion_effects:
+            - SPEED;2
+          attributes:
+            - GENERIC_ATTACK_SPEED;MULTIPLY_SCALAR_1;0.2
+    active_ability:
+      enabled: true
+      cooldown: 10
+      duration: 5
+      actions:
+        commands:
+          - '[actionbar] &aHaste Burst Activated! (5s)'
+        effects:
+          potion_effects:
+            - HASTE;3
+      visuals:
+        cast:
+          particles:
+            - type: EXPLOSION
+              shape: BURST
+              count: 40
+              speed: 0.15
+              offset_x: 0.0
+              offset_y: 0.0
+              offset_z: 0.0
+              mode: CONTINUOUS
+          title:
+            enabled: true
+          boss-bar:
+            title: '&#6bc26eS&#6dc473u&#6ec579p&#70c77ee&#72c983r &#75cc8eM&#77cd93i&#79cf98n&#7ad19di&#7cd2a3n&#7ed4a8g &#81d7b2S&#83d9b8p&#85dabde&#86dcc2e&#88dec7d &#8be1d2A&#8de3d7c&#8fe4dct&#90e6e2i&#92e7e7v&#94e9eca&#96ebf1t&#97ecf7e&#99eefcd'
+            color: BLUE
+            style: SOLID
+            enabled: true
 
   warriors_talisman:
-    display_name: '&#FF0000&oW&#FF0A00&oa&#FF1400&or&#FF1E00&or&#FF2800&oi&#FF3300&oo&#FF3D00&or&#FF4700&o''&#FF5100&os &#FF6500&oT&#FF6F00&oa&#FF7900&ol&#FF8400&oi&#FF8E00&os&#FF9800&om&#FFA200&oa&#FFAC00&on'
-    lore:
-      - '&#8B0000Forged in dragon''s fire, this talisman'
-      - '&#8B0000bolsters the wearer''s life force.'
-      - ''
-      - '&#FFB6C1Passive Effects (Inventory):'
-      - '&#FFB6C1• +4 Max Health (2 Hearts)'
-      - '&#FFB6C1• +1.0 Armor Toughness'
-      - '&#FFB6C1• Permanent Strength I'
-      - '&#FFB6C1• Regeneration II (Slow Heal)'
-      - ''
-      - '&#FFA500Permission: buffeditems.item.warrior'
     material: NETHERITE_INGOT
-    glow: true
     permission: buffeditems.item.warrior
-    effects:
-      INVENTORY:
-        potion_effects:
-          - STRENGTH;1
-          - REGENERATION;2
-        attributes:
-          - GENERIC_MAX_HEALTH;ADD_NUMBER;4.0
-          - GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0
+    display:
+      name: '&#FF0000&oW&#FF0A00&oa&#FF1400&or&#FF1E00&or&#FF2800&oi&#FF3300&oo&#FF3D00&or&#FF4700&o''&#FF5100&os &#FF6500&oT&#FF6F00&oa&#FF7900&ol&#FF8400&oi&#FF8E00&os&#FF9800&om&#FFA200&oa&#FFAC00&on'
+      lore:
+        - ''
+        - '&#8B0000Forged in dragon''s fire, this talisman'
+        - '&#8B0000bolsters the wearer''s life force.'
+        - ''
+        - '&#FFB6C1Passive Effects (Inventory):'
+        - '&#FFB6C1• +4 Max Health (2 Hearts)'
+        - '&#FFB6C1• +1.0 Armor Toughness'
+        - '&#FFB6C1• Permanent Strength I'
+        - '&#FFB6C1• Regeneration II (Slow Heal)'
+        - ''
+        - '&#FFA500Permission: buffeditems.item.warrior'
+      glow: true
+    passive_effects:
+      slots:
+        INVENTORY:
+          potion_effects:
+            - STRENGTH;1
+            - REGENERATION;2
+          attributes:
+            - GENERIC_MAX_HEALTH;ADD_NUMBER;4.0
+            - GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;1.0
+
   berserkers_greaves:
-    display_name: '&cBerserker Greaves'
-    lore:
-      - '&#FF0000Boots stained with the fury'
-      - '&#FF0000of countless battles.'
-      - ''
-      - '&#FFB6C1Passive Effects (Boots):'
-      - '&#FFB6C1• +20% Movement Speed'
-      - '&#FFB6C1• -1.0 Armor (Tradeoff)'
-      - '&#FFB6C1• Fire Resistance I'
-      - '&#FFB6C1• Speed II when worn'
-      - ''
-      - '&#FFD700Enchantments:'
-      - '&#FF6347Feather Falling IV, Protection III'
     material: NETHERITE_BOOTS
-    glow: true
-    effects:
-      BOOTS:
-        potion_effects:
-          - FIRE_RESISTANCE;1
-          - SPEED;2
-        attributes:
-          - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.2
-          - GENERIC_ARMOR;ADD_NUMBER;-1.0
     enchantments:
       - FEATHER_FALLING;4
       - PROTECTION;3
+    display:
+      name: '&cBerserker Greaves'
+      lore:
+        - ''
+        - '&#FF0000Boots stained with the fury'
+        - '&#FF0000of countless battles.'
+        - ''
+        - '&#FFB6C1Passive Effects (Boots):'
+        - '&#FFB6C1• +20% Movement Speed'
+        - '&#FFB6C1• -1.0 Armor (Tradeoff)'
+        - '&#FFB6C1• Fire Resistance I'
+        - '&#FFB6C1• Speed II when worn'
+        - ''
+        - '&#FFD700Enchantments:'
+        - '&#FF6347Feather Falling IV, Protection III'
+      glow: true
+    passive_effects:
+      slots:
+        BOOTS:
+          potion_effects:
+            - FIRE_RESISTANCE;1
+            - SPEED;2
+          attributes:
+            - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.2
+            - GENERIC_ARMOR;ADD_NUMBER;-1.0
+      visuals:
+        particles:
+          - type: FLAME
+            shape: CIRCLE
+            count: 1
+            offset_y: -0.75
+        sound:
+          sound: BLOCK_CHAIN_BREAK;1.0;1.0
+          enabled: true
 
   swiftness_boots:
-    display_name: '&#FFD700B&#FFE500o&#FFF700o&#E5FF00t&#CDFF00s &#B5FF00o&#9DFF00f &#85FF00S&#6DFF00w&#55FF00i&#3DFF00f&#25FF00t&#0DFF00n&#00FF15e&#00FF2Ds&#00FF45s'
-    lore:
-      - '&#87CEFDFeel the wind beneath your feet.'
-      - '&#87CEFDA sprinter''s dream.'
-      - ''
-      - '&#00FF00Passive Effects:'
-      - '&#00FF00• Speed III (Always Active)'
-      - '&#00FF00• +15% Movement Speed'
-      - '&#00FF00• Jump Boost I'
     material: IRON_BOOTS
-    glow: true
-    effects:
-      BOOTS:
-        potion_effects:
-          - SPEED;3
-          - JUMP_BOOST;1
-        attributes:
-          - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
+    display:
+      name: '&#FFD700B&#FFE500o&#FFF700o&#E5FF00t&#CDFF00s &#B5FF00o&#9DFF00f &#85FF00S&#6DFF00w&#55FF00i&#3DFF00f&#25FF00t&#0DFF00n&#00FF15e&#00FF2Ds&#00FF45s'
+      lore:
+        - ''
+        - '&#87CEFDFeel the wind beneath your feet.'
+        - '&#87CEFDA sprinter''s dream.'
+        - ''
+        - '&#00FF00Passive Effects:'
+        - '&#00FF00• Speed III (Always Active)'
+        - '&#00FF00• +15% Movement Speed'
+        - '&#00FF00• Jump Boost I'
+      glow: true
+    passive_effects:
+      slots:
+        BOOTS:
+          potion_effects:
+            - SPEED;3
+            - JUMP_BOOST;1
+          attributes:
+            - GENERIC_MOVEMENT_SPEED;MULTIPLY_SCALAR_1;0.15
+      visuals:
+        particles:
+          - type: CHERRY_LEAVES
+            shape: HELIX
+            count: 3
+            speed: 0.05
+            radius: 0.7
+            period: 40.0
+            offset_x: 0.0
+            offset_y: 0.0
+            offset_z: 0.0
+            mode: CONTINUOUS
+
+  phantom_kings_breastplate:
+    material: LEATHER_CHESTPLATE
+    display:
+      name: "&#9932CCP&#A73FD2h&#B54DD7a&#C45ADDn&#D267E3t&#E075E8o&#EE82EEm &#F089EAK&#F18CE8i&#F290E6n&#F393E4g&#F497E2'&#F59AE0s &#F7A1DDC&#F7A4DBh&#F8A8D9e&#F9ABD7s&#FAAFD5t&#FBB2D3p&#FCB6D1l&#FDB9CFa&#FEBDCDt&#FFC0CBe"
+      lore:
+        - ''
+        - '&7A relic from the fallen kingdom,'
+        - '&7bound to the soul of its wearer.'
+        - ''
+        - '&3&lPASSIVE AURA:'
+        - '&7- &fResistance II'
+        - '&7- &bSpeed I'
+        - '&7- &3Knockback Resistance'
+        - ''
+        - '&7&o"The abyss stares back..."'
+        - ''
+        - '&8&o1.7.0 Showcase Item'
+        - ''
+      color: '#0A0E14'
+      glow: true
+    flags:
+      HIDE_ENCHANTS: true
+      HIDE_DYE: true
+      HIDE_ATTRIBUTES: true
+    passive_effects:
+      attribute_mode: STATIC
+      visuals:
+        boss-bar:
+          enabled: true
+          mode: CONTINUOUS
+          title: '&#4B0082P&#483D8Bh&#6A5ACDa&#7B68EEn&#9370DBt&#8A2BE2o&#9400D3m &#9932CCK&#BA55D3i&#DA70D6n&#EE82EEg''&#FF00FFs &#E0B0FFP&#D8BFD8r&#DDA0DDot&#EE82EEe&#FF00FFc&#DA70D6t&#BA55D3i&#9932CCo&#9400D3n'
+          color: PURPLE
+          style: SEGMENTED_6
+        action-bar:
+          enabled: true
+          mode: CONTINUOUS
+          message: '&d&k|&r &5The spirits of the abyss guard you... &d&k|'
+          delay: 100
+          duration: 60
+        particles:
+          - type: SOUL_FIRE_FLAME
+            mode: CONTINUOUS
+            shape: HELIX
+            count: 2
+            speed: 0.02
+            radius: 0.9
+            period: 30.0
+            offset_y: 0.0
+          - type: DRAGON_BREATH
+            mode: CONTINUOUS
+            shape: CIRCLE
+            radius: 0.4
+            count: 3
+            offset_y: -0.5
+          - type: SOUL
+            mode: ON_EQUIP
+            shape: BURST
+            count: 25
+            speed: 0.2
+            offset_y: 1.0
+          - type: FLASH
+            mode: ON_EQUIP
+            shape: BURST
+            count: 1
+        sound:
+          sound: ENTITY_WITHER_SPAWN;1.0;1.0
+          volume: 0.4
+          pitch: 0.5
+          enabled: true
+          delay: 0
+      slots:
+        CHESTPLATE:
+          potion_effects:
+            - RESISTANCE;2
+            - SPEED;1
+            - NIGHT_VISION;1
+          attributes:
+            - GENERIC_ARMOR;ADD_NUMBER;12.0
+            - GENERIC_ARMOR_TOUGHNESS;ADD_NUMBER;5.0
+            - GENERIC_KNOCKBACK_RESISTANCE;ADD_NUMBER;0.5

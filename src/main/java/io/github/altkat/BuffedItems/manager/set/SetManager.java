@@ -100,11 +100,40 @@ public class SetManager {
                         if (count > items.size()) {
                             exceedingBonuses.add(count);
                             isValid = false;
-                            continue;
+                            // Do NOT continue here, allow the bonus to be loaded for editing
                         }
 
-                        BuffedItemEffect effects = parseEffects(bonusesSection.getConfigurationSection(countStr), setId, count, errors);
-                        bonuses.put(count, new SetBonus(count, effects));
+                        ConfigurationSection bonusSection = bonusesSection.getConfigurationSection(countStr);
+                        Map<PotionEffectType, Integer> potions = new HashMap<>();
+                        List<ParsedAttribute> attributes = new ArrayList<>();
+
+                        if (bonusSection != null) {
+                            for (String s : bonusSection.getStringList("potion_effects")) {
+                                try {
+                                    String[] parts = s.split(";");
+                                    PotionEffectType type = PotionEffectType.getByName(parts[0].toUpperCase());
+                                    if (type == null) throw new IllegalArgumentException("Invalid potion type: " + parts[0]);
+                                    potions.put(type, Integer.parseInt(parts[1]));
+                                } catch (Exception e) {
+                                    errors.add("Set Bonus (" + count + " pcs) Potion Error: " + e.getMessage() + " in '" + s + "'");
+                                }
+                            }
+
+                            for (String s : bonusSection.getStringList("attributes")) {
+                                try {
+                                    String[] parts = s.split(";");
+                                    Attribute attr = Attribute.valueOf(parts[0].toUpperCase());
+                                    AttributeModifier.Operation op = AttributeModifier.Operation.valueOf(parts[1].toUpperCase());
+                                    double amount = Double.parseDouble(parts[2]);
+                                    UUID uuid = UUID.nameUUIDFromBytes(("buffeditems.set." + setId + "." + count + "." + attr.name()).getBytes());
+                                    attributes.add(new ParsedAttribute(attr, op, amount, uuid));
+                                } catch (Exception e) {
+                                    errors.add("Set Bonus (" + count + " pcs) Attribute Error: " + e.getMessage() + " in '" + s + "'");
+                                }
+                            }
+                        }
+                        bonuses.put(count, new SetBonus(count, new BuffedItemEffect(potions, attributes)));
+
                     } catch (NumberFormatException e) {
                         errors.add("Invalid bonus key '" + countStr + "'. Must be a number.");
                         isValid = false;

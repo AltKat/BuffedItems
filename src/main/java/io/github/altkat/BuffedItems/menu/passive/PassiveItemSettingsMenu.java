@@ -41,12 +41,12 @@ public class PassiveItemSettingsMenu extends Menu {
         if (e.getSlot() == 8) {
             BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
             if (item != null) {
-                BuffedItem.AttributeMode current = item.getAttributeMode();
+                BuffedItem.AttributeMode current = item.getPassiveEffects().getAttributeMode();
                 BuffedItem.AttributeMode next = (current == BuffedItem.AttributeMode.STATIC)
                         ? BuffedItem.AttributeMode.DYNAMIC
                         : BuffedItem.AttributeMode.STATIC;
 
-                ConfigManager.setItemValue(item.getId(), "attribute_mode", next.name());
+                ConfigManager.setItemValue(item.getId(), "passive_effects.attribute_mode", next.name());
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                 this.open();
             }
@@ -55,6 +55,11 @@ public class PassiveItemSettingsMenu extends Menu {
 
         if (type == Material.BARRIER) {
             new ItemEditorMenu(playerMenuUtility, plugin).open();
+            return;
+        }
+
+        if (e.getSlot() == 13) {
+            new PassiveItemVisualsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
@@ -74,7 +79,7 @@ public class PassiveItemSettingsMenu extends Menu {
 
         BuffedItem item = plugin.getItemManager().getBuffedItem(itemId);
         if (item != null) {
-            BuffedItem.AttributeMode attrMode = item.getAttributeMode();
+            BuffedItem.AttributeMode attrMode = item.getPassiveEffects().getAttributeMode();
             String modeColor = (attrMode == BuffedItem.AttributeMode.DYNAMIC) ? "§b" : "§7";
             Material modeIcon = (attrMode == BuffedItem.AttributeMode.DYNAMIC) ? Material.GOLD_BLOCK : Material.IRON_BLOCK;
 
@@ -100,6 +105,15 @@ public class PassiveItemSettingsMenu extends Menu {
                 "",
                 "§7(Requires selecting a slot)",
                 "§eClick to Edit"));
+
+        inventory.setItem(13, makeItem(Material.GLOW_INK_SAC, "§dVisual Effects",
+                "§7Add visual feedback when this",
+                "§7item is held or worn.",
+                "",
+                "§7- BossBar, Action Bar",
+                "§7- Title Alerts, Sounds",
+                "",
+                "§eClick to Configure"));
 
         inventory.setItem(15, makeItem(Material.IRON_SWORD, "§bPassive Attributes",
                 "§7Add permanent stats like",

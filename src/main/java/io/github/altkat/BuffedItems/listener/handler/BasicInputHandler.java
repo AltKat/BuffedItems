@@ -14,37 +14,70 @@ public class BasicInputHandler implements ChatInputHandler {
 
     private final BuffedItems plugin;
     private static final Pattern PERMISSION_NODE_PATTERN = Pattern.compile("^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^#?[0-9a-fA-F]{6}$");
+
 
     public BasicInputHandler(BuffedItems plugin) {
         this.plugin = plugin;
     }
 
     @Override
+    public boolean shouldHandle(String path) {
+        // Exclude lore, which is handled by LoreInputHandler
+        if (path.startsWith("display.lore.")) {
+            return false;
+        }
+        return path.startsWith("display.") ||
+                path.equals("permission") ||
+                path.equals("active_ability.permission") ||
+                path.equals("passive_effects.permission") ||
+                path.equals("material.manual");
+    }
+
+    @Override
+    public void onCancel(Player player, PlayerMenuUtility pmu, String path) {
+        if (path.equals("permission") || path.equals("active_ability.permission") || path.equals("passive_effects.permission")) {
+            new PermissionSettingsMenu(pmu, plugin).open();
+        } else {
+            // display.* (name, color, custom-model-data) and material.manual
+            new ItemEditorMenu(pmu, plugin).open();
+        }
+    }
+
+    @Override
     public void handle(Player player, PlayerMenuUtility pmu, String input, String path, String itemId) {
         switch (path) {
-            case "display_name":
+            case "display.name":
                 handleDisplayNameEdit(player, pmu, input, itemId);
+                break;
+            case "display.color":
+                handleColorEdit(player, pmu, input, itemId);
                 break;
             case "permission":
                 handlePermissionEdit(player, pmu, input, itemId, "permission");
                 break;
-            case "active_permission":
-                handlePermissionEdit(player, pmu, input, itemId, "active_permission");
+            case "active_ability.permission":
+                handlePermissionEdit(player, pmu, input, itemId, "active_ability.permission");
                 break;
-            case "passive_permission":
-                handlePermissionEdit(player, pmu, input, itemId, "passive_permission");
+            case "passive_effects.permission":
+                handlePermissionEdit(player, pmu, input, itemId, "passive_effects.permission");
                 break;
             case "material.manual":
                 handleMaterialManualEdit(player, pmu, input, itemId);
                 break;
-            case "custom_model_data":
+            case "display.custom-model-data":
                 handleCustomModelDataEdit(player, pmu, input, itemId);
+                break;
+            default:
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown input path: " + path));
+                closeChatInput(pmu);
+                new ItemEditorMenu(pmu, plugin).open();
                 break;
         }
     }
 
     private void handleDisplayNameEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
-        ConfigManager.setItemValue(itemId, "display_name", input);
+        ConfigManager.setItemValue(itemId, "display.name", input);
         player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDisplay name has been updated!"));
         closeChatInput(pmu);
         new ItemEditorMenu(pmu, plugin).open();
@@ -53,12 +86,12 @@ public class BasicInputHandler implements ChatInputHandler {
     private void handlePermissionEdit(Player player, PlayerMenuUtility pmu, String input, String itemId, String configKey) {
         if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
             ConfigManager.setItemValue(itemId, configKey, null);
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey + " has been removed/reset."));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey.replace("active_ability.permission", "active permission").replace("passive_effects.permission", "passive permission") + " has been removed/reset."));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                     () -> "[BasicHandler] Removed " + configKey + " for " + itemId);
         } else if (isValidPermissionNode(input)) {
             ConfigManager.setItemValue(itemId, configKey, input);
-            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey + " has been set to: " + input));
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§a" + configKey.replace("active_ability.permission", "active permission").replace("passive_effects.permission", "passive permission") + " has been set to: " + input));
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                     () -> "[BasicHandler] Set " + configKey + " for " + itemId + " to: " + input);
         } else {
@@ -69,6 +102,27 @@ public class BasicInputHandler implements ChatInputHandler {
         }
         closeChatInput(pmu);
         new PermissionSettingsMenu(pmu, plugin).open();
+    }
+    
+    private void handleColorEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
+            ConfigManager.setItemValue(itemId, "display.color", null);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aArmor color has been removed."));
+        } else if (HEX_COLOR_PATTERN.matcher(input).matches()) {
+            String hex = input.startsWith("#") ? input : "#" + input;
+            ConfigManager.setItemValue(itemId, "display.color", hex);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aArmor color has been set to: §e" + hex));
+        } else {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid hex color code! Format must be #RRGGBB."));
+            player.sendMessage(ConfigManager.fromSection("§cYour input: §e" + input));
+            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("display.color");
+            return;
+        }
+
+        closeChatInput(pmu);
+        new ItemEditorMenu(pmu, plugin).open();
     }
 
     private void handleMaterialManualEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
@@ -89,7 +143,7 @@ public class BasicInputHandler implements ChatInputHandler {
 
     private void handleCustomModelDataEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
         if ("none".equalsIgnoreCase(input) || "remove".equalsIgnoreCase(input)) {
-            ConfigManager.setItemValue(itemId, "custom-model-data", null);
+            ConfigManager.setItemValue(itemId, "display.custom-model-data", null);
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCustom Model Data has been removed."));
             closeChatInput(pmu);
         } else {
@@ -98,12 +152,12 @@ public class BasicInputHandler implements ChatInputHandler {
                 if (directValue < 0) {
                     throw new NumberFormatException();
                 }
-                ConfigManager.setItemValue(itemId, "custom-model-data", directValue);
+                ConfigManager.setItemValue(itemId, "display.custom-model-data", directValue);
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCustom Model Data set to: §e" + directValue));
                 closeChatInput(pmu);
             } catch (NumberFormatException ex) {
                 if (input.contains(":")) {
-                    ConfigManager.setItemValue(itemId, "custom-model-data", input);
+                    ConfigManager.setItemValue(itemId, "display.custom-model-data", input);
                     player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCustom Model Data set to: §e" + input));
                     player.sendMessage(ConfigManager.fromSection("§7It will be resolved on next reload/save."));
                     closeChatInput(pmu);
@@ -114,7 +168,7 @@ public class BasicInputHandler implements ChatInputHandler {
                     player.sendMessage(ConfigManager.fromSection("§enexo:item_id"));
                     player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                     pmu.setWaitingForChatInput(true);
-                    pmu.setChatInputPath("custom_model_data");
+                    pmu.setChatInputPath("display.custom-model-data");
                     return;
                 }
             }

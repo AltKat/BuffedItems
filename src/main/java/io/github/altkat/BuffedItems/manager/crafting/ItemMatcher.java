@@ -34,7 +34,8 @@ public class ItemMatcher {
 
         switch (ingredient.getMatchType()) {
             case MATERIAL:
-                return true;
+                // Prevent using a BuffedItem when a generic MATERIAL is requested.
+                return !inputItem.hasItemMeta() || !inputItem.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING);
 
             case BUFFED_ITEM:
                 if (!inputItem.hasItemMeta()) return false;

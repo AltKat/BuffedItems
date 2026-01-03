@@ -42,6 +42,10 @@ public class CostManager {
         if (plugin.getHookManager().isVaultLoaded()) {
             registerFactory("MONEY", data -> new MoneyCost(data, plugin.getHookManager().getVaultHook()));
         }
+
+        if (plugin.getHookManager().isAuraSkillsLoaded()) {
+            registerFactory("AURASKILLS_MANA", data -> new AuraSkillsManaCost(data, plugin.getHookManager().getAuraSkillsHook()));
+        }
     }
 
     /**

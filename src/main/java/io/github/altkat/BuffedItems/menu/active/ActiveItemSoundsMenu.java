@@ -28,7 +28,7 @@ public class ActiveItemSoundsMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 36;
+        return 27;
     }
 
     @Override
@@ -38,29 +38,21 @@ public class ActiveItemSoundsMenu extends Menu {
 
         Material type = e.getCurrentItem().getType();
 
-        if (type == Material.BARRIER && e.getSlot() == 35) {
+        if (type == Material.BARRIER && e.getSlot() == 26) {
             new ActiveItemSettingsMenu(playerMenuUtility, plugin).open();
             return;
         }
 
-        if (e.getSlot() == 10) {
+        if (e.getSlot() == 11) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "success").open();
         }
 
-        else if (e.getSlot() == 12) {
+        else if (e.getSlot() == 13) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cost-fail").open();
         }
 
-        else if (e.getSlot() == 14) {
+        else if (e.getSlot() == 15) {
             new SoundSettingsMenu(playerMenuUtility, plugin, "cooldown").open();
-        }
-
-        else if (e.getSlot() == 16) {
-            new SoundSettingsMenu(playerMenuUtility, plugin, "depletion").open();
-        }
-
-        else if (e.getSlot() == 25) {
-            new SoundSettingsMenu(playerMenuUtility, plugin, "depleted-try").open();
         }
     }
 
@@ -71,28 +63,28 @@ public class ActiveItemSoundsMenu extends Menu {
 
         setFillerGlass();
 
-        String currSuccess = item.getCustomSuccessSound();
+        String currSuccess = item.getActiveAbility().getSounds().getSuccess();
         if (currSuccess == null) {
             currSuccess = "§a" + ConfigManager.getGlobalSuccessSound() + " §8(Default)";
         } else {
             currSuccess = "§a" + currSuccess;
         }
 
-        inventory.setItem(10, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
+        inventory.setItem(11, makeItem(Material.EXPERIENCE_BOTTLE, "§aSuccess Sound",
                 "§7Sound played on successful use.",
                 "§7Current: " + currSuccess,
                 "",
                 "§eClick to Change"));
 
 
-        String currCostFail = item.getCustomCostFailSound();
+        String currCostFail = item.getActiveAbility().getSounds().getCostFail();
         if (currCostFail == null) {
             currCostFail = "§6" + ConfigManager.getGlobalCostFailSound() + " §8(Default)";
         } else {
             currCostFail = "§6" + currCostFail;
         }
 
-        inventory.setItem(12, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
+        inventory.setItem(13, makeItem(Material.REDSTONE, "§6Cost Fail Sound",
                 "§7Sound played when a cost is not met.",
                 "§7Current: " + currCostFail,
                 "",
@@ -100,42 +92,19 @@ public class ActiveItemSoundsMenu extends Menu {
 
 
 
-        String currCool = item.getCustomCooldownSound();
+        String currCool = item.getActiveAbility().getSounds().getCooldown();
         if (currCool == null) {
             currCool = "§c" + ConfigManager.getGlobalCooldownSound() + " §8(Default)";
         } else {
             currCool = "§c" + currCool;
         }
 
-        inventory.setItem(14, makeItem(Material.ANVIL, "§cCooldown Sound",
+        inventory.setItem(15, makeItem(Material.ANVIL, "§cCooldown Sound",
                 "§7Sound played when on cooldown.",
                 "§7Current: " + currCool,
                 "",
                 "§eClick to Change"));
 
-        String currDepletion = item.getCustomDepletionSound();
-        if (currDepletion == null) {
-            currDepletion = "§5" + ConfigManager.getGlobalDepletionSound() + " §8(Default)";
-        } else {
-            currDepletion = "§5" + currDepletion;
-        }
-
-        inventory.setItem(16, makeItem(Material.JUKEBOX, "§5Depletion Sound",
-                "§7Sound played when item breaks/depletes.",
-                "§7Current: " + currDepletion,
-                "",
-                "§eClick to Change"));
-
-        String currTry = item.getCustomDepletedTrySound();
-        if (currTry == null) currTry = "§7" + ConfigManager.getGlobalDepletedTrySound() + " §8(Default)";
-        else currTry = "§7" + currTry;
-
-        inventory.setItem(25, makeItem(Material.DISPENSER, "§8Depleted Try Sound",
-                "§7Sound played when trying to use",
-                "§7an empty/depleted item.",
-                "§7Current: " + currTry,
-                "", "§eClick to Change"));
-
-        inventory.setItem(35, makeItem(Material.BARRIER, "§cBack"));
+        inventory.setItem(26, makeItem(Material.BARRIER, "§cBack"));
     }
 }

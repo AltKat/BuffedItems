@@ -59,13 +59,13 @@ public class CostListMenu extends Menu {
         }
 
         if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.BLACK_STAINED_GLASS_PANE) {
-            List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+            List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
             if (e.getSlot() >= costList.size()) return;
 
             // 1. DELETE (Right Click)
             if (e.getClick() == ClickType.RIGHT) {
                 costList.remove(e.getSlot());
-                ConfigManager.setItemValue(itemId, "costs", costList);
+                ConfigManager.setItemValue(itemId, "active_ability.costs", costList);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§cCost removed."));
                 this.open();
             }
@@ -73,7 +73,7 @@ public class CostListMenu extends Menu {
             else if (e.getClick() == ClickType.LEFT) {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setEditIndex(e.getSlot());
-                playerMenuUtility.setChatInputPath("active.costs.edit.amount");
+                playerMenuUtility.setChatInputPath("active_ability.costs.edit.amount");
                 p.closeInventory();
 
                 Map<?, ?> costData = costList.get(e.getSlot());
@@ -88,7 +88,7 @@ public class CostListMenu extends Menu {
             else if (e.getClick() == ClickType.SHIFT_LEFT) {
                 playerMenuUtility.setWaitingForChatInput(true);
                 playerMenuUtility.setEditIndex(e.getSlot());
-                playerMenuUtility.setChatInputPath("active.costs.edit.message");
+                playerMenuUtility.setChatInputPath("active_ability.costs.edit.message");
                 p.closeInventory();
 
                 Map<?, ?> costData = costList.get(e.getSlot());
@@ -103,6 +103,9 @@ public class CostListMenu extends Menu {
                 }
                 else if ("COINSENGINE".equals(type)) {
                     placeholders = "{amount}, {currency_name}";
+                }
+                else if ("AURASKILLS_MANA".equals(type)) {
+                    placeholders = "{amount}";
                 }
 
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEditing Failure Message."));
@@ -119,7 +122,7 @@ public class CostListMenu extends Menu {
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
         inventory.setItem(49, makeItem(Material.ANVIL, "§aAdd New Cost", "§7Add a requirement to use this item."));
 
-        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active-mode.costs");
+        List<Map<?, ?>> costList = ItemsConfig.get().getMapList("items." + itemId + ".active_ability.costs");
         int index = 0;
 
         for (Map<?, ?> costData : costList) {
@@ -168,7 +171,7 @@ public class CostListMenu extends Menu {
             if (bItem != null) {
                 displayItem = new ItemBuilder(bItem, plugin).build();
                 title = ConfigManager.fromSection("§f" + amountStr + "x ")
-                        .append(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                        .append(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
                 lore.add(ConfigManager.fromSection("§8Type: §#FF6347Buffed Item§#FFD700"));
                 lore.add(ConfigManager.fromSection("§8ID: §7" + bItemId));
             } else {
@@ -218,7 +221,21 @@ public class CostListMenu extends Menu {
                 lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
             }
 
-            // --- 5. GENERIC TYPES ---
+            // --- 5. AURASKILLS MANA ---
+        } else if ("AURASKILLS_MANA".equals(type)) {
+            if (!plugin.getHookManager().isAuraSkillsLoaded()) {
+                isError = true;
+                displayItem = new ItemStack(Material.BARRIER);
+                title = ConfigManager.fromSection("§cAura Skills Missing");
+                errorDetail = "Plugin not hooked!";
+            } else {
+                displayItem = new ItemStack(Material.LAPIS_LAZULI);
+                title = ConfigManager.fromSection("§bAuraSkills Mana");
+                lore.add(ConfigManager.fromSection("§8Type: §7AURASKILLS_MANA"));
+                lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+            }
+
+            // --- 6. GENERIC TYPES ---
         } else {
             Material iconMat = Material.PAPER;
             String name = type;

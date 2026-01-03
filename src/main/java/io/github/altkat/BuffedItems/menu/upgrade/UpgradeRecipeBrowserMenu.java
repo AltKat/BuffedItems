@@ -81,7 +81,7 @@ public class UpgradeRecipeBrowserMenu extends PaginatedMenu {
 
         if (resultItem != null) {
             icon = new ItemBuilder(resultItem, plugin).build();
-            resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getDisplayName()));
+            resultName = ConfigManager.toSection(ConfigManager.fromLegacy(resultItem.getItemDisplay().getDisplayName()));
         } else {
             icon = new ItemStack(Material.BARRIER);
             resultName = "§cUnknown Item";
@@ -99,7 +99,7 @@ public class UpgradeRecipeBrowserMenu extends PaginatedMenu {
             String bId = ((BuffedItemCost) recipe.getBaseCost()).getRequiredItemId();
             BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
             if (bItem != null) {
-                baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                baseName = ConfigManager.toSection(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
             } else {
                 baseName = bId;
             }

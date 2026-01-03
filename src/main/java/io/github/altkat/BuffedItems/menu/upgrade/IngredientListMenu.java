@@ -121,7 +121,7 @@ public class IngredientListMenu extends Menu {
             if (bItem != null) {
                 displayItem = new ItemBuilder(bItem, plugin).build();
                 title = ConfigManager.fromSection("§f" + amountStr + "x ")
-                        .append(ConfigManager.fromLegacy(bItem.getDisplayName()));
+                        .append(ConfigManager.fromLegacy(bItem.getItemDisplay().getDisplayName()));
             } else {
                 displayItem = new ItemStack(Material.BEDROCK);
                 title = ConfigManager.fromSection("§cUnknown Buffed Item: " + itemId);
@@ -130,7 +130,7 @@ public class IngredientListMenu extends Menu {
             lore.add(ConfigManager.fromSection("§8Type: §#FF6347Buffed Item§#FFD700"));
             lore.add(ConfigManager.fromSection("§8ID: §7" + itemId));
 
-            // --- 3. COINS ENGINE (NEW) ---
+            // --- 3. COINS ENGINE ---
         } else if ("COINSENGINE".equals(type)) {
             Object currObj = map.get("currency_id");
             String currencyId = (currObj != null) ? currObj.toString() : "coins";
@@ -153,7 +153,7 @@ public class IngredientListMenu extends Menu {
             lore.add(ConfigManager.fromSection("§8Currency ID: §e" + currencyId));
             lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
 
-            // --- 4. MONEY / VAULT (NEW) ---
+            // --- 4. MONEY / VAULT ---
         } else if ("MONEY".equals(type)) {
             if (plugin.getHookManager().getVaultHook() == null) {
                 displayItem = new ItemStack(Material.BEDROCK);
@@ -166,7 +166,20 @@ public class IngredientListMenu extends Menu {
             lore.add(ConfigManager.fromSection("§8Type: §7MONEY"));
             lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
 
-            // --- 5. GENERIC TYPES (XP, LEVEL, HUNGER, HEALTH) ---
+            // --- 5. AURASKILLS MANA ---
+        } else if ("AURASKILLS_MANA".equals(type)) {
+            if (!plugin.getHookManager().isAuraSkillsLoaded()) {
+                displayItem = new ItemStack(Material.BEDROCK);
+                title = ConfigManager.fromSection("§cAuraSkills Missing");
+                lore.add(ConfigManager.fromSection("§cPlugin is missing!"));
+            } else {
+                displayItem = new ItemStack(Material.LAPIS_LAZULI);
+                title = ConfigManager.fromSection("§bAurelium Mana");
+            }
+            lore.add(ConfigManager.fromSection("§8Type: §7AURASKILLS_MANA"));
+            lore.add(ConfigManager.fromSection("§8Amount: §e" + amountStr));
+
+            // --- 6. GENERIC TYPES (XP, LEVEL, HUNGER, HEALTH) ---
         } else {
             Material iconMat;
             String name;

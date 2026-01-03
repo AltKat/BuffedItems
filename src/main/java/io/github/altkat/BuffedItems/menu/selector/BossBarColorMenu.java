@@ -2,8 +2,10 @@ package io.github.altkat.BuffedItems.menu.selector;
 
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.menu.active.ActiveItemVisualsMenu;
+import io.github.altkat.BuffedItems.menu.active.ActiveCastBossBarSettingsMenu;
+import io.github.altkat.BuffedItems.menu.active.ActiveItemCooldownVisualsMenu;
 import io.github.altkat.BuffedItems.menu.base.Menu;
+import io.github.altkat.BuffedItems.menu.passive.BossBarSettingsMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
@@ -34,8 +36,19 @@ public class BossBarColorMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
         if (e.getCurrentItem().getType() == Material.BLACK_STAINED_GLASS_PANE) return;
+        
+        String mode = playerMenuUtility.getChatInputPath();
+        String configPath;
+        if ("passive_visuals".equals(mode)) {
+            configPath = "passive_effects.visuals.boss-bar.color";
+        } else if ("active_cast_visuals".equals(mode)) {
+            configPath = "active_ability.visuals.cast.boss-bar.color";
+        } else {
+            configPath = "active_ability.visuals.cooldown.boss-bar.color";
+        }
+
         if (e.getCurrentItem().getType() == Material.BARRIER) {
-            new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
+            openPrevious(mode);
             return;
         }
 
@@ -43,9 +56,19 @@ public class BossBarColorMenu extends Menu {
             String colorName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
             try {
                 BarColor color = BarColor.valueOf(colorName);
-                ConfigManager.setItemValue(itemId, "visuals.boss-bar-color", color.name());
-                new ActiveItemVisualsMenu(playerMenuUtility, plugin).open();
+                ConfigManager.setItemValue(itemId, configPath, color.name());
+                openPrevious(mode);
             } catch (IllegalArgumentException ignored) {}
+        }
+    }
+
+    private void openPrevious(String mode) {
+        if ("passive_visuals".equals(mode)) {
+            new BossBarSettingsMenu(playerMenuUtility, plugin).open();
+        } else if ("active_cast_visuals".equals(mode)) {
+            new ActiveCastBossBarSettingsMenu(playerMenuUtility, plugin).open();
+        } else {
+            new ActiveItemCooldownVisualsMenu(playerMenuUtility, plugin).open();
         }
     }
 

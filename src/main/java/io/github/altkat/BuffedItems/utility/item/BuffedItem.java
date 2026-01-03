@@ -1,151 +1,65 @@
 package io.github.altkat.BuffedItems.utility.item;
 
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
-import io.github.altkat.BuffedItems.manager.cost.ICost;
+import io.github.altkat.BuffedItems.utility.item.data.ActiveAbility;
+import io.github.altkat.BuffedItems.utility.item.data.ItemDisplay;
+import io.github.altkat.BuffedItems.utility.item.data.PassiveEffects;
+import io.github.altkat.BuffedItems.utility.item.data.UsageDetails;
+import io.github.altkat.BuffedItems.utility.item.data.visual.PassiveVisuals;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+
+import org.bukkit.enchantments.Enchantment;
 
 import java.util.*;
 
 public class BuffedItem {
     private final String id;
-    private final String displayName;
-    private final List<String> lore;
     private Material material;
-    private final boolean glow;
-    private final Map<String, BuffedItemEffect> effects;
     private final String permission;
-    private final String activePermission;
-    private final String passivePermission;
-    private final Map<Enchantment, Integer> enchantments;
-    private final Integer customModelData;
-    private final String customModelDataRaw;
-    private ItemStack cachedItem;
-
-    private final boolean activeMode;
-    private final int cooldown;
-    private final int maxUses;
-    private final String customUsageLore;
-    private final String customDepletedLore;
-    private final String customDepletedMessage;
-    private final String customDepletionNotification;
-    private String customDepletionTransformMessage;
-    private final int activeDuration;
-    private final List<String> activeCommands;
-    private final boolean visualChat;
-    private final boolean visualTitle;
-    private final boolean visualActionBar;
-    private final boolean visualBossBar;
-    private final String bossBarColor;
-    private final String bossBarStyle;
-    private final BuffedItemEffect activeEffects;
-    private final String customChatMsg;
-    private final String customTitleMsg;
-    private final String customSubtitleMsg;
-    private final String customActionBarMsg;
-    private final String customBossBarMsg;
-    private final String customSuccessSound;
-    private final String customCooldownSound;
-    private final String customCostFailSound;
-    private final String customDepletionSound;
-    private final String customDepletedTrySound;
-    private final DepletionAction depletionAction;
-    private final String depletionTransformId;
-    private final List<String> depletionCommands;
-    private final List<ICost> costs;
-    public enum AttributeMode { STATIC, DYNAMIC }
-    private final AttributeMode attributeMode;
     private final int updateHash;
     private final boolean hasPlaceholders;
 
+    private final ItemDisplay itemDisplay;
+    private final PassiveEffects passiveEffects;
+    private final PassiveVisuals passiveVisuals;
+    private final ActiveAbility activeAbility;
+    private final UsageDetails usageDetails;
+    private final Map<String, Boolean> flags;
+    private final Map<Enchantment, Integer> enchantments;
+
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
+    private ItemStack cachedItem;
 
-    private final Map<String, Boolean> flags;
+    public enum AttributeMode { STATIC, DYNAMIC }
 
-    public BuffedItem(String id, String displayName, List<String> lore, Material material,
-                      boolean glow, Map<String, BuffedItemEffect> effects, String permission,
-                      String activePermission, String passivePermission, Map<String, Boolean> flags,
-                      Map<Enchantment, Integer> enchantments, Integer customModelData, String customModelDataRaw,
-                      boolean activeMode, int cooldown, int maxUses, String customUsageLore, String customDepletedLore, String customDepletedMessage,
-                      String customDepletionNotification, String customDepletionTransformMessage, int activeDuration, List<String> activeCommands, boolean visualChat,
-                      boolean visualTitle, boolean visualActionBar, boolean visualBossBar, String bossBarColor,
-                      String bossBarStyle, BuffedItemEffect activeEffects, String customChatMsg, String customTitleMsg,
-                      String customSubtitleMsg, String customActionBarMsg, String customBossBarMsg, String customSuccessSound,
-                      String customCooldownSound, String customCostFailSound, String customDepletionSound, String customDepletedTrySound,
-                      DepletionAction depletionAction, String depletionTransformId, List<String> depletionCommands, AttributeMode attributeMode, List<ICost> costs, int updateHash, boolean hasPlaceholders) {
+    public BuffedItem(String id, Material material, String permission, int updateHash, boolean hasPlaceholders, ItemDisplay itemDisplay, PassiveEffects passiveEffects, PassiveVisuals passiveVisuals, ActiveAbility activeAbility, UsageDetails usageDetails, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
         this.id = id;
-        this.displayName = displayName;
-        this.lore = lore;
         this.material = material;
-        this.glow = glow;
-        this.effects = effects;
         this.permission = permission;
-        this.activePermission = activePermission;
-        this.passivePermission = passivePermission;
-        this.flags = (flags != null) ? flags : new HashMap<>();
-        this.enchantments = (enchantments != null) ? enchantments : new HashMap<>();
-        this.customModelData = customModelData;
-        this.customModelDataRaw = customModelDataRaw;
-        this.activeMode = activeMode;
-        this.cooldown = cooldown;
-        this.maxUses = maxUses;
-        this.activeDuration = activeDuration;
-        this.customUsageLore = customUsageLore;
-        this.customDepletedLore = customDepletedLore;
-        this.customDepletedMessage = customDepletedMessage;
-        this.customDepletionNotification = customDepletionNotification;
-        this.customDepletionTransformMessage = customDepletionTransformMessage;
-        this.activeCommands = (activeCommands != null) ? activeCommands : new ArrayList<>();
-        this.visualChat = visualChat;
-        this.visualTitle = visualTitle;
-        this.visualActionBar = visualActionBar;
-        this.visualBossBar = visualBossBar;
-        this.bossBarColor = bossBarColor;
-        this.bossBarStyle = bossBarStyle;
-        this.activeEffects = activeEffects;
-        this.customChatMsg = customChatMsg;
-        this.customTitleMsg = customTitleMsg;
-        this.customSubtitleMsg = customSubtitleMsg;
-        this.customActionBarMsg = customActionBarMsg;
-        this.customBossBarMsg = customBossBarMsg;
-        this.customSuccessSound = customSuccessSound;
-        this.customCooldownSound = customCooldownSound;
-        this.customCostFailSound = customCostFailSound;
-        this.customDepletionSound = customDepletionSound;
-        this.customDepletedTrySound = customDepletedTrySound;
-        this.depletionAction = depletionAction;
-        this.depletionTransformId = depletionTransformId;
-        this.depletionCommands = (depletionCommands != null) ? depletionCommands : new ArrayList<>();
-        this.attributeMode = attributeMode;
-        this.costs = (costs != null) ? costs : new ArrayList<>();
         this.updateHash = updateHash;
         this.hasPlaceholders = hasPlaceholders;
+        this.itemDisplay = itemDisplay;
+        this.passiveEffects = passiveEffects;
+        this.passiveVisuals = passiveVisuals;
+        this.activeAbility = activeAbility;
+        this.usageDetails = usageDetails;
+        this.flags = flags;
+        this.enchantments = enchantments;
     }
-
-
 
     private static final Set<String> DEFAULT_TRUE_FLAGS;
     static {
         DEFAULT_TRUE_FLAGS = new HashSet<>(Arrays.asList(
-                //"UNBREAKABLE",
                 "HIDE_ATTRIBUTES",
-                "HIDE_ENCHANTS",
                 "HIDE_UNBREAKABLE",
                 "HIDE_ADDITIONAL_TOOLTIP",
                 "HIDE_DESTROYS",
                 "HIDE_PLACED_ON",
                 "HIDE_ARMOR_TRIM",
-                //"PREVENT_ANVIL_USE",
-                //"PREVENT_ENCHANT_TABLE",
-                //"PREVENT_SMITHING_USE",
-                //"PREVENT_DROP",
-                //"PREVENT_CONSUME"
+                "HIDE_DYE",
                 "PREVENT_PLACEMENT"
-                //"PREVENT_DEATH_DROP",
-                //"PREVENT_INTERACT"
-                //"LOST_ON_DEATH"
         ));
     }
 
@@ -158,35 +72,57 @@ public class BuffedItem {
         return DEFAULT_TRUE_FLAGS.contains(id);
     }
 
+    public Map<String, Boolean> getFlags() {
+        return flags;
+    }
+    
+    public Map<Enchantment, Integer> getEnchantments() {
+        return enchantments;
+    }
+
     public String getId() {
         return id;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public List<String> getLore() {
-        return lore;
     }
 
     public Material getMaterial() {
         return material;
     }
 
-    public boolean hasGlow() {
-        return glow;
-    }
-
-    public Map<String, BuffedItemEffect> getEffects() {
-        return effects;
+    public void setMaterial(Material material) {
+        this.material = material;
     }
 
     public String getPermission() {
         return permission;
     }
-    public String getActivePermissionRaw() { return activePermission; }
-    public String getPassivePermissionRaw() { return passivePermission; }
+
+    public int getUpdateHash() {
+        return updateHash;
+    }
+
+    public boolean hasPlaceholders() {
+        return hasPlaceholders;
+    }
+
+    public ItemDisplay getItemDisplay() {
+        return itemDisplay;
+    }
+
+    public PassiveEffects getPassiveEffects() {
+        return passiveEffects;
+    }
+
+    public PassiveVisuals getPassiveVisuals() {
+        return passiveVisuals;
+    }
+
+    public ActiveAbility getActiveAbility() {
+        return activeAbility;
+    }
+
+    public UsageDetails getUsageDetails() {
+        return usageDetails;
+    }
 
     public boolean isValid() {
         return isValid;
@@ -201,113 +137,6 @@ public class BuffedItem {
         this.errorMessages.add(message);
     }
 
-    public Map<String, Boolean> getFlags() {
-        return flags;
-    }
-
-    public void setMaterial(Material material) {
-        this.material = material;
-    }
-
-    public Map<Enchantment, Integer> getEnchantments() {
-        return enchantments;
-    }
-
-    public Optional<Integer> getCustomModelData() {
-        return Optional.ofNullable(customModelData);
-    }
-
-    public Optional<String> getCustomModelDataRaw() {
-        return Optional.ofNullable(customModelDataRaw);
-    }
-
-    public boolean isActiveMode() {
-        return activeMode;
-    }
-
-    public int getCooldown() {
-        return cooldown;
-    }
-
-    public int getMaxUses() { return maxUses; }
-
-    public String getUsageLore(int currentUses) {
-        String format = (this.customUsageLore != null && !this.customUsageLore.isEmpty())
-                ? this.customUsageLore
-                : ConfigManager.getGlobalUsageLore();
-
-        return format
-                .replace("{remaining_uses}", String.valueOf(currentUses))
-                .replace("{total_uses}", String.valueOf(this.maxUses));
-    }
-
-    public String getDepletedLore() {
-        return (this.customDepletedLore != null && !this.customDepletedLore.isEmpty())
-                ? this.customDepletedLore
-                : ConfigManager.getGlobalDepletedLore();
-    }
-
-    public String getDepletedMessage() {
-        return (this.customDepletedMessage != null && !this.customDepletedMessage.isEmpty())
-                ? this.customDepletedMessage
-                : ConfigManager.getGlobalDepletedMessage();
-    }
-
-    public String getDepletionNotification() {
-        return (this.customDepletionNotification != null && !this.customDepletionNotification.isEmpty())
-                ? this.customDepletionNotification
-                : ConfigManager.getGlobalDepletionNotification();
-    }
-
-    public String getDepletionTransformMessage() {
-        return (this.customDepletionTransformMessage != null && !this.customDepletionTransformMessage.isEmpty())
-                ? this.customDepletionTransformMessage
-                : ConfigManager.getGlobalDepletionTransformMessage();
-    }
-
-    public int getActiveDuration() {
-        return activeDuration;
-    }
-
-    public List<String> getActiveCommands() {
-        return activeCommands;
-    }
-
-    public boolean isVisualChat() { return visualChat; }
-    public boolean isVisualTitle() { return visualTitle; }
-    public boolean isVisualActionBar() { return visualActionBar; }
-    public boolean isVisualBossBar() { return visualBossBar; }
-    public String getBossBarColor() { return bossBarColor; }
-    public String getBossBarStyle() { return bossBarStyle; }
-    public BuffedItemEffect getActiveEffects() {
-        return activeEffects;
-    }
-    public String getCustomChatMsg() { return customChatMsg; }
-    public String getCustomTitleMsg() { return customTitleMsg; }
-    public String getCustomSubtitleMsg() { return customSubtitleMsg; }
-    public String getCustomActionBarMsg() { return customActionBarMsg; }
-    public String getCustomBossBarMsg() { return customBossBarMsg; }
-    public String getCustomSuccessSound() { return customSuccessSound; }
-    public String getCustomCooldownSound() { return customCooldownSound; }
-    public String getCustomCostFailSound() { return customCostFailSound; }
-    public String getCustomDepletionSound() { return customDepletionSound; }
-    public String getCustomDepletedTrySound() { return customDepletedTrySound; }
-    public DepletionAction getDepletionAction() { return depletionAction; }
-    public String getDepletionTransformId() { return depletionTransformId; }
-    public List<String> getDepletionCommands() { return depletionCommands; }
-    public AttributeMode getAttributeMode() {
-        return attributeMode;
-    }
-    public List<ICost> getCosts() {
-        return costs;
-    }
-    public int getUpdateHash() {
-        return updateHash;
-    }
-    public boolean hasPlaceholders() {
-        return hasPlaceholders;
-    }
-
     public void setCachedItem(ItemStack cachedItem) {
         this.cachedItem = cachedItem;
     }
@@ -316,7 +145,24 @@ public class BuffedItem {
         return cachedItem;
     }
 
+    public String getUsageLore(int currentUses) {
+        String format = (usageDetails.getUsageLore() != null && !usageDetails.getUsageLore().isEmpty())
+                ? usageDetails.getUsageLore()
+                : ConfigManager.getGlobalUsageLore();
+
+        return format
+                .replace("{remaining_uses}", String.valueOf(currentUses))
+                .replace("{total_uses}", String.valueOf(usageDetails.getMaxUses()));
+    }
+
+    public String getDepletedLore() {
+        return (usageDetails.getDepletedLore() != null && !usageDetails.getDepletedLore().isEmpty())
+                ? usageDetails.getDepletedLore()
+                : ConfigManager.getGlobalDepletedLore();
+    }
+    
     public boolean hasActivePermission(org.bukkit.entity.Player player) {
+        String activePermission = activeAbility.getActivePermission();
         if (activePermission != null && !activePermission.equalsIgnoreCase("NONE")) {
             return player.hasPermission(activePermission);
         }
@@ -327,6 +173,7 @@ public class BuffedItem {
     }
 
     public boolean hasPassivePermission(org.bukkit.entity.Player player) {
+        String passivePermission = passiveEffects.getPassivePermission();
         if (passivePermission != null && !passivePermission.equalsIgnoreCase("NONE")) {
             return player.hasPermission(passivePermission);
         }

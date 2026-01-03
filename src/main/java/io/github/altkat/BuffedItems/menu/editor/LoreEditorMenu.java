@@ -48,7 +48,7 @@ public class LoreEditorMenu extends PaginatedMenu {
 
         if (e.getSlot() == 4) return;
 
-        List<String> lore = new ArrayList<>(item.getLore());
+        List<String> lore = new ArrayList<>(item.getItemDisplay().getLore());
 
         if (handlePageChange(e, lore.size())) return;
 
@@ -66,7 +66,7 @@ public class LoreEditorMenu extends PaginatedMenu {
                 return;
             }
             playerMenuUtility.setWaitingForChatInput(true);
-            playerMenuUtility.setChatInputPath("lore.add");
+            playerMenuUtility.setChatInputPath("display.lore.add");
             p.closeInventory();
             p.sendMessage(ConfigManager.fromLegacyWithPrefix("§aPlease type the new lore line in chat. Use '&' for color codes."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
@@ -80,7 +80,7 @@ public class LoreEditorMenu extends PaginatedMenu {
                 return;
             }
             lore.add("");
-            ConfigManager.setItemValue(item.getId(), "lore", lore);
+            ConfigManager.setItemValue(item.getId(), "display.lore", lore);
             this.open();
             return;
         }
@@ -95,13 +95,13 @@ public class LoreEditorMenu extends PaginatedMenu {
                 if (e.isLeftClick()) {
                     if (loreIndex <= 0) return;
                     Collections.swap(lore, loreIndex, loreIndex - 1);
-                    ConfigManager.setItemValue(item.getId(), "lore", lore);
+                    ConfigManager.setItemValue(item.getId(), "display.lore", lore);
                     this.open();
                 }
                 else if (e.isRightClick()) {
                     if (loreIndex >= lore.size() - 1) return;
                     Collections.swap(lore, loreIndex, loreIndex + 1);
-                    ConfigManager.setItemValue(item.getId(), "lore", lore);
+                    ConfigManager.setItemValue(item.getId(), "display.lore", lore);
                     this.open();
                 }
                 return;
@@ -109,13 +109,13 @@ public class LoreEditorMenu extends PaginatedMenu {
 
             if (e.isLeftClick()) {
                 playerMenuUtility.setWaitingForChatInput(true);
-                playerMenuUtility.setChatInputPath("lore." + loreIndex);
+                playerMenuUtility.setChatInputPath("display.lore." + loreIndex);
                 p.closeInventory();
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the edited lore line in chat."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
             } else if (e.isRightClick()) {
                 lore.remove(loreIndex);
-                ConfigManager.setItemValue(item.getId(), "lore", lore);
+                ConfigManager.setItemValue(item.getId(), "display.lore", lore);
                 this.open();
             }
         }
@@ -146,7 +146,7 @@ public class LoreEditorMenu extends PaginatedMenu {
             inventory.setItem(4, makeItem(Material.BARRIER, "§cPreview Unavailable", "§7Error building preview."));
         }
 
-        List<String> lore = item.getLore();
+        List<String> lore = item.getItemDisplay().getLore();
 
         if (!lore.isEmpty()) {
             for (int i = 0; i < maxItemsPerPage; i++) {

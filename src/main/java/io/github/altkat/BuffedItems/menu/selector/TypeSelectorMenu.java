@@ -49,6 +49,11 @@ public class TypeSelectorMenu extends Menu {
         String type = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
         Player p = (Player) e.getWhoClicked();
 
+        if (e.getCurrentItem().getType() == Material.GRAY_DYE) {
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§cThis feature requires a plugin that is not installed."));
+            return;
+        }
+
         if (type.equals("BUFFED_ITEM")) {
             BuffedItemSelectorMenu.SelectionContext buffedContext =
                     (context == MaterialSelectionContext.COST)
@@ -66,7 +71,7 @@ public class TypeSelectorMenu extends Menu {
         }
 
         String prefix = (context == MaterialSelectionContext.COST)
-                ? "active.costs.add."
+                ? "active_ability.costs.add."
                 : "upgrade.ingredients.add.";
 
         playerMenuUtility.setWaitingForChatInput(true);
@@ -88,7 +93,14 @@ public class TypeSelectorMenu extends Menu {
     @Override
     public void setMenuItems() {
         setFillerGlass();
-        inventory.setItem(10, makeItem(Material.GOLD_INGOT, "§aMONEY", "§7Vault Currency"));
+
+        // MONEY (Vault)
+        if (plugin.getHookManager().isVaultLoaded()) {
+            inventory.setItem(10, makeItem(Material.GOLD_INGOT, "§aMONEY", "§7Vault Currency"));
+        } else {
+            inventory.setItem(10, makeItem(Material.GRAY_DYE, "§7MONEY", "§cPlugin not installed", "§7Install Vault & Economy to use this feature."));
+        }
+
         inventory.setItem(11, makeItem(Material.EXPERIENCE_BOTTLE, "§aEXPERIENCE", "§7XP Points"));
         inventory.setItem(12, makeItem(Material.ENCHANTING_TABLE, "§aLEVEL", "§7XP Levels"));
         inventory.setItem(13, makeItem(Material.COOKED_BEEF, "§aHUNGER", "§7Food Level"));
@@ -96,8 +108,18 @@ public class TypeSelectorMenu extends Menu {
         inventory.setItem(15, makeItem(Material.CHEST, "§aITEM", "§7Physical Items"));
         inventory.setItem(16, makeItem(Material.NETHER_STAR, "§aBUFFED_ITEM", "§7Custom Buffed Items"));
 
+        // COINSENGINE
         if (plugin.getServer().getPluginManager().getPlugin("CoinsEngine") != null) {
             inventory.setItem(19, makeItem(Material.SUNFLOWER, "§aCOINSENGINE", "§7CoinsEngine Currency"));
+        } else {
+            inventory.setItem(19, makeItem(Material.GRAY_DYE, "§7COINSENGINE", "§cPlugin not installed", "§7Install CoinsEngine to use this feature."));
+        }
+
+        // AURASKILLS
+        if (plugin.getHookManager().isAuraSkillsLoaded()) {
+            inventory.setItem(20, makeItem(Material.LAPIS_LAZULI, "§aAURASKILLS_MANA", "§7AuraSkills Mana"));
+        } else {
+            inventory.setItem(20, makeItem(Material.GRAY_DYE, "§7AURASKILLS_MANA", "§cPlugin not installed", "§7Install AuraSkills to use this feature."));
         }
 
         inventory.setItem(31, makeItem(Material.BARRIER, "§cCancel"));
