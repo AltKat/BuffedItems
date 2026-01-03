@@ -12,12 +12,17 @@ public class NexoHook {
     }
 
     public Integer getCustomModelData(String itemId) {
+        ItemStack item = getItemStack(itemId);
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
+            return item.getItemMeta().getCustomModelData();
+        }
+        return null;
+    }
+
+    public ItemStack getItemStack(String itemId) {
         ItemBuilder builder = NexoItems.itemFromId(itemId);
         if (builder != null) {
-            ItemStack item = builder.build();
-            if (item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
-                return item.getItemMeta().getCustomModelData();
-            }
+            return builder.build();
         }
         return null;
     }

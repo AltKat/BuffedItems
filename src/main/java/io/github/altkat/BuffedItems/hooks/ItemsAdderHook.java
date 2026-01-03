@@ -11,12 +11,17 @@ public class ItemsAdderHook {
     }
 
     public Integer getCustomModelData(String itemId) {
+        ItemStack item = getItemStack(itemId);
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
+            return item.getItemMeta().getCustomModelData();
+        }
+        return null;
+    }
+
+    public ItemStack getItemStack(String itemId) {
         CustomStack stack = CustomStack.getInstance(itemId);
         if (stack != null) {
-            ItemStack item = stack.getItemStack();
-            if (item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
-                return item.getItemMeta().getCustomModelData();
-            }
+            return stack.getItemStack();
         }
         return null;
     }

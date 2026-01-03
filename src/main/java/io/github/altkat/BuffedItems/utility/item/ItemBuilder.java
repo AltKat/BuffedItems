@@ -33,7 +33,12 @@ public class ItemBuilder {
     public ItemBuilder(BuffedItem buffedItem, Plugin plugin) {
         this.buffedItem = buffedItem;
         this.plugin = plugin;
-        this.itemStack = new ItemStack(buffedItem.getMaterial());
+        
+        if (buffedItem.getBaseItem() != null) {
+            this.itemStack = buffedItem.getBaseItem().clone();
+        } else {
+            this.itemStack = new ItemStack(buffedItem.getMaterial());
+        }
     }
 
     public ItemStack build() {

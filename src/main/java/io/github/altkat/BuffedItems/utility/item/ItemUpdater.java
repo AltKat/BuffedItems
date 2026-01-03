@@ -171,10 +171,13 @@ public class ItemUpdater {
 
         // 8. Color for Leather Armor
         if (meta instanceof org.bukkit.inventory.meta.LeatherArmorMeta leatherMeta) {
-            template.getItemDisplay().getColor().ifPresentOrElse(
-                    leatherMeta::setColor,
-                    () -> leatherMeta.setColor(null) // Reset color if not specified
-            );
+            if (template.getItemDisplay().getColor().isPresent()) {
+                leatherMeta.setColor(template.getItemDisplay().getColor().get());
+            } else if (template.getBaseItem() != null && template.getBaseItem().getItemMeta() instanceof org.bukkit.inventory.meta.LeatherArmorMeta baseMeta) {
+                leatherMeta.setColor(baseMeta.getColor());
+            } else {
+                leatherMeta.setColor(null);
+            }
         }
 
         meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, template.getUpdateHash());

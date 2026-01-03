@@ -159,7 +159,14 @@ public class ItemManager {
         }
         Map<Enchantment, Integer> enchantments = parseEnchantments(itemSection, errorMessages);
 
-        ItemDisplay itemDisplay = parseDisplay(itemSection.getConfigurationSection("display"), itemId, errorMessages);
+        java.util.concurrent.atomic.AtomicReference<ItemStack> baseItemRef = new java.util.concurrent.atomic.AtomicReference<>();
+        ItemDisplay itemDisplay = parseDisplay(itemSection.getConfigurationSection("display"), itemId, errorMessages, baseItemRef);
+        
+        // Force material match if we have a base item from Nexo/ItemsAdder
+        if (baseItemRef.get() != null) {
+            material = baseItemRef.get().getType();
+        }
+
         PassiveEffects passiveEffects = parsePassiveEffects(itemSection.getConfigurationSection("passive_effects"), itemId, errorMessages);
         PassiveVisuals passiveVisuals = parsePassiveVisuals(itemSection.getConfigurationSection("passive_effects.visuals"), errorMessages);
         ActiveAbility activeAbility = parseActiveAbility(itemSection.getConfigurationSection("active_ability"), itemId, errorMessages);
@@ -220,7 +227,8 @@ public class ItemManager {
                 activeAbility,
                 usageDetails,
                 flags,
-                enchantments
+                enchantments,
+                baseItemRef.get()
         );
 
         for (String errorMsg : errorMessages) {
@@ -359,7 +367,7 @@ public class ItemManager {
         return enchantments;
     }
 
-    private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages) {
+    private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages, java.util.concurrent.atomic.AtomicReference<ItemStack> baseItemRef) {
         if (section == null) {
             return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null, null);
         }
@@ -402,6 +410,9 @@ public class ItemManager {
 
                 if (resolved != null) {
                     customModelData = resolved.getValue();
+                    if (resolved.getItemStack() != null) {
+                        baseItemRef.set(resolved.getItemStack());
+                    }
                 } else {
                     customModelData = null;
                     errorMessages.add("§cInvalid custom-model-data: '" + customModelDataRaw + "'");

@@ -31,10 +31,11 @@ public class BuffedItem {
     private boolean isValid = true;
     private final List<String> errorMessages = new ArrayList<>();
     private ItemStack cachedItem;
+    private final ItemStack baseItem;
 
     public enum AttributeMode { STATIC, DYNAMIC }
 
-    public BuffedItem(String id, Material material, String permission, int updateHash, boolean hasPlaceholders, ItemDisplay itemDisplay, PassiveEffects passiveEffects, PassiveVisuals passiveVisuals, ActiveAbility activeAbility, UsageDetails usageDetails, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
+    public BuffedItem(String id, Material material, String permission, int updateHash, boolean hasPlaceholders, ItemDisplay itemDisplay, PassiveEffects passiveEffects, PassiveVisuals passiveVisuals, ActiveAbility activeAbility, UsageDetails usageDetails, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments, ItemStack baseItem) {
         this.id = id;
         this.material = material;
         this.permission = permission;
@@ -47,6 +48,11 @@ public class BuffedItem {
         this.usageDetails = usageDetails;
         this.flags = flags;
         this.enchantments = enchantments;
+        this.baseItem = baseItem;
+    }
+
+    public BuffedItem(String id, Material material, String permission, int updateHash, boolean hasPlaceholders, ItemDisplay itemDisplay, PassiveEffects passiveEffects, PassiveVisuals passiveVisuals, ActiveAbility activeAbility, UsageDetails usageDetails, Map<String, Boolean> flags, Map<Enchantment, Integer> enchantments) {
+        this(id, material, permission, updateHash, hasPlaceholders, itemDisplay, passiveEffects, passiveVisuals, activeAbility, usageDetails, flags, enchantments, null);
     }
 
     private static final Set<String> DEFAULT_TRUE_FLAGS;
@@ -143,6 +149,10 @@ public class BuffedItem {
 
     public ItemStack getCachedItem() {
         return cachedItem;
+    }
+
+    public ItemStack getBaseItem() {
+        return baseItem;
     }
 
     public String getUsageLore(int currentUses) {
