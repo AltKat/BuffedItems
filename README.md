@@ -22,7 +22,7 @@
 
 > **Transform your server with Living Items, Passive Stats, and Dynamic Abilities.**
 
-**BuffedItems** is a powerful item engine that allows you to create unique custom items with persistent attributes, passive effects, and scripted active abilities all managed through a comprehensive **in-game GUI editor**.
+**BuffedItems** is a powerful item engine that allows you to create unique custom items with persistent attributes, passive effects, and scripted active abilities—all managed through a comprehensive **in-game GUI editor**.
 
 ***
 
@@ -32,6 +32,12 @@
 
 ### 🛠️ Core Features
 * **🖥️ Full In-Game GUI Editor:** Create, edit, and manage items without touching a single config file. Just type `/bi menu`.
+---
+* **🎨 Advanced Visuals Engine (v1.7.0):**
+    * **Particles:** Attach stunning shapes like **Helix, Vortex, Wings, Spheres, and Bursts** to your items.
+    * **Trigger Modes:** Play visuals **Passive** (while wearing/holding) or **Active** (on ability cast).
+    * **Priority System:** Smart handling for multiple continuous effects.
+---
 * **🛡️ Passive Effects:** Grant permanent stats based on where the item is held/worn (`MAIN_HAND`, `OFF_HAND`, `ARMOR`, `INVENTORY`).
     * **Potions:** Speed, Night Vision, Jump Boost, etc.
     * **Attributes:** +Max Health, +Attack Damage, +Movement Speed, +Armor Toughness, etc.
@@ -39,10 +45,9 @@
 * **⚡ Active Abilities & Scripting:**
     * Trigger complex command chains with a **Right-Click**.
     * **Logic System:** Use prefixes like `[chance:50]`, `[delay:20]`, and `[else]` to create RNG-based mechanics.
-    * **Actions:** Send messages, titles, play sounds, or execute console commands.
+    * **Internal Tags:** Use `[message]`, `[actionbar]`, `[title]`, and `[sound]` for faster, color-supported feedback.
 ---
-* **🔄 Live Item Updates:** Change an item's damage, lore, or name in the config, and players' existing items will **automatically update** the moment they are used or clicked.
-    * *Data Safety:* Custom Enchants, Anvil Names, and Usage Stats are **preserved** during updates.
+* **🔄 Live Item Updates:** Change an item's stats or visuals in the editor, and all existing items in players' inventories will **automatically update** the moment they are used.
 ---
 * **🔋 Usage Limits (Custom Durability):** Create items with a specific number of uses (independent of vanilla durability).
     * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
@@ -55,12 +60,12 @@
 ---
 * **🔨 Custom Crafting System:** 
   * Create custom shaped recipes (3x3) for your items directly in-game.
-  * **Advanced Ingredients:** Supports Vanilla materials, other BuffedItems, and **Exact NBT** items (Base64).
+  * **Advanced Ingredients:** Supports Vanilla materials, other BuffedItems, and **Exact NBT** items.
   * **Recipe Book:** Automatically registers your custom recipes to the vanilla green Recipe Book for easy crafting.
 ---
 * **💎 Advanced Cost System:**
     * Set requirements for using items or upgrading them.
-    * **Supports:** Money (Vault), CoinsEngine, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
+    * **Supports:** Money (Vault), CoinsEngine, AuraSkills Mana, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
 ---
 * **🆙 Upgrade Station:**
     * Allow players to evolve their items (e.g., *Rusty Sword* -> *Excalibur*).
@@ -77,11 +82,11 @@
   
 * **🎨 Visuals & Customization:**
     * Full **HEX Color** support (`&#RRGGBB`).
-    * **Custom Model Data** support for resource packs (ItemsAdder/Nexo friendly).
-    * **Cooldown Visuals:** BossBar, ActionBar, and Title countdowns.
     * **PAPI Placeholders:** Placeholders are accepted everywhere.
+    * **Leather Armor Dyeing:** Set exact colors using hex codes.
+    * **Custom Model Data** support (ItemsAdder/Nexo compatible).
 ---
-* 📚 For detailed guides on all features, visit the [BuffedItems Wiki](https://github.com/AltKat/BuffedItems/wiki).
+* 📚 For detailed guides, visit the [BuffedItems Wiki](https://github.com/AltKat/BuffedItems/wiki).
 ***
 
 <p align="center">
@@ -120,16 +125,11 @@
   <img src="https://altkat.github.io/buffeditems/how-it-works.jpg" alt="BuffedItems How it works Banner"/>
 </p>
 
-The plugin operates on a **dynamic, event-driven** architecture designed for performance and flexibility:
-
-1.  **Design in-Game**: Use `/bi menu` to create items. No config editing needed. You can attach **Passive Stats** (Attributes/Potions) and **Active Abilities** (Command Logic) to any item.
-2.  **Passive Engine**: The core task scans players' inventories efficiently. If a player equips a specific item in the correct slot (e.g., *Magma Boots* on feet), they instantly gain the configured effects. Unequip it, and the effects vanish.
-3.  **Active Triggers**: When a player right-clicks an **Active Item**:
-    * **Checks**: Cooldowns, Permissions, and Costs (Money, XP, Items) are verified.
-    * **Logic**: If checks pass, the item executes your command script (supports `[chance]`, `[delay]`, `[console]` logic).
-    * **Feedback**: Plays sounds, visuals, etc.
-4.  **Set Bonuses**: The plugin tracks how many items from a specific **Set** a player is wearing. As they equip more pieces (2/4, 3/4...), they unlock tiered bonuses automatically.
-5.  **Live Updates**: Changed a stat in the config? The moment a player uses or clicks their existing item, it **auto-updates** to the new version while preserving their custom enchantments and data.
+1.  **Design in-Game**: Use `/bi menu` to create items. No config editing needed.
+2.  **Passive Engine**: Automatically applies Potion Effects and Attributes based on the item's slot.
+3.  **Visual Engine**: Spawns complex particle shapes and manages BossBars/ActionBars based on item state.
+4.  **Active Triggers**: Executes scripted logic when an item is used, handling Cooldowns, Costs, and RNG.
+5.  **Live Updates**: Any changes made in the editor are pushed to existing items in real-time.
    
 * 📚 For detailed setup instructions and advanced configuration, see the [Getting Started section in the Wiki](https://github.com/AltKat/BuffedItems/wiki).
 ***
@@ -140,10 +140,7 @@ The plugin operates on a **dynamic, event-driven** architecture designed for per
 
 * **Custom Armor Textures**: This plugin only sets the `CustomModelData` tag. It does **not** manage resource packs or custom armor models. Wearable items (helmets, armor) using ItemsAdder/Nexo IDs will show the custom texture in the inventory, but will render as the **default material** (e.g., Diamond Helmet) when equipped on the player.
 * **Configuration Files**:
-    * `config.yml`: Contains general plugin settings (messages, debug level, etc.).
-    * `items.yml`: Stores all your custom items.
-    * `upgrades.yml`: Stores all your upgrade recipes.
-    * **Editing**: We recommend using the in-game GUI (`/bi menu`) as it handles everything for you instantly. However, you CAN edit these files manually if you prefer! Just run `/bi reload` afterwards to apply your manual changes.
+    * **Editing**: We recommend using the in-game GUI (`/bi menu`) as it handles everything for you instantly. However, you CAN edit yml files manually if you prefer! Just run `/bi reload` afterwards to apply your manual changes.
 ***
 
 <p align="center">
@@ -165,21 +162,21 @@ The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 | `/bi update`                           | `buffeditems.command.update`  | Checks for the latest update.                                       |
 
 **Admin Permission:**
-* `buffeditems.admin`: Grants access to all BuffedItems commands.
+* `buffeditems.admin`: Grants access to **ALL** BuffedItems commands listed above.
 
 **Item Permissions:**
-* You can define a custom permission (e.g., `myitems.warrior_perk`) inside the item editor. If set, a player must have this permission to receive the item's effects. See the [Wiki for permission details](https://github.com/AltKat/BuffedItems/wiki).
+You can define custom permissions inside the Item Editor:
+* **Main Permission:** Required to use/hold the item.
+* **Active Permission:** Required specifically for the Right-Click ability.
+* **Passive Permission:** Required specifically for the passive stats.
+* *Example:* `my.server.vip.sword`
+* See the [Wiki for permission details](https://github.com/AltKat/BuffedItems/wiki).
+***
 
 <p align="center">
   <img src="https://altkat.github.io/buffeditems/requirements.jpg" alt="BuffedItems Requirements Banner"/>
 </p>
 
-This plugin requires the **Paper API** and uses Paper-exclusive events (like `AsyncChatEvent` and `PlayerArmorChangeEvent`). It **will not work on Spigot**.
-
 * **Java 17** or newer
 * **Minecraft 1.21** or newer
-* Paper-based server software:
-    * **Paper** (Target platform)
-    * **Pufferfish** (Paper fork)
-    * **Purpur** (Paper fork)
-    * and others.
+* **Paper** or any Paper-based fork (Purpur, Pufferfish).
