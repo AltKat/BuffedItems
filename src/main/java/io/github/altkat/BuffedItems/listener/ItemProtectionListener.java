@@ -64,7 +64,6 @@ public class ItemProtectionListener implements Listener {
         plugin.getEffectApplicatorTask().getManagedEffects(player.getUniqueId())
                 .forEach(player::removePotionEffect);
 
-        List<ItemStack> keptItems = new ArrayList<>();
         Iterator<ItemStack> iterator = e.getDrops().iterator();
 
         while (iterator.hasNext()) {
@@ -78,32 +77,15 @@ public class ItemProtectionListener implements Listener {
 
             if (itemHasFlag(item, "PREVENT_DEATH_DROP")) {
                 iterator.remove();
-                keptItems.add(item);
+                e.getItemsToKeep().add(item);
             }
-        }
-
-        if (!keptItems.isEmpty()) {
-            plugin.getDeathKeptItems().put(e.getEntity().getUniqueId(), keptItems);
         }
     }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent e) {
         UUID playerUuid = e.getPlayer().getUniqueId();
-        Map<UUID, List<ItemStack>> itemsMap = plugin.getDeathKeptItems();
 
-        if (itemsMap.containsKey(playerUuid)) {
-            List<ItemStack> keptItems = itemsMap.get(playerUuid);
-
-            HashMap<Integer, ItemStack> didNotFit = e.getPlayer().getInventory().addItem(keptItems.toArray(new ItemStack[0]));
-
-            if (!didNotFit.isEmpty()) {
-                for (ItemStack item : didNotFit.values()) {
-                    e.getPlayer().getWorld().dropItemNaturally(e.getRespawnLocation(), item);
-                }
-            }
-            itemsMap.remove(playerUuid);
-        }
         org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_TASK, () -> "[RespawnListener] Player " + e.getPlayer().getName() + " respawned. Scheduling inventory update (1-tick delay).");
             plugin.getEffectApplicatorTask().markPlayerForUpdate(playerUuid);

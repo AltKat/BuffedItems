@@ -32,7 +32,6 @@ public class PlayerQuitListener implements Listener {
         int effectCount = effectsToClear.size();
         plugin.getEffectApplicatorTask().playerQuit(player);
         plugin.getActiveAttributeManager().clearPlayer(player.getUniqueId());
-        plugin.getDeathKeptItems().remove(player.getUniqueId());
         BuffedItems.removePlayerMenuUtility(player.getUniqueId());
         plugin.getInventoryChangeListener().clearPlayerData(player.getUniqueId());
 
