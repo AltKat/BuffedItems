@@ -61,12 +61,13 @@ public class CustomModelDataHandler {
             return null;
         }
 
-        Integer cmd = plugin.getHookManager().getItemsAdderHook().getCustomModelData(externalItemId);
+        org.bukkit.inventory.ItemStack item = plugin.getHookManager().getItemsAdderHook().getItemStack(externalItemId);
 
-        if (cmd != null) {
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
+            int cmd = item.getItemMeta().getCustomModelData();
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                     () -> "[CMD] Resolved ItemsAdder CMD for '" + buffedItemId + "': " + externalItemId + " -> " + cmd);
-            return new CustomModelData(cmd, rawValue, CustomModelData.Source.ITEMSADDER);
+            return new CustomModelData(cmd, rawValue, CustomModelData.Source.ITEMSADDER, item);
         }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
@@ -81,12 +82,13 @@ public class CustomModelDataHandler {
             return null;
         }
 
-        Integer cmd = plugin.getHookManager().getNexoHook().getCustomModelData(externalItemId);
+        org.bukkit.inventory.ItemStack item = plugin.getHookManager().getNexoHook().getItemStack(externalItemId);
 
-        if (cmd != null) {
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
+            int cmd = item.getItemMeta().getCustomModelData();
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_DETAILED,
                     () -> "[CMD] Resolved Nexo CMD for '" + buffedItemId + "': " + externalItemId + " -> " + cmd);
-            return new CustomModelData(cmd, rawValue, CustomModelData.Source.NEXO);
+            return new CustomModelData(cmd, rawValue, CustomModelData.Source.NEXO, item);
         }
 
         ConfigManager.sendDebugMessage(ConfigManager.DEBUG_INFO,
@@ -98,16 +100,23 @@ public class CustomModelDataHandler {
         private final int value;
         private final String rawValue;
         private final Source source;
+        private final org.bukkit.inventory.ItemStack itemStack;
 
         public CustomModelData(int value, String rawValue, Source source) {
+            this(value, rawValue, source, null);
+        }
+
+        public CustomModelData(int value, String rawValue, Source source, org.bukkit.inventory.ItemStack itemStack) {
             this.value = value;
             this.rawValue = rawValue;
             this.source = source;
+            this.itemStack = itemStack;
         }
 
         public int getValue() { return value; }
         public String getRawValue() { return rawValue; }
         public Source getSource() { return source; }
+        public org.bukkit.inventory.ItemStack getItemStack() { return itemStack; }
 
         public enum Source { DIRECT, ITEMSADDER, NEXO }
     }

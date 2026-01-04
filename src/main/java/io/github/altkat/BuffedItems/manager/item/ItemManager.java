@@ -159,7 +159,14 @@ public class ItemManager {
         }
         Map<Enchantment, Integer> enchantments = parseEnchantments(itemSection, errorMessages);
 
-        ItemDisplay itemDisplay = parseDisplay(itemSection.getConfigurationSection("display"), itemId, errorMessages);
+        java.util.concurrent.atomic.AtomicReference<ItemStack> baseItemRef = new java.util.concurrent.atomic.AtomicReference<>();
+        ItemDisplay itemDisplay = parseDisplay(itemSection.getConfigurationSection("display"), itemId, errorMessages, baseItemRef);
+        
+        // Force material match if we have a base item from Nexo/ItemsAdder
+        if (baseItemRef.get() != null) {
+            material = baseItemRef.get().getType();
+        }
+
         PassiveEffects passiveEffects = parsePassiveEffects(itemSection.getConfigurationSection("passive_effects"), itemId, errorMessages);
         PassiveVisuals passiveVisuals = parsePassiveVisuals(itemSection.getConfigurationSection("passive_effects.visuals"), errorMessages);
         ActiveAbility activeAbility = parseActiveAbility(itemSection.getConfigurationSection("active_ability"), itemId, errorMessages);
@@ -199,6 +206,7 @@ public class ItemManager {
                 itemDisplay.getLore().toString(),
                 itemDisplay.hasGlow(),
                 itemDisplay.getCustomModelData().orElse(-1),
+                itemDisplay.getDurability(),
                 itemDisplay.getColor().map(Color::asRGB).orElse(-1),
                 stableFlags.toString(),
                 stableEnchants.toString(),
@@ -220,7 +228,8 @@ public class ItemManager {
                 activeAbility,
                 usageDetails,
                 flags,
-                enchantments
+                enchantments,
+                baseItemRef.get()
         );
 
         for (String errorMsg : errorMessages) {
@@ -359,13 +368,14 @@ public class ItemManager {
         return enchantments;
     }
 
-    private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages) {
+    private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages, java.util.concurrent.atomic.AtomicReference<ItemStack> baseItemRef) {
         if (section == null) {
-            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null, null);
+            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null, 0, null);
         }
         String displayName = section.getString("name", "Default Name");
         List<String> lore = section.getStringList("lore");
         boolean glow = section.getBoolean("glow", false);
+        int durability = section.getInt("durability", 0);
         org.bukkit.Color color = null;
         String colorStr = section.getString("color");
         if (colorStr != null) {
@@ -402,6 +412,9 @@ public class ItemManager {
 
                 if (resolved != null) {
                     customModelData = resolved.getValue();
+                    if (resolved.getItemStack() != null) {
+                        baseItemRef.set(resolved.getItemStack());
+                    }
                 } else {
                     customModelData = null;
                     errorMessages.add("§cInvalid custom-model-data: '" + customModelDataRaw + "'");
@@ -414,7 +427,7 @@ public class ItemManager {
             customModelData = null;
         }
 
-        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw, color);
+        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw, durability, color);
     }
 
     private PassiveEffects parsePassiveEffects(ConfigurationSection section, String itemId, List<String> errorMessages) {

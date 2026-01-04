@@ -33,7 +33,12 @@ public class ItemBuilder {
     public ItemBuilder(BuffedItem buffedItem, Plugin plugin) {
         this.buffedItem = buffedItem;
         this.plugin = plugin;
-        this.itemStack = new ItemStack(buffedItem.getMaterial());
+        
+        if (buffedItem.getBaseItem() != null) {
+            this.itemStack = buffedItem.getBaseItem().clone();
+        } else {
+            this.itemStack = new ItemStack(buffedItem.getMaterial());
+        }
     }
 
     public ItemStack build() {
@@ -47,6 +52,10 @@ public class ItemBuilder {
         meta.lore(coloredLore);
 
         display.getCustomModelData().ifPresent(meta::setCustomModelData);
+
+        if (display.getDurability() > 0 && meta instanceof org.bukkit.inventory.meta.Damageable damageable) {
+            damageable.setDamage(display.getDurability());
+        }
 
         if (buffedItem.getFlag("UNBREAKABLE")) {
             meta.setUnbreakable(true);

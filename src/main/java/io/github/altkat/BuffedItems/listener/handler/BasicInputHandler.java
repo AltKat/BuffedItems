@@ -68,11 +68,31 @@ public class BasicInputHandler implements ChatInputHandler {
             case "display.custom-model-data":
                 handleCustomModelDataEdit(player, pmu, input, itemId);
                 break;
+            case "display.durability":
+                handleDurabilityEdit(player, pmu, input, itemId);
+                break;
             default:
                 player.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown input path: " + path));
                 closeChatInput(pmu);
                 new ItemEditorMenu(pmu, plugin).open();
                 break;
+        }
+    }
+
+    private void handleDurabilityEdit(Player player, PlayerMenuUtility pmu, String input, String itemId) {
+        try {
+            int value = Integer.parseInt(input);
+            if (value < 0) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cDurability damage cannot be negative."));
+                return;
+            }
+            ConfigManager.setItemValue(itemId, "display.durability", value);
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§aDurability damage set to: §e" + value));
+            closeChatInput(pmu);
+            new ItemEditorMenu(pmu, plugin).open();
+        } catch (NumberFormatException e) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number. Please enter a valid integer (e.g., 100)."));
+            player.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
         }
     }
 

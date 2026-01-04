@@ -42,7 +42,6 @@ public final class BuffedItems extends JavaPlugin {
     private ActiveAttributeManager activeAttributeManager;
     private EffectApplicatorTask effectApplicatorTask;
     private static final ConcurrentHashMap<UUID, PlayerMenuUtility> playerMenuUtilityMap = new ConcurrentHashMap<>();
-    private final Map<UUID, List<ItemStack>> deathKeptItems = new HashMap<>();
     private Metrics metrics;
     private InventoryListener inventoryListener;
     private UpdateHandler updateHandler;
@@ -360,9 +359,6 @@ public final class BuffedItems extends JavaPlugin {
     public EffectManager getEffectManager() { return effectManager; }
     public ActiveAttributeManager getActiveAttributeManager() { return activeAttributeManager; }
     public EffectApplicatorTask getEffectApplicatorTask() { return effectApplicatorTask; }
-    public Map<UUID, List<ItemStack>> getDeathKeptItems() {
-        return deathKeptItems;
-    }
     public static void removePlayerMenuUtility(UUID uuid) {
         if(playerMenuUtilityMap.containsKey(uuid)) {
             ConfigManager.sendDebugMessage(ConfigManager.DEBUG_VERBOSE, () -> "[Util] Removing PlayerMenuUtility for " + uuid);

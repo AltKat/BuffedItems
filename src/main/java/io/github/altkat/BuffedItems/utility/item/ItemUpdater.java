@@ -128,6 +128,13 @@ public class ItemUpdater {
         // 3. Custom Model Data
         template.getItemDisplay().getCustomModelData().ifPresent(meta::setCustomModelData);
 
+        // 3.5 Durability (Only update if Unbreakable is TRUE, effectively treating damage as cosmetic/texture ID)
+        if (template.getFlag("UNBREAKABLE")) {
+            if (meta instanceof org.bukkit.inventory.meta.Damageable damageable && template.getItemDisplay().getDurability() > 0) {
+                damageable.setDamage(template.getItemDisplay().getDurability());
+            }
+        }
+
         // 4. Enchantments (Sync with template)
         // First, clear existing enchants to ensure sync
         for (Enchantment ench : meta.getEnchants().keySet()) {
@@ -171,10 +178,13 @@ public class ItemUpdater {
 
         // 8. Color for Leather Armor
         if (meta instanceof org.bukkit.inventory.meta.LeatherArmorMeta leatherMeta) {
-            template.getItemDisplay().getColor().ifPresentOrElse(
-                    leatherMeta::setColor,
-                    () -> leatherMeta.setColor(null) // Reset color if not specified
-            );
+            if (template.getItemDisplay().getColor().isPresent()) {
+                leatherMeta.setColor(template.getItemDisplay().getColor().get());
+            } else if (template.getBaseItem() != null && template.getBaseItem().getItemMeta() instanceof org.bukkit.inventory.meta.LeatherArmorMeta baseMeta) {
+                leatherMeta.setColor(baseMeta.getColor());
+            } else {
+                leatherMeta.setColor(null);
+            }
         }
 
         meta.getPersistentDataContainer().set(versionKey, PersistentDataType.INTEGER, template.getUpdateHash());
