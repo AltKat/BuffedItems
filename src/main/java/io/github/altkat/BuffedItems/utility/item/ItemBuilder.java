@@ -53,6 +53,10 @@ public class ItemBuilder {
 
         display.getCustomModelData().ifPresent(meta::setCustomModelData);
 
+        if (display.getDurability() > 0 && meta instanceof org.bukkit.inventory.meta.Damageable damageable) {
+            damageable.setDamage(display.getDurability());
+        }
+
         if (buffedItem.getFlag("UNBREAKABLE")) {
             meta.setUnbreakable(true);
         }

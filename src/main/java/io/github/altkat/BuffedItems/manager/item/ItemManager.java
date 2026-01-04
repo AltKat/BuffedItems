@@ -206,6 +206,7 @@ public class ItemManager {
                 itemDisplay.getLore().toString(),
                 itemDisplay.hasGlow(),
                 itemDisplay.getCustomModelData().orElse(-1),
+                itemDisplay.getDurability(),
                 itemDisplay.getColor().map(Color::asRGB).orElse(-1),
                 stableFlags.toString(),
                 stableEnchants.toString(),
@@ -369,11 +370,12 @@ public class ItemManager {
 
     private ItemDisplay parseDisplay(ConfigurationSection section, String itemId, List<String> errorMessages, java.util.concurrent.atomic.AtomicReference<ItemStack> baseItemRef) {
         if (section == null) {
-            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null, null);
+            return new ItemDisplay("Default Name", new ArrayList<>(), false, null, null, 0, null);
         }
         String displayName = section.getString("name", "Default Name");
         List<String> lore = section.getStringList("lore");
         boolean glow = section.getBoolean("glow", false);
+        int durability = section.getInt("durability", 0);
         org.bukkit.Color color = null;
         String colorStr = section.getString("color");
         if (colorStr != null) {
@@ -425,7 +427,7 @@ public class ItemManager {
             customModelData = null;
         }
 
-        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw, color);
+        return new ItemDisplay(displayName, lore, glow, customModelData, customModelDataRaw, durability, color);
     }
 
     private PassiveEffects parsePassiveEffects(ConfigurationSection section, String itemId, List<String> errorMessages) {

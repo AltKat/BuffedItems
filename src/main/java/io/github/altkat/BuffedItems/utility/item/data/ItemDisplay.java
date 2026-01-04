@@ -10,14 +10,16 @@ public class ItemDisplay {
     private final boolean glow;
     private final Integer customModelData;
     private final String customModelDataRaw;
+    private final int durability;
     private final Color color;
 
-    public ItemDisplay(String displayName, List<String> lore, boolean glow, Integer customModelData, String customModelDataRaw, Color color) {
+    public ItemDisplay(String displayName, List<String> lore, boolean glow, Integer customModelData, String customModelDataRaw, int durability, Color color) {
         this.displayName = displayName;
         this.lore = lore;
         this.glow = glow;
         this.customModelData = customModelData;
         this.customModelDataRaw = customModelDataRaw;
+        this.durability = durability;
         this.color = color;
     }
 
@@ -39,6 +41,10 @@ public class ItemDisplay {
 
     public Optional<String> getCustomModelDataRaw() {
         return Optional.ofNullable(customModelDataRaw);
+    }
+
+    public int getDurability() {
+        return durability;
     }
     
     public Optional<Color> getColor() {

@@ -116,6 +116,14 @@ public class ItemEditorMenu extends Menu {
                 p.sendMessage(ConfigManager.fromSection("§7Type §6'none'§7 or §6'remove'§7 to clear."));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
                 break;
+            case ANVIL:
+                playerMenuUtility.setWaitingForChatInput(true);
+                playerMenuUtility.setChatInputPath("display.durability");
+                p.closeInventory();
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Durability Damage:"));
+                p.sendMessage(ConfigManager.fromSection("§7Enter '0' to make it pristine."));
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+                break;
             case CHEST_MINECART:
                 new PassiveItemSettingsMenu(playerMenuUtility, plugin).open();
                 break;
@@ -245,6 +253,11 @@ public class ItemEditorMenu extends Menu {
             inventory.setItem(29, makeItem(Material.GRAY_DYE, "§7Dye Armor Color", "§cNot Applicable", "§7This option is only available", "§7for Leather Armor items."));
         }
 
+        inventory.setItem(30, makeItem(Material.ANVIL, "§7Set Durability (Damage)",
+                "§7Current: §e" + item.getItemDisplay().getDurability(),
+                "§7Set how much damage/usage",
+                "§7the item starts with."));
+
         addBackButton(new ItemListMenu(playerMenuUtility, plugin));
         setFillerGlass();
     }
@@ -255,6 +268,9 @@ public class ItemEditorMenu extends Menu {
 
         infoLore.add(ConfigManager.fromSection("§7Item ID: §b" + item.getId()));
         infoLore.add(ConfigManager.fromSection("§7Material: §f" + item.getMaterial().name()));
+        if (item.getItemDisplay().getDurability() > 0) {
+            infoLore.add(ConfigManager.fromSection("§7Durability (Damage): §e" + item.getItemDisplay().getDurability()));
+        }
 
         String glowStatus = item.getItemDisplay().hasGlow() ? "§aYes" : "§cNo";
         infoLore.add(ConfigManager.fromSection("§7Glow: " + glowStatus));

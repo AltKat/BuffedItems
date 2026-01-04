@@ -128,6 +128,13 @@ public class ItemUpdater {
         // 3. Custom Model Data
         template.getItemDisplay().getCustomModelData().ifPresent(meta::setCustomModelData);
 
+        // 3.5 Durability (Only update if Unbreakable is TRUE, effectively treating damage as cosmetic/texture ID)
+        if (template.getFlag("UNBREAKABLE")) {
+            if (meta instanceof org.bukkit.inventory.meta.Damageable damageable && template.getItemDisplay().getDurability() > 0) {
+                damageable.setDamage(template.getItemDisplay().getDurability());
+            }
+        }
+
         // 4. Enchantments (Sync with template)
         // First, clear existing enchants to ensure sync
         for (Enchantment ench : meta.getEnchants().keySet()) {
