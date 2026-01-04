@@ -1,5 +1,5 @@
+<h1 align="center">⚔️ BuffedItems - Item Engine 🛡️</h1>
 <p align="center">
-  <img src="https://altkat.github.io/buffeditems/banner-main.jpg" alt="BuffedItems Banner"/>
   <br/>
   <img src="https://img.shields.io/badge/MC-1.21+-green?style=for-the-badge&logo=minecraft" alt="Minecraft 1.21+" />
   <img src="https://img.shields.io/badge/Java-17+-blueviolet?style=for-the-badge&logo=openjdk" alt="Java 17+" />
@@ -18,7 +18,6 @@
   </a>
 </p>
 
-<h1 align="center">⚔️ BuffedItems - Item Engine 🛡️</h1>
 
 > **Transform your server with Living Items, Passive Stats, and Dynamic Abilities.**
 
@@ -37,39 +36,79 @@
     * **Particles:** Attach stunning shapes like **Helix, Vortex, Wings, Spheres, and Bursts** to your items.
     * **Trigger Modes:** Play visuals **Passive** (while wearing/holding) or **Active** (on ability cast).
     * **Priority System:** Smart handling for multiple continuous effects.
+      
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/particle_cherry.gif" alt="BuffedItems Cherry Particle"/>
+</p>
+
 ---
 * **🛡️ Passive Effects:** Grant permanent stats based on where the item is held/worn (`MAIN_HAND`, `OFF_HAND`, `ARMOR`, `INVENTORY`).
     * **Potions:** Speed, Night Vision, Jump Boost, etc.
     * **Attributes:** +Max Health, +Attack Damage, +Movement Speed, +Armor Toughness, etc.
+
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" alt="BuffedItems Passive Effects"/>
+</p>
+  
 ---
 * **⚡ Active Abilities & Scripting:**
     * Trigger complex command chains with a **Right-Click**.
     * **Logic System:** Use prefixes like `[chance:50]`, `[delay:20]`, and `[else]` to create RNG-based mechanics.
     * **Internal Tags:** Use `[message]`, `[actionbar]`, `[title]`, and `[sound]` for faster, color-supported feedback.
+ 
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/identifyscrol.gif" alt="BuffedItems Active Abilities"/>
+</p>
+      
 ---
 * **🔄 Live Item Updates:** Change an item's stats or visuals in the editor, and all existing items in players' inventories will **automatically update** the moment they are used.
 ---
 * **🔋 Usage Limits (Custom Durability):** Create items with a specific number of uses (independent of vanilla durability).
     * **Actions:** Choose what happens when depleted: `DESTROY`, `DISABLE` (Mark as depleted), or `TRANSFORM` (into another item).
     * **Feedback:** Custom sounds and messages for depletion events.
+
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/usage_limit_system.png" alt="BuffedItems Usage Limits"/>
+</p>
+  
 ---
 * **🆕 Item Set Bonuses:** Create RPG-style armor sets!
     * Combine specific items (Helmet, Chestplate, Sword, etc.) to unlock **Tiered Bonuses**.
     * **Example:** "Wear 2 pieces for Speed I, wear 4 pieces for +10 Health."
     * Manage sets entirely via the **In-Game GUI** (`/bi menu` -> Item Sets).
+ 
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/set_system.png" alt="BuffedItems Set System"/>
+</p>
+      
 ---
 * **🔨 Custom Crafting System:** 
   * Create custom shaped recipes (3x3) for your items directly in-game.
   * **Advanced Ingredients:** Supports Vanilla materials, other BuffedItems, and **Exact NBT** items.
   * **Recipe Book:** Automatically registers your custom recipes to the vanilla green Recipe Book for easy crafting.
+
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/enchanted_carrot_craft.png" alt="BuffedItems Custom Crafting"/>
+</p>
+
 ---
 * **💎 Advanced Cost System:**
     * Set requirements for using items or upgrading them.
     * **Supports:** Money (Vault), CoinsEngine, AuraSkills Mana, XP, Levels, Health, Hunger, Vanilla Items, and Custom BuffedItems.
+
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/cost_system.gif" alt="BuffedItems Cost System"/>
+</p>
+      
 ---
 * **🆙 Upgrade Station:**
     * Allow players to evolve their items (e.g., *Rusty Sword* -> *Excalibur*).
     * Configure **Success Rates**, **Risk Factors** (Lose item on fail?), and **Failure Actions**.
+ 
+<p align="center">
+  <img src="https://altkat.github.io/buffeditems/images/upgrade_system.gif" alt="BuffedItems Upgrade Station"/>
+</p>
+
 ---
 * **🚩 Item Flags & Protections**:
     * **PREVENT_DEATH_DROP (Soulbound):** Item stays with player on death.
@@ -91,7 +130,6 @@
 
 <p align="center">
   <img src="https://altkat.github.io/buffeditems/images.jpg" alt="BuffedItems Images Section Banner"/>
-  <img src="https://altkat.github.io/buffeditems/images/warrior_talisman.gif" width="720" alt="Warrior's Talisman"/>
 </p>
 <details>
 <summary><b>📸 Click to view In-Game Screenshots</b></summary>
