@@ -176,7 +176,6 @@
   <img src="https://altkat.github.io/buffeditems/important-notes.jpg" alt="BuffedItems Important Notes Banner"/>
 </p>
 
-* **Custom Armor Textures**: This plugin only sets the `CustomModelData` tag. It does **not** manage resource packs or custom armor models. Wearable items (helmets, armor) using ItemsAdder/Nexo IDs will show the custom texture in the inventory, but will render as the **default material** (e.g., Diamond Helmet) when equipped on the player.
 * **Configuration Files**:
     * **Editing**: We recommend using the in-game GUI (`/bi menu`) as it handles everything for you instantly. However, you CAN edit yml files manually if you prefer! Just run `/bi reload` afterwards to apply your manual changes.
 ***
