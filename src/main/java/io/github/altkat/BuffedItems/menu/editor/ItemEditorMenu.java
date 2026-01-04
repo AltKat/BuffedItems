@@ -96,6 +96,7 @@ public class ItemEditorMenu extends Menu {
                 }
                 break;
             case GRASS_BLOCK:
+                playerMenuUtility.setMaterialContext(PlayerMenuUtility.MaterialSelectionContext.ICON);
                 new MaterialSelectorMenu(playerMenuUtility, plugin).open();
                 break;
             case REDSTONE_TORCH:
