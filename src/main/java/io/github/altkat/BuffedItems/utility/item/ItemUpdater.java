@@ -135,15 +135,11 @@ public class ItemUpdater {
             }
         }
 
-        // 4. Enchantments (Sync with template)
-        // First, clear existing enchants to ensure sync
-        for (Enchantment ench : meta.getEnchants().keySet()) {
-            meta.removeEnchant(ench);
-        }
-        
-        boolean hasRealEnchants = !template.getEnchantments().isEmpty();
-        
-        if (hasRealEnchants) {
+        // 4. Enchantments
+        // We do NOT clear existing enchantments to preserve player-added ones.
+        boolean templateHasEnchants = !template.getEnchantments().isEmpty();
+
+        if (templateHasEnchants) {
             for (Map.Entry<Enchantment, Integer> entry : template.getEnchantments().entrySet()) {
                 meta.addEnchant(entry.getKey(), entry.getValue(), true);
             }
@@ -152,10 +148,12 @@ public class ItemUpdater {
         // 5. Unbreakable
         meta.setUnbreakable(template.getFlag("UNBREAKABLE"));
 
-        // Glow Logic (Synced with ItemBuilder)
+        // Glow Logic
+        boolean dummyEnchantAdded = false;
         if (template.getItemDisplay().hasGlow()) {
-            if (!hasRealEnchants) {
+            if (!meta.hasEnchants()) {
                 meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
+                dummyEnchantAdded = true;
             }
         }
 
@@ -165,7 +163,7 @@ public class ItemUpdater {
         ItemUtils.applyAttributes(template, meta);
 
         // 7. Flags
-        if (template.getFlag("HIDE_ENCHANTS") || (template.getItemDisplay().hasGlow() && !hasRealEnchants)) {
+        if (template.getFlag("HIDE_ENCHANTS") || dummyEnchantAdded) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
         if (template.getFlag("HIDE_ATTRIBUTES")) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

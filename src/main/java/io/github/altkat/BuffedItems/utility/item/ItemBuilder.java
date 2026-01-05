@@ -61,23 +61,25 @@ public class ItemBuilder {
             meta.setUnbreakable(true);
         }
 
-        boolean hasRealEnchants = !buffedItem.getEnchantments().isEmpty();
+        boolean templateHasEnchants = !buffedItem.getEnchantments().isEmpty();
 
-        if (hasRealEnchants) {
+        if (templateHasEnchants) {
             for (Map.Entry<Enchantment, Integer> entry : buffedItem.getEnchantments().entrySet()) {
                 meta.addEnchant(entry.getKey(), entry.getValue(), true);
             }
         }
 
+        boolean dummyEnchantAdded = false;
         if (display.hasGlow()) {
-            if (!hasRealEnchants) {
+            if (!meta.hasEnchants()) {
                 meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
+                dummyEnchantAdded = true;
             }
         }
 
         ItemUtils.applyAttributes(buffedItem, meta);
 
-        if (buffedItem.getFlag("HIDE_ENCHANTS") || (display.hasGlow() && !hasRealEnchants)) {
+        if (buffedItem.getFlag("HIDE_ENCHANTS") || dummyEnchantAdded) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
         if (buffedItem.getFlag("HIDE_ATTRIBUTES")) {
