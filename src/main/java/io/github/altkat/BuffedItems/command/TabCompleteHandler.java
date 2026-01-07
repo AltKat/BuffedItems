@@ -35,6 +35,7 @@ public class TabCompleteHandler implements TabCompleter {
             if (sender.hasPermission("buffeditems.command.menu")) {subcommands.add("menu");}
             if (sender.hasPermission("buffeditems.command.wiki")) subcommands.add("wiki");
             if (sender.hasPermission("buffeditems.command.update")) subcommands.add("update");
+            if (sender.hasPermission("buffeditems.command.bypass")) subcommands.add("bypass");
             if (sender.hasPermission("buffeditems.command.upgrade")) {
                 if (UpgradesConfig.get().getBoolean("settings.enabled", true)) {
                     subcommands.add("upgrade");

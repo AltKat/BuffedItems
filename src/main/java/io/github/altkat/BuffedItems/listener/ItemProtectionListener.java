@@ -112,6 +112,17 @@ public class ItemProtectionListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.LOW)
+    public void onEntityInteract(PlayerInteractEntityEvent e) {
+        Player player = e.getPlayer();
+        ItemStack item = player.getInventory().getItem(e.getHand());
+
+        if (itemHasFlag(item, "PREVENT_INTERACT")) {
+            e.setCancelled(true);
+            sendProtectionMessage(player, "protection-prevent-interact");
+        }
+    }
+
     @EventHandler
     public void onEntityPlace(PlayerInteractEvent e) {
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getItem() == null) {
@@ -269,6 +280,11 @@ public class ItemProtectionListener implements Listener {
     private void sendProtectionMessage(Player p, String key) {
         String rawMsg = plugin.getConfig().getString("messages." + key);
         if (rawMsg == null) rawMsg = "&cAction blocked.";
+
+        if (rawMsg.isEmpty() || rawMsg.equalsIgnoreCase("NONE")) {
+            return;
+        }
+
         String parsedMsg = plugin.getHookManager().processPlaceholders(p, rawMsg);
         p.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedMsg));
     }

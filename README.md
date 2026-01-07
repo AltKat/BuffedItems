@@ -55,6 +55,7 @@
     * Trigger complex command chains with a **Right-Click**.
     * **Logic System:** Use prefixes like `[chance:50]`, `[delay:20]`, and `[else]` to create RNG-based mechanics.
     * **Internal Tags:** Use `[message]`, `[actionbar]`, `[title]`, and `[sound]` for faster, color-supported feedback.
+    * **Admin Bypass Mode:** Toggle `/bi bypass` to test abilities without costs, cooldowns, or usage limits.
  
 <p align="center">
   <img src="https://altkat.github.io/buffeditems/images/identifyscrol.gif" alt="BuffedItems Active Abilities"/>
@@ -197,6 +198,7 @@ The main command is `/buffeditems` (Aliases: `/bi`, `/buffitems`).
 | `/bi list`                             | `buffeditems.command.list`    | Lists all created items and shows if any have configuration errors. |
 | `/bi wiki`                             | `buffeditems.command.wiki`    | Opens wiki page.                                                    |
 | `/bi update`                           | `buffeditems.command.update`  | Checks for the latest update.                                       |
+| `/bi bypass`                           | `buffeditems.command.bypass`  | Toggles Admin Bypass Mode (Infinite uses, no costs/cooldowns).      |
 
 **Admin Permission:**
 * `buffeditems.admin`: Grants access to **ALL** BuffedItems commands listed above.

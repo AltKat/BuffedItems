@@ -101,7 +101,9 @@ public class ItemInteractListener implements Listener {
         }
 
         // Cooldown check
-        if (plugin.getCooldownManager().isOnCooldown(player, itemId)) {
+        boolean bypass = plugin.isBypassEnabled(player);
+
+        if (!bypass && plugin.getCooldownManager().isOnCooldown(player, itemId)) {
             handleCooldownMessage(player, buffedItem);
             event.setCancelled(true);
             return;
@@ -112,7 +114,7 @@ public class ItemInteractListener implements Listener {
 
         if (item.getItemMeta().getPersistentDataContainer().has(durabilityKey, PersistentDataType.INTEGER)) {
             currentUses = item.getItemMeta().getPersistentDataContainer().get(durabilityKey, PersistentDataType.INTEGER);
-            if (currentUses != null && currentUses <= 0) {
+            if (!bypass && currentUses != null && currentUses <= 0) {
                 event.setCancelled(true);
                 String rawDepletedMsg = buffedItem.getUsageDetails().getDepletedMessage();
                 String parsedDepletedMsg = hooks.processPlaceholders(player, rawDepletedMsg);
@@ -124,7 +126,7 @@ public class ItemInteractListener implements Listener {
 
         // Cost Checks
         List<ICost> costs = buffedItem.getActiveAbility().getCosts();
-        if (costs != null && !costs.isEmpty()) {
+        if (!bypass && costs != null && !costs.isEmpty()) {
             List<String> missingRequirements = new ArrayList<>();
 
             for (ICost cost : costs) {
@@ -144,14 +146,14 @@ public class ItemInteractListener implements Listener {
         }
 
         // Deduct Costs
-        if (costs != null && !costs.isEmpty()) {
+        if (!bypass && costs != null && !costs.isEmpty()) {
             for (ICost cost : costs) {
                 cost.deduct(player);
             }
         }
 
         // Set cooldown
-        if (buffedItem.getActiveAbility().getCooldown() > 0) {
+        if (!bypass && buffedItem.getActiveAbility().getCooldown() > 0) {
             plugin.getCooldownManager().setCooldown(player, itemId, buffedItem.getActiveAbility().getCooldown());
         }
 
@@ -161,7 +163,7 @@ public class ItemInteractListener implements Listener {
         playConfiguredSound(player, buffedItem.getActiveAbility().getSounds().getSuccess(), ConfigManager.getGlobalSuccessSound());
         playCastVisuals(player, buffedItem);
 
-        if (currentUses != null && currentUses > 0) {
+        if (!bypass && currentUses != null && currentUses > 0) {
             int newUses = currentUses - 1;
 
             if (newUses == 0) {

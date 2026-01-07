@@ -8,7 +8,7 @@ description: 'Create custom items with permanent potion effects and attributes. 
 commands:
   buffeditems:
     description: Main command for the BuffedItems plugin.
-    usage: /<command> [give|reload|list|menu|upgrade|wiki|update|recipes|sets]
+    usage: /<command> [give|reload|list|menu|upgrade|wiki|update|recipes|sets|bypass]
     aliases: [bi, buffitems]
 permissions:
   buffeditems.admin:
@@ -23,6 +23,7 @@ permissions:
       buffeditems.command.update: true
       buffeditems.command.recipes: true
       buffeditems.command.sets: true
+      buffeditems.command.bypass: true
   buffeditems.command.give:
     description: Allows usage of the /buffeditems give command.
     default: op
@@ -50,3 +51,6 @@ permissions:
   buffeditems.command.sets:
     description: Allows viewing the item sets menu.
     default: true
+  buffeditems.command.bypass:
+    description: Allows toggling admin bypass mode for costs and cooldowns.
+    default: op

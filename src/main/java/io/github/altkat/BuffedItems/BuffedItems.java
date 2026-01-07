@@ -399,4 +399,26 @@ public final class BuffedItems extends JavaPlugin {
             getLogger().severe("==============================================================");;
         }
     }
+
+    private final Set<UUID> bypassPlayers = ConcurrentHashMap.newKeySet();
+
+    public boolean isBypassEnabled(Player player) {
+        return bypassPlayers.contains(player.getUniqueId());
+    }
+
+    public void toggleBypass(Player player) {
+        if (bypassPlayers.contains(player.getUniqueId())) {
+            bypassPlayers.remove(player.getUniqueId());
+        } else {
+            bypassPlayers.add(player.getUniqueId());
+        }
+    }
+
+    public void setBypass(Player player, boolean enabled) {
+        if (enabled) {
+            bypassPlayers.add(player.getUniqueId());
+        } else {
+            bypassPlayers.remove(player.getUniqueId());
+        }
+    }
 }

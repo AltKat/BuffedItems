@@ -479,7 +479,10 @@ public class ItemManager {
                         double amount = Double.parseDouble(parts[2]);
                         UUID modifierUUID = EffectManager.getUuidForItem(itemId, slot.toUpperCase(), attribute);
                         parsedAttributes.add(new ParsedAttribute(attribute, operation, amount, modifierUUID));
-                        managedAttributeUUIDs.add(modifierUUID);
+
+                        if (attributeMode == BuffedItem.AttributeMode.DYNAMIC || slot.equalsIgnoreCase("INVENTORY")) {
+                            managedAttributeUUIDs.add(modifierUUID);
+                        }
                     } catch (Exception e) {
                         errorMessages.add("§cCorrupt Attribute format: §e'" + attrString + "'");
                     }

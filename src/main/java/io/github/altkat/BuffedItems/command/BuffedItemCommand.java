@@ -150,6 +150,20 @@ public class BuffedItemCommand implements CommandExecutor {
                     sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUpdate handler is not initialized."));
                 }
                 return true;
+            case "bypass":
+                if (!sender.hasPermission("buffeditems.command.bypass")) {
+                    sender.sendMessage(noPermissionMessage);
+                    return true;
+                }
+                if (sender instanceof Player p) {
+                    plugin.toggleBypass(p);
+                    boolean enabled = plugin.isBypassEnabled(p);
+                    String status = enabled ? "§aENABLED" : "§cDISABLED";
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§7Bypass Mode: " + status));
+                } else {
+                    sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cThis command can only be used by players."));
+                }
+                return true;
             default:
                 sender.sendMessage(ConfigManager.fromSectionWithPrefix("§cUnknown subcommand. Use /buffeditems for help."));
                 return true;
@@ -193,6 +207,9 @@ public class BuffedItemCommand implements CommandExecutor {
         }
         if (sender.hasPermission("buffeditems.command.update")) {
             sender.sendMessage(ConfigManager.fromSection("§6/bi update §7(Check Updates)"));
+        }
+        if (sender.hasPermission("buffeditems.command.bypass")) {
+            sender.sendMessage(ConfigManager.fromSection("§6/bi bypass §7(Toggle Admin Bypass)"));
         }
     }
 
