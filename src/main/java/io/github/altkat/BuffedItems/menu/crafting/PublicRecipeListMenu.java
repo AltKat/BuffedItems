@@ -3,6 +3,9 @@ package io.github.altkat.BuffedItems.menu.crafting;
 import io.github.altkat.BuffedItems.BuffedItems;
 import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.crafting.CustomRecipe;
+import io.github.altkat.BuffedItems.manager.crafting.MatchType;
+import io.github.altkat.BuffedItems.manager.crafting.RecipeIngredient;
+import io.github.altkat.BuffedItems.manager.crafting.RecipeType;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
@@ -13,9 +16,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PublicRecipeListMenu extends PaginatedMenu {
@@ -87,10 +88,30 @@ public class PublicRecipeListMenu extends PaginatedMenu {
 
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
+                if (recipe.getAmount() > 1 && item != null) {
+                   Component originalName = meta.hasDisplayName() ? meta.displayName() : ConfigManager.fromSection("§f" + item.getItemDisplay().getDisplayName());
+                   meta.displayName(ConfigManager.fromSection("§e" + recipe.getAmount() + "x ").append(originalName));
+                }
 
                 List<Component> lore = new ArrayList<>();
                 lore.add(Component.empty());
-                lore.add(ConfigManager.fromSection("§eClick to view recipe"));
+                
+                String typeName = formatRecipeType(recipe.getType());
+                lore.add(ConfigManager.fromSection("§7Station: §f" + typeName));
+                lore.add(Component.empty());
+                
+                lore.add(ConfigManager.fromSection("§7Ingredients:"));
+                Map<String, Integer> ingredientCounts = aggregateIngredients(recipe);
+                if (ingredientCounts.isEmpty()) {
+                     lore.add(ConfigManager.fromSection(" §8- None"));
+                } else {
+                    for (Map.Entry<String, Integer> entry : ingredientCounts.entrySet()) {
+                        lore.add(ConfigManager.fromSection(" §8• §7" + entry.getKey() + " §8x" + entry.getValue()));
+                    }
+                }
+
+                lore.add(Component.empty());
+                lore.add(ConfigManager.fromSection("§eClick to view details"));
 
                 meta.lore(lore);
                 icon.setItemMeta(meta);
@@ -107,5 +128,78 @@ public class PublicRecipeListMenu extends PaginatedMenu {
                 .filter(CustomRecipe::isEnabled)
                 .sorted(Comparator.comparing(CustomRecipe::getId))
                 .collect(Collectors.toList());
+    }
+    
+    private String formatRecipeType(RecipeType type) {
+        switch (type) {
+            case SHAPED: return "Crafting Table";
+            case SHAPELESS: return "Crafting Table (Shapeless)";
+            case FURNACE: return "Furnace";
+            case BLAST_FURNACE: return "Blast Furnace";
+            case SMOKER: return "Smoker";
+            case CAMPFIRE: return "Campfire";
+            default: return formatEnumName(type.name());
+        }
+    }
+    
+    private String formatEnumName(String name) {
+        String lower = name.toLowerCase().replace("_", " ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : lower.split(" ")) {
+            sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+        }
+        return sb.toString().trim();
+    }
+
+    private Map<String, Integer> aggregateIngredients(CustomRecipe recipe) {
+        Map<String, Integer> counts = new HashMap<>();
+
+        if (recipe.getType() == RecipeType.SHAPED) {
+             List<String> shape = recipe.getShape();
+             if (shape != null) {
+                 for (String row : shape) {
+                     for (char c : row.toCharArray()) {
+                         if (c == ' ') continue;
+                         RecipeIngredient ing = recipe.getIngredient(c);
+                         if (ing != null) {
+                             addIngredientCount(counts, ing, 1);
+                         }
+                     }
+                 }
+             }
+        } else {
+             for (RecipeIngredient ing : recipe.getIngredients().values()) {
+                 addIngredientCount(counts, ing, 1);
+             }
+        }
+        
+        return counts;
+    }
+    
+    private void addIngredientCount(Map<String, Integer> counts, RecipeIngredient ing, int multiplier) {
+        String name = getIngredientName(ing);
+        int amount = ing.getAmount() * multiplier;
+        counts.put(name, counts.getOrDefault(name, 0) + amount);
+    }
+    
+    private String getIngredientName(RecipeIngredient ing) {
+        if (ing.getMatchType() == MatchType.BUFFED_ITEM) {
+            BuffedItem bi = plugin.getItemManager().getBuffedItem(ing.getData());
+            if (bi != null) {
+                String rawName = bi.getItemDisplay().getDisplayName();
+                return ConfigManager.toSection(ConfigManager.fromLegacy(rawName));
+            }
+            return ing.getData();
+        } else if (ing.getMatchType() == MatchType.MATERIAL) {
+            if (ing.getMaterial() != null) return formatEnumName(ing.getMaterial().name());
+        } else if (ing.getMatchType() == MatchType.EXACT) {
+             if (ing.getExactReferenceItem() != null) {
+                 if (ing.getExactReferenceItem().getItemMeta() != null && ing.getExactReferenceItem().getItemMeta().hasDisplayName()) {
+                     return ConfigManager.toSection(ing.getExactReferenceItem().getItemMeta().displayName());
+                 }
+                 return formatEnumName(ing.getExactReferenceItem().getType().name());
+             }
+        }
+        return "Unknown Item";
     }
 }

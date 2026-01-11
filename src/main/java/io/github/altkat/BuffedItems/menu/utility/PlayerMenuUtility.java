@@ -28,7 +28,8 @@ public class PlayerMenuUtility {
         ICON,
         COST,
         INGREDIENT,
-        CRAFTING_INGREDIENT
+        CRAFTING_INGREDIENT,
+        UPGRADE_BASE
     }
 
 

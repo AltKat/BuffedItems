@@ -5,6 +5,8 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.config.UpgradesConfig;
 import io.github.altkat.BuffedItems.manager.cost.ICost;
 import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
+import io.github.altkat.BuffedItems.manager.cost.types.ItemCost;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
@@ -77,15 +79,46 @@ public class UpgradeManager {
             ICost baseCost = null;
             if (recipeSection.contains("base")) {
                 if (recipeSection.isString("base")) {
-                    String itemId = recipeSection.getString("base");
+                    String val = recipeSection.getString("base");
 
-                    Map<String, Object> syntheticMap = new HashMap<>();
-                    syntheticMap.put("type", "BUFFED_ITEM");
-                    syntheticMap.put("amount", 1);
-                    syntheticMap.put("item_id", itemId);
-
+                    if (plugin.getItemManager().getBuffedItem(val) != null) {
+                        Map<String, Object> syntheticMap = new HashMap<>();
+                        syntheticMap.put("type", "BUFFED_ITEM");
+                        syntheticMap.put("amount", 1);
+                        syntheticMap.put("item_id", val);
+                        try {
+                            baseCost = plugin.getCostManager().parseCost(syntheticMap);
+                        } catch (Exception e) {
+                            errors.add("Base Item Error: " + e.getMessage());
+                        }
+                    } else {
+                        Material mat = Material.matchMaterial(val);
+                        if (mat != null) {
+                            Map<String, Object> syntheticMap = new HashMap<>();
+                            syntheticMap.put("type", "ITEM");
+                            syntheticMap.put("amount", 1);
+                            syntheticMap.put("material", val);
+                            try {
+                                baseCost = plugin.getCostManager().parseCost(syntheticMap);
+                            } catch (Exception e) {
+                                errors.add("Base Item Error: " + e.getMessage());
+                            }
+                        } else {
+                            // Fallback: try parsing as BuffedItem so it might fail with "Invalid Base Item ID" later
+                            Map<String, Object> syntheticMap = new HashMap<>();
+                            syntheticMap.put("type", "BUFFED_ITEM");
+                            syntheticMap.put("amount", 1);
+                            syntheticMap.put("item_id", val);
+                            try {
+                                baseCost = plugin.getCostManager().parseCost(syntheticMap);
+                            } catch (Exception e) {
+                                errors.add("Base Item Error: " + e.getMessage());
+                            }
+                        }
+                    }
+                } else if (recipeSection.isConfigurationSection("base")) {
                     try {
-                        baseCost = plugin.getCostManager().parseCost(syntheticMap);
+                        baseCost = plugin.getCostManager().parseCost(recipeSection.getConfigurationSection("base").getValues(false));
                     } catch (Exception e) {
                         errors.add("Base Item Error: " + e.getMessage());
                     }
@@ -97,21 +130,24 @@ public class UpgradeManager {
                 errors.add("Missing or Invalid Base Item ID.");
             }
             else {
-                if (!(baseCost instanceof BuffedItemCost)) {
-                    isValid = false;
-                    errors.add("Base item MUST be a BUFFED_ITEM (Vanilla items not allowed as base).");
-                }
-                else {
+                if (baseCost instanceof BuffedItemCost) {
                     BuffedItemCost bCost = (BuffedItemCost) baseCost;
-
                     if (bCost.getAmount() != 1) {
                         isValid = false;
                         errors.add("Base item amount MUST be exactly 1.");
-                    }
-                    else if (plugin.getItemManager().getBuffedItem(bCost.getRequiredItemId()) == null) {
+                    } else if (plugin.getItemManager().getBuffedItem(bCost.getRequiredItemId()) == null) {
                         isValid = false;
                         errors.add("Invalid Base Item ID: " + bCost.getRequiredItemId());
                     }
+                } else if (baseCost instanceof ItemCost) {
+                    ItemCost iCost = (ItemCost) baseCost;
+                    if (iCost.getAmount() != 1) {
+                        isValid = false;
+                        errors.add("Base item amount MUST be exactly 1.");
+                    }
+                } else {
+                    isValid = false;
+                    errors.add("Base item MUST be a BUFFED_ITEM or vanilla ITEM.");
                 }
             }
 
@@ -138,6 +174,9 @@ public class UpgradeManager {
                 }
             }
 
+            boolean keepEnchantments = recipeSection.getBoolean("transfer.enchantments", true);
+            boolean keepArmorTrim = recipeSection.getBoolean("transfer.armor_trim", true);
+
             if (isValid) {
                 validCount++;
             } else {
@@ -145,7 +184,7 @@ public class UpgradeManager {
                 recipesWithErrors.add(key);
             }
 
-            UpgradeRecipe recipe = new UpgradeRecipe(key, displayName, baseCost, ingredients, resultItem, resultAmount, chance, failureAction, isValid, errors);
+            UpgradeRecipe recipe = new UpgradeRecipe(key, displayName, baseCost, ingredients, resultItem, resultAmount, chance, failureAction, keepEnchantments, keepArmorTrim, isValid, errors);
             recipes.put(key, recipe);
         }
 

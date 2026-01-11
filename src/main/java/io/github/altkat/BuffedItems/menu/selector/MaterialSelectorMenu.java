@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.menu.base.PaginatedMenu;
 import io.github.altkat.BuffedItems.menu.crafting.IngredientSettingsMenu;
 import io.github.altkat.BuffedItems.menu.editor.ItemEditorMenu;
+import io.github.altkat.BuffedItems.menu.upgrade.UpgradeRecipeEditorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -42,6 +43,15 @@ public class MaterialSelectorMenu extends PaginatedMenu {
     public void handleMenu(InventoryClickEvent e) {
         if (e.getCurrentItem() == null) return;
         Player p = (Player) e.getWhoClicked();
+
+        if (e.getClickedInventory() == e.getView().getBottomInventory()) {
+            Material clickedType = e.getCurrentItem().getType();
+            if (clickedType != Material.AIR) {
+                handleMaterialSelection(p, clickedType);
+            }
+            return;
+        }
+
         int clickedSlot = e.getSlot();
         Material clickedType = e.getCurrentItem().getType();
 
@@ -49,12 +59,12 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             return;
         }
 
-        if (clickedType == Material.BARRIER && clickedSlot == 49) {
+        if (clickedType == Material.BARRIER && clickedSlot == 53) {
             handleBack();
             return;
         }
 
-        if (clickedType == Material.ANVIL && clickedSlot == 48) {
+        if (clickedType == Material.ANVIL && clickedSlot == 49) {
             handleManualInput(p);
             return;
         }
@@ -62,6 +72,11 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         if (clickedSlot < this.maxItemsPerPage) {
             handleMaterialSelection(p, clickedType);
         }
+    }
+
+    @Override
+    public boolean allowBottomInventoryClick() {
+        return true;
     }
 
     private void handleMaterialSelection(Player p, Material material) {
@@ -88,8 +103,14 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setChatInputPath("upgrade.ingredients.add.ITEM_QUANTITY");
             p.closeInventory();
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§aSelected: §e" + material.name()));
-            p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount in chat."));
+            p.sendMessage(ConfigManager.fromSection("§aPlease enter the Amount (Quantity) in chat."));
             p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit)"));
+        }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.UPGRADE_BASE) {
+            String recipeId = playerMenuUtility.getItemToEditId();
+            ConfigManager.setUpgradeValue(recipeId, "base", material.name());
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase item updated to: §e" + material.name()));
+            new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
         }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
             playerMenuUtility.setTempMaterial(material);
@@ -116,6 +137,10 @@ public class MaterialSelectorMenu extends PaginatedMenu {
             playerMenuUtility.setChatInputPath("upgrade.ingredients.add.ITEM");
             p.sendMessage(ConfigManager.fromSectionWithPrefix("§eFormat: AMOUNT;MATERIAL (e.g. 10;DIAMOND)"));
         }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.UPGRADE_BASE) {
+            playerMenuUtility.setChatInputPath("upgrade.base.material_manual");
+            p.sendMessage(ConfigManager.fromSectionWithPrefix("§aPlease type the Material name in chat (e.g., 'DIAMOND')."));
+        }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
             playerMenuUtility.setChatInputPath("recipe_ingredient_material_manual");
             playerMenuUtility.setUnsavedChanges(true);
@@ -133,6 +158,9 @@ public class MaterialSelectorMenu extends PaginatedMenu {
         else if (context == PlayerMenuUtility.MaterialSelectionContext.INGREDIENT) {
             new TypeSelectorMenu(playerMenuUtility, plugin, context).open();
         }
+        else if (context == PlayerMenuUtility.MaterialSelectionContext.UPGRADE_BASE) {
+            new TypeSelectorMenu(playerMenuUtility, plugin, context).open();
+        }
         else if (context == PlayerMenuUtility.MaterialSelectionContext.CRAFTING_INGREDIENT) {
             new IngredientSettingsMenu(playerMenuUtility, plugin, false).open();
         }
@@ -147,10 +175,14 @@ public class MaterialSelectorMenu extends PaginatedMenu {
 
     @Override
     public void setMenuItems() {
-        inventory.setItem(45, makeItem(Material.ARROW, "§aPrevious Page"));
-        inventory.setItem(53, makeItem(Material.ARROW, "§aNext Page"));
-        inventory.setItem(49, makeItem(Material.BARRIER, "§cBack to Editor"));
-        inventory.setItem(48, makeItem(Material.ANVIL, "§bEnter Manually", "§7Click to type the material name in chat."));
+        addMenuControls();
+        inventory.setItem(53, makeItem(Material.BARRIER, "§cBack to Editor"));
+        inventory.setItem(49, makeItem(Material.ANVIL, "§bEnter Manually", "§7Click to type the material name in chat."));
+
+        inventory.setItem(45, makeItem(Material.BOOK,
+                "§eQuick Select",
+                "§7You can directly click an item",
+                "§7in your inventory to select it!"));
 
         for (int i = 0; i < maxItemsPerPage; i++) {
             index = maxItemsPerPage * page + i;

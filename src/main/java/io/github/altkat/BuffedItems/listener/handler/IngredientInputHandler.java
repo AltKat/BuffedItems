@@ -66,6 +66,9 @@ public class IngredientInputHandler implements ChatInputHandler {
         else if (path.equals("upgrade.base.set_id")) {
             handleSetBaseId(player, pmu, input, recipeId);
         }
+        else if (path.equals("upgrade.base.material_manual")) {
+            handleSetBaseMaterial(player, pmu, input, recipeId);
+        }
         else if (path.equals("upgrade.ingredients.edit.amount")) {
             handleEditIngredientAmount(player, pmu, input, recipeId);
         }
@@ -80,6 +83,23 @@ public class IngredientInputHandler implements ChatInputHandler {
         ConfigManager.setUpgradeValue(recipeId, "base", itemId);
 
         player.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase item updated to: §e" + itemId));
+        closeChat(pmu);
+        new UpgradeRecipeEditorMenu(pmu, plugin).open();
+    }
+
+    private void handleSetBaseMaterial(Player player, PlayerMenuUtility pmu, String input, String recipeId) {
+        String matName = input.trim().toUpperCase();
+        Material mat = Material.matchMaterial(matName);
+
+        if (mat == null) {
+            player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid material: " + matName));
+            pmu.setWaitingForChatInput(true);
+            pmu.setChatInputPath("upgrade.base.material_manual");
+            return;
+        }
+
+        ConfigManager.setUpgradeValue(recipeId, "base", mat.name());
+        player.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase material updated to: §e" + mat.name()));
         closeChat(pmu);
         new UpgradeRecipeEditorMenu(pmu, plugin).open();
     }

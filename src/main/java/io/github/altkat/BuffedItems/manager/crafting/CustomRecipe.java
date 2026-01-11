@@ -12,18 +12,22 @@ public class CustomRecipe {
     private final List<String> shape;
     private final String permission;
     private final Map<Character, RecipeIngredient> ingredients;
+    private final RecipeType type;
+    private int cookTime = 200;
+    private double experience = 0.7;
 
     private boolean valid;
     private final List<String> errorMessages;
 
     private boolean enabled = true;
 
-    public CustomRecipe(String id, String resultItemId, int amount, List<String> shape, String permission) {
+    public CustomRecipe(String id, String resultItemId, int amount, List<String> shape, String permission, RecipeType type) {
         this.id = id;
         this.resultItemId = resultItemId;
         this.amount = amount;
         this.shape = shape;
         this.permission = permission;
+        this.type = type;
         this.ingredients = new HashMap<>();
         this.valid = true;
         this.errorMessages = new ArrayList<>();
@@ -47,6 +51,14 @@ public class CustomRecipe {
         return shape;
     }
     public String getPermission() { return permission; }
+    public RecipeType getType() { return type; }
+    
+    public int getCookTime() { return cookTime; }
+    public void setCookTime(int cookTime) { this.cookTime = cookTime; }
+    
+    public double getExperience() { return experience; }
+    public void setExperience(double experience) { this.experience = experience; }
+
     public boolean isValid() { return valid; }
     public void setValid(boolean valid) { this.valid = valid; }
     public List<String> getErrorMessages() { return errorMessages; }

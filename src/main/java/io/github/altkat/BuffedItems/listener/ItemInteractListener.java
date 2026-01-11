@@ -117,8 +117,10 @@ public class ItemInteractListener implements Listener {
             if (!bypass && currentUses != null && currentUses <= 0) {
                 event.setCancelled(true);
                 String rawDepletedMsg = buffedItem.getUsageDetails().getDepletedMessage();
-                String parsedDepletedMsg = hooks.processPlaceholders(player, rawDepletedMsg);
-                player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepletedMsg));
+                if (rawDepletedMsg != null && !rawDepletedMsg.isEmpty() && !rawDepletedMsg.equalsIgnoreCase("NONE")) {
+                    String parsedDepletedMsg = hooks.processPlaceholders(player, rawDepletedMsg);
+                    player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepletedMsg));
+                }
                 playConfiguredSound(player, buffedItem.getUsageDetails().getDepletedTrySound(), ConfigManager.getGlobalDepletedTrySound());
                 return;
             }
@@ -317,8 +319,10 @@ public class ItemInteractListener implements Listener {
 
     private void handleDepletion(Player player, BuffedItem buffedItem, ItemStack originalItem, EquipmentSlot hand) {
         String rawDepleteMsg = buffedItem.getUsageDetails().getDepletionNotification();
-        String parsedDepleteMsg = hooks.processPlaceholders(player, rawDepleteMsg);
-        player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepleteMsg));
+        if (rawDepleteMsg != null && !rawDepleteMsg.isEmpty() && !rawDepleteMsg.equalsIgnoreCase("NONE")) {
+            String parsedDepleteMsg = hooks.processPlaceholders(player, rawDepleteMsg);
+            player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedDepleteMsg));
+        }
 
         playConfiguredSound(player, buffedItem.getUsageDetails().getDepletionSound(), ConfigManager.getGlobalDepletionSound());
 
@@ -383,8 +387,10 @@ public class ItemInteractListener implements Listener {
             else player.getInventory().setItemInOffHand(resultItem);
 
             String rawTransformMsg = buffedItem.getUsageDetails().getDepletionTransformMessage();
-            String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
-            player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
+            if (rawTransformMsg != null && !rawTransformMsg.isEmpty() && !rawTransformMsg.equalsIgnoreCase("NONE")) {
+                String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
+                player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
+            }
         } else {
             plugin.getLogger().warning("[BuffedItems] Transform failed. Target '" + targetId + "' not found.");
             if (hand == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(null);
@@ -408,8 +414,10 @@ public class ItemInteractListener implements Listener {
             giveItemToPlayer(player, resultItem);
 
             String rawTransformMsg = buffedItem.getUsageDetails().getDepletionTransformMessage();
-            String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
-            player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
+            if (rawTransformMsg != null && !rawTransformMsg.isEmpty() && !rawTransformMsg.equalsIgnoreCase("NONE")) {
+                String parsedTransformMsg = hooks.processPlaceholders(player, rawTransformMsg);
+                player.sendMessage(ConfigManager.fromLegacyWithPrefix(parsedTransformMsg));
+            }
         }else {
             plugin.getLogger().warning("[BuffedItems] Transform failed. Target '" + targetId + "' not found.");
         }

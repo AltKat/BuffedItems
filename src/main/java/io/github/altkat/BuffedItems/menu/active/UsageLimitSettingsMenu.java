@@ -131,6 +131,7 @@ public class UsageLimitSettingsMenu extends Menu {
                 if (configKey.equals("usage.lore_format")) {
                     p.sendMessage(ConfigManager.fromSection("§7Placeholders: {remaining_uses}, {total_uses}"));
                 }
+                p.sendMessage(ConfigManager.fromSection("§7(Type 'NONE' to disable this message)"));
                 p.sendMessage(ConfigManager.fromSection("§7(Type 'cancel' to exit."));
             }
         }
@@ -184,28 +185,74 @@ public class UsageLimitSettingsMenu extends Menu {
                 "§7Current: §f" + item.getUsageDetails().getDepletionCommands().size() + " commands", "", "§eClick to Edit"));
 
         // Messages with default fallbacks
-        String usageLore = item.getUsageLore(maxUses > 0 ? maxUses : 1);
-        inventory.setItem(20, makeMessageItem(Material.PAPER, "Usage Lore", usageLore, "usage.lore_format"));
+        String localUsageLore = item.getUsageDetails().getUsageLore();
+        String displayUsageLore;
+        if (localUsageLore == null || localUsageLore.isEmpty() || localUsageLore.equalsIgnoreCase("NONE")) {
+            if (localUsageLore != null && localUsageLore.equalsIgnoreCase("NONE")) displayUsageLore = "§cDISABLED";
+            else {
+                String global = ConfigManager.getGlobalUsageLore();
+                if (global == null) displayUsageLore = "§cDISABLED";
+                else {
+                    displayUsageLore = global.replace("{remaining_uses}", String.valueOf(maxUses > 0 ? maxUses : 1))
+                            .replace("{total_uses}", String.valueOf(maxUses > 0 ? maxUses : 1)) + " &8(Default)";
+                }
+            }
+        } else {
+            displayUsageLore = item.getUsageLore(maxUses > 0 ? maxUses : 1);
+        }
+        inventory.setItem(20, makeMessageItem(Material.PAPER, "Usage Lore", displayUsageLore, "usage.lore_format"));
 
         String depletedLore = item.getUsageDetails().getDepletedLore();
-        if (depletedLore == null || depletedLore.isEmpty())
-            depletedLore = ConfigManager.getGlobalDepletedLore() + " &8(Default)";
-        inventory.setItem(22, makeMessageItem(Material.BOOK, "Depleted Lore", depletedLore, "usage.depleted_lore"));
+        String displayDepletedLore;
+        if (depletedLore == null || depletedLore.isEmpty() || depletedLore.equalsIgnoreCase("NONE")) {
+            if (depletedLore != null && depletedLore.equalsIgnoreCase("NONE")) displayDepletedLore = "§cDISABLED";
+            else {
+                String global = ConfigManager.getGlobalDepletedLore();
+                displayDepletedLore = (global != null) ? global + " &8(Default)" : "§cDISABLED";
+            }
+        } else {
+            displayDepletedLore = depletedLore;
+        }
+        inventory.setItem(22, makeMessageItem(Material.BOOK, "Depleted Lore", displayDepletedLore, "usage.depleted_lore"));
 
         String depletedMsg = item.getUsageDetails().getDepletedMessage();
-        if (depletedMsg == null || depletedMsg.isEmpty())
-            depletedMsg = ConfigManager.getGlobalDepletedMessage() + " &8(Default)";
-        inventory.setItem(24, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", depletedMsg, "usage.depleted_message"));
+        String displayDepletedMsg;
+        if (depletedMsg == null || depletedMsg.isEmpty() || depletedMsg.equalsIgnoreCase("NONE")) {
+            if (depletedMsg != null && depletedMsg.equalsIgnoreCase("NONE")) displayDepletedMsg = "§cDISABLED";
+            else {
+                String global = ConfigManager.getGlobalDepletedMessage();
+                displayDepletedMsg = (global != null) ? global + " &8(Default)" : "§cDISABLED";
+            }
+        } else {
+            displayDepletedMsg = depletedMsg;
+        }
+        inventory.setItem(24, makeMessageItem(Material.WRITABLE_BOOK, "Denial Message", displayDepletedMsg, "usage.depleted_message"));
 
         String depletionNotif = item.getUsageDetails().getDepletionNotification();
-        if (depletionNotif == null || depletionNotif.isEmpty())
-            depletionNotif = ConfigManager.getGlobalDepletionNotification() + " &8(Default)";
-        inventory.setItem(28, makeMessageItem(Material.BELL, "Break Notification", depletionNotif, "usage.depletion_notification"));
+        String displayDepletionNotif;
+        if (depletionNotif == null || depletionNotif.isEmpty() || depletionNotif.equalsIgnoreCase("NONE")) {
+            if (depletionNotif != null && depletionNotif.equalsIgnoreCase("NONE")) displayDepletionNotif = "§cDISABLED";
+            else {
+                String global = ConfigManager.getGlobalDepletionNotification();
+                displayDepletionNotif = (global != null) ? global + " &8(Default)" : "§cDISABLED";
+            }
+        } else {
+            displayDepletionNotif = depletionNotif;
+        }
+        inventory.setItem(28, makeMessageItem(Material.BELL, "Break Notification", displayDepletionNotif, "usage.depletion_notification"));
 
         String transformMsg = item.getUsageDetails().getDepletionTransformMessage();
-        if (transformMsg == null || transformMsg.isEmpty())
-            transformMsg = ConfigManager.getGlobalDepletionTransformMessage() + " &8(Default)";
-        inventory.setItem(30, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", transformMsg, "usage.transform_message"));
+        String displayTransformMsg;
+        if (transformMsg == null || transformMsg.isEmpty() || transformMsg.equalsIgnoreCase("NONE")) {
+            if (transformMsg != null && transformMsg.equalsIgnoreCase("NONE")) displayTransformMsg = "§cDISABLED";
+            else {
+                String global = ConfigManager.getGlobalDepletionTransformMessage();
+                displayTransformMsg = (global != null) ? global + " &8(Default)" : "§cDISABLED";
+            }
+        } else {
+            displayTransformMsg = transformMsg;
+        }
+        inventory.setItem(30, makeMessageItem(Material.CHERRY_SIGN, "Transform Message", displayTransformMsg, "usage.transform_message"));
 
 
         // Sounds with default fallbacks

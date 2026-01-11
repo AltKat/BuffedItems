@@ -210,6 +210,7 @@ public final class BuffedItems extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemProtectionListener(this), this);
         getServer().getPluginManager().registerEvents(new ItemInteractListener(this), this);
+        getServer().getPluginManager().registerEvents(new FurnaceListener(this), this);
         inventoryListener = new InventoryListener(this);
         getServer().getPluginManager().registerEvents(inventoryListener, this);
         getServer().getPluginManager().registerEvents(new CraftingListener(this), this);

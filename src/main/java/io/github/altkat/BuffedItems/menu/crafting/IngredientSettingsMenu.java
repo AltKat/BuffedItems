@@ -99,6 +99,12 @@ public class IngredientSettingsMenu extends Menu {
             new BuffedItemSelectorMenu(playerMenuUtility, plugin, BuffedItemSelectorMenu.SelectionContext.CRAFTING_INGREDIENT).open();
         }
         else if (e.getSlot() == 15) {
+            String recipeTypeStr = RecipesConfig.get().getString("recipes." + recipeId + ".type", "SHAPED");
+            if (recipeTypeStr.equalsIgnoreCase("FURNACE") || recipeTypeStr.equalsIgnoreCase("BLAST_FURNACE") ||
+                recipeTypeStr.equalsIgnoreCase("SMOKER") || recipeTypeStr.equalsIgnoreCase("CAMPFIRE")) {
+                p.sendMessage(ConfigManager.fromSectionWithPrefix("§cCooking recipes only support an input amount of 1."));
+                return;
+            }
             playerMenuUtility.setWaitingForChatInput(true);
             playerMenuUtility.setChatInputPath("recipe_ingredient_amount");
             p.closeInventory();
@@ -145,6 +151,12 @@ public class IngredientSettingsMenu extends Menu {
         String path = "recipes." + recipeId + ".ingredients." + key;
         String shapePath = "recipes." + recipeId + ".shape";
         ConfigurationSection config = RecipesConfig.get();
+
+        String recipeTypeStr = config.getString("recipes." + recipeId + ".type", "SHAPED");
+        boolean isCooking = recipeTypeStr.equalsIgnoreCase("FURNACE") || recipeTypeStr.equalsIgnoreCase("BLAST_FURNACE") ||
+                recipeTypeStr.equalsIgnoreCase("SMOKER") || recipeTypeStr.equalsIgnoreCase("CAMPFIRE");
+        
+        if (isCooking) amount = 1;
 
         if (type == null) {
             config.set(path, null);
@@ -263,7 +275,18 @@ public class IngredientSettingsMenu extends Menu {
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aVanilla Material", "§7Select from list."));
         inventory.setItem(13, makeItem(Material.NETHER_STAR, "§6Buffed Item", "§7Select custom item."));
 
-        inventory.setItem(15, makeItem(Material.GOLD_NUGGET, "§eSet Amount", "§7Current: " + (ing != null ? ing.getAmount() : 1)));
+        String recipeTypeStr = RecipesConfig.get().getString("recipes." + recipeId + ".type", "SHAPED");
+        boolean isCooking = recipeTypeStr.equalsIgnoreCase("FURNACE") || recipeTypeStr.equalsIgnoreCase("BLAST_FURNACE") ||
+                recipeTypeStr.equalsIgnoreCase("SMOKER") || recipeTypeStr.equalsIgnoreCase("CAMPFIRE");
+
+        if (isCooking) {
+            inventory.setItem(15, makeItem(Material.GOLD_NUGGET, "§eSet Amount",
+                    "§7Current: §e1",
+                    "",
+                    "§cDisabled for cooking recipes."));
+        } else {
+            inventory.setItem(15, makeItem(Material.GOLD_NUGGET, "§eSet Amount", "§7Current: §e" + (ing != null ? ing.getAmount() : 1)));
+        }
 
         inventory.setItem(16, makeItem(Material.RED_STAINED_GLASS_PANE, "§cClear Slot"));
         inventory.setItem(26, makeItem(Material.BARRIER, "§cBack"));

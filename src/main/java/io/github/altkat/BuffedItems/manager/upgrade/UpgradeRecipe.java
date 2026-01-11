@@ -15,11 +15,13 @@ public class UpgradeRecipe {
     private final int resultAmount;
     private final double successRate;
     private final FailureAction failureAction;
+    private final boolean keepEnchantments;
+    private final boolean keepArmorTrim;
 
     private final boolean valid;
     private final List<String> errorMessages;
 
-    public UpgradeRecipe(String id, String displayName, ICost baseCost, List<ICost> ingredients, String resultItemId, int resultAmount, double successRate, FailureAction failureAction, boolean valid, List<String> errorMessages) {
+    public UpgradeRecipe(String id, String displayName, ICost baseCost, List<ICost> ingredients, String resultItemId, int resultAmount, double successRate, FailureAction failureAction, boolean keepEnchantments, boolean keepArmorTrim, boolean valid, List<String> errorMessages) {
         this.id = id;
         this.displayName = displayName;
         this.baseCost = baseCost;
@@ -28,6 +30,8 @@ public class UpgradeRecipe {
         this.resultAmount = resultAmount;
         this.successRate = successRate;
         this.failureAction = failureAction;
+        this.keepEnchantments = keepEnchantments;
+        this.keepArmorTrim = keepArmorTrim;
         this.valid = valid;
         this.errorMessages = (errorMessages != null) ? errorMessages : new ArrayList<>();
     }
@@ -40,6 +44,8 @@ public class UpgradeRecipe {
     public int getResultAmount() { return resultAmount; }
     public double getSuccessRate() { return successRate; }
     public FailureAction getFailureAction() { return failureAction; }
+    public boolean isKeepEnchantments() { return keepEnchantments; }
+    public boolean isKeepArmorTrim() { return keepArmorTrim; }
 
     public boolean isValid() { return valid; }
     public List<String> getErrorMessages() { return errorMessages; }

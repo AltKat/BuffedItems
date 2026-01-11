@@ -115,10 +115,12 @@ public class ItemUpdater {
                     ? template.getUsageLore(currentUses)
                     : template.getDepletedLore();
 
-            String parsedUsageLine = template.hasPlaceholders()
-                    ? plugin.getHookManager().processPlaceholders(player, usageLineRaw)
-                    : usageLineRaw;
-            baseLore.add(ConfigManager.fromLegacy(parsedUsageLine));
+            if (usageLineRaw != null && !usageLineRaw.isEmpty()) {
+                String parsedUsageLine = template.hasPlaceholders()
+                        ? plugin.getHookManager().processPlaceholders(player, usageLineRaw)
+                        : usageLineRaw;
+                baseLore.add(ConfigManager.fromLegacy(parsedUsageLine));
+            }
         } else {
             meta.getPersistentDataContainer().remove(usesKey);
         }

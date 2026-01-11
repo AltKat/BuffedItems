@@ -122,7 +122,9 @@ public class ItemBuilder {
                 lore = new ArrayList<>();
             }
             String dynamicLore = buffedItem.getUsageLore(usageDetails.getMaxUses());
-            lore.add(ConfigManager.fromLegacy(dynamicLore));
+            if (dynamicLore != null && !dynamicLore.isEmpty()) {
+                lore.add(ConfigManager.fromLegacy(dynamicLore));
+            }
 
             meta.lore(lore);
         }

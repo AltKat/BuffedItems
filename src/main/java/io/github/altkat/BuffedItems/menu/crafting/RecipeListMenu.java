@@ -166,9 +166,17 @@ public class RecipeListMenu extends PaginatedMenu {
 
                 if (recipe.isValid()) {
                     String permission = RecipesConfig.get().getString("recipes." + recipe.getId() +".permission");
+                    lore.add(ConfigManager.fromSection("§7Type: §b" + recipe.getType().name()));
                     lore.add(ConfigManager.fromSection("§7Result: §f" + recipe.getResultItemId()));
                     lore.add(ConfigManager.fromSection("§7Permission: §f" + (permission == null ? "None" : permission)));
                     lore.add(ConfigManager.fromSection("§7Amount: §e" + recipe.getAmount()));
+
+                    if (recipe.getType() != io.github.altkat.BuffedItems.manager.crafting.RecipeType.SHAPED && recipe.getType() != io.github.altkat.BuffedItems.manager.crafting.RecipeType.SHAPELESS) {
+                        lore.add(ConfigManager.fromSection("§7Cook Time: §e" + (recipe.getCookTime() / 20.0) + "s"));
+                        if (recipe.getType() != io.github.altkat.BuffedItems.manager.crafting.RecipeType.CAMPFIRE) {
+                            lore.add(ConfigManager.fromSection("§7Experience: §e" + ((recipe.getExperience() % 1 == 0) ? String.format("%.0f", recipe.getExperience()) : String.valueOf(recipe.getExperience()))));
+                        }
+                    }
                 } else {
                     lore.add(ConfigManager.fromSection("§c§lCONFIGURATION ERRORS:"));
                     for (String err : recipe.getErrorMessages()) {

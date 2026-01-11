@@ -543,27 +543,37 @@ public class ConfigManager {
 
     public static String getGlobalUsageLore() {
         if (plugin == null) return "&7Remaining Uses: &e{remaining_uses}&7/&6{total_uses}";
-        return plugin.getConfig().getString("active-items.messages.usage-limit-lore", "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%");
+        String val = plugin.getConfig().getString("active-items.messages.usage-limit-lore");
+        if (val != null && (val.isEmpty() || val.equalsIgnoreCase("NONE"))) return null;
+        return val != null ? val : "&7Remaining Uses: &e%remaining_uses%&7/&6%total_uses%";
     }
 
     public static String getGlobalDepletedLore() {
         if (plugin == null) return "&cITEM DEPLETED - NO USES LEFT";
-        return plugin.getConfig().getString("active-items.messages.usage-limit-depleted-lore", "&cITEM DEPLETED - NO USES LEFT");
+        String val = plugin.getConfig().getString("active-items.messages.usage-limit-depleted-lore");
+        if (val != null && (val.isEmpty() || val.equalsIgnoreCase("NONE"))) return null;
+        return val != null ? val : "&cITEM DEPLETED - NO USES LEFT";
     }
 
     public static String getGlobalDepletedMessage() {
         if (plugin == null) return "&cThis item is depleted! You can't use its ability anymore.";
-        return plugin.getConfig().getString("active-items.messages.usage-limit-depleted-message", "&cThis item is depleted! You can't use its ability anymore.");
+        String val = plugin.getConfig().getString("active-items.messages.usage-limit-depleted-message");
+        if (val != null && (val.isEmpty() || val.equalsIgnoreCase("NONE"))) return null;
+        return val != null ? val : "&cThis item is depleted! You can't use its ability anymore.";
     }
 
     public static String getGlobalDepletionNotification() {
         if (plugin == null) return "&cYour item has run out of charges!";
-        return plugin.getConfig().getString("active-items.messages.usage-limit-depletion-notification", "&cYour item has run out of charges!");
+        String val = plugin.getConfig().getString("active-items.messages.usage-limit-depletion-notification");
+        if (val != null && (val.isEmpty() || val.equalsIgnoreCase("NONE"))) return null;
+        return val != null ? val : "&cYour item has run out of charges!";
     }
 
     public static String getGlobalDepletionTransformMessage() {
         if (plugin == null) return "&cYour item has run out of charges!";
-        return plugin.getConfig().getString("active-items.messages.usage-limit-depletion-transform", "&eYour item transformed!");
+        String val = plugin.getConfig().getString("active-items.messages.usage-limit-depletion-transform");
+        if (val != null && (val.isEmpty() || val.equalsIgnoreCase("NONE"))) return null;
+        return val != null ? val : "&eYour item transformed!";
     }
 
     public static String getGlobalDepletionSound() {

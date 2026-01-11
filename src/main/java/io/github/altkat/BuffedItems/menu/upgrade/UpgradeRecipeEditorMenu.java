@@ -8,6 +8,7 @@ import io.github.altkat.BuffedItems.manager.cost.types.BuffedItemCost;
 import io.github.altkat.BuffedItems.manager.upgrade.FailureAction;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.selector.BuffedItemSelectorMenu;
+import io.github.altkat.BuffedItems.menu.selector.TypeSelectorMenu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
 import org.bukkit.Material;
@@ -71,8 +72,7 @@ public class UpgradeRecipeEditorMenu extends Menu {
                 break;
 
             case 13:
-                new BuffedItemSelectorMenu(playerMenuUtility, plugin,
-                        BuffedItemSelectorMenu.SelectionContext.BASE).open();
+                new TypeSelectorMenu(playerMenuUtility, plugin, PlayerMenuUtility.MaterialSelectionContext.UPGRADE_BASE).open();
                 break;
             case 14:
                 new IngredientListMenu(playerMenuUtility, plugin).open();
@@ -84,6 +84,23 @@ public class UpgradeRecipeEditorMenu extends Menu {
                 break;
             case 16:
                 askInput(p, "upgrade.result.amount", "§aEnter Result Amount.");
+                break;
+
+            case 17:
+                // Transfer Settings Toggle
+                // We will cycle through: Enchants+Trim -> Enchants Only -> Trim Only -> None -> Enchants+Trim
+                // Actually, let's keep it simple: Clicking toggles Enchants, Shift-Click toggles Trim.
+                boolean keepEnch = UpgradesConfig.get().getBoolean("upgrades." + recipeId + ".transfer.enchantments", true);
+                boolean keepTrim = UpgradesConfig.get().getBoolean("upgrades." + recipeId + ".transfer.armor_trim", true);
+
+                if (e.isShiftClick()) {
+                    ConfigManager.setUpgradeValue(recipeId, "transfer.armor_trim", !keepTrim);
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aArmor Trim transfer set to: " + (!keepTrim ? "§aTRUE" : "§cFALSE")));
+                } else {
+                    ConfigManager.setUpgradeValue(recipeId, "transfer.enchantments", !keepEnch);
+                    p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnchantment transfer set to: " + (!keepEnch ? "§aTRUE" : "§cFALSE")));
+                }
+                this.open();
                 break;
 
             case 22:
@@ -110,6 +127,9 @@ public class UpgradeRecipeEditorMenu extends Menu {
 
         String resultItemId = UpgradesConfig.get().getString(path + ".result.item", "None");
         int resultAmount = UpgradesConfig.get().getInt(path + ".result.amount", 1);
+
+        boolean keepEnch = UpgradesConfig.get().getBoolean(path + ".transfer.enchantments", true);
+        boolean keepTrim = UpgradesConfig.get().getBoolean(path + ".transfer.armor_trim", true);
 
         String resultDisplayName = "§f" + resultItemId;
         BuffedItem resultItem = plugin.getItemManager().getBuffedItem(resultItemId);
@@ -208,6 +228,13 @@ public class UpgradeRecipeEditorMenu extends Menu {
                 "§aClick to Select"));
 
         inventory.setItem(16, makeItem(Material.GOLD_NUGGET, "§6Result Amount", "§7Current: §e" + resultAmount, "", "§aClick to Edit"));
+
+        inventory.setItem(17, makeItem(Material.ENCHANTED_BOOK, "§dTransfer Settings",
+                "§7Enchantments: " + (keepEnch ? "§aON" : "§cOFF"),
+                "§7Armor Trim: " + (keepTrim ? "§aON" : "§cOFF"),
+                "",
+                "§eClick to toggle Enchantments",
+                "§bShift-Click to toggle Trim"));
 
         inventory.setItem(22, makeItem(Material.BARRIER, "§cBack"));
     }

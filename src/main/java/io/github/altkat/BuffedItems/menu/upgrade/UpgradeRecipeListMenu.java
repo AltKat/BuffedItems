@@ -187,12 +187,19 @@ public class UpgradeRecipeListMenu extends PaginatedMenu {
                 iconStack = new ItemStack(Material.BARRIER);
             }
             else {
-                BuffedItemCost bCost = (BuffedItemCost) baseCost;
-                String bId = bCost.getRequiredItemId();
-                BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
+                if (baseCost instanceof BuffedItemCost) {
+                    BuffedItemCost bCost = (BuffedItemCost) baseCost;
+                    String bId = bCost.getRequiredItemId();
+                    BuffedItem bItem = plugin.getItemManager().getBuffedItem(bId);
 
-                if (bItem != null) {
-                    iconStack = new ItemBuilder(bItem, plugin).build();
+                    if (bItem != null) {
+                        iconStack = new ItemBuilder(bItem, plugin).build();
+                    } else {
+                        iconStack = new ItemStack(Material.BEDROCK);
+                    }
+                } else if (baseCost instanceof io.github.altkat.BuffedItems.manager.cost.types.ItemCost) {
+                    io.github.altkat.BuffedItems.manager.cost.types.ItemCost iCost = (io.github.altkat.BuffedItems.manager.cost.types.ItemCost) baseCost;
+                    iconStack = new ItemStack(iCost.getMaterial());
                 } else {
                     iconStack = new ItemStack(Material.BEDROCK);
                 }

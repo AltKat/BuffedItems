@@ -869,6 +869,11 @@ public class ItemManager {
         return item.getItemMeta().getPersistentDataContainer().has(nbtKey, PersistentDataType.STRING);
     }
 
+    public String getBuffedItemID(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return null;
+        return item.getItemMeta().getPersistentDataContainer().get(nbtKey, PersistentDataType.STRING);
+    }
+
     public BuffedItem getBuffedItem(String itemId) {
         return buffedItems.get(itemId);
     }

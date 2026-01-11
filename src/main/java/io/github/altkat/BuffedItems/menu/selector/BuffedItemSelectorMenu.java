@@ -35,7 +35,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
     public enum SelectionContext {
         COST,
         INGREDIENT,
-        BASE,
+        UPGRADE_BASE,
         RESULT,
         USAGE_LIMIT,
         SET_MEMBER,
@@ -67,6 +67,18 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         Player p = (Player) e.getWhoClicked();
 
         if (e.getCurrentItem() == null) return;
+
+        if (e.getClickedInventory() == e.getView().getBottomInventory()) {
+            ItemStack clickedItem = e.getCurrentItem();
+            if (plugin.getItemManager().isBuffedItem(clickedItem)) {
+                String buffedItemId = plugin.getItemManager().getBuffedItemID(clickedItem);
+                if (buffedItemId != null) {
+                    handleSelection(p, buffedItemId);
+                }
+            }
+            return;
+        }
+
         if (handlePageChange(e, items.size())) return;
 
         if (e.getSlot() == 49 && e.getCurrentItem().getType() == Material.PAPER) {
@@ -88,9 +100,14 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         }
     }
 
+    @Override
+    public boolean allowBottomInventoryClick() {
+        return true;
+    }
+
     private void handleSelection(Player p, String itemId) {
         switch (context) {
-            case BASE:
+            case UPGRADE_BASE:
                 ConfigManager.setUpgradeValue(playerMenuUtility.getItemToEditId(), "base", itemId);
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aBase item updated to: §e" + itemId));
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
@@ -165,7 +182,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
         p.closeInventory();
 
         switch (context) {
-            case BASE:
+            case UPGRADE_BASE:
                 playerMenuUtility.setChatInputPath("upgrade.base.set_id");
                 p.sendMessage(ConfigManager.fromSectionWithPrefix("§aEnter Base Item ID manually."));
                 break;
@@ -213,7 +230,7 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
     private void handleBack() {
         switch (context) {
-            case BASE:
+            case UPGRADE_BASE:
             case RESULT:
                 new UpgradeRecipeEditorMenu(playerMenuUtility, plugin).open();
                 break;
@@ -254,6 +271,11 @@ public class BuffedItemSelectorMenu extends PaginatedMenu {
 
         inventory.setItem(49, makeItem(Material.PAPER, "§eManual Input", "§7Click to type ID in chat manually."));
         inventory.setItem(53, makeItem(Material.BARRIER, "§cBack"));
+
+        inventory.setItem(45, makeItem(Material.BOOK,
+                "§eQuick Select",
+                "§7You can directly click a BuffedItem",
+                "§7in your inventory to select it!"));
 
         for (int i = 0; i < maxItemsPerPage; i++) {
             int index = maxItemsPerPage * page + i;

@@ -170,6 +170,39 @@ public class UpgradeMenu extends Menu {
                 : new ItemStack(Material.BARRIER);
         resultStack.setAmount(recipe.getResultAmount());
 
+        // --- Preview Transfer Logic ---
+        if (resultBuffedItem != null && inputItem != null && inputItem.hasItemMeta()) {
+            ItemMeta inputMeta = inputItem.getItemMeta();
+            ItemMeta resultMeta = resultStack.getItemMeta();
+
+            if (recipe.isKeepEnchantments() && inputMeta.hasEnchants()) {
+                BuffedItem baseTemplate = null;
+                if (plugin.getItemManager().isBuffedItem(inputItem)) {
+                    String baseId = plugin.getItemManager().getBuffedItemID(inputItem);
+                    if (baseId != null) baseTemplate = plugin.getItemManager().getBuffedItem(baseId);
+                }
+
+                for (java.util.Map.Entry<org.bukkit.enchantments.Enchantment, Integer> entry : inputMeta.getEnchants().entrySet()) {
+                    org.bukkit.enchantments.Enchantment ench = entry.getKey();
+                    int level = entry.getValue();
+
+                    if (baseTemplate != null && baseTemplate.getEnchantments().containsKey(ench)) continue;
+                    if (resultBuffedItem.getEnchantments().containsKey(ench)) continue;
+                    if (ench.canEnchantItem(resultStack)) {
+                        resultMeta.addEnchant(ench, level, true);
+                    }
+                }
+            }
+            
+            if (recipe.isKeepArmorTrim() && inputMeta instanceof org.bukkit.inventory.meta.ArmorMeta inputArmor && resultMeta instanceof org.bukkit.inventory.meta.ArmorMeta resultArmor) {
+                if (inputArmor.hasTrim()) {
+                    resultArmor.setTrim(inputArmor.getTrim());
+                }
+            }
+            resultStack.setItemMeta(resultMeta);
+        }
+        // --- End Preview Logic ---
+
         if (recipe.getResultAmount() > 1) {
             ItemMeta meta = resultStack.getItemMeta();
             if (meta != null && meta.hasDisplayName()) {
@@ -212,6 +245,57 @@ public class UpgradeMenu extends Menu {
 
         lore.add("");
         lore.add("§7Success Rate: §b" + recipe.getSuccessRate() + "%");
+        
+        String risk = switch (recipe.getFailureAction()) {
+            case KEEP_EVERYTHING -> "§aSafe (No Loss)";
+            case KEEP_BASE_ONLY -> "§eModerate (Item Kept)";
+            case LOSE_EVERYTHING -> "§cRisky (Lose All)";
+        };
+        lore.add("§7Risk: " + risk);
+
+        // --- Dynamic Transfer Info ---
+        boolean showsTransferHeader = false;
+        if (inputItem != null && inputItem.hasItemMeta()) {
+            ItemMeta inputMeta = inputItem.getItemMeta();
+
+            // Check for transferable enchantments
+            if (recipe.isKeepEnchantments() && inputMeta.hasEnchants()) {
+                BuffedItem baseTemplate = null;
+                if (plugin.getItemManager().isBuffedItem(inputItem)) {
+                    String baseId = plugin.getItemManager().getBuffedItemID(inputItem);
+                    if (baseId != null) baseTemplate = plugin.getItemManager().getBuffedItem(baseId);
+                }
+
+                boolean hasUserEnchants = false;
+                for (org.bukkit.enchantments.Enchantment ench : inputMeta.getEnchants().keySet()) {
+                    if (baseTemplate == null || !baseTemplate.getEnchantments().containsKey(ench)) {
+                        // Compatibility check against Result Item
+                        if (ench.canEnchantItem(resultStack)) {
+                            hasUserEnchants = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasUserEnchants) {
+                    if (!showsTransferHeader) { lore.add(""); showsTransferHeader = true; }
+                    lore.add("§a✔ Your personal enchantments will");
+                    lore.add("§a  be transferred to the new item!");
+                }
+            }
+
+            // Check for transferable armor trim
+            if (recipe.isKeepArmorTrim() && inputMeta instanceof org.bukkit.inventory.meta.ArmorMeta am && am.hasTrim()) {
+                // Compatibility check: Result Item must also support ArmorMeta
+                if (resultStack.getItemMeta() instanceof org.bukkit.inventory.meta.ArmorMeta) {
+                    if (!showsTransferHeader) { lore.add(""); showsTransferHeader = true; }
+                    lore.add("§a✔ Your armor trim will be");
+                    lore.add("§a  transferred to the new item!");
+                }
+            }
+        }
+        // --- End Transfer Info ---
+
         lore.add("");
 
         if (canAfford) {
@@ -257,6 +341,10 @@ public class UpgradeMenu extends Menu {
         boolean success = (Math.random() * 100) <= recipe.getSuccessRate();
 
         if (success) {
+            // Clone input item before modification to preserve data for transfer logic
+            ItemStack inputClone = inputItem.clone();
+            ItemMeta inputMeta = inputClone.getItemMeta();
+
             inputItem.setAmount(inputItem.getAmount() - requiredBase);
             inventory.setItem(INPUT_SLOT, inputItem);
 
@@ -270,6 +358,48 @@ public class UpgradeMenu extends Menu {
             if (resultBuffedItem != null) {
                 resultStack = new ItemBuilder(resultBuffedItem, plugin).build();
                 resultStack.setAmount(recipe.getResultAmount());
+
+                // --- Transfer Logic Start ---
+                ItemMeta resultMeta = resultStack.getItemMeta();
+
+                // 1. Enchantment Transfer
+                if (recipe.isKeepEnchantments() && inputMeta != null && inputMeta.hasEnchants()) {
+                    BuffedItem baseTemplate = null;
+                    if (plugin.getItemManager().isBuffedItem(inputClone)) {
+                        String baseId = plugin.getItemManager().getBuffedItemID(inputClone);
+                        if (baseId != null) baseTemplate = plugin.getItemManager().getBuffedItem(baseId);
+                    }
+
+                    for (java.util.Map.Entry<org.bukkit.enchantments.Enchantment, Integer> entry : inputMeta.getEnchants().entrySet()) {
+                        org.bukkit.enchantments.Enchantment ench = entry.getKey();
+                        int level = entry.getValue();
+
+                        // Filter 1: If base was BuffedItem, ignore template enchants (keep only user-added)
+                        if (baseTemplate != null && baseTemplate.getEnchantments().containsKey(ench)) {
+                            continue;
+                        }
+
+                        // Filter 2: If target template has this enchant, ignore (template wins)
+                        if (resultBuffedItem.getEnchantments().containsKey(ench)) {
+                            continue;
+                        }
+
+                        // Filter 3: Compatibility check
+                        if (ench.canEnchantItem(resultStack)) {
+                            resultMeta.addEnchant(ench, level, true);
+                        }
+                    }
+                }
+
+                // 2. Armor Trim Transfer
+                if (recipe.isKeepArmorTrim() && inputMeta instanceof org.bukkit.inventory.meta.ArmorMeta inputArmor && resultMeta instanceof org.bukkit.inventory.meta.ArmorMeta resultArmor) {
+                    if (inputArmor.hasTrim()) {
+                        resultArmor.setTrim(inputArmor.getTrim());
+                    }
+                }
+                
+                resultStack.setItemMeta(resultMeta);
+                // --- Transfer Logic End ---
 
                 org.bukkit.inventory.meta.ItemMeta meta = resultStack.getItemMeta();
 
@@ -365,7 +495,10 @@ public class UpgradeMenu extends Menu {
         }
         else if (cost instanceof ItemCost) {
             Material reqMat = ((ItemCost) cost).getMaterial();
-            return input.getType() == reqMat;
+            if (input.getType() != reqMat) return false;
+
+            // Ensure it is NOT a BuffedItem (must be vanilla)
+            return !plugin.getItemManager().isBuffedItem(input);
         }
         return false;
     }

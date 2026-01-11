@@ -6,7 +6,7 @@
 
     <groupId>io.github.altkat</groupId>
     <artifactId>BuffedItems</artifactId>
-    <version>1.8.2</version>
+    <version>1.9.0</version>
     <packaging>jar</packaging>
     <name>BuffedItems</name>
 

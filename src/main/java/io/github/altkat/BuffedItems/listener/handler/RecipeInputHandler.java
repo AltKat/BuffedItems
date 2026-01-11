@@ -35,7 +35,8 @@ public class RecipeInputHandler implements ChatInputHandler {
             return;
         }
 
-        if (path.equals("recipe_result_amount") || path.equals("recipe_result_manual") || path.equals("recipe_permission")) {
+        if (path.equals("recipe_result_amount") || path.equals("recipe_result_manual") || path.equals("recipe_permission")
+                || path.equals("recipe_cook_time") || path.equals("recipe_experience")) {
             new RecipeEditorMenu(pmu, plugin).open();
             return;
         }
@@ -98,6 +99,44 @@ public class RecipeInputHandler implements ChatInputHandler {
 
             player.sendMessage(ConfigManager.fromSectionWithPrefix("§aRecipe permission updated: " + (perm == null ? "None" : perm)));
             new RecipeEditorMenu(pmu, plugin).open();
+            closeChat(pmu);
+        }
+
+        else if (path.equals("recipe_cook_time")) {
+            try {
+                double seconds = Double.parseDouble(input);
+                if (seconds < 0) throw new NumberFormatException();
+
+                String recipeId = pmu.getRecipeToEditId();
+                RecipesConfig.get().set("recipes." + recipeId + ".cook_time", seconds);
+                pmu.setUnsavedChanges(true);
+
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aCook time updated: " + seconds + " seconds."));
+                new RecipeEditorMenu(pmu, plugin).open();
+
+            } catch (NumberFormatException e) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number. Please enter a positive number of seconds."));
+                new RecipeEditorMenu(pmu, plugin).open();
+            }
+            closeChat(pmu);
+        }
+
+        else if (path.equals("recipe_experience")) {
+            try {
+                double xp = Double.parseDouble(input);
+                if (xp < 0) throw new NumberFormatException();
+
+                String recipeId = pmu.getRecipeToEditId();
+                RecipesConfig.get().set("recipes." + recipeId + ".experience", xp);
+                pmu.setUnsavedChanges(true);
+
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§aExperience updated: " + xp));
+                new RecipeEditorMenu(pmu, plugin).open();
+
+            } catch (NumberFormatException e) {
+                player.sendMessage(ConfigManager.fromSectionWithPrefix("§cInvalid number."));
+                new RecipeEditorMenu(pmu, plugin).open();
+            }
             closeChat(pmu);
         }
 
@@ -180,6 +219,12 @@ public class RecipeInputHandler implements ChatInputHandler {
             return false;
         }
 
+        String recipeTypeStr = config.getString("recipes." + recipeId + ".type", "SHAPED");
+        boolean isCooking = recipeTypeStr.equalsIgnoreCase("FURNACE") || recipeTypeStr.equalsIgnoreCase("BLAST_FURNACE") ||
+                recipeTypeStr.equalsIgnoreCase("SMOKER") || recipeTypeStr.equalsIgnoreCase("CAMPFIRE");
+
+        if (isCooking) newAmount = 1;
+
         String typeStr = config.getString(path + ".type");
         String value = config.getString(path + ".value");
         MatchType type = MatchType.valueOf(typeStr);
@@ -197,6 +242,12 @@ public class RecipeInputHandler implements ChatInputHandler {
         String shapePath = "recipes." + recipeId + ".shape";
 
         ConfigurationSection config = RecipesConfig.get();
+
+        String recipeTypeStr = config.getString("recipes." + recipeId + ".type", "SHAPED");
+        boolean isCooking = recipeTypeStr.equalsIgnoreCase("FURNACE") || recipeTypeStr.equalsIgnoreCase("BLAST_FURNACE") ||
+                recipeTypeStr.equalsIgnoreCase("SMOKER") || recipeTypeStr.equalsIgnoreCase("CAMPFIRE");
+
+        if (isCooking) amount = 1;
 
         if (type == null) {
             config.set(path, null);

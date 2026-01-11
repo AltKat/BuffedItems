@@ -156,9 +156,17 @@ public class BuffedItem {
     }
 
     public String getUsageLore(int currentUses) {
-        String format = (usageDetails.getUsageLore() != null && !usageDetails.getUsageLore().isEmpty())
-                ? usageDetails.getUsageLore()
-                : ConfigManager.getGlobalUsageLore();
+        String format;
+        if (usageDetails.getUsageLore() != null) {
+            if (usageDetails.getUsageLore().isEmpty() || usageDetails.getUsageLore().equalsIgnoreCase("NONE")) {
+                return null;
+            }
+            format = usageDetails.getUsageLore();
+        } else {
+            format = ConfigManager.getGlobalUsageLore();
+        }
+
+        if (format == null) return null;
 
         return format
                 .replace("{remaining_uses}", String.valueOf(currentUses))
@@ -166,9 +174,17 @@ public class BuffedItem {
     }
 
     public String getDepletedLore() {
-        return (usageDetails.getDepletedLore() != null && !usageDetails.getDepletedLore().isEmpty())
-                ? usageDetails.getDepletedLore()
-                : ConfigManager.getGlobalDepletedLore();
+        String format;
+        if (usageDetails.getDepletedLore() != null) {
+            if (usageDetails.getDepletedLore().isEmpty() || usageDetails.getDepletedLore().equalsIgnoreCase("NONE")) {
+                return null;
+            }
+            format = usageDetails.getDepletedLore();
+        } else {
+            format = ConfigManager.getGlobalDepletedLore();
+        }
+        
+        return format;
     }
     
     public boolean hasActivePermission(org.bukkit.entity.Player player) {

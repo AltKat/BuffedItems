@@ -5,6 +5,7 @@ import io.github.altkat.BuffedItems.manager.config.ConfigManager;
 import io.github.altkat.BuffedItems.manager.crafting.CustomRecipe;
 import io.github.altkat.BuffedItems.manager.crafting.MatchType;
 import io.github.altkat.BuffedItems.manager.crafting.RecipeIngredient;
+import io.github.altkat.BuffedItems.manager.crafting.RecipeType;
 import io.github.altkat.BuffedItems.menu.base.Menu;
 import io.github.altkat.BuffedItems.menu.utility.PlayerMenuUtility;
 import io.github.altkat.BuffedItems.utility.item.BuffedItem;
@@ -77,22 +78,53 @@ public class RecipePreviewMenu extends Menu {
         }
 
         inventory.setItem(25, resultIcon);
-
         inventory.setItem(23, makeItem(Material.ARROW, "§e->"));
 
-        List<String> shape = recipe.getShape();
-        if (shape != null) {
-            for (int row = 0; row < shape.size(); row++) {
-                String line = shape.get(row);
-                for (int col = 0; col < line.length(); col++) {
-                    char key = line.charAt(col);
-                    RecipeIngredient ing = recipe.getIngredient(key);
+        RecipeType type = recipe.getType();
 
-                    if (ing != null) {
-                        int slotIndex = (row * 3) + col;
-                        if (slotIndex < gridSlots.length) {
-                            ItemStack ingredientIcon = getIngredientIcon(ing);
-                            inventory.setItem(gridSlots[slotIndex], ingredientIcon);
+        if (type == RecipeType.SHAPELESS) {
+            inventory.setItem(22, makeItem(Material.BOOK, "§dShapeless Recipe", "§7Ingredients can be placed anywhere."));
+
+            int index = 0;
+            for (RecipeIngredient ing : recipe.getIngredients().values()) {
+                if (index >= gridSlots.length) break;
+                inventory.setItem(gridSlots[index], getIngredientIcon(ing));
+                index++;
+            }
+        } else if (type == RecipeType.FURNACE || type == RecipeType.BLAST_FURNACE || type == RecipeType.SMOKER || type == RecipeType.CAMPFIRE) {
+            RecipeIngredient input = recipe.getIngredients().values().stream().findFirst().orElse(null);
+            if (input != null) {
+                inventory.setItem(20, getIngredientIcon(input));
+            }
+
+            Material stationMat = Material.FURNACE;
+            String stationName = "Furnace";
+            if (type == RecipeType.BLAST_FURNACE) { stationMat = Material.BLAST_FURNACE; stationName = "Blast Furnace"; }
+            else if (type == RecipeType.SMOKER) { stationMat = Material.SMOKER; stationName = "Smoker"; }
+            else if (type == RecipeType.CAMPFIRE) { stationMat = Material.CAMPFIRE; stationName = "Campfire"; }
+
+            String cookTimeLore = "§7Cook Time: §b" + (recipe.getCookTime() / 20.0) + "s";
+            if (type != RecipeType.CAMPFIRE) {
+                String xpLore = "§7Experience: §b" + ((recipe.getExperience() % 1 == 0) ? String.format("%.0f", recipe.getExperience()) : String.valueOf(recipe.getExperience()));
+                inventory.setItem(22, makeItem(stationMat, "§eCooking Station: §6" + stationName, cookTimeLore, xpLore));
+            } else {
+                inventory.setItem(22, makeItem(stationMat, "§eCooking Station: §6" + stationName, cookTimeLore));
+            }
+        } else {
+            List<String> shape = recipe.getShape();
+            if (shape != null) {
+                for (int row = 0; row < shape.size(); row++) {
+                    String line = shape.get(row);
+                    for (int col = 0; col < line.length(); col++) {
+                        char key = line.charAt(col);
+                        RecipeIngredient ing = recipe.getIngredient(key);
+
+                        if (ing != null) {
+                            int slotIndex = (row * 3) + col;
+                            if (slotIndex < gridSlots.length) {
+                                ItemStack ingredientIcon = getIngredientIcon(ing);
+                                inventory.setItem(gridSlots[slotIndex], ingredientIcon);
+                            }
                         }
                     }
                 }
