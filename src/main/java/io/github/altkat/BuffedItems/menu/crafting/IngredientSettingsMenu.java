@@ -270,7 +270,7 @@ public class IngredientSettingsMenu extends Menu {
         inventory.setItem(11, makeItem(Material.ENDER_EYE, "§5Scan as EXACT",
                 "§7Saves the item in your hand",
                 "§7with ALL metadata (Name, Lore, NBT).",
-                "§7Useful for special vanilla items."));
+                "§7Useful for potions and special items."));
 
         inventory.setItem(12, makeItem(Material.GRASS_BLOCK, "§aVanilla Material", "§7Select from list."));
         inventory.setItem(13, makeItem(Material.NETHER_STAR, "§6Buffed Item", "§7Select custom item."));
